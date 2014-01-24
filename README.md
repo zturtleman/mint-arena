@@ -18,6 +18,6 @@ If you put both projects in the same directory you can launch the game using;
 
 On Linux and OS X you'll need to put `./` before the command and substitue correct platform and architecture (just look in the `build` directory to see what they are).
 
-## Help! It errors "CGame VM uses unsupported API" when I try to run it!
+### Help! It errors "CGame VM uses unsupported API" when I try to run it!
 
 This repo needs to be updated because of API changes in Spearmint. Create a bug report.

@@ -89,7 +89,8 @@ void CG_SurfaceSprite( const refEntity_t *e ) {
 		VectorSet( up, 0, s * re.radius, c * re.radius );
 	}
 
-	//
+	// 1  0
+	// 2  3
 	verts[0].xyz[0] = vec3_origin[0] + left[0] + up[0];
 	verts[0].xyz[1] = vec3_origin[1] + left[1] + up[1];
 	verts[0].xyz[2] = vec3_origin[2] + left[2] + up[2];
@@ -108,7 +109,7 @@ void CG_SurfaceSprite( const refEntity_t *e ) {
 
 	// standard square texture coordinates
 	for ( j = 0; j < 4; j++ ) {
-		verts[j].st[0] = ( j && j != 3 );
+		verts[j].st[0] = ( j == 0 || j == 3 );
 		verts[j].st[1] = ( j < 2 );
 
 		* ( unsigned int * )&verts[j].modulate = * ( unsigned int * )re.shaderRGBA;

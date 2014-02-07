@@ -616,9 +616,9 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 						for ( j = 0; j < ent->client->ps.tokens; j++ ) {
 							drop = Drop_Item( ent, item, 0 );
 							if ( ent->client->sess.sessionTeam == TEAM_RED ) {
-								drop->spawnflags = TEAM_BLUE;
+								drop->s.team = TEAM_BLUE;
 							} else {
-								drop->spawnflags = TEAM_RED;
+								drop->s.team = TEAM_RED;
 							}
 						}
 					}

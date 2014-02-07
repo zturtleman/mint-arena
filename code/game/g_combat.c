@@ -186,7 +186,7 @@ void TossClientCubes( gentity_t *self ) {
 
 	drop->nextthink = level.time + g_cubeTimeout.integer * 1000;
 	drop->think = G_FreeEntity;
-	drop->spawnflags = self->client->sess.sessionTeam;
+	drop->s.team = self->client->sess.sessionTeam;
 }
 
 

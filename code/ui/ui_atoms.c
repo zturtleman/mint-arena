@@ -90,8 +90,8 @@ void UI_LoadBestScores(const char *map, int game)
 
 	uiInfo.demoAvailable = qfalse;
 
-	Com_sprintf(fileName, MAX_QPATH, "demos/%s_%d.%s", map, game, DEMOEXT);
-	if(trap_FS_FOpenFile(fileName, &f, FS_READ) >= 0)
+	Com_sprintf(fileName, MAX_QPATH, "%s_%i", map, game);
+	if(trap_GetDemoFileInfo(fileName, NULL, NULL, NULL, NULL, NULL) != 0)
 	{
 		uiInfo.demoAvailable = qtrue;
 		trap_FS_FCloseFile(f);

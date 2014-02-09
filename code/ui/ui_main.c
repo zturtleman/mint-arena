@@ -2774,6 +2774,10 @@ static void UI_LoadDemos( void ) {
 	char	demolist[NAMEBUFSIZE];
 	char	*demoname;
 	int	i, len;
+	int		protocol, length, runTime;
+	char	startTime[20];
+	char	endTime[20];
+	qboolean	valid;
 
 	uiInfo.demoCount = trap_FS_GetFileList("demos", "$demos", demolist, ARRAY_LEN(demolist));
 	
@@ -2784,6 +2788,10 @@ static void UI_LoadDemos( void ) {
 
 	for(i = 0; i < uiInfo.demoCount; i++)
 	{
+		// information to build into new UI...
+		valid = trap_GetDemoFileInfo( demoname, &protocol, &length, startTime, endTime, &runTime );
+		Com_Printf("Demo: %s%s, protocol %d, %dKB, %d seconds, %s -> %s\n", demoname, valid ? "" : " (unsupported)", protocol, length/1024, runTime/1000, startTime, endTime );
+
 		len = strlen(demoname);
 		uiInfo.demoList[i] = String_Alloc(demoname);
 		demoname += len + 1;

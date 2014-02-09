@@ -94,6 +94,8 @@ int			trap_GetDemoState( void );
 int			trap_GetDemoPos( void );
 void		trap_GetDemoName( char *buffer, int size );
 int			trap_GetDemoLength( void );
+// startTime and endTime are formatted as "YYYY-MM-DD HH:MM:SS", make sure buffer is at least 19 characters. runTime is in milliseconds.
+int			trap_GetDemoFileInfo( const char *demoName, int *protocol, int *length, char *startTime, char *endTime, int *runTime );
 
 void		trap_GetClientState( uiClientState_t *state );
 int			trap_GetConfigString( int index, char* buff, int buffsize );

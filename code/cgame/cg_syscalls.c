@@ -542,6 +542,10 @@ int			trap_GetDemoLength( void ) {
   return syscall( CG_GETDEMOLENGTH );
 }
 
+int			trap_GetDemoFileInfo( const char *demoName, int *protocol, int *length, char *startTime, char *endTime, int *runTime ) {
+  return syscall( CG_GETDEMOFILEINFO, demoName, protocol, length, startTime, endTime, runTime );
+}
+
 void trap_GetClientState( uiClientState_t *state ) {
 	syscall( CG_GETCLIENTSTATE, state );
 }

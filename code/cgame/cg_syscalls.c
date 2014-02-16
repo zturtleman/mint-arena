@@ -429,6 +429,11 @@ int		trap_R_LerpTag( orientation_t *tag, clipHandle_t mod, int startFrame, int e
 	return syscall( CG_R_LERPTAG, tag, mod, startFrame, endFrame, PASSFLOAT(frac), tagName );
 }
 
+int		trap_R_LerpTagFrameModel( orientation_t *tag, clipHandle_t mod, clipHandle_t frameModel, int startFrame, clipHandle_t endFrameModel, int endFrame,
+					   float frac, const char *tagName ) {
+	return syscall( CG_R_LERPTAG_FRAMEMODEL, tag, mod, frameModel, startFrame, endFrameModel, endFrame, PASSFLOAT(frac), tagName );
+}
+
 void	trap_R_RemapShader( const char *oldShader, const char *newShader, const char *timeOffset ) {
 	syscall( CG_R_REMAP_SHADER, oldShader, newShader, timeOffset );
 }

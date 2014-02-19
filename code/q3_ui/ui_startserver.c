@@ -855,8 +855,12 @@ static void ServerOptions_Start( void ) {
 	}
 
 	trap_Cvar_SetValue( "sv_maxclients", Com_Clamp( 0, 12, maxclients ) );
-	trap_Cvar_SetValue( "ui_publicServer", Com_Clamp( 0, 1, publicserver ) );
-	trap_Cvar_SetValue( "sv_public", Com_Clamp( 0, 1, publicserver ) );
+	if( s_serveroptions.multiplayer ) {
+		trap_Cvar_SetValue( "ui_publicServer", Com_Clamp( 0, 1, publicserver ) );
+		trap_Cvar_SetValue( "sv_public", Com_Clamp( 0, 1, publicserver ) );
+	} else {
+		trap_Cvar_SetValue( "sv_public", 0 );
+	}
 	trap_Cvar_SetValue( "dedicated", Com_Clamp( 0, 1, dedicated ) );
 	trap_Cvar_SetValue ("timelimit", Com_Clamp( 0, timelimit, timelimit ) );
 	trap_Cvar_SetValue ("fraglimit", Com_Clamp( 0, fraglimit, fraglimit ) );

@@ -744,9 +744,6 @@ void CG_Cinematic_f( void ) {
 	char	s[6];
 	float	x, y, width, height;
 	int		bits = CIN_system;
-	uiClientState_t cls;
-
-	trap_GetClientState( &cls );
 
 	Com_DPrintf("CG_Cinematic_f\n");
 	CG_StopCinematic_f();

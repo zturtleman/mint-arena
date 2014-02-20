@@ -115,8 +115,6 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_CONSOLE_CLOSE:
 		CG_CloseConsole();
 		return 0;
-	case CG_WANTSBINDKEYS:
-		return UI_WantsBindKeys();
 	case CG_CREATE_USER_CMD:
 		return (intptr_t)CG_CreateUserCmd(arg0, arg1, arg2, IntAsFloat(arg3), IntAsFloat(arg4), arg5);
 	default:
@@ -2816,8 +2814,34 @@ CG_DistributeKeyEvent
 */
 void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state ) {
 	int keyCatcher;
+	qboolean onlybinds = qfalse;
 
 	cg.connState = state;
+
+	switch ( key ) {
+		case K_KP_PGUP:
+		case K_KP_EQUALS:
+		case K_KP_5:
+		case K_KP_LEFTARROW:
+		case K_KP_UPARROW:
+		case K_KP_RIGHTARROW:
+		case K_KP_DOWNARROW:
+		case K_KP_END:
+		case K_KP_PGDN:
+		case K_KP_INS:
+		case K_KP_DEL:
+		case K_KP_HOME:
+			if ( trap_Key_IsDown( K_KP_NUMLOCK ) ) {
+				onlybinds = qtrue;
+			}
+			break;
+		default:
+			break;
+	}
+
+	if ( onlybinds && !UI_WantsBindKeys() ) {
+		return;
+	}
 
 	// console key is hardcoded, so the user can never unbind it
 	if( key == K_CONSOLE || ( key == K_ESCAPE && trap_Key_IsDown( K_SHIFT ) ) ) {

@@ -960,12 +960,14 @@ The string has been tokenized and can be retrieved with
 Cmd_Argc() / Cmd_Argv()
 =================
 */
-qboolean CG_ConsoleCommand( int realTime ) {
+qboolean CG_ConsoleCommand( connstate_t state, int realTime ) {
 	char		buffer[BIG_INFO_STRING];
 	const char	*cmd;
 	int		i;
 	int		localPlayerNum;
 	const char	*baseCmd;
+
+	cg.connState = state;
 
 	// update UI frame time
 	UI_ConsoleCommand( realTime );

@@ -638,6 +638,7 @@ typedef struct {
 #define MAX_SPAWN_VARS_CHARS    2048
  
 typedef struct {
+	connstate_t	connState;
 	qboolean	connected;			// connected to a server
 	
 	int			clientFrame;		// incremented each frame
@@ -1723,7 +1724,7 @@ typedef struct {
 	int		flags;
 } consoleCommand_t;
 
-qboolean CG_ConsoleCommand( int realTime );
+qboolean CG_ConsoleCommand( connstate_t state, int realTime );
 void CG_InitConsoleCommands( void );
 
 void CG_StopCinematic_f( void );

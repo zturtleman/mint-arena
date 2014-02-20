@@ -109,9 +109,6 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_JOYSTICK_EVENT:
 		CG_JoystickEvent(arg0, arg1, arg2);
 		return 0;
-	case CG_EVENT_HANDLING:
-		CG_EventHandling(arg0);
-		return 0;
 	case CG_CONSOLE_TEXT:
 		CG_AddNotifyText(arg0, arg1);
 		return 0;

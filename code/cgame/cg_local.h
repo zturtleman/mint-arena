@@ -111,6 +111,14 @@ typedef enum {
 	IMPACTSOUND_FLESH
 } impactSound_t;
 
+// for CG_EventHandling
+enum {
+  CGAME_EVENT_NONE,
+  CGAME_EVENT_TEAMMENU,
+  CGAME_EVENT_SCOREBOARD,
+  CGAME_EVENT_EDITHUD
+};
+
 //=================================================
 
 #define	MAX_EDIT_LINE	256

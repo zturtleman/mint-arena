@@ -52,12 +52,12 @@ int UI_MaxSplitView(void) {
 UI_NumLocalClients
 =================
 */
-int UI_NumLocalClients(uiClientState_t *cs) {
+int UI_NumLocalClients(void) {
 	int numLocalClients = 0;
 	int i;
 
 	for (i = 0; i < UI_MaxSplitView(); i++) {
-		if (cs->clientNums[i] >= 0 && cs->clientNums[i] < MAX_CLIENTS) {
+		if (cg.localClients[i].clientNum >= 0 && cg.localClients[i].clientNum < MAX_CLIENTS) {
 			numLocalClients++;
 		}
 	}

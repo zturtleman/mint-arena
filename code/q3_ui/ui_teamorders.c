@@ -374,7 +374,6 @@ UI_TeamOrdersMenu_BuildBotList
 ===============
 */
 static void UI_TeamOrdersMenu_BuildBotList( void ) {
-	uiClientState_t	cs;
 	int		numPlayers;
 	int		isBot;
 	int		n;
@@ -386,8 +385,6 @@ static void UI_TeamOrdersMenu_BuildBotList( void ) {
 		teamOrdersMenuInfo.bots[n] = teamOrdersMenuInfo.botNames[n];
 	}
 
-	trap_GetClientState( &cs );
-
 	Q_strncpyz( teamOrdersMenuInfo.botNames[0], "Everyone", 16 );
 	teamOrdersMenuInfo.numBots = 1;
 
@@ -398,7 +395,7 @@ static void UI_TeamOrdersMenu_BuildBotList( void ) {
 	for( n = 0; n < numPlayers && teamOrdersMenuInfo.numBots < 9; n++ ) {
 		trap_GetConfigString( CS_PLAYERS + n, info, MAX_INFO_STRING );
 
-		if( n == cs.clientNums[0] ) {
+		if( n == cg.localClients[0].clientNum ) {
 			playerTeam = *Info_ValueForKey( info, "t" );
 			continue;
 		}
@@ -507,7 +504,6 @@ UI_TeamOrdersMenu_f
 ===============
 */
 void UI_TeamOrdersMenu_f( void ) {
-	uiClientState_t	cs;
 	char	info[MAX_INFO_STRING];
 	int		team;
 
@@ -519,8 +515,10 @@ void UI_TeamOrdersMenu_f( void ) {
 	}
 
 	// not available to spectators
-	trap_GetClientState( &cs );
-	trap_GetConfigString( CS_PLAYERS + cs.clientNums[0], info, MAX_INFO_STRING );
+	if ( cg.localClients[0].clientNum == -1 ) {
+		return;
+	}
+	trap_GetConfigString( CS_PLAYERS + cg.localClients[0].clientNum, info, MAX_INFO_STRING );
 	team = atoi( Info_ValueForKey( info, "t" ) );
 	if( team == TEAM_SPECTATOR ) {
 		return;

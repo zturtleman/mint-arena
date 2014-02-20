@@ -91,12 +91,8 @@ Con_ToggleConsole_f
 ================
 */
 void Con_ToggleConsole_f (void) {
-	uiClientState_t	cls;
-
-	trap_GetClientState( &cls );
-
 	// Can't toggle the console when it's the only thing available
-	if ( cls.connState == CA_DISCONNECTED && trap_Key_GetCatcher( ) == KEYCATCH_CONSOLE ) {
+	if ( cg.connState == CA_DISCONNECTED && trap_Key_GetCatcher( ) == KEYCATCH_CONSOLE ) {
 		return;
 	}
 
@@ -460,12 +456,8 @@ void Console_Key ( int key, qboolean down ) {
 
 	// enter finishes the line
 	if ( key == K_ENTER || key == K_KP_ENTER ) {
-		uiClientState_t cls;
-
-		trap_GetClientState( &cls );
-
 		// if not in the game explicitly prepend a slash if needed
-		if ( cls.connState != CA_ACTIVE && con_autochat.integer &&
+		if ( cg.connState != CA_ACTIVE && con_autochat.integer &&
 				g_consoleField.buffer[0] &&
 				g_consoleField.buffer[0] != '\\' &&
 				g_consoleField.buffer[0] != '/' ) {
@@ -506,7 +498,7 @@ void Console_Key ( int key, qboolean down ) {
 
 		CG_SaveConsoleHistory( );
 
-		if ( cls.connState == CA_DISCONNECTED ) {
+		if ( cg.connState == CA_DISCONNECTED ) {
 			trap_UpdateScreen();	// force an update, because the command
 		}							// may take some time
 		return;

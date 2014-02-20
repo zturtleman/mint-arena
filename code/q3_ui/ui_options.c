@@ -121,15 +121,13 @@ Options_MenuInit
 */
 void Options_MenuInit( void ) {
 	int				y;
-	uiClientState_t	cstate;
 
 	memset( &s_options, 0, sizeof(optionsmenu_t) );
 
 	SystemConfig_Cache();
 	s_options.menu.wrapAround = qtrue;
 
-	trap_GetClientState( &cstate );
-	if ( cstate.connState >= CA_CONNECTED ) {
+	if ( cg.connState >= CA_CONNECTED ) {
 		s_options.menu.fullscreen = qfalse;
 	}
 	else {

@@ -141,7 +141,6 @@ UI_ResetMenu
 =================
 */
 void UI_ResetMenu(void) {
-	uiClientState_t	cstate;
 	int	n1, n2, n3;
 	int	l1, l2, l3;
 
@@ -162,9 +161,7 @@ void UI_ResetMenu(void) {
 	s_reset.menu.key        = Reset_MenuKey;
 	s_reset.menu.wrapAround = qtrue;
 
-	trap_GetClientState( &cstate );
-
-	if ( cstate.connState >= CA_CONNECTED ) {
+	if ( cg.connState >= CA_CONNECTED ) {
 		// float on top of running game
 		s_reset.menu.fullscreen = qfalse;
 	}

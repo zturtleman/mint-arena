@@ -1656,19 +1656,29 @@ UI_BuildPlayerList
 ===============
 */
 static void UI_BuildPlayerList( void ) {
-	uiClientState_t	cs;
 	int		n, count, team, team2, playerTeamNumber;
 	char	info[MAX_INFO_STRING];
 
-	trap_GetClientState( &cs );
-	trap_GetConfigString( CS_PLAYERS + cs.psClientNums[0], info, MAX_INFO_STRING );
-	uiInfo.playerNumber = cs.psClientNums[0];
+	uiInfo.teamLeader = qfalse;
+	uiInfo.playerCount = 0;
+	uiInfo.myTeamCount = 0;
+
+	// get followed player's clientNum, if local client 0 exists...
+	if ( cg.snap && cg.snap->lcIndex[0] != -1 ) {
+		uiInfo.playerNumber = cg.snap->pss[ cg.snap->lcIndex[0] ].clientNum;
+	} else {
+		uiInfo.playerNumber = cg.localClients[0].clientNum;
+
+		if ( uiInfo.playerNumber == -1 ) {
+			return;
+		}
+	}
+
+	trap_GetConfigString( CS_PLAYERS + uiInfo.playerNumber, info, MAX_INFO_STRING );
 	uiInfo.teamLeader = atoi(Info_ValueForKey(info, "tl"));
 	team = atoi(Info_ValueForKey(info, "t"));
 	trap_GetConfigString( CS_SERVERINFO, info, sizeof(info) );
 	count = atoi( Info_ValueForKey( info, "sv_maxclients" ) );
-	uiInfo.playerCount = 0;
-	uiInfo.myTeamCount = 0;
 	playerTeamNumber = 0;
 	for( n = 0; n < count; n++ ) {
 		trap_GetConfigString( CS_PLAYERS + n, info, MAX_INFO_STRING );

@@ -111,7 +111,7 @@ static void InSelectPlayerMenu_Draw( void ) {
 InSelectPlayer_MenuInit
 =================
 */
-void InSelectPlayer_MenuInit( uiClientState_t *cs, const char *banner, qboolean disableMissingPlayers ) {
+void InSelectPlayer_MenuInit( const char *banner, qboolean disableMissingPlayers ) {
 	int		y;
 	int		i;
 
@@ -146,7 +146,7 @@ void InSelectPlayer_MenuInit( uiClientState_t *cs, const char *banner, qboolean 
 		s_setupplayers.player[i].string				= s_setupplayers.playerString[i];
 		if (!disableMissingPlayers) {
 			// Have players in game be red and not ingame be white.
-			if (cs->clientNums[i] == -1) {
+			if (cg.localClients[i].clientNum == -1) {
 				s_setupplayers.player[i].color		= color_white;
 			} else {
 				s_setupplayers.player[i].color		= color_red;
@@ -156,7 +156,7 @@ void InSelectPlayer_MenuInit( uiClientState_t *cs, const char *banner, qboolean 
 		}
 		s_setupplayers.player[i].style				= UI_CENTER|UI_SMALLFONT;
 
-		if (disableMissingPlayers && cs->clientNums[i] == -1) {
+		if (disableMissingPlayers && cg.localClients[i].clientNum == -1) {
 			s_setupplayers.player[i].generic.flags |= QMF_GRAYED;
 		}
 
@@ -199,17 +199,28 @@ InSelectPlayerMenu
 =================
 */
 void InSelectPlayerMenu( void (*playerfunc)(int), const char *banner, qboolean disableMissingPlayers ) {
-	uiClientState_t	cs;
+	if (disableMissingPlayers) {
+		int i, playerNum;
 
-	trap_GetClientState( &cs );
+		// check if there is only one local player and find local client index
+		for ( i = 0, playerNum = -1; i < UI_MaxSplitView(); i++) {
+			if ( cg.localClients[i].clientNum >= 0 && cg.localClients[i].clientNum < MAX_CLIENTS ) {
+				if ( playerNum == -1 ) {
+					playerNum = i;
+				} else {
+					playerNum = -1;
+					break;
+				}
+			}
+		}
 
-	// If there is only one local client skip this menu.
-	if (UI_NumLocalClients(&cs) <= 1 && disableMissingPlayers) {
-		playerfunc(0);
-		return;
+		if ( playerNum != -1 ) {
+			playerfunc( playerNum );
+			return;
+		}
 	}
 
-	InSelectPlayer_MenuInit( &cs, banner, disableMissingPlayers );
+	InSelectPlayer_MenuInit( banner, disableMissingPlayers );
 	s_setupplayers.playerfunc = playerfunc;
 	UI_PushMenu( &s_setupplayers.menu );
 }

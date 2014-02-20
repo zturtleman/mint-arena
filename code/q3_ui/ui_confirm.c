@@ -179,7 +179,6 @@ UI_ConfirmMenu_Stlye
 =================
 */
 void UI_ConfirmMenu_Style( const char *question, int style, void (*draw)( void ), void (*action)( qboolean result ) ) {
-	uiClientState_t	cstate;
 	int	n1, n2, n3;
 	int	l1, l2, l3;
 
@@ -205,8 +204,7 @@ void UI_ConfirmMenu_Style( const char *question, int style, void (*draw)( void )
 	s_confirm.menu.key        = ConfirmMenu_Key;
 	s_confirm.menu.wrapAround = qtrue;
 
-	trap_GetClientState( &cstate );
-	if ( cstate.connState >= CA_CONNECTED ) {
+	if ( cg.connState >= CA_CONNECTED ) {
 		s_confirm.menu.fullscreen = qfalse;
 	}
 	else {
@@ -257,7 +255,6 @@ hacked over from Confirm stuff
 =================
 */
 void UI_Message( const char **lines ) {
-	uiClientState_t	cstate;
 	int n1, l1;
 	
 	// zero set all our globals
@@ -275,8 +272,7 @@ void UI_Message( const char **lines ) {
 	s_confirm.menu.key        = ConfirmMenu_Key;
 	s_confirm.menu.wrapAround = qtrue;
 	
-	trap_GetClientState( &cstate );
-	if ( cstate.connState >= CA_CONNECTED ) {
+	if ( cg.connState >= CA_CONNECTED ) {
 		s_confirm.menu.fullscreen = qfalse;
 	}
 	else {

@@ -1673,6 +1673,7 @@ localEntity_t *CG_MakeExplosion( vec3_t origin, vec3_t dir,
 void CG_ProcessSnapshots( qboolean initialOnly );
 void CG_RestoreSnapshot( void );
 playerState_t *CG_LocalClientPlayerStateForClientNum( int clientNum );
+int CG_NumLocalClients( void );
 
 
 //

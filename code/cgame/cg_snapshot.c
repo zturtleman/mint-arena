@@ -483,3 +483,21 @@ playerState_t *CG_LocalClientPlayerStateForClientNum(int clientNum) {
 	return NULL;
 }
 
+/*
+=============
+CG_NumLocalClients
+=============
+*/
+int CG_NumLocalClients( void ) {
+	int numLocalClients = 0;
+	int i;
+
+	for (i = 0; i < CG_MaxSplitView(); i++) {
+		if (cg.localClients[i].clientNum != -1) {
+			numLocalClients++;
+		}
+	}
+
+	return numLocalClients;
+}
+

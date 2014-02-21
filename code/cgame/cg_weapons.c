@@ -1563,15 +1563,11 @@ void CG_NextWeapon_f( int localClient ) {
 	playerState_t	*ps;
 	cglc_t			*lc;
 
-	if ( !cg.snap ) {
+	if ( cg.localClients[localClient].clientNum == -1 ) {
 		return;
 	}
 
-	if (localClient >= CG_MaxSplitView() || cg.snap->lcIndex[localClient] == -1) {
-		return;
-	}
-
-	ps = &cg.snap->pss[cg.snap->lcIndex[localClient]];
+	ps = &cg.snap->pss[localClient];
 	lc = &cg.localClients[localClient];
 
 	if ( ps->pm_flags & PMF_FOLLOW ) {
@@ -1609,15 +1605,11 @@ void CG_PrevWeapon_f( int localClient ) {
 	playerState_t	*ps;
 	cglc_t			*lc;
 
-	if ( !cg.snap ) {
+	if ( cg.localClients[localClient].clientNum == -1 ) {
 		return;
 	}
 
-	if (localClient >= CG_MaxSplitView() || cg.snap->lcIndex[localClient] == -1) {
-		return;
-	}
-
-	ps = &cg.snap->pss[cg.snap->lcIndex[localClient]];
+	ps = &cg.snap->pss[localClient];
 	lc = &cg.localClients[localClient];
 
 	if ( ps->pm_flags & PMF_FOLLOW ) {
@@ -1654,15 +1646,11 @@ void CG_Weapon_f( int localClient ) {
 	playerState_t	*ps;
 	cglc_t			*lc;
 
-	if ( !cg.snap ) {
+	if ( cg.localClients[localClient].clientNum == -1 ) {
 		return;
 	}
 
-	if (localClient >= CG_MaxSplitView() || cg.snap->lcIndex[localClient] == -1) {
-		return;
-	}
-
-	ps = &cg.snap->pss[cg.snap->lcIndex[localClient]];
+	ps = &cg.snap->pss[localClient];
 	lc = &cg.localClients[localClient];
 
 	if ( ps->pm_flags & PMF_FOLLOW ) {
@@ -1691,13 +1679,17 @@ CG_OutOfAmmoChange
 The current weapon has just run out of ammo
 ===================
 */
-void CG_OutOfAmmoChange( int localClientNum ) {
+void CG_OutOfAmmoChange( int localClient ) {
 	cglc_t			*lc;
 	playerState_t	*ps;
 	int				i;
 
-	lc = &cg.localClients[localClientNum];
-	ps = &cg.snap->pss[cg.snap->lcIndex[localClientNum]];
+	if ( cg.localClients[localClient].clientNum == -1 ) {
+		return;
+	}
+
+	lc = &cg.localClients[localClient];
+	ps = &cg.snap->pss[localClient];
 
 	lc->weaponSelectTime = cg.time;
 

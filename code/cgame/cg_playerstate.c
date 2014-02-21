@@ -198,12 +198,18 @@ A respawn happened this snapshot
 */
 void CG_Respawn( int clientNum ) {
 	int i;
+	qboolean allClients;
 
 	// no error decay on player movement
 	cg.thisFrameTeleport = qtrue;
 
+	allClients = ( clientNum == -1 );
+
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if (clientNum != -1 && (cg.snap->lcIndex[i] == -1 || cg.snap->pss[cg.snap->lcIndex[i]].clientNum != clientNum)) {
+		if ( cg.localClients[i].clientNum == -1 ) {
+			continue;
+		}
+		if ( !allClients && cg.snap->pss[i].clientNum != clientNum ) {
 			continue;
 		}
 
@@ -211,7 +217,7 @@ void CG_Respawn( int clientNum ) {
 		cg.localClients[i].weaponSelectTime = cg.time;
 
 		// select the weapon the server says we are using
-		cg.localClients[i].weaponSelect = cg.snap->pss[cg.snap->lcIndex[i]].weapon;
+		cg.localClients[i].weaponSelect = cg.snap->pss[i].weapon;
 	}
 }
 

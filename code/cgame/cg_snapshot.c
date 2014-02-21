@@ -94,7 +94,10 @@ void CG_SetInitialSnapshot( snapshot_t *snap ) {
 
 	cg.snap = snap;
 
-	for (i = 0; i < cg.snap->numPSs; i++) {
+	for (i = 0; i < CG_MaxSplitView(); i++) {
+		if ( cg.snap->clientNums[i] == -1 ) {
+			continue;
+		}
 		BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState, qfalse );
 	}
 
@@ -158,7 +161,7 @@ static void CG_TransitionSnapshot( void ) {
 	oldFrame = cg.snap;
 	cg.snap = cg.nextSnap;
 
-	for (i = 0; i < MAX_SPLITVIEW; i++) {
+	for (i = 0; i < CG_MaxSplitView(); i++) {
 		// Server added or removed local client
 		if ( oldFrame && oldFrame->clientNums[i] != cg.snap->clientNums[i] ) {
 			CG_LocalClientRemoved( i );
@@ -167,11 +170,11 @@ static void CG_TransitionSnapshot( void ) {
 				CG_LocalClientAdded( i, cg.snap->clientNums[i] );
 			}
 		}
-	}
 
-	for (i = 0; i < cg.snap->numPSs; i++) {
-		BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState, qfalse );
-		cg_entities[ cg.snap->pss[i].clientNum ].interpolate = qfalse;
+		if ( cg.snap->clientNums[i] != -1 ) {
+			BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState, qfalse );
+			cg_entities[ cg.snap->pss[i].clientNum ].interpolate = qfalse;
+		}
 	}
 
 	for ( i = 0 ; i < cg.snap->numEntities ; i++ ) {
@@ -189,16 +192,16 @@ static void CG_TransitionSnapshot( void ) {
 		playerState_t	*ops, *ps;
 
 		for (i = 0; i < CG_MaxSplitView(); i++) {
-			if (oldFrame->lcIndex[i] == -1 || cg.snap->lcIndex[i] == -1) {
+			if ( oldFrame->clientNums[i] == -1 || oldFrame->clientNums[i] != cg.snap->clientNums[i] ) {
 				continue;
 			}
 
 			cg.cur_localClientNum = i;
 			cg.cur_lc = &cg.localClients[i];
-			cg.cur_ps = &cg.snap->pss[cg.snap->lcIndex[i]];
+			cg.cur_ps = &cg.snap->pss[i];
 
-			ops = &oldFrame->pss[oldFrame->lcIndex[i]];
-			ps = &cg.snap->pss[cg.snap->lcIndex[i]];
+			ops = &oldFrame->pss[i];
+			ps = &cg.snap->pss[i];
 
 			// teleporting checks are irrespective of prediction
 			if ( ( ps->eFlags ^ ops->eFlags ) & EF_TELEPORT_BIT ) {
@@ -232,7 +235,10 @@ static void CG_SetNextSnap( snapshot_t *snap ) {
 
 	cg.nextSnap = snap;
 
-	for (i = 0; i < cg.snap->numPSs; i++) {
+	for (i = 0; i < CG_MaxSplitView(); i++) {
+		if ( cg.snap->clientNums[i] == -1 ) {
+			continue;
+		}
 		BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].nextState, qfalse );
 		cg_entities[ cg.snap->pss[i].clientNum ].interpolate = qtrue;
 	}
@@ -255,7 +261,11 @@ static void CG_SetNextSnap( snapshot_t *snap ) {
 	}
 
 	cg.nextFrameTeleport = qfalse;
-	for (i = 0; i < cg.snap->numPSs; i++) {
+	for (i = 0; i < CG_MaxSplitView(); i++) {
+		if ( snap->clientNums[i] == -1 ) {
+			continue;
+		}
+
 		// if the next frame is a teleport for the playerstate, we
 		// can't interpolate during demos
 		if ( cg.snap && ( ( snap->pss[i].eFlags ^ cg.snap->pss[i].eFlags ) & EF_TELEPORT_BIT ) ) {
@@ -465,8 +475,8 @@ playerState_t *CG_LocalClientPlayerStateForClientNum(int clientNum) {
 	int i;
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if (cg.snap->lcIndex[i] != -1 && cg.snap->pss[cg.snap->lcIndex[i]].clientNum == clientNum) {
-			return &cg.snap->pss[cg.snap->lcIndex[i]];
+		if (cg.snap->clientNums[i] != -1 && cg.snap->pss[i].clientNum == clientNum) {
+			return &cg.snap->pss[i];
 		}
 	}
 

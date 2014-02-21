@@ -390,12 +390,12 @@ static void CG_NextOrder_f( int localPlayerNum ) {
 
 	localClient = &cg.localClients[ localPlayerNum ];
 
-	if ( localClient->clientNum == -1 || cg.snap->lcIndex[localPlayerNum] == -1 ) {
+	if ( localClient->clientNum == -1 ) {
 		return;
 	}
 
-	clientNum = cg.snap->pss[ cg.snap->lcIndex[ localPlayerNum ] ].clientNum;
-	team = cg.snap->pss[ cg.snap->lcIndex[ localPlayerNum ] ].persistant[PERS_TEAM];
+	clientNum = cg.snap->pss[ localPlayerNum ].clientNum;
+	team = cg.snap->pss[ localPlayerNum ].persistant[PERS_TEAM];
 
 	ci = cgs.clientinfo + clientNum;
 

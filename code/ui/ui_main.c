@@ -1663,16 +1663,11 @@ static void UI_BuildPlayerList( void ) {
 	uiInfo.playerCount = 0;
 	uiInfo.myTeamCount = 0;
 
-	// get followed player's clientNum, if local client 0 exists...
-	if ( cg.snap && cg.snap->lcIndex[0] != -1 ) {
-		uiInfo.playerNumber = cg.snap->pss[ cg.snap->lcIndex[0] ].clientNum;
-	} else {
-		uiInfo.playerNumber = cg.localClients[0].clientNum;
-
-		if ( uiInfo.playerNumber == -1 ) {
-			return;
-		}
+	if ( !cg.snap || cg.localClients[0].clientNum == -1 ) {
+		return;
 	}
+
+	uiInfo.playerNumber = cg.snap->pss[0].clientNum;
 
 	trap_GetConfigString( CS_PLAYERS + uiInfo.playerNumber, info, MAX_INFO_STRING );
 	uiInfo.teamLeader = atoi(Info_ValueForKey(info, "tl"));

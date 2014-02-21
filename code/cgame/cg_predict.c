@@ -85,7 +85,10 @@ void CG_BuildSolidList( void ) {
 	}
 
 	// Add local clients to solid entity list
-	for ( i = 0 ; i < snap->numPSs ; i++ ) {
+	for ( i = 0 ; i < CG_MaxSplitView() ; i++ ) {
+		if ( snap->clientNums[i] == -1 ) {
+			continue;
+		}
 		ps = &snap->pss[i];
 		cent = &cg_entities[ps->clientNum];
 		if ( ps->linked && ps->contents ) {
@@ -314,13 +317,13 @@ static void CG_InterpolatePlayerState( qboolean grabAngles ) {
 		return;
 	}
 
-	if (prev->lcIndex[cg.cur_localClientNum] == -1 ||
-		next->lcIndex[cg.cur_localClientNum] == -1) {
+	if (prev->clientNums[cg.cur_localClientNum] == -1 ||
+		next->clientNums[cg.cur_localClientNum] == -1) {
 		return;
 	}
 
-	prevPS = &prev->pss[prev->lcIndex[cg.cur_localClientNum]];
-	nextPS = &next->pss[next->lcIndex[cg.cur_localClientNum]];
+	prevPS = &prev->pss[cg.cur_localClientNum];
+	nextPS = &next->pss[cg.cur_localClientNum];
 
 	f = (float)( cg.time - prev->serverTime ) / ( next->serverTime - prev->serverTime );
 
@@ -578,8 +581,8 @@ void CG_PredictPlayerState( void ) {
 	// because predicted player positions are going to 
 	// be ahead of everything else anyway
 	if ( cg.nextSnap && !cg.nextFrameTeleport && !cg.thisFrameTeleport
-		&& cg.nextSnap->lcIndex[cg.cur_localClientNum] != -1) {
-		cg.cur_lc->predictedPlayerState = cg.nextSnap->pss[cg.nextSnap->lcIndex[cg.cur_localClientNum]];
+		&& cg.nextSnap->clientNums[cg.cur_localClientNum] != -1) {
+		cg.cur_lc->predictedPlayerState = cg.nextSnap->pss[cg.cur_localClientNum];
 		cg.physicsTime = cg.nextSnap->serverTime;
 	} else {
 		cg.cur_lc->predictedPlayerState = *cg.cur_ps;

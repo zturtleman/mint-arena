@@ -875,7 +875,7 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 				continue;
 			}
 
-			if ( vchat->clientNum != cg.snap->pss[cg.snap->lcIndex[i]].clientNum ) {
+			if ( vchat->clientNum != cg.snap->pss[i].clientNum ) {
 				int orderTask = CG_ValidOrder(vchat->cmd);
 				if (orderTask > 0) {
 					cg.localClients[i].acceptOrderTime = cg.time + 5000;

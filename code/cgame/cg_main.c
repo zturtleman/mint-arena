@@ -679,15 +679,15 @@ int CG_CrosshairPlayer( int localClientNum ) {
 }
 
 int CG_LastAttacker( int localClientNum ) {
-	if (!cg.snap || localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
+	if (!cg.snap || localClientNum < 0 || localClientNum >= CG_MaxSplitView() ) {
 		return -1;
 	}
 
-	if ( !cg.localClients[localClientNum].attackerTime ) {
+	if ( !cg.localClients[localClientNum].attackerTime || cg.localClients[localClientNum].clientNum == -1 ) {
 		return -1;
 	}
 
-	return cg.snap->pss[cg.snap->lcIndex[localClientNum]].persistant[PERS_ATTACKER];
+	return cg.snap->pss[localClientNum].persistant[PERS_ATTACKER];
 }
 
 /*

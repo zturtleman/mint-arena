@@ -74,7 +74,7 @@ void CG_CheckOrderPending( int localPlayerNum ) {
 
 	localClient = &cg.localClients[localPlayerNum];
 
-	if ( localClient->clientNum == -1 || cg.snap->lcIndex[localPlayerNum] == -1 ) {
+	if ( localClient->clientNum == -1 ) {
 		return;
 	}
 
@@ -89,9 +89,9 @@ void CG_CheckOrderPending( int localPlayerNum ) {
 		p1 = p2 = NULL;
 		b[0] = '\0';
 
-		clientNum = cg.snap->pss[ cg.snap->lcIndex[ localPlayerNum ] ].clientNum;
-		team = cg.snap->pss[ cg.snap->lcIndex[ localPlayerNum ] ].persistant[PERS_TEAM];
-		selectedPlayer = cg_currentSelectedPlayer[ localPlayerNum ].integer;
+		clientNum = cg.snap->pss[localPlayerNum].clientNum;
+		team = cg.snap->pss[localPlayerNum].persistant[PERS_TEAM];
+		selectedPlayer = cg_currentSelectedPlayer[localPlayerNum].integer;
 
 		//ci = cgs.clientinfo + sortedTeamPlayers[team][selectedPlayer];
 

@@ -967,22 +967,22 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 	// Use single camera/viewport at intermission
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if (cg.snap->lcIndex[i] != -1 && cg.snap->pss[i].pm_type != PM_INTERMISSION) {
+		if ( cg.localClients[i].clientNum != -1 && cg.snap->pss[i].pm_type != PM_INTERMISSION ) {
 			// client present and not at intermission, keep viewports separate.
 			break;
 		}
 	}
-	cg.singleCamera = (cg.snap->numPSs > 1) && (i == CG_MaxSplitView());
+	cg.singleCamera = ( i > 1 && i == CG_MaxSplitView() );
 
 	cg.numViewports = 0;
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if (cg.snap->lcIndex[i] == -1) {
+		if ( cg.localClients[i].clientNum == -1 ) {
 			renderClientViewport[i] = qfalse;
 			continue;
 		}
 		cg.cur_localClientNum = i;
 		cg.cur_lc = &cg.localClients[i];
-		cg.cur_ps = &cg.snap->pss[cg.snap->lcIndex[i]];
+		cg.cur_ps = &cg.snap->pss[i];
 
 		// Check if viewport should be drawn.
 		if ( cg.singleCamera && cg.numViewports >= 1 ) {
@@ -1025,7 +1025,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		cg.viewport++;
 		cg.cur_localClientNum = i;
 		cg.cur_lc = &cg.localClients[i];
-		cg.cur_ps = &cg.snap->pss[cg.snap->lcIndex[i]];
+		cg.cur_ps = &cg.snap->pss[i];
 
 		// decide on third person view
 		cg.cur_lc->renderingThirdPerson = cg_thirdPerson[cg.cur_localClientNum].integer || (cg.cur_ps->stats[STAT_HEALTH] <= 0);
@@ -1056,7 +1056,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 			CG_AddTestModel();
 		}
 		cg.refdef.time = cg.time;
-		memcpy( cg.refdef.areamask, cg.snap->areamask[cg.snap->lcIndex[i]], sizeof( cg.refdef.areamask ) );
+		memcpy( cg.refdef.areamask, cg.snap->areamask[i], sizeof( cg.refdef.areamask ) );
 
 		// warning sounds when powerup is wearing off
 		CG_PowerupTimerSounds();

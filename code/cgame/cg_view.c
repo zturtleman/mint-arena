@@ -972,7 +972,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 			break;
 		}
 	}
-	cg.singleCamera = ( i > 1 && i == CG_MaxSplitView() );
+	cg.singleCamera = ( CG_NumLocalClients() > 1 && i == CG_MaxSplitView() );
 
 	cg.numViewports = 0;
 	for (i = 0; i < CG_MaxSplitView(); i++) {

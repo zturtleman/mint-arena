@@ -102,6 +102,7 @@ int			trap_GetConfigString( int index, char* buff, int buffsize );
 void		trap_SetMapTitle( const char *name );
 void		trap_SetViewAngles( int localPlayerNum, const vec3_t angles );
 void		trap_GetViewAngles( int localPlayerNum, const vec3_t angles );
+void		trap_SV_Shutdown( const char *msg );
 
 // model collision
 void		trap_CM_LoadMap( const char *mapname );

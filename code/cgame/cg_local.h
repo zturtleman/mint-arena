@@ -1417,6 +1417,8 @@ void CG_AddNotifyText( int realTime, qboolean restoredText );
 
 void CG_SetupDlightstyles( void );
 
+void CG_KillServer( void );
+
 
 //
 // cg_view.c

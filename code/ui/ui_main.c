@@ -2067,11 +2067,8 @@ static qboolean UI_OwnerDrawVisible(int flags) {
 				vis = qfalse;
 			} else {
 				if (uiInfo.soundHighScore) {
-					if (trap_Cvar_VariableValue("sv_killserver") == 0) {
-						// wait on server to go down before playing sound
-						trap_S_StartLocalSound(uiInfo.newHighScoreSound, CHAN_ANNOUNCER);
-						uiInfo.soundHighScore = qfalse;
-					}
+					trap_S_StartLocalSound(uiInfo.newHighScoreSound, CHAN_ANNOUNCER);
+					uiInfo.soundHighScore = qfalse;
 				}
 			}
 			flags &= ~UI_SHOW_NEWHIGHSCORE;
@@ -5133,7 +5130,7 @@ void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 
 		  return;
 	  case UIMENU_MAIN:
-			trap_Cvar_SetValue( "sv_killserver", 1 );
+			CG_KillServer();
 			UI_EnterMenu();
 			//trap_S_StartLocalSound( trap_S_RegisterSound("sound/misc/menu_background.wav", qfalse) , CHAN_LOCAL_SOUND );
 			//trap_S_StartBackgroundTrack("sound/misc/menu_background.wav", NULL, 1.0f, 1.0f);
@@ -5156,7 +5153,7 @@ void UI_SetActiveMenu( uiMenuCommand_t menu ) {
       Menus_ActivateByName("team");
 		  return;
 	  case UIMENU_POSTGAME:
-			trap_Cvar_SetValue( "sv_killserver", 1 );
+			CG_KillServer();
 			UI_EnterMenu();
 			if (uiInfo.inGameLoad) {
 				UI_LoadNonIngame();

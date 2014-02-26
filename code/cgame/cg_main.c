@@ -2412,6 +2412,32 @@ void CG_AssetCache( void ) {
 	cgDC.Assets.sliderThumb = trap_R_RegisterShaderNoMip( ASSET_SLIDER_THUMB );
 }
 #endif
+
+/*
+=================
+CG_ClearState
+
+Called at init and killing server from UI
+=================
+*/
+void CG_ClearState( qboolean everything ) {
+	int i;
+
+	if ( everything ) {
+		memset( &cgs, 0, sizeof( cgs ) );
+	}
+	memset( &cg, 0, sizeof( cg ) );
+	memset( cg_entities, 0, sizeof(cg_entities) );
+	memset( cg_weapons, 0, sizeof(cg_weapons) );
+	memset( cg_items, 0, sizeof(cg_items) );
+
+	cg.cinematicHandle = -1;
+
+	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+		cg.localClients[i].clientNum = -1;
+	}
+}
+
 /*
 =================
 CG_Init
@@ -2422,15 +2448,10 @@ Called after every cgame load, such as main menu, level change, or subsystem res
 void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 
 	// clear everything
-	memset( &cgs, 0, sizeof( cgs ) );
-	memset( &cg, 0, sizeof( cg ) );
-	memset( cg_entities, 0, sizeof(cg_entities) );
-	memset( cg_weapons, 0, sizeof(cg_weapons) );
-	memset( cg_items, 0, sizeof(cg_items) );
+	CG_ClearState( qtrue );
 
 	cg.connState = state;
 	cg.connected = ( cg.connState > CA_CONNECTED && cg.connState != CA_CINEMATIC );
-	cg.cinematicHandle = -1;
 
 	cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
 
@@ -2609,6 +2630,25 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	trap_S_ClearLoopingSounds( qtrue );
 
 	CG_RestoreSnapshot();
+}
+
+/*
+=================
+CG_KillServer
+
+Called by UI to kill local server
+=================
+*/
+void CG_KillServer( void ) {
+	if ( !cgs.localServer ) {
+		return;
+	}
+
+	trap_SV_Shutdown( "Server was killed" );
+
+	CG_ClearState( qfalse );
+
+	cgs.localServer = qfalse;
 }
 
 /*

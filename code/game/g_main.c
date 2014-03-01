@@ -662,8 +662,16 @@ int G_MapRestart( int levelTime, int restartTime ) {
 	int			delay;
 	char		buf[12];
 
+	if ( trap_Argc() > 1 ) {
+		trap_Argv( 1, buf, sizeof (buf) );
+		delay = atoi( buf );
+	}
+	else {
+		delay = 5;
+	}
+
 	// restart time hit
-	if ( restartTime && levelTime >= restartTime ) {
+	if ( ( restartTime && levelTime >= restartTime ) || ( !restartTime && delay <= 0 ) ) {
 		if ( g_doFullMapRestart ) {
 			// force full map reload
 			return -1;
@@ -682,19 +690,7 @@ int G_MapRestart( int levelTime, int restartTime ) {
 		return 0;
 	}
 
-	if ( trap_Argc() > 1 ) {
-		trap_Argv( 1, buf, sizeof (buf) );
-		delay = atoi( buf );
-	}
-	else {
-		delay = 5;
-	}
-
-	if ( delay > 0 ) {
-		restartTime = levelTime + delay * 1000;
-	} else {
-		restartTime = 0;
-	}
+	restartTime = levelTime + delay * 1000;
 
 	trap_SetConfigstring( CS_WARMUP, va( "%i", restartTime ) );
 	return restartTime;

@@ -60,8 +60,6 @@ gentity_t		g_entities[MAX_GENTITIES];
 gclient_t		g_clients[MAX_CLIENTS];
 gconnection_t	g_connections[MAX_CLIENTS];
 
-qboolean	g_doFullMapRestart = qfalse;
-
 vmCvar_t	g_gametype;
 vmCvar_t	g_dmflags;
 vmCvar_t	g_fraglimit;
@@ -455,10 +453,6 @@ void G_UpdateCvars( void ) {
 				if ( cv->gameFlags & GCF_TEAM_SHADER ) {
 					remapped = qtrue;
 				}
-
-				if ( cv->gameFlags & GCF_DO_RESTART ) {
-					g_doFullMapRestart = qtrue;
-				}
 			}
 		}
 	}
@@ -651,6 +645,33 @@ void G_VidRestart( void ) {
 
 /*
 =================
+G_FullMapRestart
+
+Check if full map restart is needed for some cvars to take affect.
+=================
+*/
+qboolean G_NeedFullMapRestart( void ) {
+	int			i;
+	cvarTable_t	*cv;
+	char		value[ MAX_CVAR_VALUE_STRING ];
+	char		latched[ MAX_CVAR_VALUE_STRING ];
+
+	for ( i = 0, cv = gameCvarTable ; i < gameCvarTableSize ; i++, cv++ ) {
+		if ( cv->gameFlags & GCF_DO_RESTART ) {
+			trap_Cvar_VariableStringBuffer( cv->cvarName, value, sizeof (value) );
+			trap_Cvar_LatchedVariableStringBuffer( cv->cvarName, latched, sizeof (latched) );
+
+			if ( strcmp( value, latched ) ) {
+				return qtrue;
+			}
+		}
+	}
+
+	return qfalse;
+}
+
+/*
+=================
 G_MapRestart
 
 This is called by the server when map_restart command is issued and when restart time is hit.
@@ -672,8 +693,7 @@ int G_MapRestart( int levelTime, int restartTime ) {
 
 	// restart time hit
 	if ( ( restartTime && levelTime >= restartTime ) || ( !restartTime && delay <= 0 ) ) {
-		if ( g_doFullMapRestart ) {
-			// force full map reload
+		if ( G_NeedFullMapRestart() ) {
 			return -1;
 		}
 

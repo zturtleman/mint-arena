@@ -49,6 +49,12 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define	MAX_LOCATIONS		64
 
+#define	MAX_SAY_TEXT	150
+
+#define	SAY_ALL			0
+#define	SAY_TEAM		1
+#define	SAY_TELL		2
+
 #define	MODELINDEX_BITS		10
 
 // these are networked using the modelindex and/or modelindex2 field, must fit in MODELINDEX_BITS

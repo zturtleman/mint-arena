@@ -335,7 +335,7 @@ qhandle_t trap_R_RegisterShaderNoMip( const char *name ) {
 }
 
 void trap_R_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font) {
-	syscall(CG_R_REGISTERFONT, fontName, pointSize, font );
+	syscall(CG_R_REGISTERFONT, fontName, pointSize, font, sizeof ( fontInfo_t ) );
 }
 
 qhandle_t	trap_R_AllocSkinSurface( const char *surface, qhandle_t hShader ) {
@@ -351,7 +351,7 @@ void	trap_R_ClearScene( void ) {
 }
 
 void	trap_R_AddPolyRefEntityToScene( const refEntity_t *re, int numVerts, const polyVert_t *verts, int numPolys ) {
-	syscall( CG_R_ADDPOLYREFENTITYTOSCENE, re, numVerts, verts, numPolys );
+	syscall( CG_R_ADDPOLYREFENTITYTOSCENE, re, sizeof ( refEntity_t ), numVerts, verts, numPolys );
 }
 
 void	trap_R_AddRefEntityToScene( const refEntity_t *re ) {
@@ -359,7 +359,7 @@ void	trap_R_AddRefEntityToScene( const refEntity_t *re ) {
 		return;
 	}
 
-	syscall( CG_R_ADDREFENTITYTOSCENE, re );
+	syscall( CG_R_ADDREFENTITYTOSCENE, re, sizeof ( refEntity_t ) );
 }
 
 void	trap_R_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts ) {
@@ -391,7 +391,7 @@ int		trap_R_LightForPoint( vec3_t point, vec3_t ambientLight, vec3_t directedLig
 }
 
 void	trap_R_RenderScene( const refdef_t *fd ) {
-	syscall( CG_R_RENDERSCENE, fd );
+	syscall( CG_R_RENDERSCENE, fd, sizeof ( refdef_t ) );
 }
 
 void	trap_R_SetColor( const float *rgba ) {
@@ -471,7 +471,7 @@ void		trap_GetClipboardData( char *buf, int bufsize ) {
 }
 
 void		trap_GetGlconfig( glconfig_t *glconfig ) {
-	syscall( CG_GETGLCONFIG, glconfig );
+	syscall( CG_GETGLCONFIG, glconfig, sizeof ( glconfig_t )  );
 }
 
 int trap_GetVoipTime( int clientNum ) {
@@ -507,15 +507,15 @@ void		trap_SV_Shutdown( const char *msg ) {
 }
 
 void		trap_GetGameState( gameState_t *gamestate ) {
-	syscall( CG_GETGAMESTATE, gamestate );
+	syscall( CG_GETGAMESTATE, gamestate, sizeof ( gameState_t ) );
 }
 
 void		trap_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime ) {
 	syscall( CG_GETCURRENTSNAPSHOTNUMBER, snapshotNumber, serverTime );
 }
 
-qboolean	trap_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerStates, void *entities, int maxEntities ) {
-	return syscall( CG_GETSNAPSHOT, snapshotNumber, snapshot, playerStates, entities, maxEntities );
+qboolean	trap_GetSnapshot( int snapshotNumber, vmSnapshot_t *snapshot, void *playerStates, void *entities, int maxEntities ) {
+	return syscall( CG_GETSNAPSHOT, snapshotNumber, snapshot, sizeof ( vmSnapshot_t ), playerStates, entities, maxEntities );
 }
 
 qboolean	trap_GetServerCommand( int serverCommandNumber ) {
@@ -556,7 +556,7 @@ int			trap_GetDemoFileInfo( const char *demoName, int *protocol, int *length, ch
 }
 
 void trap_GetClientState( uiClientState_t *state ) {
-	syscall( CG_GETCLIENTSTATE, state );
+	syscall( CG_GETCLIENTSTATE, state, sizeof ( uiClientState_t ) );
 }
 
 int trap_GetConfigString( int index, char* buff, int buffsize ) {

@@ -1299,7 +1299,7 @@ int BotAIShutdownClient(int client, qboolean restart) {
 	trap_SetConfigstring(CS_BOTINFO + bs->client, "");
 
 	BotFreeMoveState(bs->ms);
-	//free the goal state`			
+	//free the goal state
 	BotFreeGoalState(bs->gs);
 	//free the chat file
 	trap_BotFreeChatState(bs->cs);

@@ -187,6 +187,10 @@ void SP_misc_gamemodel( gentity_t *ent ) {
 	G_FreeEntity( ent );
 }
 
+// Loaded by CGame
+void SP_props_skyportal( gentity_t *ent ) {
+	G_FreeEntity( ent );
+}
 
 void locateMaster( gentity_t *ent ) {
 	ent->target_ent = G_PickTarget( ent->target );

@@ -186,6 +186,25 @@ void SP_misc_gamemodel( void ) {
 	}
 }
 
+/*QUAKED props_skyportal (.6 .7 .7) (-8 -8 0) (8 8 16)
+"fov" for the skybox default is 90
+To have the portal sky fogged, enter any of the following values:
+"fogcolor" (r g b) (values 0.0-1.0)
+"fognear" distance from entity to start fogging (FIXME? Supported by RTCW, but not Spearmint)
+"fogfar" distance from entity that fog is opaque
+
+*/
+void SP_skyportal( void ) {
+	//int fogn;
+
+	cg.hasSkyPortal = qtrue;
+
+	CG_SpawnVector( "origin", "0 0 0", cg.skyPortalOrigin );
+	CG_SpawnVector( "fogcolor", "0 0 0", cg.skyPortalFogColor );
+	//CG_SpawnInt( "fognear", "0", &fogn );
+	CG_SpawnInt( "fogfar", "300", &cg.skyPortalFogDepthForOpaque );
+}
+
 typedef struct {
 	char    *name;
 	void ( *spawn )( void );
@@ -194,6 +213,7 @@ typedef struct {
 spawn_t spawns[] = {
 	{0, 0},
 	{"misc_gamemodel",               SP_misc_gamemodel},
+	{"props_skyportal",              SP_skyportal},
 };
 
 int numSpawns = ARRAY_LEN( spawns );

@@ -633,6 +633,38 @@ static int CG_CalcFov( void ) {
 }
 
 
+/*
+==============
+CG_DrawSkyBoxPortal
+==============
+*/
+void CG_DrawSkyBoxPortal( void ) {
+	refdef_t backuprefdef;
+
+	if ( !cg_skybox.integer || !cg.hasSkyPortal ) {
+		return;
+	}
+
+	backuprefdef = cg.refdef;
+
+	VectorCopy( cg.skyPortalOrigin, cg.refdef.vieworg );
+
+	if ( cg.skyPortalFogDepthForOpaque > 0 ) {
+		cg.refdef.fogType = FT_LINEAR;
+		cg.refdef.fogDensity = 1.0f;
+		cg.refdef.fogDepthForOpaque = cg.skyPortalFogDepthForOpaque;
+	}
+	VectorCopy( cg.skyPortalFogColor, cg.refdef.fogColor );
+
+	cg.refdef.time = cg.time;
+
+	// draw the skybox
+	trap_R_RenderScene( &cg.refdef );
+
+	cg.refdef = backuprefdef;
+	cg.refdef.rdflags |= RDF_NOSKY;
+}
+
 
 /*
 ===============
@@ -1035,6 +1067,8 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		// build cg.refdef
 		inwater = CG_CalcViewValues();
 		CG_SetupFrustum();
+
+		CG_DrawSkyBoxPortal();
 
 		// first person blend blobs, done after AnglesToAxis
 		if ( !cg.cur_lc->renderingThirdPerson ) {

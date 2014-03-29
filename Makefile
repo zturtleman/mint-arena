@@ -1166,6 +1166,7 @@ $(B)/$(MISSIONPACK)/vm/mint-cgame.qvm: $(MPCGVMOBJ) $(GDIR)/bg_syscalls.asm $(Q3
 
 Q3GOBJ = \
   $(B)/$(BASEGAME)/game/g_main.o \
+  $(B)/$(BASEGAME)/game/ai_char.o \
   $(B)/$(BASEGAME)/game/ai_chat.o \
   $(B)/$(BASEGAME)/game/ai_cmd.o \
   $(B)/$(BASEGAME)/game/ai_dmnet.o \
@@ -1223,6 +1224,7 @@ $(B)/$(BASEGAME)/vm/mint-game.qvm: $(Q3GVMOBJ) $(GDIR)/bg_syscalls.asm $(Q3ASM)
 
 MPGOBJ = \
   $(B)/$(MISSIONPACK)/game/g_main.o \
+  $(B)/$(MISSIONPACK)/game/ai_char.o \
   $(B)/$(MISSIONPACK)/game/ai_chat.o \
   $(B)/$(MISSIONPACK)/game/ai_cmd.o \
   $(B)/$(MISSIONPACK)/game/ai_dmnet.o \

@@ -567,38 +567,6 @@ int trap_AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs) {
 }
 
 
-int trap_BotLoadCharacter(char *charfile, float skill) {
-	return syscall( BOTLIB_AI_LOAD_CHARACTER, charfile, PASSFLOAT(skill));
-}
-
-void trap_BotFreeCharacter(int character) {
-	syscall( BOTLIB_AI_FREE_CHARACTER, character );
-}
-
-float trap_Characteristic_Float(int character, int index) {
-	floatint_t fi;
-	fi.i = syscall( BOTLIB_AI_CHARACTERISTIC_FLOAT, character, index );
-	return fi.f;
-}
-
-float trap_Characteristic_BFloat(int character, int index, float min, float max) {
-	floatint_t fi;
-	fi.i = syscall( BOTLIB_AI_CHARACTERISTIC_BFLOAT, character, index, PASSFLOAT(min), PASSFLOAT(max) );
-	return fi.f;
-}
-
-int trap_Characteristic_Integer(int character, int index) {
-	return syscall( BOTLIB_AI_CHARACTERISTIC_INTEGER, character, index );
-}
-
-int trap_Characteristic_BInteger(int character, int index, int min, int max) {
-	return syscall( BOTLIB_AI_CHARACTERISTIC_BINTEGER, character, index, min, max );
-}
-
-void trap_Characteristic_String(int character, int index, char *buf, int size) {
-	syscall( BOTLIB_AI_CHARACTERISTIC_STRING, character, index, buf, size );
-}
-
 int trap_BotAllocChatState(void) {
 	return syscall( BOTLIB_AI_ALLOC_CHAT_STATE );
 }

@@ -30,11 +30,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 
 /*****************************************************************************
- * name:		be_ai_gen.h
+ * name:		ai_gen.h
  *
  * desc:		genetic selection
  *
- * $Archive: /source/code/botlib/be_ai_gen.h $
+ * $Archive: /source/code/game/ai_gen.h $
  *
  *****************************************************************************/
 

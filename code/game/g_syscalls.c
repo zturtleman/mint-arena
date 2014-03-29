@@ -680,10 +680,6 @@ void trap_BotSetChatName(int chatstate, char *name, int client) {
 }
 
 
-int trap_GeneticParentsAndChildSelection(int numranks, float *ranks, int *parent1, int *parent2, int *child) {
-	return syscall( BOTLIB_AI_GENETIC_PARENTS_AND_CHILD_SELECTION, numranks, ranks, parent1, parent2, child );
-}
-
 int trap_PC_AddGlobalDefine(char *string) {
 	return syscall( G_PC_ADD_GLOBAL_DEFINE, string );
 }

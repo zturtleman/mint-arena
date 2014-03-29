@@ -181,7 +181,5 @@ int		trap_BotLoadChatFile(int chatstate, char *chatfile, char *chatname);
 void	trap_BotSetChatGender(int chatstate, int gender);
 void	trap_BotSetChatName(int chatstate, char *name, int client);
 
-int		trap_GeneticParentsAndChildSelection(int numranks, float *ranks, int *parent1, int *parent2, int *child);
-
 #endif
 

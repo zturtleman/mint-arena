@@ -1171,6 +1171,7 @@ Q3GOBJ = \
   $(B)/$(BASEGAME)/game/ai_dmnet.o \
   $(B)/$(BASEGAME)/game/ai_dmq3.o \
   $(B)/$(BASEGAME)/game/ai_ea.o \
+  $(B)/$(BASEGAME)/game/ai_gen.o \
   $(B)/$(BASEGAME)/game/ai_goal.o \
   $(B)/$(BASEGAME)/game/ai_main.o \
   $(B)/$(BASEGAME)/game/ai_move.o \
@@ -1227,6 +1228,7 @@ MPGOBJ = \
   $(B)/$(MISSIONPACK)/game/ai_dmnet.o \
   $(B)/$(MISSIONPACK)/game/ai_dmq3.o \
   $(B)/$(MISSIONPACK)/game/ai_ea.o \
+  $(B)/$(MISSIONPACK)/game/ai_gen.o \
   $(B)/$(MISSIONPACK)/game/ai_goal.o \
   $(B)/$(MISSIONPACK)/game/ai_main.o \
   $(B)/$(MISSIONPACK)/game/ai_move.o \

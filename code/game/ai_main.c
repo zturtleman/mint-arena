@@ -44,9 +44,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../botlib/be_aas.h"
 #include "../botlib/be_ai_char.h"
 #include "../botlib/be_ai_chat.h"
-#include "../botlib/be_ai_gen.h"
 //
 #include "ai_ea.h"
+#include "ai_gen.h"
 #include "ai_goal.h"
 #include "ai_move.h"
 #include "ai_weap.h"
@@ -531,7 +531,7 @@ void BotInterbreedBots(void) {
 		}
 	}
 
-	if (trap_GeneticParentsAndChildSelection(MAX_CLIENTS, ranks, &parent1, &parent2, &child)) {
+	if (GeneticParentsAndChildSelection(MAX_CLIENTS, ranks, &parent1, &parent2, &child)) {
 		BotInterbreedGoalFuzzyLogic(botstates[parent1]->gs, botstates[parent2]->gs, botstates[child]->gs);
 		BotMutateGoalFuzzyLogic(botstates[child]->gs, 1);
 	}

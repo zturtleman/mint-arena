@@ -1317,9 +1317,9 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 		maxs[2] -= 10; //a little lower to avoid low ceiling
 	} //end if
 	VectorMA(ms->origin, 3, dir, end);
-	trap_Trace(&trace, ms->origin, mins, maxs, end, ms->entitynum, MASK_PLAYERSOLID);
+	trap_ClipToEntities(&trace, ms->origin, mins, maxs, end, ms->entitynum, MASK_PLAYERSOLID);
 	//if not started in solid and not hitting the world entity
-	if (!trace.startsolid && (trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE) )
+	if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE)
 	{
 		result->blocked = qtrue;
 		result->blockentity = trace.entityNum;
@@ -1331,8 +1331,8 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 		//check if the bot is standing on something
 		trap_AAS_PresenceTypeBoundingBox(ms->presencetype, mins, maxs);
 		VectorMA(ms->origin, -3, up, end);
-		trap_Trace(&trace, ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
-		if (!trace.startsolid && (trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE) )
+		trap_ClipToEntities(&trace, ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+		if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE)
 		{
 			result->blocked = qtrue;
 			result->blockentity = trace.entityNum;

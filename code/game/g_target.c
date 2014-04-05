@@ -228,7 +228,9 @@ void SP_target_speaker( gentity_t *ent ) {
 	G_SpawnFloat( "random", "0", &ent->random );
 
 	if ( !G_SpawnString( "noise", "NOSOUND", &s ) ) {
-		G_Error( "target_speaker without a noise key at %s", vtos( ent->s.origin ) );
+		G_Printf( "target_speaker without a noise key at %s\n", vtos( ent->s.origin ) );
+		G_FreeEntity( ent );
+		return;
 	}
 
 	// force all client relative sounds to be "activator" speakers that

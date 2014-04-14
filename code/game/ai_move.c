@@ -1299,18 +1299,35 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 int BotMoveInDirection(int movestate, vec3_t dir, float speed, int type)
 {
 	bot_movestate_t *ms;
+	qboolean success;
 
 	ms = BotMoveStateFromHandle(movestate);
 	if (!ms) return qfalse;
 	//if swimming
 	if (trap_AAS_Swimming(ms->origin))
 	{
-		return BotSwimInDirection(ms, dir, speed, type);
+		success = BotSwimInDirection(ms, dir, speed, type);
 	} //end if
 	else
 	{
-		return BotWalkInDirection(ms, dir, speed, type);
+		success = BotWalkInDirection(ms, dir, speed, type);
 	} //end else
+	// check if blocked
+	if (success) {
+		bot_moveresult_t result;
+		bot_input_t		bi;
+
+		Com_Memset(&result, 0, sizeof (result));
+
+		EA_GetInput(ms->client, ms->thinktime, &bi);
+		BotCheckBlocked(ms, bi.dir, qfalse, &result);
+
+		if (result.blocked) {
+			success = qfalse;
+		}
+	}
+	//
+	return success;
 } //end of the function BotMoveInDirection
 //===========================================================================
 //

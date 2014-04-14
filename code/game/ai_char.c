@@ -519,7 +519,7 @@ int BotInterpolateCharacters(int handle1, int handle2, float desiredskill)
 	if (!ch1 || !ch2)
 		return 0;
 	//find a free spot for a character
-	for (handle = 0; handle < MAX_CLIENTS; handle++)
+	for (handle = 1; handle <= MAX_CLIENTS; handle++)
 	{
 		if (!botcharacters[handle].skill) break;
 	} //end for

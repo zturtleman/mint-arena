@@ -2609,7 +2609,7 @@ Draw info for bot that client is following.
 =================
 */
 static qboolean CG_DrawBotInfo( int y ) {
-	const char	*info, *str, *leader, *carrying, *action;
+	const char	*info, *str, *leader, *carrying, *action, *node;
 	int x;
 
 	if ( !(cg.cur_ps->pm_flags & PMF_FOLLOW) ) {
@@ -2620,6 +2620,17 @@ static qboolean CG_DrawBotInfo( int y ) {
 
 	if (!*info) {
 		return qfalse;
+	}
+
+	node = Info_ValueForKey(info, "n");
+
+	if ( *node ) {
+		str = va("AI Node: %s", node);
+		x = 0.5 * ( 640 - BIGCHAR_WIDTH * CG_DrawStrlen( str ) );
+
+		CG_DrawBigString( x, y, str, 1.0F );
+
+		y += BIGCHAR_HEIGHT + 2;
 	}
 
 	action = Info_ValueForKey(info, "a");

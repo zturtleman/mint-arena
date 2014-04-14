@@ -298,7 +298,8 @@ void BotReportStatus(bot_state_t *bs) {
 	char netname[MAX_MESSAGE_SIZE];
 	char leader[MAX_MESSAGE_SIZE];
 	char carrying[MAX_MESSAGE_SIZE];
-	char *action;
+	char action[MAX_MESSAGE_SIZE];
+	char node[MAX_MESSAGE_SIZE];
 
 	trap_GetConfigstring(CS_BOTINFO+bs->client, buf, sizeof(buf));
 
@@ -310,8 +311,9 @@ void BotReportStatus(bot_state_t *bs) {
 
 	Q_strncpyz( leader, Info_ValueForKey(buf, "l"), sizeof(leader) );
 	Q_strncpyz( carrying, Info_ValueForKey(buf, "c"), sizeof(carrying) );
-	action = Info_ValueForKey(buf, "a");
-	BotAI_Print(PRT_MESSAGE, "%-20s%-1s%-2s: %s\n", netname, leader, carrying, action);
+	Q_strncpyz( action, Info_ValueForKey(buf, "a"), sizeof(action) );
+	Q_strncpyz( node, Info_ValueForKey(buf, "n"), sizeof(node) );
+	BotAI_Print(PRT_MESSAGE, "%-20s%-1s%-2s: %s (%s)\n", netname, leader, carrying, action, node);
 }
 
 /*
@@ -468,10 +470,11 @@ void BotSetInfoConfigString(bot_state_t *bs) {
 			break;
 		}
 	}
-  	cs = va("l\\%s\\c\\%s\\a\\%s",
+	cs = va("l\\%s\\c\\%s\\a\\%s\\n\\%s",
 				leader,
 				carrying,
-				action);
+				action,
+				bs->ainodename);
   	trap_SetConfigstring (CS_BOTINFO + bs->client, cs);
 }
 

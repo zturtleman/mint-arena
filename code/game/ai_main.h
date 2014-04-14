@@ -139,6 +139,7 @@ typedef struct bot_state_s
 	//
 	bot_settings_t settings;						//several bot settings
 	int (*ainode)(struct bot_state_s *bs);			//current AI node
+	char ainodename[32];							//current AI node name
 	float thinktime;								//time the bot thinks this frame
 	vec3_t origin;									//origin of the bot
 	vec3_t velocity;								//velocity of the bot

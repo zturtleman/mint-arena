@@ -4553,15 +4553,23 @@ BotRandomMove
 */
 void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult) {
 	vec3_t dir, angles;
+	int i;
 
 	angles[0] = 0;
 	angles[1] = random() * 360;
 	angles[2] = 0;
-	AngleVectors(angles, dir, NULL, NULL);
 
-	BotMoveInDirection(bs->ms, dir, 400, MOVE_WALK);
+	for (i = 0; i < 8; i++) {
+		AngleVectors(angles, dir, NULL, NULL);
 
-	moveresult->failure = qfalse;
+		if (BotMoveInDirection(bs->ms, dir, 400, MOVE_WALK)) {
+			break;
+		}
+
+		angles[1] = ((int)angles[1] + 45) % 360;
+	}
+
+	moveresult->failure = (i == 8);
 	VectorCopy(dir, moveresult->movedir);
 }
 

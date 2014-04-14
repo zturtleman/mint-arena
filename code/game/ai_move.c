@@ -1252,28 +1252,6 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-int BotMoveInDirection(int movestate, vec3_t dir, float speed, int type)
-{
-	bot_movestate_t *ms;
-
-	ms = BotMoveStateFromHandle(movestate);
-	if (!ms) return qfalse;
-	//if swimming
-	if (trap_AAS_Swimming(ms->origin))
-	{
-		return BotSwimInDirection(ms, dir, speed, type);
-	} //end if
-	else
-	{
-		return BotWalkInDirection(ms, dir, speed, type);
-	} //end else
-} //end of the function BotMoveInDirection
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
 void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_moveresult_t *result)
 {
 	vec3_t mins, maxs, end, up = {0, 0, 1};
@@ -1312,6 +1290,28 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 		} //end if
 	} //end else
 } //end of the function BotCheckBlocked
+//===========================================================================
+//
+// Parameter:			-
+// Returns:				-
+// Changes Globals:		-
+//===========================================================================
+int BotMoveInDirection(int movestate, vec3_t dir, float speed, int type)
+{
+	bot_movestate_t *ms;
+
+	ms = BotMoveStateFromHandle(movestate);
+	if (!ms) return qfalse;
+	//if swimming
+	if (trap_AAS_Swimming(ms->origin))
+	{
+		return BotSwimInDirection(ms, dir, speed, type);
+	} //end if
+	else
+	{
+		return BotWalkInDirection(ms, dir, speed, type);
+	} //end else
+} //end of the function BotMoveInDirection
 //===========================================================================
 //
 // Parameter:			-

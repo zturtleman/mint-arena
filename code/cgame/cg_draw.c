@@ -3249,6 +3249,8 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 	CG_FogView();
 
+	cg.refdef.skyAlpha = cg.skyAlpha;
+
 	// draw 3D view
 	trap_R_RenderScene( &cg.refdef );
 

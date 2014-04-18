@@ -656,6 +656,8 @@ void CG_DrawSkyBoxPortal( void ) {
 	}
 	VectorCopy( cg.skyPortalFogColor, cg.refdef.fogColor );
 
+	cg.refdef.skyAlpha = cg.skyAlpha;
+
 	cg.refdef.time = cg.time;
 
 	// draw the skybox

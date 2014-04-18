@@ -716,6 +716,8 @@ typedef struct {
 	vec3_t		skyPortalFogColor;
 	int			skyPortalFogDepthForOpaque;
 
+	float		skyAlpha;
+
 	int			numViewports;
 	int			viewport;
 	qboolean	singleCamera; // Rending multiple clients using one viewport

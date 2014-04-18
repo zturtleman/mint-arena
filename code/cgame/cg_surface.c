@@ -39,9 +39,11 @@ CG_AddCustomSurface
 */
 qboolean CG_AddCustomSurface( const refEntity_t *re ) {
 	switch ( re->reType ) {
+#if 0 // Disabled so that engine code is used. Allows spriteScale and spriteGen shader keywords to be used.
 		case RT_SPRITE:
 			CG_SurfaceSprite( re );
 			return qtrue;
+#endif
 		case RT_RAIL_RINGS:
 			CG_SurfaceRailRings( re );
 			return qtrue;

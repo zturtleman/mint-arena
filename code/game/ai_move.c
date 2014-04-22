@@ -1070,6 +1070,40 @@ float BotGapDistance(vec3_t origin, vec3_t hordir, int entnum)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
+int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed)
+{
+	vec3_t hordir, end;
+	aas_trace_t trace;
+
+	hordir[0] = dir[0];
+	hordir[1] = dir[1];
+	hordir[2] = 0;
+	VectorNormalize(hordir);
+	VectorMA(ms->origin, ms->thinktime * speed * 0.5, hordir, end);
+	//trace horizontally in the move direction
+	trap_AAS_TraceClientBBox(&trace, ms->origin, end, PRESENCE_NORMAL, ms->entitynum);
+	//this shouldn't happen... but we check anyway
+	if (trace.startsolid) return qfalse;
+	//if no obstacle at all
+	if (trace.fraction >= 1.0) return qfalse;
+	//trace horizontally in the move direction again
+	trap_AAS_TraceClientBBox(&trace, ms->origin, end, PRESENCE_CROUCH, ms->entitynum);
+	//again this shouldn't happen
+	if (trace.startsolid) return qfalse;
+	//if something is hit
+	if (trace.fraction < 1.0) return qfalse;
+
+	EA_Crouch(ms->client);
+	EA_Move(ms->client, hordir, speed);
+	//there is a barrier
+	return qtrue;
+} //end of the function BotCheckBarrierCrouch
+//===========================================================================
+//
+// Parameter:			-
+// Returns:				-
+// Changes Globals:		-
+//===========================================================================
 int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed)
 {
 	vec3_t start, hordir, end;
@@ -1150,9 +1184,8 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 		if (BotCheckBarrierJump(ms, dir, speed)) return qtrue;
 		//remove barrier jump flag
 		ms->moveflags &= ~MFL_BARRIERJUMP;
-		//get the presence type for the movement
-		if ((type & MOVE_CROUCH) && !(type & MOVE_JUMP)) presencetype = PRESENCE_CROUCH;
-		else presencetype = PRESENCE_NORMAL;
+		//if there is a barrier the bot can crouch through
+		if (BotCheckBarrierCrouch(ms, dir, speed)) return qtrue;
 		//horizontal direction
 		hordir[0] = dir[0];
 		hordir[1] = dir[1];
@@ -1164,6 +1197,9 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 			//if there is a gap, try to jump over it
 			if (BotGapDistance(ms->origin, hordir, ms->entitynum) > 0) type |= MOVE_JUMP;
 		} //end if
+		//get the presence type for the movement
+		if ((type & MOVE_CROUCH) && !(type & MOVE_JUMP)) presencetype = PRESENCE_CROUCH;
+		else presencetype = PRESENCE_NORMAL;
 		//get command movement
 		VectorScale(hordir, speed, cmdmove);
 		VectorCopy(ms->velocity, velocity);
@@ -1259,11 +1295,10 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 
 	//test for entities obstructing the bot's path
 	trap_AAS_PresenceTypeBoundingBox(ms->presencetype, mins, maxs);
-	//
+	//if the bot can step on
 	if (fabs(DotProduct(dir, up)) < 0.7)
 	{
-		mins[2] += STEPSIZE; //if the bot can step on
-		maxs[2] -= 10; //a little lower to avoid low ceiling
+		mins[2] += STEPSIZE;
 	} //end if
 	VectorMA(ms->origin, 3, dir, end);
 	trap_ClipToEntities(&trace, ms->origin, mins, maxs, end, ms->entitynum, MASK_PLAYERSOLID);

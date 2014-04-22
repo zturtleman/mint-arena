@@ -4650,22 +4650,12 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 	//if (moveresult->flags & MOVERESULT_ONTOPOFOBSTACLE) movetype = MOVE_JUMP;
 	//else
 	movetype = MOVE_WALK;
-	// if there's an obstacle at the bot's feet and head then
-	// the bot might be able to crouch through
-	//VectorCopy(bs->origin, start);
-	//start[2] += 18;
-	//VectorMA(start, 5, hordir, end);
-	//VectorSet(mins, -16, -16, -24);
-	//VectorSet(maxs, 16, 16, 4);
-	//
-	//bsptrace = AAS_Trace(start, mins, maxs, end, bs->entitynum, MASK_PLAYERSOLID);
-	//if (bsptrace.fraction >= 1) movetype = MOVE_CROUCH;
 	// get the sideward vector
 	CrossProduct(hordir, up, sideward);
 	//
 	if (bs->flags & BFL_AVOIDRIGHT) VectorNegate(sideward, sideward);
-	// try to crouch straight forward?
-	if (movetype != MOVE_CROUCH || !BotMoveInDirection(bs->ms, hordir, 400, movetype)) {
+
+	if (!BotMoveInDirection(bs->ms, hordir, 400, movetype)) {
 		// perform the movement
 		if (!BotMoveInDirection(bs->ms, sideward, 400, movetype)) {
 			// flip the avoid direction flag

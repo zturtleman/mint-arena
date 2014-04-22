@@ -77,6 +77,7 @@ typedef struct {
 	playerInfo_t		playerinfo;
 	int					current_fx;
 	char				playerModel[MAX_QPATH];
+	char				playerHead[MAX_QPATH];
 	int					localClient;
 	char				bannerString[32];
 } playersettings_t;
@@ -248,12 +249,14 @@ PlayerSettings_DrawPlayer
 static void PlayerSettings_DrawPlayer( void *self ) {
 	menubitmap_s	*b;
 	vec3_t			viewangles;
-	char			buf[MAX_QPATH];
+	char			model[MAX_QPATH], headmodel[MAX_QPATH];
 
-	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playersettings.localClient, "model"), buf, sizeof( buf ) );
-	if ( strcmp( buf, s_playersettings.playerModel ) != 0 ) {
-		UI_PlayerInfo_SetModel( &s_playersettings.playerinfo, buf );
-		strcpy( s_playersettings.playerModel, buf );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playersettings.localClient, "model"), model, sizeof( model ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playersettings.localClient, "headmodel"), headmodel, sizeof ( headmodel ) );
+	if ( strcmp( model, s_playersettings.playerModel ) != 0 || strcmp( headmodel, s_playersettings.playerHead ) != 0 ) {
+		UI_PlayerInfo_SetModel( &s_playersettings.playerinfo, model, headmodel, NULL );
+		strcpy( s_playersettings.playerModel, model );
+		strcpy( s_playersettings.playerHead, headmodel );
 
 		viewangles[YAW]   = 180 - 30;
 		viewangles[PITCH] = 0;
@@ -307,6 +310,7 @@ static void PlayerSettings_SetMenuItems( void ) {
 	vec3_t	viewangles;
 	int		c;
 	int		h;
+	char	model[MAX_QPATH], headmodel[MAX_QPATH];
 
 	// name
 	Q_strncpyz( s_playersettings.name.field.buffer, CG_Cvar_VariableString(
@@ -326,8 +330,10 @@ static void PlayerSettings_SetMenuItems( void ) {
 	viewangles[PITCH] = 0;
 	viewangles[ROLL]  = 0;
 
-	UI_PlayerInfo_SetModel( &s_playersettings.playerinfo,
-			CG_Cvar_VariableString( Com_LocalClientCvarName(s_playersettings.localClient, "model") ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playersettings.localClient, "model"), model, sizeof( model ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playersettings.localClient, "headmodel"), headmodel, sizeof ( headmodel ) );
+
+	UI_PlayerInfo_SetModel( &s_playersettings.playerinfo, model, headmodel, NULL );
 	UI_PlayerInfo_SetInfo( &s_playersettings.playerinfo, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
 
 	// handicap

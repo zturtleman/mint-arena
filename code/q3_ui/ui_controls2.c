@@ -238,6 +238,7 @@ typedef struct
 	menuslider_s		joythreshold;
 	int					section;
 	char				playerModel[MAX_QPATH];
+	char				playerHead[MAX_QPATH];
 	vec3_t				playerViewangles;
 	vec3_t				playerMoveangles;
 	int					playerLegs;
@@ -1028,12 +1029,14 @@ Controls_DrawPlayer
 */
 static void Controls_DrawPlayer( void *self ) {
 	menubitmap_s	*b;
-	char			buf[MAX_QPATH];
+	char			model[MAX_QPATH], headmodel[MAX_QPATH];
 
-	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_controls.localClient, "model"), buf, sizeof( buf ) );
-	if ( strcmp( buf, s_controls.playerModel ) != 0 ) {
-		UI_PlayerInfo_SetModel( &s_controls.playerinfo, buf );
-		strcpy( s_controls.playerModel, buf );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_controls.localClient, "model"), model, sizeof( model ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_controls.localClient, "headmodel"), headmodel, sizeof( headmodel ) );
+	if ( strcmp( model, s_controls.playerModel ) != 0 || strcmp( headmodel, s_controls.playerHead ) != 0 ) {
+		UI_PlayerInfo_SetModel( &s_controls.playerinfo, model, headmodel, NULL );
+		strcpy( s_controls.playerModel, model );
+		strcpy( s_controls.playerHead, headmodel );
 		Controls_UpdateModel( ANIM_IDLE );
 	}
 
@@ -1478,9 +1481,14 @@ Controls_InitModel
 */
 static void Controls_InitModel( void )
 {
+	char model[MAX_QPATH], headmodel[MAX_QPATH];
+
 	memset( &s_controls.playerinfo, 0, sizeof(playerInfo_t) );
 
-	UI_PlayerInfo_SetModel( &s_controls.playerinfo, CG_Cvar_VariableString( "model" ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_controls.localClient, "model"), model, sizeof ( model ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_controls.localClient, "headmodel"), headmodel, sizeof ( headmodel ) );
+
+	UI_PlayerInfo_SetModel( &s_controls.playerinfo, model, headmodel, NULL );
 
 	Controls_UpdateModel( ANIM_IDLE );
 }

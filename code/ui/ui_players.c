@@ -1037,8 +1037,6 @@ static qboolean	UI_RegisterClientSkin( playerInfo_t *pi, const char *modelName, 
 	char		filename[MAX_QPATH];
 	qboolean	legsSkin, torsoSkin, headSkin;
 
-	legsSkin = torsoSkin = headSkin = qfalse;
-
 	if (teamName && *teamName) {
 		Com_sprintf( filename, sizeof( filename ), "models/players/%s/%s/lower_%s.skin", modelName, teamName, skinName );
 	} else {
@@ -1055,6 +1053,8 @@ static qboolean	UI_RegisterClientSkin( playerInfo_t *pi, const char *modelName, 
 
 	if ( UI_FindClientHeadFile( filename, sizeof(filename), teamName, headModelName, headSkinName, "head", "skin" ) ) {
 		headSkin = CG_RegisterSkin( filename, &pi->modelSkin, qtrue );
+	} else {
+		headSkin = qfalse;
 	}
 
 	if ( !legsSkin || !torsoSkin || !headSkin ) {

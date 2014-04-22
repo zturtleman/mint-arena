@@ -1093,6 +1093,7 @@ int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed)
 	//if something is hit
 	if (trace.fraction < 1.0) return qfalse;
 
+	ms->presencetype = PRESENCE_CROUCH;
 	EA_Crouch(ms->client);
 	EA_Move(ms->client, hordir, speed);
 	//there is a barrier

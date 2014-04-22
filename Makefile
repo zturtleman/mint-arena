@@ -29,6 +29,9 @@ endif
 ifndef BUILD_MISSIONPACK
   BUILD_MISSIONPACK=
 endif
+ifndef USE_MISSIONPACK_Q3_UI
+  USE_MISSIONPACK_Q3_UI =
+endif
 ifndef BUILD_FINAL
   BUILD_FINAL      =0
 endif
@@ -109,7 +112,11 @@ MISSIONPACK=missionpack
 endif
 
 ifndef MISSIONPACK_CFLAGS
+ifeq ($(USE_MISSIONPACK_Q3_UI), 1)
+MISSIONPACK_CFLAGS=-DMISSIONPACK
+else
 MISSIONPACK_CFLAGS=-DMISSIONPACK -DMISSIONPACK_HUD
+endif
 endif
 
 MISSIONPACK_CFLAGS+=-DMODDIR=\"$(MISSIONPACK)\"
@@ -822,6 +829,7 @@ makedirs:
 	@if [ ! -d $(B)/$(MISSIONPACK)/cgame ];then $(MKDIR) $(B)/$(MISSIONPACK)/cgame;fi
 	@if [ ! -d $(B)/$(MISSIONPACK)/game ];then $(MKDIR) $(B)/$(MISSIONPACK)/game;fi
 	@if [ ! -d $(B)/$(MISSIONPACK)/ui ];then $(MKDIR) $(B)/$(MISSIONPACK)/ui;fi
+	@if [ ! -d $(B)/$(MISSIONPACK)/q3ui ];then $(MKDIR) $(B)/$(MISSIONPACK)/q3ui;fi
 	@if [ ! -d $(B)/$(MISSIONPACK)/qcommon ];then $(MKDIR) $(B)/$(MISSIONPACK)/qcommon;fi
 	@if [ ! -d $(B)/$(MISSIONPACK)/vm ];then $(MKDIR) $(B)/$(MISSIONPACK)/vm;fi
 	@if [ ! -d $(B)/tools ];then $(MKDIR) $(B)/tools;fi
@@ -1131,14 +1139,60 @@ MPCGOBJ = \
   $(B)/$(MISSIONPACK)/cgame/cg_view.o \
   $(B)/$(MISSIONPACK)/cgame/cg_weapons.o \
   \
+  $(B)/$(MISSIONPACK)/qcommon/q_math.o \
+  $(B)/$(MISSIONPACK)/qcommon/q_shared.o
+
+ifeq ($(USE_MISSIONPACK_Q3_UI), 1)
+MPCGOBJ += \
+  $(B)/$(MISSIONPACK)/q3ui/ui_main.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_addbots.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_atoms.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_cinematics.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_confirm.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_connect.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_controls2.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_credits.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_demo2.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_display.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_gameinfo.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_ingame.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_ingame_selectplayer.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_joystick.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_loadconfig.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_menu.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_mfield.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_mods.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_network.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_options.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_playermodel.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_players.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_playersettings.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_preferences.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_qmenu.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_removebots.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_saveconfig.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_selectplayer.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_serverinfo.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_servers2.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_setup.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_sound.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_sparena.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_specifyserver.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_splevel.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_sppostgame.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_spskill.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_startserver.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_team.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_teamorders.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_video.o
+else
+MPCGOBJ += \
   $(B)/$(MISSIONPACK)/ui/ui_main.o \
   $(B)/$(MISSIONPACK)/ui/ui_atoms.o \
   $(B)/$(MISSIONPACK)/ui/ui_gameinfo.o \
   $(B)/$(MISSIONPACK)/ui/ui_players.o \
-  $(B)/$(MISSIONPACK)/ui/ui_shared.o \
-  \
-  $(B)/$(MISSIONPACK)/qcommon/q_math.o \
-  $(B)/$(MISSIONPACK)/qcommon/q_shared.o
+  $(B)/$(MISSIONPACK)/ui/ui_shared.o
+endif
 
 MPCGVMOBJ = $(MPCGOBJ:%.o=%.asm)
 
@@ -1307,6 +1361,9 @@ $(B)/$(MISSIONPACK)/cgame/%.o: $(CGDIR)/%.c
 $(B)/$(MISSIONPACK)/ui/%.o: $(UIDIR)/%.c
 	$(DO_CGAME_CC_MISSIONPACK)
 
+$(B)/$(MISSIONPACK)/q3ui/%.o: $(Q3UIDIR)/%.c
+	$(DO_CGAME_CC_MISSIONPACK)
+
 $(B)/$(MISSIONPACK)/cgame/bg_%.asm: $(GDIR)/bg_%.c $(Q3LCC)
 	$(DO_CGAME_Q3LCC_MISSIONPACK)
 
@@ -1314,6 +1371,9 @@ $(B)/$(MISSIONPACK)/cgame/%.asm: $(CGDIR)/%.c $(Q3LCC)
 	$(DO_CGAME_Q3LCC_MISSIONPACK)
 
 $(B)/$(MISSIONPACK)/ui/%.asm: $(UIDIR)/%.c $(Q3LCC)
+	$(DO_CGAME_Q3LCC_MISSIONPACK)
+
+$(B)/$(MISSIONPACK)/q3ui/%.asm: $(Q3UIDIR)/%.c $(Q3LCC)
 	$(DO_CGAME_Q3LCC_MISSIONPACK)
 
 

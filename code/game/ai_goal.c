@@ -457,6 +457,34 @@ void BotInitInfoEntities(void)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
+#ifdef MISSIONPACK
+void BotUnlinkSolidItems(qboolean unlink) {
+	int i;
+	gentity_t *ent;
+
+	if (g_gametype.integer != GT_OBELISK) {
+		return;
+	}
+
+	for ( i = 0, ent = g_entities; i < level.num_entities; i++, ent++ ) {
+		//check if it's an obelisk
+		if ( ent->s.eType == ET_GENERAL && ent->activator && ent->activator->s.eType == ET_TEAM
+			&& ( !Q_stricmp( ent->activator->classname, "team_blueobelisk" ) || !Q_stricmp( ent->activator->classname, "team_redobelisk" ) ) ) {
+			if ( unlink ) {
+				trap_UnlinkEntity( ent );
+			} else {
+				trap_LinkEntity( ent );
+			}
+		}
+	}
+}
+#endif
+//===========================================================================
+//
+// Parameter:			-
+// Returns:				-
+// Changes Globals:		-
+//===========================================================================
 void BotInitLevelItems(void)
 {
 	int i, spawnflags, value;
@@ -480,6 +508,11 @@ void BotInitLevelItems(void)
 
 	//if there's no AAS file loaded
 	if (!trap_AAS_Loaded()) return;
+
+#ifdef MISSIONPACK
+	//unlink solid items
+	BotUnlinkSolidItems(qtrue);
+#endif
 
 	//validate the modelindexes of the item info
 	for (i = 0; i < ic->numiteminfo; i++)
@@ -590,6 +623,10 @@ void BotInitLevelItems(void)
 		AddLevelItemToList(li);
 	} //end for
 	BotAI_Print(PRT_DEVELOPER, "found %d level items\n", numlevelitems);
+#ifdef MISSIONPACK
+	//relink solid items
+	BotUnlinkSolidItems(qfalse);
+#endif
 } //end of the function BotInitLevelItems
 //===========================================================================
 //

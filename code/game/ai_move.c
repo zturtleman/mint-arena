@@ -1904,6 +1904,7 @@ bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach)
 		hordir[1] = reach->end[1] - ms->origin[1];
 		hordir[2] = 0;
 		VectorNormalize(hordir);
+		BotCheckBlocked(ms, hordir, qtrue, &result);
 		//elemantary action jump
 		if (dist1 < 24) EA_Jump(ms->client);
 		else if (dist1 < 32) EA_DelayedJump(ms->client);
@@ -1918,6 +1919,7 @@ bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach)
 		hordir[1] = runstart[1] - ms->origin[1];
 		hordir[2] = 0;
 		VectorNormalize(hordir);
+		BotCheckBlocked(ms, hordir, qtrue, &result);
 		//
 		if (dist2 > 80) dist2 = 80;
 		speed = 400 - (400 - 5 * dist2);

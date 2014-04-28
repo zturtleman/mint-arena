@@ -1300,6 +1300,7 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 {
 	vec3_t mins, maxs, end, up = {0, 0, 1};
 	trace_t trace;
+	float currentspeed;
 
 	//test for entities obstructing the bot's path
 	trap_AAS_PresenceTypeBoundingBox(ms->presencetype, mins, maxs);
@@ -1308,9 +1309,10 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 	{
 		mins[2] += STEPSIZE;
 	} //end if
+	// check for entities nearby
 	VectorMA(ms->origin, 3, dir, end);
 	trap_ClipToEntities(&trace, ms->origin, mins, maxs, end, ms->entitynum, MASK_PLAYERSOLID);
-	//if not started in solid and not hitting the world entity
+	//if not started in solid and hitting an entity
 	if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE)
 	{
 		result->blocked = qtrue;
@@ -1321,9 +1323,9 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 	else if (checkbottom && !trap_AAS_AreaReachability(ms->areanum))
 	{
 		//check if the bot is standing on something
-		trap_AAS_PresenceTypeBoundingBox(ms->presencetype, mins, maxs);
 		VectorMA(ms->origin, -3, up, end);
 		trap_ClipToEntities(&trace, ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+		//if not started in solid and hitting an entity
 		if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE)
 		{
 			result->blocked = qtrue;
@@ -1332,6 +1334,19 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 			//BotAI_Print(PRT_DEVELOPER, "%d: BotCheckBlocked: I'm blocked\n", ms->client);
 		} //end if
 	} //end else
+	else
+	{
+		// get the current speed
+		currentspeed = DotProduct(ms->velocity, dir);
+		// do a full trace to check for obstacles to avoid, depending on current speed
+		VectorMA(ms->origin, currentspeed + 3, dir, end);
+		trap_Trace(&trace, ms->origin, mins, maxs, end, ms->entitynum, MASK_PLAYERSOLID);
+		// if not started in solid and not hitting the world entity
+		if (!trace.startsolid && trace.entityNum != ENTITYNUM_NONE && trace.entityNum != ENTITYNUM_WORLD) {
+			result->blocked = qtrue;
+			result->blockentity = trace.entityNum;
+		}
+	}
 } //end of the function BotCheckBlocked
 //===========================================================================
 //

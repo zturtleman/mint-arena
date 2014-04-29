@@ -4591,6 +4591,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 	int movetype, bspent;
 	vec3_t mins, maxs, end, v1, v2, hordir, sideward, angles, up = {0, 0, 1};
 	aas_entityinfo_t entinfo;
+	gentity_t *ent;
 	bot_activategoal_t activategoal;
 	trace_t trace;
 
@@ -4608,15 +4609,16 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 	}
 	// get info for the entity that is blocking the bot
 	BotEntityInfo(moveresult->blockentity, &entinfo);
+	ent = &g_entities[moveresult->blockentity];
 #ifdef OBSTACLEDEBUG
 	ClientName(bs->client, netname, sizeof(netname));
 	BotAI_Print(PRT_MESSAGE, "%s: I'm blocked by model %d\n", netname, entinfo.modelindex);
 #endif // OBSTACLEDEBUG
 	VectorSubtract(entinfo.origin, bs->origin, v2);
 	VectorNormalize(v2);
-	// if blocked by another client
-	if (entinfo.number < level.maxclients) {
-		VectorNormalize2(g_entities[moveresult->blockentity].client->ps.velocity, v1);
+	// if blocked by a client
+	if (ent->client) {
+		VectorNormalize2(ent->client->ps.velocity, v1);
 		// if the blocking entity is moving away from us or if it is an enemy
 		if (DotProduct(v1, v2) > 0.0 || !BotSameTeam(bs, moveresult->blockentity)) {
 			trap_AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
@@ -4631,14 +4633,14 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 	// else if blocked by a bsp model
 	else if (entinfo.modelindex > 0 && entinfo.modelindex <= max_bspmodelindex) {
 		// a closed doors without a targetname will operate automatically
-		if (!strcmp(g_entities[entinfo.number].classname, "func_door") && (g_entities[entinfo.number].moverState == MOVER_POS1)) {
+		if (!strcmp(ent->classname, "func_door") && (ent->moverState == MOVER_POS1)) {
 			// if no targetname
-			if (!g_entities[entinfo.number].targetname) {
+			if (!ent->targetname) {
 				return;
 			}
 		}
 		// buttons will operate on contact
-		if (!strcmp(g_entities[entinfo.number].classname, "func_button") && (g_entities[entinfo.number].moverState == MOVER_POS1)) {
+		if (!strcmp(ent->classname, "func_button") && (ent->moverState == MOVER_POS1)) {
 			return;
 		}
 		// if the bot wants to activate the bsp entity

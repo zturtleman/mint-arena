@@ -1446,6 +1446,7 @@ void CG_TestModelPrevSkin_f (void);
 void CG_ZoomUp_f( int localClient );
 void CG_ZoomDown_f( int localClient );
 void CG_AddBufferedSound( sfxHandle_t sfx);
+void CG_StepOffset( vec3_t vieworg );
 
 void CG_SetupFrustum( void );
 qboolean CG_CullPoint( vec3_t pt );

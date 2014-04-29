@@ -293,7 +293,7 @@ static void CG_CalcVrect (void) {
 //==============================================================================
 
 // this causes a compiler bug on mac MrC compiler
-static void CG_StepOffset( vec3_t vieworg ) {
+void CG_StepOffset( vec3_t vieworg ) {
 	int		timeDelta;
 
 	// smooth out stair climbing
@@ -336,6 +336,8 @@ static void CG_OffsetThirdPersonView( void ) {
 		focusAngles[PITCH] = 45;		// don't go too far overhead
 	}
 	AngleVectors( focusAngles, forward, NULL, NULL );
+
+	CG_StepOffset( cg.refdef.vieworg );
 
 	VectorMA( cg.refdef.vieworg, FOCUS_DISTANCE, forward, focusPoint );
 

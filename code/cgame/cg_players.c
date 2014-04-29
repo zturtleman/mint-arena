@@ -2389,6 +2389,8 @@ void CG_Player( centity_t *cent ) {
 	// get the player model information
 	renderfx = 0;
 	if ( cent->currentState.number == cg.cur_ps->clientNum) {
+		CG_StepOffset( cent->lerpOrigin );
+
 		if (!cg.cur_lc->renderingThirdPerson) {
 			renderfx = RF_ONLY_MIRROR;
 		} else {

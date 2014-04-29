@@ -1050,6 +1050,10 @@ static float CG_DrawScores( float y ) {
 	float		y1;
 	gitem_t		*item;
 
+	if ( !cg_drawScores.integer ) {
+		return y;
+	}
+
 	s1 = cgs.scores1;
 	s2 = cgs.scores2;
 

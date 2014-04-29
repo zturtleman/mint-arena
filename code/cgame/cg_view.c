@@ -292,6 +292,17 @@ static void CG_CalcVrect (void) {
 
 //==============================================================================
 
+// this causes a compiler bug on mac MrC compiler
+static void CG_StepOffset( vec3_t vieworg ) {
+	int		timeDelta;
+
+	// smooth out stair climbing
+	timeDelta = cg.time - cg.cur_lc->stepTime;
+	if ( timeDelta < STEP_TIME ) {
+		vieworg[2] -= cg.cur_lc->stepChange
+			* (STEP_TIME - timeDelta) / STEP_TIME;
+	}
+}
 
 /*
 ===============
@@ -371,19 +382,6 @@ static void CG_OffsetThirdPersonView( void ) {
 	cg.refdefViewAngles[YAW] -= cg_thirdPersonAngle[cg.cur_localClientNum].value;
 }
 
-
-// this causes a compiler bug on mac MrC compiler
-static void CG_StepOffset( void ) {
-	int		timeDelta;
-	
-	// smooth out stair climbing
-	timeDelta = cg.time - cg.cur_lc->stepTime;
-	if ( timeDelta < STEP_TIME ) {
-		cg.refdef.vieworg[2] -= cg.cur_lc->stepChange 
-			* (STEP_TIME - timeDelta) / STEP_TIME;
-	}
-}
-
 /*
 ===============
 CG_OffsetFirstPersonView
@@ -405,8 +403,11 @@ static void CG_OffsetFirstPersonView( void ) {
 		return;
 	}
 
-	origin = cg.refdef.vieworg;
-	angles = cg.refdefViewAngles;
+	VectorCopy( cg.refdef.vieworg, cg.firstPersonViewOrg );
+	VectorCopy( cg.refdefViewAngles, cg.firstPersonViewAngles );
+
+	origin = cg.firstPersonViewOrg;
+	angles = cg.firstPersonViewAngles;
 
 	// if dead, fix the angle and don't add any kick
 	if ( cg.cur_ps->stats[STAT_HEALTH] <= 0 ) {
@@ -491,15 +492,15 @@ static void CG_OffsetFirstPersonView( void ) {
 	delta = cg.time - cg.cur_lc->landTime;
 	if ( delta < LAND_DEFLECT_TIME ) {
 		f = delta / LAND_DEFLECT_TIME;
-		cg.refdef.vieworg[2] += cg.cur_lc->landChange * f;
+		origin[2] += cg.cur_lc->landChange * f;
 	} else if ( delta < LAND_DEFLECT_TIME + LAND_RETURN_TIME ) {
 		delta -= LAND_DEFLECT_TIME;
 		f = 1.0 - ( delta / LAND_RETURN_TIME );
-		cg.refdef.vieworg[2] += cg.cur_lc->landChange * f;
+		origin[2] += cg.cur_lc->landChange * f;
 	}
 
 	// add step offset
-	CG_StepOffset();
+	CG_StepOffset( origin );
 
 	// pivot the eye based on a neck length
 #if 0
@@ -786,16 +787,20 @@ static int CG_CalcViewValues( void ) {
 		}
 	}
 
+	// offset for local bobbing and kicks
+	CG_OffsetFirstPersonView();
+
 	if ( cg.cur_lc->renderingThirdPerson ) {
 		// back away from character
 		CG_OffsetThirdPersonView();
 	} else {
-		// offset for local bobbing and kicks
-		CG_OffsetFirstPersonView();
+		VectorCopy( cg.firstPersonViewOrg, cg.refdef.vieworg );
+		VectorCopy( cg.firstPersonViewAngles, cg.refdefViewAngles );
 	}
 
 	// position eye relative to origin
 	AnglesToAxis( cg.refdefViewAngles, cg.refdef.viewaxis );
+	AnglesToAxis( cg.firstPersonViewAngles, cg.firstPersonViewAxis );
 
 	if ( cg.cur_lc->hyperspace ) {
 		cg.refdef.rdflags |= RDF_NOWORLDMODEL | RDF_HYPERSPACE;

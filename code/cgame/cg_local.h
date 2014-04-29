@@ -699,6 +699,11 @@ typedef struct {
 	vec3_t		refdefViewAngles;		// will be converted to refdef.viewaxis
 	float		fov;					// either range checked cg_fov or forced value
 
+	// first person view pos, set even when rendering third person view
+	vec3_t		firstPersonViewOrg;
+	vec3_t		firstPersonViewAngles;
+	vec3_t		firstPersonViewAxis[3];
+
 	// spawn variables
 	qboolean spawning;                  // the CG_Spawn*() functions are valid
 	int numSpawnVars;

@@ -444,7 +444,7 @@ static userCvarTable_t userCvarTable[] = {
 	{ cg_thirdPerson, "cg_thirdPerson", "0", 0, RANGE_BOOL },
 	{ cg_thirdPersonRange, "cg_thirdPersonRange", "40", CVAR_CHEAT, RANGE_ALL },
 	{ cg_thirdPersonAngle, "cg_thirdPersonAngle", "0", CVAR_CHEAT, RANGE_ALL },
-	{ cg_thirdPersonHeight, "cg_thirdPersonHeight", "8", 0, RANGE_INT( 0, 32 ) },
+	{ cg_thirdPersonHeight, "cg_thirdPersonHeight", "24", 0, RANGE_INT( 0, 32 ) },
 
 #ifdef MISSIONPACK
 	{ cg_currentSelectedPlayer, "cg_currentSelectedPlayer", "0", CVAR_ARCHIVE, RANGE_ALL },

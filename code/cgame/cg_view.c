@@ -341,7 +341,7 @@ static void CG_OffsetThirdPersonView( void ) {
 
 	VectorCopy( cg.refdef.vieworg, view );
 
-	view[2] += 8;
+	view[2] += cg_thirdPersonHeight[cg.cur_localClientNum].value;
 
 	cg.refdefViewAngles[PITCH] *= 0.5;
 

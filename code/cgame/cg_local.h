@@ -1380,9 +1380,10 @@ extern	vmCvar_t		cg_teamtask[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_teampref[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_autoswitch[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_drawGun[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_thirdPerson[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_thirdPersonRange[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_thirdPersonAngle[MAX_SPLITVIEW];
-extern	vmCvar_t		cg_thirdPerson[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_thirdPersonHeight[MAX_SPLITVIEW];
 
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_currentSelectedPlayer[MAX_SPLITVIEW];

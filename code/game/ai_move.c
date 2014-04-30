@@ -1221,6 +1221,10 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 		} //end if
 		else
 		{
+			if (type & MOVE_CROUCH)
+			{
+				cmdmove[2] = -400;
+			}
 			maxframes = 2;
 			cmdframes = 2;
 			stopevent = SE_HITGROUNDDAMAGE|

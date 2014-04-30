@@ -1259,14 +1259,17 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 			dist = BotGapDistance(move.endpos, hordir, ms->entitynum);
 			if (dist > 0) return qfalse;
 		} //end if
-		//get horizontal movement
-		tmpdir[0] = move.endpos[0] - ms->origin[0];
-		tmpdir[1] = move.endpos[1] - ms->origin[1];
-		tmpdir[2] = 0;
 		//
 		//trap_AAS_DrawCross(move.endpos, 4, LINECOLOR_BLUE);
-		//the bot is blocked by something
-		if (VectorLength(tmpdir) < speed * ms->thinktime * 0.5) return qfalse;
+		if (!(type & MOVE_JUMP))
+		{
+			//get horizontal movement
+			tmpdir[0] = move.endpos[0] - ms->origin[0];
+			tmpdir[1] = move.endpos[1] - ms->origin[1];
+			tmpdir[2] = 0;
+			//the bot is blocked by something
+			if (VectorLength(tmpdir) < speed * ms->thinktime * 0.5) return qfalse;
+		}
 		//perform the movement
 		if (type & MOVE_JUMP) EA_Jump(ms->client);
 		if (type & MOVE_CROUCH) EA_Crouch(ms->client);

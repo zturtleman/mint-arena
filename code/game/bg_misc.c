@@ -1355,7 +1355,13 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		return qtrue;
 
 	case IT_POWERUP:
-		return qtrue;	// powerups are always picked up
+#ifdef MISSIONPACK
+		// scout overrides haste
+		if (item->giTag == PW_HASTE && bg_itemlist[ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT ) {
+			return qfalse;
+		}
+#endif
+		return qtrue;
 
 #ifdef MISSIONPACK
 	case IT_PERSISTANT_POWERUP:

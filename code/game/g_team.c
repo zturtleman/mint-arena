@@ -1270,6 +1270,9 @@ static void ObeliskDie( gentity_t *self, gentity_t *inflictor, gentity_t *attack
 
 	teamgame.redObeliskAttackedTime = 0;
 	teamgame.blueObeliskAttackedTime = 0;
+
+	trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE "\ndestroyed the %s obelisk.\n\"",
+			attacker->client->pers.netname, TeamName(self->spawnflags)));
 }
 
 

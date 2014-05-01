@@ -734,11 +734,11 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 		return 0; // We don't have the flag
 #ifdef MISSIONPACK
 	if( g_gametype.integer == GT_1FCTF ) {
-		PrintMsg( NULL, "%s" S_COLOR_WHITE " captured the flag!\n", cl->pers.netname );
+		trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE "\ncaptured the flag!\n\"", cl->pers.netname ));
 	}
 	else {
 #endif
-	PrintMsg( NULL, "%s" S_COLOR_WHITE " captured the %s flag!\n", cl->pers.netname, TeamName(OtherTeam(team)));
+	trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE "\ncaptured the %s flag!\n\"", cl->pers.netname, TeamName(OtherTeam(team))));
 #ifdef MISSIONPACK
 	}
 #endif

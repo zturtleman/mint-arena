@@ -995,14 +995,15 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot, int conn
 	ClientUserinfoChanged( clientNum );
 
 	// don't do the "xxx connected" messages if they were caried over from previous level
-	// or if they're an extra local player
-	if ( firstTime && firstConnectionPlayer ) {
-		trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " connected\n\"", client->pers.netname) );
-	}
+	if ( firstTime ) {
+		if ( firstConnectionPlayer ) {
+			trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " connected\n\"", client->pers.netname) );
+		} else {
+			trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " dropped in\n\"", client->pers.netname) );
+		}
 
-	if ( g_gametype.integer >= GT_TEAM &&
-		client->sess.sessionTeam != TEAM_SPECTATOR ) {
-		BroadcastTeamChange( client, -1 );
+		// show team change when finished connecting
+		ent->flags |= FL_FIRST_BEGIN;
 	}
 
 	// count current clients and rank for scoreboard
@@ -1029,10 +1030,15 @@ void ClientBegin( int clientNum ) {
 	gentity_t	*ent;
 	gclient_t	*client;
 	int			flags;
+	qboolean	firstTime;
 
 	ent = g_entities + clientNum;
 
 	client = level.clients + clientNum;
+
+	// check if first connect
+	firstTime = (ent->flags & FL_FIRST_BEGIN);
+	ent->flags &= FL_FIRST_BEGIN;
 
 	if ( ent->r.linked ) {
 		trap_UnlinkEntity( ent );
@@ -1058,13 +1064,9 @@ void ClientBegin( int clientNum ) {
 	// locate ent at a spawn point
 	ClientSpawn( ent );
 
-	if ( client->sess.sessionTeam != TEAM_SPECTATOR ) {
-		if ( g_gametype.integer != GT_TOURNAMENT  ) {
-			if ( level.connections[client->pers.connectionNum].numLocalPlayers > 1 ) {
-				trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " dropped in\n\"", client->pers.netname) );
-			} else {
-				trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " entered the game\n\"", client->pers.netname) );
-			}
+	if ( firstTime && !g_singlePlayer.integer ) {
+		if ( g_gametype.integer != GT_TOURNAMENT ) {
+			BroadcastTeamChange( client, -1 );
 		}
 	}
 	G_LogPrintf( "ClientBegin: %i\n", clientNum );

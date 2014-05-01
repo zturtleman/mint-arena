@@ -977,7 +977,8 @@ typedef enum {
 	MOD_KAMIKAZE,
 	MOD_JUICED,
 #endif
-	MOD_GRAPPLE
+	MOD_GRAPPLE,
+	MOD_SUICIDE_TEAM_CHANGE
 } meansOfDeath_t;
 
 

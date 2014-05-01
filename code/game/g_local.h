@@ -52,6 +52,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	SP_INTERMISSION_DELAY_TIME	5000
 
 // gentity->flags
+#define	FL_FIRST_BEGIN			0x00000008
 #define	FL_GODMODE				0x00000010
 #define	FL_NOTARGET				0x00000020
 #define	FL_TEAMSLAVE			0x00000400	// not the first on the team

@@ -499,18 +499,24 @@ Let everyone know about a team change
 */
 void BroadcastTeamChange( gclient_t *client, int oldTeam )
 {
-	if ( client->sess.sessionTeam == TEAM_RED ) {
-		trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE " joined the red team.\n\"",
-			client->pers.netname) );
-	} else if ( client->sess.sessionTeam == TEAM_BLUE ) {
-		trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE " joined the blue team.\n\"",
-		client->pers.netname));
-	} else if ( client->sess.sessionTeam == TEAM_SPECTATOR && oldTeam != TEAM_SPECTATOR ) {
-		trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE " joined the spectators.\n\"",
+	if ( client->sess.sessionTeam == oldTeam )
+		return;
+
+	if ( client->sess.sessionTeam == TEAM_SPECTATOR ) {
+		trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " joined the spectators.\n\"",
 		client->pers.netname));
 	} else if ( client->sess.sessionTeam == TEAM_FREE ) {
-		trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE " joined the battle.\n\"",
+		trap_SendServerCommand( -1, va("print  \"%s" S_COLOR_WHITE " joined the battle.\n\"",
 		client->pers.netname));
+	} else if ( client->sess.sessionTeam == TEAM_RED ) {
+		trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " joined the red team.\n\"",
+		client->pers.netname) );
+	} else if ( client->sess.sessionTeam == TEAM_BLUE ) {
+		trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " joined the blue team.\n\"",
+		client->pers.netname));
+	} else {
+		trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " joined the %s team.\n\"",
+		client->pers.netname, TeamName(client->sess.sessionTeam)));
 	}
 }
 
@@ -619,7 +625,7 @@ void SetTeam( gentity_t *ent, const char *s ) {
 		// Kill him (makes sure he loses flags, etc)
 		ent->flags &= ~FL_GODMODE;
 		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
-		player_die (ent, ent, ent, 100000, MOD_SUICIDE);
+		player_die (ent, ent, ent, 100000, MOD_SUICIDE_TEAM_CHANGE);
 
 	}
 
@@ -644,8 +650,6 @@ void SetTeam( gentity_t *ent, const char *s ) {
 		CheckTeamLeader( oldTeam );
 	}
 
-	BroadcastTeamChange( client, oldTeam );
-
 	// get and distribute relevent paramters
 	ClientUserinfoChanged( clientNum );
 
@@ -653,6 +657,8 @@ void SetTeam( gentity_t *ent, const char *s ) {
 	if ( client->pers.connected != CON_CONNECTED ) {
 		return;
 	}
+
+	BroadcastTeamChange( client, oldTeam );
 
 	ClientBegin( clientNum );
 }

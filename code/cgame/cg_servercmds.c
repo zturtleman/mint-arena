@@ -1067,6 +1067,16 @@ int CG_LocalClientBitsForTeam( team_t team ) {
 	return bits;
 }
 
+void CG_ReplaceCharacter( char *str, char old, char new ) {
+	char *p = strchr( str, old );
+
+	while ( p != NULL )
+	{
+		*p = new;
+		p = strchr( p + 1, old );
+	}
+}
+
 /*
 =================
 CG_ServerCommand
@@ -1127,6 +1137,14 @@ static void CG_ServerCommand( void ) {
 	}
 
 	if ( !strcmp( cmd, "cp" ) ) {
+		// print to console as a single line
+		Q_strncpyz( text, CG_Argv( start+1 ), sizeof ( text ) );
+		if ( strlen(text) > 1 && text[strlen(text) - 1] == '\n' ) {
+			text[strlen(text) - 1] = '\0';
+		}
+		CG_ReplaceCharacter( text, '\n', ' ' );
+		CG_Printf("[skipnotify]%s\n", text );
+
 		for ( i = 0; i < CG_MaxSplitView(); i++ ) {
 			if ( localPlayerBits == -1 || ( localPlayerBits & ( 1 << i ) ) ) {
 				CG_CenterPrint( i, CG_Argv( start + 1 ), SCREEN_HEIGHT * 0.30, 0.5 );

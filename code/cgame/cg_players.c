@@ -1756,6 +1756,13 @@ static void CG_TrailItem( centity_t *cent, qhandle_t hModel ) {
 	angles[YAW] += 90;
 	AnglesToAxis( angles, ent.axis );
 
+	if (cent->currentState.clientNum == cg.cur_lc->predictedPlayerState.clientNum
+		&& cg_thirdPerson[cg.cur_localClientNum].integer)
+	{
+		// flag blocks view in third person, so only draw in mirrors
+		ent.renderfx |= RF_ONLY_MIRROR;
+	}
+
 	ent.hModel = hModel;
 	CG_AddRefEntityWithMinLight( &ent );
 }

@@ -2284,7 +2284,7 @@ static void CG_DrawThirdPersonCrosshair(void)
 		return;
 	}
 
-	if ( !cg.cur_lc->renderingThirdPerson ) {
+	if ( !cg.cur_lc->renderingThirdPerson || !cg_thirdPerson[cg.cur_localClientNum].integer ) {
 		return;
 	}
 

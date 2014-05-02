@@ -1073,7 +1073,8 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		cg.cur_ps = &cg.snap->pss[i];
 
 		// decide on third person view
-		cg.cur_lc->renderingThirdPerson = cg_thirdPerson[cg.cur_localClientNum].integer || (cg.cur_ps->stats[STAT_HEALTH] <= 0);
+		cg.cur_lc->renderingThirdPerson = cg.cur_ps->persistant[PERS_TEAM] != TEAM_SPECTATOR
+							&& (cg_thirdPerson[cg.cur_localClientNum].integer || (cg.cur_ps->stats[STAT_HEALTH] <= 0));
 
 		CG_PB_ClearPolyBuffers();
 

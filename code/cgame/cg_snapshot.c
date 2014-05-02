@@ -217,6 +217,9 @@ static void CG_TransitionSnapshot( void ) {
 		}
 	}
 
+	cg.cur_localClientNum = -1;
+	cg.cur_lc = NULL;
+	cg.cur_ps = NULL;
 }
 
 

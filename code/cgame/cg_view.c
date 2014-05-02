@@ -273,7 +273,7 @@ static void CG_CalcVrect (void) {
 	}
 
 	// the intermission should always be full screen
-	if ( cg.cur_ps->pm_type == PM_INTERMISSION ) {
+	if ( ( cg.cur_ps && cg.cur_ps->pm_type == PM_INTERMISSION ) || ( !cg.cur_ps && cg.singleCamera ) ) {
 		size = 100;
 	} else {
 		size = cg_viewsize.integer;
@@ -1042,6 +1042,10 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		}
 	}
 
+	cg.cur_localClientNum = -1;
+	cg.cur_lc = NULL;
+	cg.cur_ps = NULL;
+
 	// If all local clients dropped out from playing still draw main local client.
 	if (cg.numViewports == 0) {
 		cg.numViewports = 1;
@@ -1136,6 +1140,10 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		CG_DrawActive( stereoView );
 	}
 
+	cg.cur_localClientNum = -1;
+	cg.cur_lc = NULL;
+	cg.cur_ps = NULL;
+
 	if (cg_cameraOrbit.integer) {
 		if (cg.time > cg.nextOrbitTime) {
 			cg.nextOrbitTime = cg.time + cg_cameraOrbitDelay.integer;
@@ -1157,11 +1165,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		// calculate size of viewport
 		CG_CalcVrect();
 	}
-
-	// Not drawing single client view.
-	cg.cur_lc = NULL;
-	cg.cur_ps = NULL;
-	cg.cur_localClientNum = -1;
 
 	// Draw over all viewports
 	CG_DrawScreen2D( stereoView );

@@ -2021,15 +2021,8 @@ CG_PlayerFloatSprite
 Float a sprite over the player's head
 ===============
 */
-static void CG_PlayerFloatSprite( centity_t *cent, qhandle_t shader ) {
-	int				rf;
+static void CG_PlayerFloatSprite( centity_t *cent, int rf, qhandle_t shader ) {
 	refEntity_t		ent;
-
-	if ( cent->currentState.number == cg.cur_ps->clientNum && !cg.cur_lc->renderingThirdPerson ) {
-		rf = RF_ONLY_MIRROR;
-	} else {
-		rf = 0;
-	}
 
 	memset( &ent, 0, sizeof( ent ) );
 	VectorCopy( cent->lerpOrigin, ent.origin );
@@ -2055,45 +2048,60 @@ Float sprites over the player's head
 ===============
 */
 static void CG_PlayerSprites( centity_t *cent ) {
+	int		friendFlags, awardFlags;
 	int		team;
 
+	if ( cent->currentState.number == cg.cur_ps->clientNum ) {
+		// current client's team sprite should only be shown in mirrors
+		friendFlags = RF_ONLY_MIRROR;
+
+		// if first person or drawing awards on HUD, only show your award sprites in mirrors
+		if ( !cg.cur_lc->renderingThirdPerson || cg_draw2D.integer ) {
+			awardFlags = RF_ONLY_MIRROR;
+		} else {
+			awardFlags = 0;
+		}
+	} else {
+		friendFlags = awardFlags = 0;
+	}
+
 	if ( cent->currentState.eFlags & EF_CONNECTION ) {
-		CG_PlayerFloatSprite( cent, cgs.media.connectionShader );
+		CG_PlayerFloatSprite( cent, 0, cgs.media.connectionShader );
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_TALK ) {
-		CG_PlayerFloatSprite( cent, cgs.media.balloonShader );
+		CG_PlayerFloatSprite( cent, 0, cgs.media.balloonShader );
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_IMPRESSIVE ) {
-		CG_PlayerFloatSprite( cent, cgs.media.medalImpressive );
+		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalImpressive );
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_EXCELLENT ) {
-		CG_PlayerFloatSprite( cent, cgs.media.medalExcellent );
+		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalExcellent );
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_GAUNTLET ) {
-		CG_PlayerFloatSprite( cent, cgs.media.medalGauntlet );
+		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalGauntlet );
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_DEFEND ) {
-		CG_PlayerFloatSprite( cent, cgs.media.medalDefend );
+		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalDefend );
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_ASSIST ) {
-		CG_PlayerFloatSprite( cent, cgs.media.medalAssist );
+		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalAssist );
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_CAP ) {
-		CG_PlayerFloatSprite( cent, cgs.media.medalCapture );
+		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalCapture );
 		return;
 	}
 
@@ -2102,7 +2110,7 @@ static void CG_PlayerSprites( centity_t *cent ) {
 		cg.cur_ps->persistant[PERS_TEAM] == team &&
 		cgs.gametype >= GT_TEAM) {
 		if (cg_drawFriend.integer) {
-			CG_PlayerFloatSprite( cent, cgs.media.friendShader );
+			CG_PlayerFloatSprite( cent, friendFlags, cgs.media.friendShader );
 		}
 		return;
 	}

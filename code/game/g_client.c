@@ -1001,9 +1001,6 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot, int conn
 		} else {
 			trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " dropped in\n\"", client->pers.netname) );
 		}
-
-		// show team change when finished connecting
-		ent->flags |= FL_FIRST_BEGIN;
 	}
 
 	// count current clients and rank for scoreboard
@@ -1030,15 +1027,10 @@ void ClientBegin( int clientNum ) {
 	gentity_t	*ent;
 	gclient_t	*client;
 	int			flags;
-	qboolean	firstTime;
 
 	ent = g_entities + clientNum;
 
 	client = level.clients + clientNum;
-
-	// check if first connect
-	firstTime = (ent->flags & FL_FIRST_BEGIN);
-	ent->flags &= FL_FIRST_BEGIN;
 
 	if ( ent->r.linked ) {
 		trap_UnlinkEntity( ent );
@@ -1064,7 +1056,7 @@ void ClientBegin( int clientNum ) {
 	// locate ent at a spawn point
 	ClientSpawn( ent );
 
-	if ( firstTime && !g_singlePlayer.integer ) {
+	if ( !g_singlePlayer.integer ) {
 		if ( g_gametype.integer != GT_TOURNAMENT ) {
 			BroadcastTeamChange( client, -1 );
 		}

@@ -963,6 +963,7 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot, int conn
 	memset( client, 0, sizeof(*client) );
 
 	client->pers.connected = CON_CONNECTING;
+	client->pers.initialSpawn = qtrue;
 
 	// update client connection info
 	level.connections[connectionNum].numLocalPlayers++;
@@ -1056,11 +1057,12 @@ void ClientBegin( int clientNum ) {
 	// locate ent at a spawn point
 	ClientSpawn( ent );
 
-	if ( !g_singlePlayer.integer ) {
+	if ( client->pers.initialSpawn && !g_singlePlayer.integer ) {
 		if ( g_gametype.integer != GT_TOURNAMENT ) {
 			BroadcastTeamChange( client, -1 );
 		}
 	}
+	client->pers.initialSpawn = qfalse;
 	G_LogPrintf( "ClientBegin: %i\n", clientNum );
 
 	// count current clients and rank for scoreboard
@@ -1114,9 +1116,8 @@ void ClientSpawn(gentity_t *ent) {
 	else
 	{
 		// the first spawn should be at a good looking spot
-		if ( !client->pers.initialSpawn && client->pers.localClient )
+		if ( client->pers.initialSpawn && client->pers.localClient )
 		{
-			client->pers.initialSpawn = qtrue;
 			spawnPoint = SelectInitialSpawnPoint(spawn_origin, spawn_angles,
 							     !!(ent->r.svFlags & SVF_BOT));
 		}

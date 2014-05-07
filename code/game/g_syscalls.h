@@ -102,7 +102,7 @@ float	trap_AAS_Time(void);
 
 int		trap_AAS_PointAreaNum(vec3_t point);
 int		trap_AAS_PointReachabilityAreaIndex(vec3_t point);
-void	trap_AAS_TraceClientBBox(void /* aas_trace_t */ *trace, vec3_t start, vec3_t end, int presencetype, int passent);
+void	trap_AAS_TraceClientBBox(void /* aas_trace_t */ *trace, vec3_t start, vec3_t end, int presencetype, int passent, int contentmask);
 int		trap_AAS_TraceAreas(vec3_t start, vec3_t end, int *areas, vec3_t *points, int maxareas);
 
 int		trap_AAS_PointContents(vec3_t point);
@@ -131,7 +131,7 @@ int		trap_AAS_TravelFlagForType( int traveltype );
 int		trap_AAS_AreaContentsTravelFlags( int areanum );
 int		trap_AAS_NextAreaReachability( int areanum, int reachnum );
 int		trap_AAS_ReachabilityFromNum( int num, void /*struct aas_reachability_s*/ *reach );
-int		trap_AAS_RandomGoalArea( int areanum, int travelflags, int *goalareanum, vec3_t goalorigin );
+int		trap_AAS_RandomGoalArea( int areanum, int travelflags, int contentmask, int *goalareanum, vec3_t goalorigin );
 int		trap_AAS_EnableRoutingArea( int areanum, int enable );
 unsigned short int trap_AAS_AreaTravelTime(int areanum, vec3_t start, vec3_t end);
 int		trap_AAS_AreaTravelTimeToGoalArea(int areanum, vec3_t origin, int goalareanum, int travelflags);
@@ -144,13 +144,13 @@ int		trap_AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal,
 										int type);
 
 
-int		trap_AAS_PredictClientMovement(void /* aas_clientmove_s */ *move, int entnum, vec3_t origin, int presencetype, int onground, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize);
-int		trap_AAS_OnGround(vec3_t origin, int presencetype, int passent);
+int		trap_AAS_PredictClientMovement(void /* aas_clientmove_s */ *move, int entnum, vec3_t origin, int presencetype, int onground, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize, int contentmask);
+int		trap_AAS_OnGround(vec3_t origin, int presencetype, int passent, int contentmask);
 int		trap_AAS_Swimming(vec3_t origin);
-void	trap_AAS_JumpReachRunStart(void /* struct aas_reachability_s */ *reach, vec3_t runstart);
+void	trap_AAS_JumpReachRunStart(void /* struct aas_reachability_s */ *reach, vec3_t runstart, int contentmask);
 int		trap_AAS_AgainstLadder(vec3_t origin);
 int		trap_AAS_HorizontalVelocityForJump(float zvel, vec3_t start, vec3_t end, float *velocity);
-int		trap_AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs);
+int		trap_AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs, int passent, int contentmask);
 
 int		trap_BotAllocChatState(void);
 void	trap_BotFreeChatState(int handle);

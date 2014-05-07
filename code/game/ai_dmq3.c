@@ -3565,7 +3565,8 @@ void BotAimAtEnemy(bot_state_t *bs) {
 					trap_AAS_PredictClientMovement(&move, bs->enemy, origin,
 														PRESENCE_CROUCH, qfalse,
 														dir, cmdmove, 0,
-														dist * 10 / wi.speed, 0.1f, 0, 0, qfalse);
+														dist * 10 / wi.speed, 0.1f, 0, 0, qfalse,
+														CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 					VectorCopy(move.endpos, bestorigin);
 					//BotAI_Print(PRT_MESSAGE, "%1.1f predicted speed = %f, frames = %f\n", FloatTime(), VectorLength(dir), dist * 10 / wi.speed);
 				}

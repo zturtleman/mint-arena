@@ -331,7 +331,7 @@ int BotReachabilityArea(vec3_t origin, int client)
 		VectorCopy(origin, org);
 		VectorCopy(org, end);
 		end[2] -= 800;
-		trap_AAS_TraceClientBBox(&trace, org, end, PRESENCE_CROUCH, -1);
+		trap_AAS_TraceClientBBox(&trace, org, end, PRESENCE_CROUCH, -1, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 		if (!trace.startsolid)
 		{
 			VectorCopy(trace.endpos, org);
@@ -367,7 +367,7 @@ int BotReachabilityArea(vec3_t origin, int testground)
 		{
 			VectorCopy(origin, end);
 			end[2] -= 800;
-			trap_AAS_TraceClientBBox(&trace, origin, end, PRESENCE_CROUCH, -1);
+			trap_AAS_TraceClientBBox(&trace, origin, end, PRESENCE_CROUCH, -1, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 			if (!trace.startsolid)
 			{
 				VectorCopy(trace.endpos, org);
@@ -1034,7 +1034,7 @@ float BotGapDistance(vec3_t origin, vec3_t hordir, int entnum)
 		VectorCopy(origin, start);
 		VectorCopy(origin, end);
 		end[2] -= 60;
-		trap_AAS_TraceClientBBox(&trace, start, end, PRESENCE_CROUCH, entnum);
+		trap_AAS_TraceClientBBox(&trace, start, end, PRESENCE_CROUCH, entnum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 		if (trace.fraction >= 1) return 1;
 		startz = trace.endpos[2] + 1;
 	}
@@ -1045,7 +1045,7 @@ float BotGapDistance(vec3_t origin, vec3_t hordir, int entnum)
 		start[2] = startz + 24;
 		VectorCopy(start, end);
 		end[2] -= 48 + phys_maxbarrier;
-		trap_AAS_TraceClientBBox(&trace, start, end, PRESENCE_CROUCH, entnum);
+		trap_AAS_TraceClientBBox(&trace, start, end, PRESENCE_CROUCH, entnum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 		//if solid is found the bot can't walk any further and fall into a gap
 		if (!trace.startsolid)
 		{
@@ -1081,13 +1081,13 @@ int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed)
 	VectorNormalize(hordir);
 	VectorMA(ms->origin, ms->thinktime * speed * 0.5, hordir, end);
 	//trace horizontally in the move direction
-	trap_AAS_TraceClientBBox(&trace, ms->origin, end, PRESENCE_NORMAL, ms->entitynum);
+	trap_AAS_TraceClientBBox(&trace, ms->origin, end, PRESENCE_NORMAL, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 	//this shouldn't happen... but we check anyway
 	if (trace.startsolid) return qfalse;
 	//if no obstacle at all
 	if (trace.fraction >= 1.0) return qfalse;
 	//trace horizontally in the move direction again
-	trap_AAS_TraceClientBBox(&trace, ms->origin, end, PRESENCE_CROUCH, ms->entitynum);
+	trap_AAS_TraceClientBBox(&trace, ms->origin, end, PRESENCE_CROUCH, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 	//again this shouldn't happen
 	if (trace.startsolid) return qfalse;
 	//if something is hit
@@ -1110,7 +1110,7 @@ int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean d
 	VectorCopy(ms->origin, end);
 	end[2] += phys_maxbarrier;
 	//trace right up
-	trap_AAS_TraceClientBBox(&trace, ms->origin, end, PRESENCE_NORMAL, ms->entitynum);
+	trap_AAS_TraceClientBBox(&trace, ms->origin, end, PRESENCE_NORMAL, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 	//this shouldn't happen... but we check anyway
 	if (trace.startsolid) return qfalse;
 	//if very low ceiling it isn't possible to jump up to a barrier
@@ -1124,7 +1124,7 @@ int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean d
 	VectorCopy(trace.endpos, start);
 	end[2] = trace.endpos[2];
 	//trace from previous trace end pos horizontally in the move direction
-	trap_AAS_TraceClientBBox(&trace, start, end, PRESENCE_NORMAL, ms->entitynum);
+	trap_AAS_TraceClientBBox(&trace, start, end, PRESENCE_NORMAL, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 	//again this shouldn't happen
 	if (trace.startsolid) return qfalse;
 	//
@@ -1132,7 +1132,7 @@ int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean d
 	VectorCopy(trace.endpos, end);
 	end[2] = ms->origin[2];
 	//trace down from the previous trace end pos
-	trap_AAS_TraceClientBBox(&trace, start, end, PRESENCE_NORMAL, ms->entitynum);
+	trap_AAS_TraceClientBBox(&trace, start, end, PRESENCE_NORMAL, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 	//if solid
 	if (trace.startsolid) return qfalse;
 	//if no obstacle at all
@@ -1177,7 +1177,9 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 	aas_clientmove_t move;
 	float dist;
 
-	if (trap_AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum)) ms->moveflags |= MFL_ONGROUND;
+	if (trap_AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP)) {
+		ms->moveflags |= MFL_ONGROUND;
+	}
 	//if the bot is on the ground
 	if (ms->moveflags & MFL_ONGROUND)
 	{
@@ -1236,7 +1238,7 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 		origin[2] += 0.5;
 		trap_AAS_PredictClientMovement(&move, ms->entitynum, origin, presencetype, qtrue,
 									velocity, cmdmove, cmdframes, maxframes, 0.1f,
-									stopevent, 0, qfalse);//qtrue);
+									stopevent, 0, qfalse, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 		//if prediction time wasn't enough to fully predict the movement
 		if (move.frames >= maxframes && (type & MOVE_JUMP))
 		{
@@ -1900,7 +1902,7 @@ bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach)
 	bot_moveresult_t_cleared( result );
 
 	//
-	trap_AAS_JumpReachRunStart(reach, runstart);
+	trap_AAS_JumpReachRunStart(reach, runstart, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 	//*
 	hordir[0] = runstart[0] - reach->start[0];
 	hordir[1] = runstart[1] - reach->start[1];
@@ -3084,7 +3086,9 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 	ms->moveflags &= ~(MFL_SWIMMING|MFL_AGAINSTLADDER);
 	//set some of the move flags
 	//NOTE: the MFL_ONGROUND flag is also set in the higher AI
-	if (trap_AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum)) ms->moveflags |= MFL_ONGROUND;
+	if (trap_AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP)) {
+		ms->moveflags |= MFL_ONGROUND;
+	}
 	//
 	if (ms->moveflags & MFL_ONGROUND)
 	{

@@ -395,8 +395,8 @@ int trap_AAS_PointReachabilityAreaIndex(vec3_t point) {
 	return syscall( BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX, point );
 }
 
-void trap_AAS_TraceClientBBox(void /* aas_trace_t */ *trace, vec3_t start, vec3_t end, int presencetype, int passent) {
-	syscall( BOTLIB_AAS_TRACE_CLIENT_BBOX, trace, start, end, presencetype, passent );
+void trap_AAS_TraceClientBBox(void /* aas_trace_t */ *trace, vec3_t start, vec3_t end, int presencetype, int passent, int contentmask) {
+	syscall( BOTLIB_AAS_TRACE_CLIENT_BBOX, trace, start, end, presencetype, passent, contentmask );
 }
 
 int trap_AAS_TraceAreas(vec3_t start, vec3_t end, int *areas, vec3_t *points, int maxareas) {
@@ -510,8 +510,8 @@ int trap_AAS_ReachabilityFromNum( int num, void /*struct aas_reachability_s*/ *r
 	return syscall( BOTLIB_AAS_REACHABILITY_FROM_NUM, num, reach );
 }
 
-int trap_AAS_RandomGoalArea( int areanum, int travelflags, int *goalareanum, vec3_t goalorigin ) {
-	return syscall( BOTLIB_AAS_RANDOM_GOAL_AREA, areanum, travelflags, goalareanum, goalorigin );
+int trap_AAS_RandomGoalArea( int areanum, int travelflags, int contentmask, int *goalareanum, vec3_t goalorigin ) {
+	return syscall( BOTLIB_AAS_RANDOM_GOAL_AREA, areanum, travelflags, contentmask, goalareanum, goalorigin );
 }
 
 int trap_AAS_EnableRoutingArea( int areanum, int enable ) {
@@ -539,20 +539,20 @@ int trap_AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, 
 }
 
 
-int trap_AAS_PredictClientMovement(void /* struct aas_clientmove_s */ *move, int entnum, vec3_t origin, int presencetype, int onground, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize) {
-	return syscall( BOTLIB_AAS_PREDICT_CLIENT_MOVEMENT, move, entnum, origin, presencetype, onground, velocity, cmdmove, cmdframes, maxframes, PASSFLOAT(frametime), stopevent, stopareanum, visualize );
+int trap_AAS_PredictClientMovement(void /* struct aas_clientmove_s */ *move, int entnum, vec3_t origin, int presencetype, int onground, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize, int contentmask) {
+	return syscall( BOTLIB_AAS_PREDICT_CLIENT_MOVEMENT, move, entnum, origin, presencetype, onground, velocity, cmdmove, cmdframes, maxframes, PASSFLOAT(frametime), stopevent, stopareanum, visualize, contentmask );
 }
 
-int trap_AAS_OnGround(vec3_t origin, int presencetype, int passent) {
-	return syscall( BOTLIB_AAS_ON_GROUND, origin, presencetype, passent );
+int trap_AAS_OnGround(vec3_t origin, int presencetype, int passent, int contentmask) {
+	return syscall( BOTLIB_AAS_ON_GROUND, origin, presencetype, passent, contentmask );
 }
 
 int trap_AAS_Swimming(vec3_t origin) {
 	return syscall( BOTLIB_AAS_SWIMMING, origin );
 }
 
-void trap_AAS_JumpReachRunStart(void /* struct aas_reachability_s */ *reach, vec3_t runstart) {
-	syscall( BOTLIB_AAS_JUMP_REACH_RUN_START, reach, runstart );
+void trap_AAS_JumpReachRunStart(void /* struct aas_reachability_s */ *reach, vec3_t runstart, int contentmask) {
+	syscall( BOTLIB_AAS_JUMP_REACH_RUN_START, reach, runstart, contentmask );
 }
 
 int trap_AAS_AgainstLadder(vec3_t origin) {
@@ -562,8 +562,8 @@ int trap_AAS_AgainstLadder(vec3_t origin) {
 int trap_AAS_HorizontalVelocityForJump(float zvel, vec3_t start, vec3_t end, float *velocity) {
 	return syscall( BOTLIB_AAS_HORIZONTAL_VELOCITY_FOR_JUMP, PASSFLOAT( zvel ), start, end, velocity );
 }
-int trap_AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs) {
-	return syscall( BOTLIB_AAS_DROP_TO_FLOOR, origin, mins, maxs );
+int trap_AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs, int passent, int contentmask) {
+	return syscall( BOTLIB_AAS_DROP_TO_FLOOR, origin, mins, maxs, passent, contentmask );
 }
 
 

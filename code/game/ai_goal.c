@@ -243,7 +243,7 @@ itemconfig_t *LoadItemConfig(char *filename)
 	itemconfig_t *ic;
 	iteminfo_t *ii;
 
-	strncpy( path, filename, MAX_QPATH );
+	Q_strncpyz( path, filename, sizeof( path ) );
 	source = trap_PC_LoadSource( path, BOTFILESBASEFOLDER );
 	if( !source ) {
 		BotAI_Print( PRT_ERROR, "counldn't load %s\n", path );
@@ -271,7 +271,7 @@ itemconfig_t *LoadItemConfig(char *filename)
 				trap_PC_FreeSource(source);
 				return NULL;
 			} //end if
-			strncpy(ii->classname, token.string, sizeof(ii->classname)-1);
+			Q_strncpyz(ii->classname, token.string, sizeof(ii->classname));
 			if (!PC_ReadStructure(source, &iteminfo_struct, (void *) ii))
 			{
 				trap_PC_FreeSource(source);
@@ -644,8 +644,7 @@ void BotGoalName(int number, char *name, int size)
 	{
 		if (li->number == number)
 		{
-			strncpy(name, itemconfig->iteminfo[li->iteminfo].name, size-1);
-			name[size-1] = '\0';
+			Q_strncpyz(name, itemconfig->iteminfo[li->iteminfo].name, size);
 			return;
 		} //end for
 	} //end for

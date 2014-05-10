@@ -202,7 +202,7 @@ qboolean LoadWeaponConfig(char *filename)
 	weaponconfig_t *wc;
 	weaponinfo_t weaponinfo;
 
-	strncpy(path, filename, MAX_QPATH);
+	Q_strncpyz(path, filename, sizeof(path));
 	source = trap_PC_LoadSource(path, BOTFILESBASEFOLDER);
 	if (!source)
 	{

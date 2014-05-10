@@ -5150,7 +5150,6 @@ void Item_InitControls(itemDef_t *item) {
 			listPtr->cursorPos = 0;
 			listPtr->startPos = 0;
 			listPtr->endPos = 0;
-			listPtr->cursorPos = 0;
 		}
 	}
 }

@@ -271,7 +271,7 @@ void CG_CalcVrect (void) {
 	}
 
 	// the intermission should always be full screen
-	if ( ( cg.cur_ps && cg.cur_ps->pm_type == PM_INTERMISSION ) || ( !cg.cur_ps && cg.singleCamera ) ) {
+	if ( !cg.cur_ps || cg.cur_ps->pm_type == PM_INTERMISSION ) {
 		size = 100;
 	} else {
 		size = cg_viewsize.integer;
@@ -1160,7 +1160,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		// Setup single viewport
 		cg.numViewports = 1;
 		cg.viewport = 0;
-		cg.singleCamera = qtrue;
 
 		// calculate size of viewport
 		CG_CalcVrect();

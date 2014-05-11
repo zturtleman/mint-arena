@@ -2477,7 +2477,6 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 	// Viewport scale and offset
 	cg.viewport = 0;
 	cg.numViewports = 1;
-	cg.singleCamera = qtrue;
 	CG_CalcVrect();
 
 	CG_ConsoleInit();

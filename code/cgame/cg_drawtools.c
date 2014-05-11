@@ -245,15 +245,15 @@ void CG_DrawRect( float x, float y, float width, float height, float size, const
 
 /*
 ================
-CG_ClearScreen
+CG_ClearViewport
 
 Wide and narrow aspect ratios screens need to have the sides cleared.
 Used when drawing fullscreen 4:3 UI.
 =================
 */
-void CG_ClearScreen( void ) {
+void CG_ClearViewport( void ) {
 	trap_R_SetColor( g_color_table[0] );
-	trap_R_DrawStretchPic( 0, 0, cgs.glconfig.vidWidth, cgs.glconfig.vidHeight, 0, 0, 0, 0, cgs.media.whiteShader );
+	trap_R_DrawStretchPic( cg.viewportX, cg.viewportY, cg.viewportWidth, cg.viewportHeight, 0, 0, 0, 0, cgs.media.whiteShader );
 	trap_R_SetColor( NULL );
 }
 
@@ -536,13 +536,11 @@ void CG_TileClear( void ) {
 		return;		// full screen rendering
 	}
 
-	CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
-
 	// viewport coords
-	x = y = 0;
-	w = SCREEN_WIDTH;
-	h = SCREEN_HEIGHT;
-	CG_AdjustFrom640(&x, &y, &w, &h);
+	x = cg.viewportX;
+	y = cg.viewportY;
+	w = cg.viewportWidth;
+	h = cg.viewportHeight;
 
 	// view screen coords
 	top = cg.refdef.y;
@@ -561,8 +559,6 @@ void CG_TileClear( void ) {
 
 	// clear right of view screen
 	CG_TileClearBox( right, top, w - right, bottom - top + 1, cgs.media.backTileShader );
-
-	CG_PopScreenPlacement();
 }
 
 

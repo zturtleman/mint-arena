@@ -1094,7 +1094,7 @@ void UI_Refresh( int realtime )
 	{
 		if (uis.activemenu->fullscreen)
 		{
-			CG_ClearScreen();
+			CG_ClearViewport();
 
 			// draw the background
 			if( uis.activemenu->showlogo ) {

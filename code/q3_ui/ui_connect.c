@@ -174,7 +174,7 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 
 	if ( !overlay ) {
 		// draw the dialog background
-		CG_ClearScreen();
+		CG_ClearViewport();
 		CG_DrawPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, uis.menuBackShader );
 	}
 

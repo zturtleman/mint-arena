@@ -187,86 +187,84 @@ CG_CalcVrect
 Sets the coordinates of the viewport and rendered window
 =================
 */
-static void CG_CalcVrect (void) {
+void CG_CalcVrect (void) {
 	int		size;
-	float		viewWidth, viewHeight;
-	float		viewX, viewY;
 
 	// Viewport size
-	viewX = viewY = 0;
-	viewWidth = cgs.glconfig.vidWidth;
-	viewHeight = cgs.glconfig.vidHeight;
+	cg.viewportX = cg.viewportY = 0;
+	cg.viewportWidth = cgs.glconfig.vidWidth;
+	cg.viewportHeight = cgs.glconfig.vidHeight;
 
 	// Splitscreen viewports
 	if (cg.numViewports == 2) {
 		if (cg_splitviewVertical.integer) {
-			viewWidth *= 0.5f;
+			cg.viewportWidth *= 0.5f;
 
 			if (cg.viewport == 1) {
-				viewX += viewWidth;
+				cg.viewportX += cg.viewportWidth;
 			}
 		} else {
-			viewHeight *= 0.5f;
+			cg.viewportHeight *= 0.5f;
 
 			if (cg.viewport == 1) {
-				viewY += viewHeight;
+				cg.viewportY += cg.viewportHeight;
 			}
 		}
 	} else if (cg.numViewports == 3) {
 		if (cg_splitviewVertical.integer) {
 			if (cg.viewport == 2) {
-				viewWidth *= 0.5f;
-				viewX += viewWidth;
+				cg.viewportWidth *= 0.5f;
+				cg.viewportX += cg.viewportWidth;
 			} else {
-				viewWidth *= 0.5f;
-				viewHeight *= 0.5f;
+				cg.viewportWidth *= 0.5f;
+				cg.viewportHeight *= 0.5f;
 
 				if (cg.viewport == 1) {
-					viewY += viewHeight;
+					cg.viewportY += cg.viewportHeight;
 				}
 			}
 		} else {
 			if (cg.viewport == 2) {
-				viewHeight *= 0.5f;
-				viewY += viewHeight;
+				cg.viewportHeight *= 0.5f;
+				cg.viewportY += cg.viewportHeight;
 			} else {
-				viewWidth *= 0.5f;
-				viewHeight *= 0.5f;
+				cg.viewportWidth *= 0.5f;
+				cg.viewportHeight *= 0.5f;
 
 				if (cg.viewport == 1) {
-					viewX += viewWidth;
+					cg.viewportX += cg.viewportWidth;
 				}
 			}
 		}
 	} else if (cg.numViewports > 1 && cg.numViewports <= 4) {
-		viewWidth *= 0.5f;
-		viewHeight *= 0.5f;
+		cg.viewportWidth *= 0.5f;
+		cg.viewportHeight *= 0.5f;
 
 		if (cg.viewport == 1 || cg.viewport == 3) {
-			viewX += viewWidth;
+			cg.viewportX += cg.viewportWidth;
 		}
 
 		if (cg.viewport == 2 || cg.viewport == 3) {
-			viewY += viewHeight;
+			cg.viewportY += cg.viewportHeight;
 		}
 	}
 
 	// Viewport scale and offset
-	cgs.screenXScaleStretch = viewWidth * (1.0/640.0);
-	cgs.screenYScaleStretch = viewHeight * (1.0/480.0);
-	if ( viewWidth * 480 > viewHeight * 640 ) {
-		cgs.screenXScale = viewWidth * (1.0/640.0);
-		cgs.screenYScale = viewHeight * (1.0/480.0);
+	cgs.screenXScaleStretch = cg.viewportWidth * (1.0/640.0);
+	cgs.screenYScaleStretch = cg.viewportHeight * (1.0/480.0);
+	if ( cg.viewportWidth * 480 > cg.viewportHeight * 640 ) {
+		cgs.screenXScale = cg.viewportWidth * (1.0/640.0);
+		cgs.screenYScale = cg.viewportHeight * (1.0/480.0);
 		// wide screen
-		cgs.screenXBias = 0.5 * ( viewWidth - ( viewHeight * (640.0/480.0) ) );
+		cgs.screenXBias = 0.5 * ( cg.viewportWidth - ( cg.viewportHeight * (640.0/480.0) ) );
 		cgs.screenXScale = cgs.screenYScale;
 		// no narrow screen
 		cgs.screenYBias = 0;
 	} else {
-		cgs.screenXScale = viewWidth * (1.0/640.0);
-		cgs.screenYScale = viewHeight * (1.0/480.0);
+		cgs.screenXScale = cg.viewportWidth * (1.0/640.0);
+		cgs.screenYScale = cg.viewportHeight * (1.0/480.0);
 		// narrow screen
-		cgs.screenYBias = 0.5 * ( viewHeight - ( viewWidth * (480.0/640.0) ) );
+		cgs.screenYBias = 0.5 * ( cg.viewportHeight - ( cg.viewportWidth * (480.0/640.0) ) );
 		cgs.screenYScale = cgs.screenXScale;
 		// no wide screen
 		cgs.screenXBias = 0;
@@ -280,14 +278,14 @@ static void CG_CalcVrect (void) {
 	}
 
 	// Rendered window for drawing world
-	cg.refdef.width = viewWidth*size/100;
+	cg.refdef.width = cg.viewportWidth*size/100;
 	cg.refdef.width &= ~1;
 
-	cg.refdef.height = viewHeight*size/100;
+	cg.refdef.height = cg.viewportHeight*size/100;
 	cg.refdef.height &= ~1;
 
-	cg.refdef.x = viewX + (viewWidth - cg.refdef.width)/2;
-	cg.refdef.y = viewY + (viewHeight - cg.refdef.height)/2;
+	cg.refdef.x = cg.viewportX + (cg.viewportWidth - cg.refdef.width)/2;
+	cg.refdef.y = cg.viewportY + (cg.viewportHeight - cg.refdef.height)/2;
 }
 
 //==============================================================================
@@ -1162,6 +1160,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		// Setup single viewport
 		cg.numViewports = 1;
 		cg.viewport = 0;
+		cg.singleCamera = qtrue;
 
 		// calculate size of viewport
 		CG_CalcVrect();

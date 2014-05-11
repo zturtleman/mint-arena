@@ -195,14 +195,18 @@ To have the portal sky fogged, enter any of the following values:
 
 */
 void SP_skyportal( void ) {
-	//int fogn;
+	int fogn;
+	int isfog;
 
 	cg.hasSkyPortal = qtrue;
 
 	CG_SpawnVector( "origin", "0 0 0", cg.skyPortalOrigin );
-	CG_SpawnVector( "fogcolor", "0 0 0", cg.skyPortalFogColor );
-	//CG_SpawnInt( "fognear", "0", &fogn );
-	CG_SpawnInt( "fogfar", "300", &cg.skyPortalFogDepthForOpaque );
+	isfog = CG_SpawnVector( "fogcolor", "0 0 0", cg.skyPortalFogColor );
+	isfog += CG_SpawnInt( "fognear", "0", &fogn );
+	isfog += CG_SpawnInt( "fogfar", "300", &cg.skyPortalFogDepthForOpaque );
+	if ( !isfog ) {
+		cg.skyPortalFogDepthForOpaque = 0;
+	}
 }
 
 typedef struct {

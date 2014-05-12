@@ -731,7 +731,7 @@ CG_AddNotifyText
 =================
 */
 void CG_AddNotifyText( int realTime, qboolean restoredText ) {
-	char text[ MAX_CONSOLE_TEXT - 1 ];
+	char text[1024];
 	char *buffer;
 	int bufferLen;
 	int lc;

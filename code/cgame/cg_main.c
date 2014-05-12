@@ -49,7 +49,6 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 void CG_Shutdown( void );
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime );
 static char *CG_VoIPString( int localClientNum );
-void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state );
 
 
 /*

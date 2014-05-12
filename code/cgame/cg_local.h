@@ -1424,6 +1424,7 @@ void CG_UpdateCvars( void );
 int CG_CrosshairPlayer( int localClientNum );
 int CG_LastAttacker( int localClientNum );
 void CG_LoadMenus(const char *menuFile);
+void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state );
 void CG_KeyEvent(int key, qboolean down);
 void CG_MouseEvent(int localClientNum, int x, int y);
 void CG_JoystickEvent( int localClientNum, int axis, int value );

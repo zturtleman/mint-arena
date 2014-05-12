@@ -770,6 +770,16 @@ void CG_Cinematic_f( void ) {
 	cg.cinematicHandle = trap_CIN_PlayCinematic( arg, x, y, width, height, bits );
 }
 
+/*
+===================
+CG_ToggleMenu_f
+===================
+*/
+void CG_ToggleMenu_f( void ) {
+	CG_DistributeKeyEvent( K_ESCAPE, qtrue, trap_Milliseconds(), cg.connState );
+	CG_DistributeKeyEvent( K_ESCAPE, qfalse, trap_Milliseconds(), cg.connState );
+}
+
 static consoleCommand_t	cg_commands[] = {
 	{ "testgun", CG_TestGun_f, CMD_INGAME },
 	{ "testmodel", CG_TestModel_f, CMD_INGAME },
@@ -803,7 +813,8 @@ static consoleCommand_t	cg_commands[] = {
 	{ "messageMode3", CG_MessageMode3_f },
 	{ "messageMode4", CG_MessageMode4_f },
 	{ "clear", Con_ClearConsole_f },
-	{ "toggleconsole", Con_ToggleConsole_f }
+	{ "toggleconsole", Con_ToggleConsole_f },
+	{ "togglemenu", CG_ToggleMenu_f }
 };
 
 static int cg_numCommands = ARRAY_LEN( cg_commands );

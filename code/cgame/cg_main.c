@@ -535,7 +535,7 @@ void CG_RegisterUserCvars( void ) {
 				cvarFlags |= userInfo[j];
 			}
 
-			CG_RegisterCvar( vmcvar, Com_LocalClientCvarName( j, uservar->baseName ),
+			CG_RegisterCvar( vmcvar, Com_LocalPlayerCvarName( j, uservar->baseName ),
 							uservar->defaultString, cvarFlags,
 							uservar->rangeMin, uservar->rangeMax, uservar->rangeIntegral );
 		}
@@ -549,13 +549,13 @@ void CG_RegisterUserCvars( void ) {
 			name = va("%s%d", DEFAULT_CLIENT_NAME, i + 1);
 		}
 
-		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "name"), name, userInfo[i] | CVAR_ARCHIVE );
+		trap_Cvar_Register( NULL, Com_LocalPlayerCvarName(i, "name"), name, userInfo[i] | CVAR_ARCHIVE );
 
-		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "model"), modelNames[i], userInfo[i] | CVAR_ARCHIVE );
-		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "headmodel"), headModelNames[i], userInfo[i] | CVAR_ARCHIVE );
+		trap_Cvar_Register( NULL, Com_LocalPlayerCvarName(i, "model"), modelNames[i], userInfo[i] | CVAR_ARCHIVE );
+		trap_Cvar_Register( NULL, Com_LocalPlayerCvarName(i, "headmodel"), headModelNames[i], userInfo[i] | CVAR_ARCHIVE );
 
-		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "team_model"), teamModelNames[i], userInfo[i] | CVAR_ARCHIVE );
-		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "team_headmodel"), teamHeadModelNames[i], userInfo[i] | CVAR_ARCHIVE );
+		trap_Cvar_Register( NULL, Com_LocalPlayerCvarName(i, "team_model"), teamModelNames[i], userInfo[i] | CVAR_ARCHIVE );
+		trap_Cvar_Register( NULL, Com_LocalPlayerCvarName(i, "team_headmodel"), teamHeadModelNames[i], userInfo[i] | CVAR_ARCHIVE );
 	}
 }
 
@@ -2538,7 +2538,7 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
 		// clear team preference if was previously set (only want it used for one game)
-		trap_Cvar_Set( Com_LocalClientCvarName(i, "teampref"), "" );
+		trap_Cvar_Set( Com_LocalPlayerCvarName(i, "teampref"), "" );
 
 		if (clientNums[i] < 0 || clientNums[i] >= MAX_CLIENTS) {
 			cg.localClients[i].clientNum = -1;

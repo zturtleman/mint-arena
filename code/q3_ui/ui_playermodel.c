@@ -203,10 +203,10 @@ PlayerModel_SaveChanges
 */
 static void PlayerModel_SaveChanges( void )
 {
-	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "model"), s_playermodel.modelskin );
-	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "headmodel"), s_playermodel.headmodelskin );
-	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "team_model"), s_playermodel.modelskin );
-	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "team_headmodel"), s_playermodel.headmodelskin );
+	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playermodel.localClient, "model"), s_playermodel.modelskin );
+	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playermodel.localClient, "headmodel"), s_playermodel.headmodelskin );
+	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playermodel.localClient, "team_model"), s_playermodel.modelskin );
+	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playermodel.localClient, "team_headmodel"), s_playermodel.headmodelskin );
 }
 
 /*
@@ -477,12 +477,12 @@ static void PlayerModel_SetMenuItems( void )
 	char*			pdest;
 
 	// name
-	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playermodel.localClient, "name"), s_playermodel.playername.string, 16 );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playermodel.localClient, "name"), s_playermodel.playername.string, 16 );
 	Q_CleanStr( s_playermodel.playername.string );
 
 	// model
-	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playermodel.localClient, "model"), s_playermodel.modelskin, sizeof ( s_playermodel.modelskin ) );
-	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playermodel.localClient, "headmodel"), s_playermodel.headmodelskin, sizeof ( s_playermodel.headmodelskin ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playermodel.localClient, "model"), s_playermodel.modelskin, sizeof ( s_playermodel.modelskin ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playermodel.localClient, "headmodel"), s_playermodel.headmodelskin, sizeof ( s_playermodel.headmodelskin ) );
 	
 	// use default skin if none is set
 	if (!strchr(s_playermodel.modelskin, '/')) {

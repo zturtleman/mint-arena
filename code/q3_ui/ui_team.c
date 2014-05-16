@@ -69,7 +69,7 @@ static void TeamMain_MenuEvent( void* ptr, int event ) {
 		return;
 	}
 
-	teamCmd = Com_LocalClientCvarName(s_teammain.localClient, "team");
+	teamCmd = Com_LocalPlayerCvarName(s_teammain.localClient, "team");
 
 	switch( ((menucommon_s*)ptr)->id ) {
 	case ID_JOINRED:

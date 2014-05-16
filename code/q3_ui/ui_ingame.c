@@ -114,9 +114,9 @@ UI_TogglePlayerIngame
 void UI_TogglePlayerIngame(int localClientNum)
 {
 	if (cg.localClients[localClientNum].clientNum == -1) {
-		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalClientCvarName(localClientNum, "dropin")) );
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalPlayerCvarName(localClientNum, "dropin")) );
 	} else {
-		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalClientCvarName(localClientNum, "dropout")) );
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalPlayerCvarName(localClientNum, "dropout")) );
 	}
 
 	UI_ForceMenuOff ();

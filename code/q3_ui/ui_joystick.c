@@ -91,12 +91,12 @@ static void UI_JoystickMenu_Event( void *ptr, int event ) {
 
 		if (joystick == 0) {
 			// Disable joystick
-			trap_Cvar_SetValue(Com_LocalClientCvarName(joystickMenu.localClient, "in_joystick"), 0);
-			trap_Cvar_SetValue(Com_LocalClientCvarName(joystickMenu.localClient, "in_joystickNo"), 0);
+			trap_Cvar_SetValue(Com_LocalPlayerCvarName(joystickMenu.localClient, "in_joystick"), 0);
+			trap_Cvar_SetValue(Com_LocalPlayerCvarName(joystickMenu.localClient, "in_joystickNo"), 0);
 		} else {
 			// Enable joystick
-			trap_Cvar_SetValue(Com_LocalClientCvarName(joystickMenu.localClient, "in_joystick"), 1);
-			trap_Cvar_SetValue(Com_LocalClientCvarName(joystickMenu.localClient, "in_joystickNo"), joystick-1);
+			trap_Cvar_SetValue(Com_LocalPlayerCvarName(joystickMenu.localClient, "in_joystick"), 1);
+			trap_Cvar_SetValue(Com_LocalPlayerCvarName(joystickMenu.localClient, "in_joystickNo"), joystick-1);
 		}
 
 		// Disable last selected joystick.
@@ -295,10 +295,10 @@ static void UI_Joystick_MenuInit( int localClient ) {
 	Menu_AddItem( &joystickMenu.menu, &joystickMenu.back );
 
 	// Store original joystick
-	if (trap_Cvar_VariableValue(Com_LocalClientCvarName(joystickMenu.localClient, "in_joystick")) == 0) {
+	if (trap_Cvar_VariableValue(Com_LocalPlayerCvarName(joystickMenu.localClient, "in_joystick")) == 0) {
 		joystick = 0;
 	} else {
-		joystick = 1 + (int)trap_Cvar_VariableValue(Com_LocalClientCvarName(joystickMenu.localClient, "in_joystickNo"));
+		joystick = 1 + (int)trap_Cvar_VariableValue(Com_LocalPlayerCvarName(joystickMenu.localClient, "in_joystickNo"));
 	}
 
 	if (joystick < 0 || joystick >= joystickMenu.numJoysticks) {

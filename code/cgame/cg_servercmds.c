@@ -523,7 +523,7 @@ static void CG_MapRestart( void ) {
 		cg.localClients[lc].rewardTime = 0;
 		cg.localClients[lc].rewardStack = 0;
 
-		trap_Cvar_SetValue( Com_LocalClientCvarName(lc, "cg_thirdPerson"), 0 );
+		trap_Cvar_SetValue( Com_LocalPlayerCvarName(lc, "cg_thirdPerson"), 0 );
 	}
 }
 

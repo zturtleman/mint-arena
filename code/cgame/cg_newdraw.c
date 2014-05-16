@@ -99,22 +99,22 @@ void CG_CheckOrderPending( int localPlayerNum ) {
 			case TEAMTASK_OFFENSE:
 				p1 = VOICECHAT_ONOFFENSE;
 				p2 = VOICECHAT_OFFENSE;
-				Com_sprintf( b, sizeof ( b ), "%s; wait; %s", Com_LocalClientCvarName( localPlayerNum, "+button7" ), Com_LocalClientCvarName( localPlayerNum, "-button7" ) );
+				Com_sprintf( b, sizeof ( b ), "%s; wait; %s", Com_LocalPlayerCvarName( localPlayerNum, "+button7" ), Com_LocalPlayerCvarName( localPlayerNum, "-button7" ) );
 			break;
 			case TEAMTASK_DEFENSE:
 				p1 = VOICECHAT_ONDEFENSE;
 				p2 = VOICECHAT_DEFEND;
-				Com_sprintf( b, sizeof ( b ), "%s; wait; %s", Com_LocalClientCvarName( localPlayerNum, "+button8" ), Com_LocalClientCvarName( localPlayerNum, "-button8" ) );
+				Com_sprintf( b, sizeof ( b ), "%s; wait; %s", Com_LocalPlayerCvarName( localPlayerNum, "+button8" ), Com_LocalPlayerCvarName( localPlayerNum, "-button8" ) );
 			break;					
 			case TEAMTASK_PATROL:
 				p1 = VOICECHAT_ONPATROL;
 				p2 = VOICECHAT_PATROL;
-				Com_sprintf( b, sizeof ( b ), "%s; wait; %s", Com_LocalClientCvarName( localPlayerNum, "+button9" ), Com_LocalClientCvarName( localPlayerNum, "-button9" ) );
+				Com_sprintf( b, sizeof ( b ), "%s; wait; %s", Com_LocalPlayerCvarName( localPlayerNum, "+button9" ), Com_LocalPlayerCvarName( localPlayerNum, "-button9" ) );
 			break;
 			case TEAMTASK_FOLLOW: 
 				p1 = VOICECHAT_ONFOLLOW;
 				p2 = VOICECHAT_FOLLOWME;
-				Com_sprintf( b, sizeof ( b ), "%s; wait; %s", Com_LocalClientCvarName( localPlayerNum, "+button10" ), Com_LocalClientCvarName( localPlayerNum, "-button10" ) );
+				Com_sprintf( b, sizeof ( b ), "%s; wait; %s", Com_LocalPlayerCvarName( localPlayerNum, "+button10" ), Com_LocalPlayerCvarName( localPlayerNum, "-button10" ) );
 			break;
 			case TEAMTASK_CAMP:
 				p1 = VOICECHAT_ONCAMPING;
@@ -132,16 +132,16 @@ void CG_CheckOrderPending( int localPlayerNum ) {
 
 		if (selectedPlayer == numSortedTeamPlayers[team]) {
 			// to everyone
-			trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay_team"), p2));
+			trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s\n", Com_LocalPlayerCvarName(localPlayerNum, "vsay_team"), p2));
 		} else {
 			// for the player self
 			if (sortedTeamPlayers[team][selectedPlayer] == clientNum && p1) {
-				trap_Cmd_ExecuteText(EXEC_APPEND, va("%s %i\n", Com_LocalClientCvarName(localPlayerNum, "teamtask"), localClient->currentOrder));
-				//trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "say_team"), p2));
-				trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s\n", Com_LocalClientCvarName(localPlayerNum, "vsay_team"), p1));
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("%s %i\n", Com_LocalPlayerCvarName(localPlayerNum, "teamtask"), localClient->currentOrder));
+				//trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s\n", Com_LocalPlayerCvarName(localPlayerNum, "say_team"), p2));
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s\n", Com_LocalPlayerCvarName(localPlayerNum, "vsay_team"), p1));
 			} else if (p2) {
-				//trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s, %s\n", Com_LocalClientCvarName(localPlayerNum, "say_team"), ci->name,p));
-				trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %d %s\n", Com_LocalClientCvarName(localPlayerNum, "vtell"), sortedTeamPlayers[team][selectedPlayer], p2));
+				//trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s, %s\n", Com_LocalPlayerCvarName(localPlayerNum, "say_team"), ci->name,p));
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %d %s\n", Com_LocalPlayerCvarName(localPlayerNum, "vtell"), sortedTeamPlayers[team][selectedPlayer], p2));
 			}
 		}
 		if (b[0]) {
@@ -159,12 +159,12 @@ static void CG_SetSelectedPlayerName( int localPlayerNum ) {
 	if (cg_currentSelectedPlayer[ localPlayerNum ].integer >= 0 && cg_currentSelectedPlayer[ localPlayerNum ].integer < numSortedTeamPlayers[team]) {
 		clientInfo_t *ci = cgs.clientinfo + sortedTeamPlayers[team][cg_currentSelectedPlayer[ localPlayerNum ].integer];
 		if (ci) {
-			trap_Cvar_Set(Com_LocalClientCvarName(localPlayerNum, "cg_selectedPlayerName"), ci->name);
-			trap_Cvar_SetValue(Com_LocalClientCvarName(localPlayerNum, "cg_selectedPlayer"), sortedTeamPlayers[team][cg_currentSelectedPlayer[ localPlayerNum ].integer]);
+			trap_Cvar_Set(Com_LocalPlayerCvarName(localPlayerNum, "cg_selectedPlayerName"), ci->name);
+			trap_Cvar_SetValue(Com_LocalPlayerCvarName(localPlayerNum, "cg_selectedPlayer"), sortedTeamPlayers[team][cg_currentSelectedPlayer[ localPlayerNum ].integer]);
 			cg.localClients[ localPlayerNum ].currentOrder = ci->teamTask;
 		}
 	} else {
-		trap_Cvar_Set(Com_LocalClientCvarName(localPlayerNum, "cg_selectedPlayerName"), "Everyone");
+		trap_Cvar_Set(Com_LocalPlayerCvarName(localPlayerNum, "cg_selectedPlayerName"), "Everyone");
 	}
 }
 int CG_GetSelectedPlayer( int localPlayerNum ) {

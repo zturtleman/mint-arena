@@ -1275,12 +1275,6 @@ char *Com_LocalPlayerCvarName(int localPlayerNum, const char *in_cvarName);
 int Com_LocalPlayerForCvarName(const char *in_cvarName);
 const char *Com_LocalPlayerBaseCvarName(const char *in_cvarName);
 
-#if 1 // ZTM: TMP
-#define Com_LocalClientCvarName Com_LocalPlayerCvarName
-#define Com_LocalClientForCvarName Com_LocalPlayerForCvarName
-#define Com_LocalClientBaseCvarName Com_LocalPlayerBaseCvarName
-#endif
-
 #define Square(x) ((x)*(x))
 
 // real time

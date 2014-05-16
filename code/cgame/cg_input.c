@@ -571,11 +571,11 @@ void CG_RegisterInputCvars( void ) {
 	trap_Cvar_Register( &m_side, "m_side", "0.25", CVAR_ARCHIVE );
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		trap_Cvar_Register( &cg_yawspeed[i], Com_LocalClientCvarName(i, "cg_yawspeed"), "140", CVAR_ARCHIVE );
-		trap_Cvar_Register( &cg_pitchspeed[i], Com_LocalClientCvarName(i, "cg_pitchspeed"), "140", CVAR_ARCHIVE );
-		trap_Cvar_Register( &cg_anglespeedkey[i], Com_LocalClientCvarName(i, "cg_anglespeedkey"), "1.5", 0 );
-		trap_Cvar_Register( &cg_run[i], Com_LocalClientCvarName(i, "cl_run"), "1", CVAR_ARCHIVE ); // ZTM: NOTE: changing name breaks team arena menu scripts
-		trap_Cvar_Register( &cg_joystickUseAnalog[i], Com_LocalClientCvarName(i, "in_joystickUseAnalog"), "1", CVAR_ARCHIVE );
+		trap_Cvar_Register( &cg_yawspeed[i], Com_LocalPlayerCvarName(i, "cg_yawspeed"), "140", CVAR_ARCHIVE );
+		trap_Cvar_Register( &cg_pitchspeed[i], Com_LocalPlayerCvarName(i, "cg_pitchspeed"), "140", CVAR_ARCHIVE );
+		trap_Cvar_Register( &cg_anglespeedkey[i], Com_LocalPlayerCvarName(i, "cg_anglespeedkey"), "1.5", 0 );
+		trap_Cvar_Register( &cg_run[i], Com_LocalPlayerCvarName(i, "cl_run"), "1", CVAR_ARCHIVE ); // ZTM: NOTE: changing name breaks team arena menu scripts
+		trap_Cvar_Register( &cg_joystickUseAnalog[i], Com_LocalPlayerCvarName(i, "in_joystickUseAnalog"), "1", CVAR_ARCHIVE );
 	}
 }
 

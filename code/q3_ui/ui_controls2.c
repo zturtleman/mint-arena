@@ -1045,8 +1045,8 @@ static void Controls_DrawPlayer( void *self ) {
 	menubitmap_s	*b;
 	char			model[MAX_QPATH], headmodel[MAX_QPATH];
 
-	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_controls.localClient, "model"), model, sizeof( model ) );
-	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_controls.localClient, "headmodel"), headmodel, sizeof( headmodel ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localClient, "model"), model, sizeof( model ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localClient, "headmodel"), headmodel, sizeof( headmodel ) );
 	if ( strcmp( model, s_controls.playerModel ) != 0 || strcmp( headmodel, s_controls.playerHead ) != 0 ) {
 		UI_PlayerInfo_SetModel( &s_controls.playerinfo, model, headmodel, NULL );
 		strcpy( s_controls.playerModel, model );
@@ -1106,7 +1106,7 @@ static void Controls_GetConfig( void )
 			break;
 
 		for (j = 0; j < UI_MaxSplitView(); j++) {
-			Controls_GetKeyAssignment(Com_LocalClientCvarName(j, bindptr->command), twokeys);
+			Controls_GetKeyAssignment(Com_LocalPlayerCvarName(j, bindptr->command), twokeys);
 
 			g_bindings_list[j][i].bind1 = twokeys[0];
 			g_bindings_list[j][i].bind2 = twokeys[1];
@@ -1120,10 +1120,10 @@ static void Controls_GetConfig( void )
 		s_controls.freelook.curvalue     = Com_Clamp( 0, 1, Controls_GetCvarValue( "cl_freelook" ) );
 	}
 
-	s_controls.alwaysrun.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ) ) );
-	s_controls.autoswitch.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ) ) );
-	s_controls.joyanalog.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickUseAnalog" ) ) );
-	s_controls.joythreshold.curvalue = Com_Clamp( 0.05f, 0.75f, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ) ) );
+	s_controls.alwaysrun.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localClient, "cl_run" ) ) );
+	s_controls.autoswitch.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localClient, "cg_autoswitch" ) ) );
+	s_controls.joyanalog.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localClient, "in_joystickUseAnalog" ) ) );
+	s_controls.joythreshold.curvalue = Com_Clamp( 0.05f, 0.75f, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localClient, "in_joystickThreshold" ) ) );
 }
 
 /*
@@ -1149,19 +1149,19 @@ static void Controls_SetConfig( void )
 		for (j = 0; j < UI_MaxSplitView(); j++) {
 			if (g_bindings_list[j][i].bind1 != -1)
 			{
-				trap_Key_SetBinding( g_bindings_list[j][i].bind1, Com_LocalClientCvarName(j, bindptr->command) );
+				trap_Key_SetBinding( g_bindings_list[j][i].bind1, Com_LocalPlayerCvarName(j, bindptr->command) );
 
 				if (g_bindings_list[j][i].bind2 != -1)
-					trap_Key_SetBinding( g_bindings_list[j][i].bind2, Com_LocalClientCvarName(j, bindptr->command) );
+					trap_Key_SetBinding( g_bindings_list[j][i].bind2, Com_LocalPlayerCvarName(j, bindptr->command) );
 			}
 		}
 	}
 
 	if (s_controls.localClient != 0) {
-		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ), s_controls.alwaysrun.curvalue );
-		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ), s_controls.autoswitch.curvalue );
-		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickUseAnalog" ), s_controls.joyanalog.curvalue );
-		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ), s_controls.joythreshold.curvalue );
+		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localClient, "cl_run" ), s_controls.alwaysrun.curvalue );
+		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localClient, "cg_autoswitch" ), s_controls.autoswitch.curvalue );
+		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localClient, "in_joystickUseAnalog" ), s_controls.joyanalog.curvalue );
+		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localClient, "in_joystickThreshold" ), s_controls.joythreshold.curvalue );
 		return;
 	}
 
@@ -1203,12 +1203,12 @@ static void Controls_SetDefaults( void )
 	}
 
 	if (s_controls.localClient != 0) {
-		s_controls.alwaysrun.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ) );
-		s_controls.autoswitch.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ) );
-		trap_Cvar_SetValue(Com_LocalClientCvarName(s_controls.localClient, "in_joystick"), 0);
-		trap_Cvar_SetValue(Com_LocalClientCvarName(s_controls.localClient, "in_joystickNo"), 0);
-		s_controls.joyanalog.curvalue    = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "in_joystickUseAnalog" ) );
-		s_controls.joythreshold.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ) );
+		s_controls.alwaysrun.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localClient, "cl_run" ) );
+		s_controls.autoswitch.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localClient, "cg_autoswitch" ) );
+		trap_Cvar_SetValue(Com_LocalPlayerCvarName(s_controls.localClient, "in_joystick"), 0);
+		trap_Cvar_SetValue(Com_LocalPlayerCvarName(s_controls.localClient, "in_joystickNo"), 0);
+		s_controls.joyanalog.curvalue    = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localClient, "in_joystickUseAnalog" ) );
+		s_controls.joythreshold.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localClient, "in_joystickThreshold" ) );
 		return;
 	}
 
@@ -1513,8 +1513,8 @@ static void Controls_InitModel( void )
 
 	memset( &s_controls.playerinfo, 0, sizeof(playerInfo_t) );
 
-	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_controls.localClient, "model"), model, sizeof ( model ) );
-	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_controls.localClient, "headmodel"), headmodel, sizeof ( headmodel ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localClient, "model"), model, sizeof ( model ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localClient, "headmodel"), headmodel, sizeof ( headmodel ) );
 
 	UI_PlayerInfo_SetModel( &s_controls.playerinfo, model, headmodel, NULL );
 
@@ -2057,7 +2057,7 @@ static void Controls_MenuInit( int localClient )
 
 	Menu_AddItem( &s_controls.menu, &s_controls.back );
 
-	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_controls.localClient, "name"), s_controls.name.string, 16 );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localClient, "name"), s_controls.name.string, 16 );
 	Q_CleanStr( s_controls.name.string );
 
 	// initialize the configurable cvars

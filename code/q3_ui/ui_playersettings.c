@@ -251,8 +251,8 @@ static void PlayerSettings_DrawPlayer( void *self ) {
 	vec3_t			viewangles;
 	char			model[MAX_QPATH], headmodel[MAX_QPATH];
 
-	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playersettings.localClient, "model"), model, sizeof( model ) );
-	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playersettings.localClient, "headmodel"), headmodel, sizeof ( headmodel ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playersettings.localClient, "model"), model, sizeof( model ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playersettings.localClient, "headmodel"), headmodel, sizeof ( headmodel ) );
 	if ( strcmp( model, s_playersettings.playerModel ) != 0 || strcmp( headmodel, s_playersettings.playerHead ) != 0 ) {
 		UI_PlayerInfo_SetModel( &s_playersettings.playerinfo, model, headmodel, NULL );
 		strcpy( s_playersettings.playerModel, model );
@@ -276,14 +276,14 @@ PlayerSettings_SaveChanges
 */
 static void PlayerSettings_SaveChanges( void ) {
 	// name
-	trap_Cvar_Set( Com_LocalClientCvarName(s_playersettings.localClient, "name"), s_playersettings.name.field.buffer );
+	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playersettings.localClient, "name"), s_playersettings.name.field.buffer );
 
 	// handicap
-	trap_Cvar_SetValue( Com_LocalClientCvarName(s_playersettings.localClient, "handicap"),
+	trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_playersettings.localClient, "handicap"),
 			100 - s_playersettings.handicap.curvalue * 5 );
 
 	// effects color
-	trap_Cvar_SetValue( Com_LocalClientCvarName(s_playersettings.localClient, "color1"),
+	trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_playersettings.localClient, "color1"),
 			uitogamecode[s_playersettings.effects.curvalue] );
 }
 
@@ -314,10 +314,10 @@ static void PlayerSettings_SetMenuItems( void ) {
 
 	// name
 	Q_strncpyz( s_playersettings.name.field.buffer, CG_Cvar_VariableString(
-			Com_LocalClientCvarName(s_playersettings.localClient, "name")), sizeof(s_playersettings.name.field.buffer) );
+			Com_LocalPlayerCvarName(s_playersettings.localClient, "name")), sizeof(s_playersettings.name.field.buffer) );
 
 	// effects color
-	c = trap_Cvar_VariableValue( Com_LocalClientCvarName(s_playersettings.localClient, "color1") ) - 1;
+	c = trap_Cvar_VariableValue( Com_LocalPlayerCvarName(s_playersettings.localClient, "color1") ) - 1;
 	if( c < 0 || c > NUM_COLOR_EFFECTS-1 ) {
 		c = NUM_COLOR_EFFECTS-1;
 	}
@@ -330,14 +330,14 @@ static void PlayerSettings_SetMenuItems( void ) {
 	viewangles[PITCH] = 0;
 	viewangles[ROLL]  = 0;
 
-	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playersettings.localClient, "model"), model, sizeof( model ) );
-	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playersettings.localClient, "headmodel"), headmodel, sizeof ( headmodel ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playersettings.localClient, "model"), model, sizeof( model ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playersettings.localClient, "headmodel"), headmodel, sizeof ( headmodel ) );
 
 	UI_PlayerInfo_SetModel( &s_playersettings.playerinfo, model, headmodel, NULL );
 	UI_PlayerInfo_SetInfo( &s_playersettings.playerinfo, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
 
 	// handicap
-	h = Com_Clamp( 5, 100, trap_Cvar_VariableValue(Com_LocalClientCvarName(s_playersettings.localClient, "handicap")) );
+	h = Com_Clamp( 5, 100, trap_Cvar_VariableValue(Com_LocalPlayerCvarName(s_playersettings.localClient, "handicap")) );
 	s_playersettings.handicap.curvalue = 20 - h / 5;
 }
 
@@ -354,7 +354,7 @@ static void PlayerSettings_MenuEvent( void* ptr, int event ) {
 
 	switch( ((menucommon_s*)ptr)->id ) {
 	case ID_HANDICAP:
-		trap_Cvar_Set( Com_LocalClientCvarName(s_playersettings.localClient, "handicap"),
+		trap_Cvar_Set( Com_LocalPlayerCvarName(s_playersettings.localClient, "handicap"),
 				va( "%i", 100 - 25 * s_playersettings.handicap.curvalue ) );
 		break;
 

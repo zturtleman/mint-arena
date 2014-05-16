@@ -873,7 +873,7 @@ static void ServerOptions_Start( void ) {
 	if( dedicated == 0 && s_serveroptions.gametype >= GT_TEAM ) {
 		for ( n = 0; n < UI_MaxSplitView(); ++n ) {
 			if ( n == 0 || s_serveroptions.playerType[n].curvalue == PT_HUMAN ) {
-				trap_Cvar_Set( Com_LocalClientCvarName( n, "teampref" ), playerTeam_list[s_serveroptions.playerTeam[n].curvalue] );
+				trap_Cvar_Set( Com_LocalPlayerCvarName( n, "teampref" ), playerTeam_list[s_serveroptions.playerTeam[n].curvalue] );
 			}
 		}
 	}
@@ -933,7 +933,7 @@ static void ServerOptions_InitPlayerItems( void ) {
 	// if not a dedicated server, first slot is reserved for the human on the server
 	if( s_serveroptions.dedicated.curvalue == 0 ) {
 		for (n = 0; n < UI_MaxSplitView(); n++) {
-			trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(n, "name"), s_serveroptions.playerNameBuffers[n], sizeof(s_serveroptions.playerNameBuffers[n]) );
+			trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(n, "name"), s_serveroptions.playerNameBuffers[n], sizeof(s_serveroptions.playerNameBuffers[n]) );
 			Q_CleanStr( s_serveroptions.playerNameBuffers[n] );
 
 			s_serveroptions.playerType[n].curvalue = PT_OPEN;

@@ -2540,8 +2540,8 @@ static void CG_DrawVote(void) {
 		sec = 0;
 	}
 
-	CG_KeysStringForBinding( Com_LocalClientCvarName( cg.cur_localClientNum, "vote yes" ), yesKeys, sizeof (yesKeys) );
-	CG_KeysStringForBinding( Com_LocalClientCvarName( cg.cur_localClientNum, "vote no" ), noKeys, sizeof (noKeys) );
+	CG_KeysStringForBinding( Com_LocalPlayerCvarName( cg.cur_localClientNum, "vote yes" ), yesKeys, sizeof (yesKeys) );
+	CG_KeysStringForBinding( Com_LocalPlayerCvarName( cg.cur_localClientNum, "vote no" ), noKeys, sizeof (noKeys) );
 
 	s = va( "Vote (%i): %s", sec, cgs.voteString );
 	CG_DrawSmallString( 2, 58, s, 1.0F );

@@ -81,9 +81,7 @@ typedef struct {
 
 	byte			areamask[MAX_SPLITVIEW][MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 
-	// ZTM: TMP
-	//int				playerNums[MAX_SPLITVIEW];
-	int				clientNums[MAX_SPLITVIEW];
+	int				playerNums[MAX_SPLITVIEW];
 
 	int				numServerCommands;		// text based server commands to execute when this
 	int				serverCommandSequence;	// snapshot becomes current

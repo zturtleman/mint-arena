@@ -86,7 +86,7 @@ void CG_BuildSolidList( void ) {
 
 	// Add local clients to solid entity list
 	for ( i = 0 ; i < CG_MaxSplitView() ; i++ ) {
-		if ( snap->clientNums[i] == -1 ) {
+		if ( snap->playerNums[i] == -1 ) {
 			continue;
 		}
 		ps = &snap->pss[i];
@@ -317,8 +317,8 @@ static void CG_InterpolatePlayerState( qboolean grabAngles ) {
 		return;
 	}
 
-	if (prev->clientNums[cg.cur_localClientNum] == -1 ||
-		next->clientNums[cg.cur_localClientNum] == -1) {
+	if (prev->playerNums[cg.cur_localClientNum] == -1 ||
+		next->playerNums[cg.cur_localClientNum] == -1) {
 		return;
 	}
 
@@ -581,7 +581,7 @@ void CG_PredictPlayerState( void ) {
 	// because predicted player positions are going to 
 	// be ahead of everything else anyway
 	if ( cg.nextSnap && !cg.nextFrameTeleport && !cg.thisFrameTeleport
-		&& cg.nextSnap->clientNums[cg.cur_localClientNum] != -1) {
+		&& cg.nextSnap->playerNums[cg.cur_localClientNum] != -1) {
 		cg.cur_lc->predictedPlayerState = cg.nextSnap->pss[cg.cur_localClientNum];
 		cg.physicsTime = cg.nextSnap->serverTime;
 	} else {

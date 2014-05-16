@@ -1093,7 +1093,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 			// Check if any local client is on blue/red team or has flags.
 			for (i = 0; i < CG_MaxSplitView(); i++) {
-				if (cg.snap->clientNums[i] == -1) {
+				if (cg.snap->playerNums[i] == -1) {
 					continue;
 				}
 				if (cg.snap->pss[i].persistant[PERS_TEAM] == TEAM_BLUE) {

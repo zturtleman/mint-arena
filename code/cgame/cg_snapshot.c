@@ -95,7 +95,7 @@ void CG_SetInitialSnapshot( snapshot_t *snap ) {
 	cg.snap = snap;
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if ( cg.snap->clientNums[i] == -1 ) {
+		if ( cg.snap->playerNums[i] == -1 ) {
 			continue;
 		}
 		BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState, qfalse );
@@ -163,15 +163,15 @@ static void CG_TransitionSnapshot( void ) {
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
 		// Server added or removed local client
-		if ( oldFrame && oldFrame->clientNums[i] != cg.snap->clientNums[i] ) {
+		if ( oldFrame && oldFrame->playerNums[i] != cg.snap->playerNums[i] ) {
 			CG_LocalClientRemoved( i );
 
-			if ( cg.snap->clientNums[i] != -1 ) {
-				CG_LocalClientAdded( i, cg.snap->clientNums[i] );
+			if ( cg.snap->playerNums[i] != -1 ) {
+				CG_LocalClientAdded( i, cg.snap->playerNums[i] );
 			}
 		}
 
-		if ( cg.snap->clientNums[i] != -1 ) {
+		if ( cg.snap->playerNums[i] != -1 ) {
 			BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState, qfalse );
 			cg_entities[ cg.snap->pss[i].clientNum ].interpolate = qfalse;
 		}
@@ -192,7 +192,7 @@ static void CG_TransitionSnapshot( void ) {
 		playerState_t	*ops, *ps;
 
 		for (i = 0; i < CG_MaxSplitView(); i++) {
-			if ( oldFrame->clientNums[i] == -1 || oldFrame->clientNums[i] != cg.snap->clientNums[i] ) {
+			if ( oldFrame->playerNums[i] == -1 || oldFrame->playerNums[i] != cg.snap->playerNums[i] ) {
 				continue;
 			}
 
@@ -239,7 +239,7 @@ static void CG_SetNextSnap( snapshot_t *snap ) {
 	cg.nextSnap = snap;
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if ( cg.snap->clientNums[i] == -1 ) {
+		if ( cg.snap->playerNums[i] == -1 ) {
 			continue;
 		}
 		BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].nextState, qfalse );
@@ -265,7 +265,7 @@ static void CG_SetNextSnap( snapshot_t *snap ) {
 
 	cg.nextFrameTeleport = qfalse;
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if ( snap->clientNums[i] == -1 ) {
+		if ( snap->playerNums[i] == -1 ) {
 			continue;
 		}
 
@@ -478,7 +478,7 @@ playerState_t *CG_LocalClientPlayerStateForClientNum(int clientNum) {
 	int i;
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if (cg.snap->clientNums[i] != -1 && cg.snap->pss[i].clientNum == clientNum) {
+		if (cg.snap->playerNums[i] != -1 && cg.snap->pss[i].clientNum == clientNum) {
 			return &cg.snap->pss[i];
 		}
 	}

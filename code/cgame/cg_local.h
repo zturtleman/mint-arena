@@ -490,11 +490,6 @@ typedef struct {
 } itemInfo_t;
 
 
-typedef struct {
-	int				itemNum;
-} powerupInfo_t;
-
-
 #define MAX_SKULLTRAIL		10
 
 typedef struct {
@@ -834,7 +829,7 @@ typedef struct {
 // all of the model, shader, and sound references that are
 // loaded at gamestate time are stored in cgMedia_t
 // Other media that can be tied to clients, weapons, or items are
-// stored in the clientInfo_t, itemInfo_t, weaponInfo_t, and powerupInfo_t
+// stored in the clientInfo_t, weaponInfo_t, or itemInfo_t
 typedef struct {
 	qhandle_t	charsetShader;
 	qhandle_t	whiteShader;

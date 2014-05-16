@@ -429,18 +429,18 @@ A new item was picked up this frame
 ================
 */
 static void CG_ItemPickup( int localPlayerNum, int itemNum ) {
-	cglc_t *lc = &cg.localPlayers[localPlayerNum];
+	localPlayer_t *player = &cg.localPlayers[localPlayerNum];
 	gitem_t *item = BG_ItemForItemNum( itemNum );
 
-	lc->itemPickup = itemNum;
-	lc->itemPickupTime = cg.time;
-	lc->itemPickupBlendTime = cg.time;
+	player->itemPickup = itemNum;
+	player->itemPickupTime = cg.time;
+	player->itemPickupBlendTime = cg.time;
 	// see if it should be the grabbed weapon
 	if ( item->giType == IT_WEAPON ) {
 		// select it immediately
 		if ( cg_autoswitch[localPlayerNum].integer && item->giTag != WP_MACHINEGUN ) {
-			lc->weaponSelectTime = cg.time;
-			lc->weaponSelect = item->giTag;
+			player->weaponSelectTime = cg.time;
+			player->weaponSelect = bg_itemlist[itemNum].giTag;
 		}
 	}
 
@@ -658,11 +658,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		float	oldStep;
 		int		delta;
 		int		step;
-		cglc_t	*lc;
+		localPlayer_t *player;
 		playerState_t *ps;
 
 		for (i = 0; i < CG_MaxSplitView(); i++) {
-			lc = &cg.localPlayers[i];
+			player = &cg.localPlayers[i];
 			ps = &cg.snap->pss[i];
 
 			if ( clientNum != ps->clientNum ) {
@@ -675,20 +675,20 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				continue;
 			}
 			// check for stepping up before a previous step is completed
-			delta = cg.time - lc->stepTime;
+			delta = cg.time - player->stepTime;
 			if (delta < STEP_TIME) {
-				oldStep = lc->stepChange * (STEP_TIME - delta) / STEP_TIME;
+				oldStep = player->stepChange * (STEP_TIME - delta) / STEP_TIME;
 			} else {
 				oldStep = 0;
 			}
 
 			// add this amount
 			step = 4 * (event - EV_STEP_4 + 1 );
-			lc->stepChange = oldStep + step;
-			if ( lc->stepChange > MAX_STEP_CHANGE ) {
-				lc->stepChange = MAX_STEP_CHANGE;
+			player->stepChange = oldStep + step;
+			if ( player->stepChange > MAX_STEP_CHANGE ) {
+				player->stepChange = MAX_STEP_CHANGE;
 			}
-			lc->stepTime = cg.time;
+			player->stepTime = cg.time;
 		}
 		break;
 	}

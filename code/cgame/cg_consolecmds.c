@@ -163,7 +163,7 @@ CG_ScoresDown
 =============
 */
 static void CG_ScoresDown_f(int localPlayerNum) {
-	cglc_t *lc = &cg.localPlayers[localPlayerNum];
+	localPlayer_t *player = &cg.localPlayers[localPlayerNum];
 
 #ifdef MISSIONPACK_HUD
 	CG_BuildSpectatorString();
@@ -180,11 +180,11 @@ static void CG_ScoresDown_f(int localPlayerNum) {
 			cg.numScores = 0;
 		}
 
-		lc->showScores = qtrue;
+		player->showScores = qtrue;
 	} else {
 		// show the cached contents even if they just pressed if it
 		// is within two seconds
-		lc->showScores = qtrue;
+		player->showScores = qtrue;
 	}
 }
 
@@ -194,11 +194,11 @@ CG_ScoresUp_f
 =============
 */
 static void CG_ScoresUp_f( int localPlayerNum ) {
-	cglc_t *lc = &cg.localPlayers[localPlayerNum];
+	localPlayer_t *player = &cg.localPlayers[localPlayerNum];
 
-	if ( lc->showScores ) {
-		lc->showScores = qfalse;
-		lc->scoreFadeTime = cg.time;
+	if ( player->showScores ) {
+		player->showScores = qfalse;
+		player->scoreFadeTime = cg.time;
 	}
 }
 
@@ -383,14 +383,14 @@ static void CG_PrevTeamMember_f( int localPlayerNum ) {
 // ASS U ME's enumeration order as far as task specific orders, OFFENSE is zero, CAMP is last
 //
 static void CG_NextOrder_f( int localPlayerNum ) {
-	cglc_t			*localPlayer;
+	localPlayer_t	*player;
 	clientInfo_t	*ci;
 	int				clientNum;
 	int				team;
 
-	localPlayer = &cg.localPlayers[ localPlayerNum ];
+	player = &cg.localPlayers[ localPlayerNum ];
 
-	if ( localPlayer->clientNum == -1 ) {
+	if ( player->clientNum == -1 ) {
 		return;
 	}
 
@@ -404,59 +404,59 @@ static void CG_NextOrder_f( int localPlayerNum ) {
 			return;
 		}
 	}
-	if (localPlayer->currentOrder < TEAMTASK_CAMP) {
-		localPlayer->currentOrder++;
+	if (player->currentOrder < TEAMTASK_CAMP) {
+		player->currentOrder++;
 
-		if (localPlayer->currentOrder == TEAMTASK_RETRIEVE) {
+		if (player->currentOrder == TEAMTASK_RETRIEVE) {
 			if (!CG_OtherTeamHasFlag()) {
-				localPlayer->currentOrder++;
+				player->currentOrder++;
 			}
 		}
 
-		if (localPlayer->currentOrder == TEAMTASK_ESCORT) {
+		if (player->currentOrder == TEAMTASK_ESCORT) {
 			if (!CG_YourTeamHasFlag()) {
-				localPlayer->currentOrder++;
+				player->currentOrder++;
 			}
 		}
 
 	} else {
-		localPlayer->currentOrder = TEAMTASK_OFFENSE;
+		player->currentOrder = TEAMTASK_OFFENSE;
 	}
-	localPlayer->orderPending = qtrue;
-	localPlayer->orderTime = cg.time + 3000;
+	player->orderPending = qtrue;
+	player->orderTime = cg.time + 3000;
 }
 
 
 static void CG_ConfirmOrder_f( int localPlayerNum ) {
-	cglc_t			*localPlayer;
+	localPlayer_t *player;
 
-	localPlayer = &cg.localPlayers[ localPlayerNum ];
+	player = &cg.localPlayers[ localPlayerNum ];
 
-	if ( localPlayer->clientNum == -1 ) {
+	if ( player->clientNum == -1 ) {
 		return;
 	}
 
-	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %d %s\n", Com_LocalPlayerCvarName(localPlayerNum, "vtell"), localPlayer->acceptLeader, VOICECHAT_YES));
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %d %s\n", Com_LocalPlayerCvarName(localPlayerNum, "vtell"), player->acceptLeader, VOICECHAT_YES));
 	trap_Cmd_ExecuteText(EXEC_NOW, "+button5; wait; -button5");
-	if (cg.time < localPlayer->acceptOrderTime) {
-		trap_SendClientCommand(va("teamtask %d\n", localPlayer->acceptTask));
-		localPlayer->acceptOrderTime = 0;
+	if (cg.time < player->acceptOrderTime) {
+		trap_SendClientCommand(va("teamtask %d\n", player->acceptTask));
+		player->acceptOrderTime = 0;
 	}
 }
 
 static void CG_DenyOrder_f( int localPlayerNum ) {
-	cglc_t			*localPlayer;
+	localPlayer_t *player;
 
-	localPlayer = &cg.localPlayers[ localPlayerNum ];
+	player = &cg.localPlayers[ localPlayerNum ];
 
-	if ( localPlayer->clientNum == -1 ) {
+	if ( player->clientNum == -1 ) {
 		return;
 	}
 
-	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %d %s\n", Com_LocalPlayerCvarName(localPlayerNum, "vtell"), localPlayer->acceptLeader, VOICECHAT_NO));
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %d %s\n", Com_LocalPlayerCvarName(localPlayerNum, "vtell"), player->acceptLeader, VOICECHAT_NO));
 	trap_Cmd_ExecuteText(EXEC_NOW, va("%s; wait; %s", Com_LocalPlayerCvarName(localPlayerNum, "+button6"), Com_LocalPlayerCvarName(localPlayerNum, "-button6")));
-	if (cg.time < localPlayer->acceptOrderTime) {
-		localPlayer->acceptOrderTime = 0;
+	if (cg.time < player->acceptOrderTime) {
+		player->acceptOrderTime = 0;
 	}
 }
 

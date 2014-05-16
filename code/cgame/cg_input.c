@@ -200,7 +200,7 @@ CL_AxisFraction
 Returns the fraction of the axis press
 ===============
 */
-float CL_AxisFraction( cglc_t *lc, int axisNum ) {
+float CL_AxisFraction( localPlayer_t *player, int axisNum ) {
 	float fraction;
 	int axis;
 
@@ -216,11 +216,11 @@ float CL_AxisFraction( cglc_t *lc, int axisNum ) {
 	}
 
 	// sign flip shouldn't ever happen, key should be released first
-	if ( !!( axisNum < 0 ) != !!( lc->joystickAxis[ axis ] < 0 ) ) {
+	if ( !!( axisNum < 0 ) != !!( player->joystickAxis[ axis ] < 0 ) ) {
 		fraction = 0;
 		CG_Printf("WARNING: Axis (%d) fraction 0, but still input system think it's pressed\n", axisNum);
 	} else {
-		fraction = ( (float)abs( lc->joystickAxis[ axis ] ) ) / 32767.0f;
+		fraction = ( (float)abs( player->joystickAxis[ axis ] ) ) / 32767.0f;
 	}
 
 	return fraction;
@@ -233,7 +233,7 @@ CL_KeyState
 Returns the fraction of the frame that the key was down
 ===============
 */
-float CL_KeyState( cglc_t *lc, kbutton_t *key ) {
+float CL_KeyState( localPlayer_t *player, kbutton_t *key ) {
 	float		val;
 	int			msec;
 	float		fraction;
@@ -251,16 +251,16 @@ float CL_KeyState( cglc_t *lc, kbutton_t *key ) {
 		}
 		key->downtime = in_frameTime;
 
-		localPlayerNum = lc - cg.localPlayers;
+		localPlayerNum = player - cg.localPlayers;
 		if ( cg_joystickUseAnalog[localPlayerNum].integer ) {
 			fraction = 0;
 
 			if ( key->down[0] ) {
-				fraction += CL_AxisFraction( lc, key->axisNum[0] );
+				fraction += CL_AxisFraction( player, key->axisNum[0] );
 			}
 
 			if ( key->down[1] ) {
-				fraction += CL_AxisFraction( lc, key->axisNum[1] );
+				fraction += CL_AxisFraction( player, key->axisNum[1] );
 			}
 
 			if ( fraction > 1 ) {
@@ -373,9 +373,9 @@ CG_AdjustAngles
 Moves the local angle positions
 ================
 */
-void CG_AdjustAngles( cglc_t *lc, clientInput_t *ci ) {
+void CG_AdjustAngles( localPlayer_t *player, clientInput_t *ci ) {
 	float	speed;
-	int		localPlayerNum = lc - cg.localPlayers;
+	int		localPlayerNum = player - cg.localPlayers;
 	
 	if ( ci->in_speed.active ) {
 		speed = 0.001 * cg.frametime * cg_anglespeedkey[localPlayerNum].value;
@@ -384,12 +384,12 @@ void CG_AdjustAngles( cglc_t *lc, clientInput_t *ci ) {
 	}
 
 	if ( !ci->in_strafe.active ) {
-		lc->viewangles[YAW] -= speed*cg_yawspeed[localPlayerNum].value*CL_KeyState (lc, &ci->in_right);
-		lc->viewangles[YAW] += speed*cg_yawspeed[localPlayerNum].value*CL_KeyState (lc, &ci->in_left);
+		player->viewangles[YAW] -= speed*cg_yawspeed[localPlayerNum].value*CL_KeyState (player, &ci->in_right);
+		player->viewangles[YAW] += speed*cg_yawspeed[localPlayerNum].value*CL_KeyState (player, &ci->in_left);
 	}
 
-	lc->viewangles[PITCH] -= speed*cg_pitchspeed[localPlayerNum].value * CL_KeyState (lc, &ci->in_lookup);
-	lc->viewangles[PITCH] += speed*cg_pitchspeed[localPlayerNum].value * CL_KeyState (lc, &ci->in_lookdown);
+	player->viewangles[PITCH] -= speed*cg_pitchspeed[localPlayerNum].value * CL_KeyState (player, &ci->in_lookup);
+	player->viewangles[PITCH] += speed*cg_pitchspeed[localPlayerNum].value * CL_KeyState (player, &ci->in_lookdown);
 }
 
 /*
@@ -399,7 +399,7 @@ CG_KeyMove
 Sets the usercmd_t based on key states
 ================
 */
-void CG_KeyMove( cglc_t *lc, clientInput_t *ci, usercmd_t *cmd ) {
+void CG_KeyMove( localPlayer_t *player, clientInput_t *ci, usercmd_t *cmd ) {
 	int		movespeed;
 	int		forward, side, up;
 
@@ -420,19 +420,19 @@ void CG_KeyMove( cglc_t *lc, clientInput_t *ci, usercmd_t *cmd ) {
 	side = 0;
 	up = 0;
 	if ( ci->in_strafe.active ) {
-		side += movespeed * CL_KeyState (lc, &ci->in_right);
-		side -= movespeed * CL_KeyState (lc, &ci->in_left);
+		side += movespeed * CL_KeyState (player, &ci->in_right);
+		side -= movespeed * CL_KeyState (player, &ci->in_left);
 	}
 
-	side += movespeed * CL_KeyState (lc, &ci->in_moveright);
-	side -= movespeed * CL_KeyState (lc, &ci->in_moveleft);
+	side += movespeed * CL_KeyState (player, &ci->in_moveright);
+	side -= movespeed * CL_KeyState (player, &ci->in_moveleft);
 
 
-	up += movespeed * CL_KeyState (lc, &ci->in_up);
-	up -= movespeed * CL_KeyState (lc, &ci->in_down);
+	up += movespeed * CL_KeyState (player, &ci->in_up);
+	up -= movespeed * CL_KeyState (player, &ci->in_down);
 
-	forward += movespeed * CL_KeyState (lc, &ci->in_forward);
-	forward -= movespeed * CL_KeyState (lc, &ci->in_back);
+	forward += movespeed * CL_KeyState (player, &ci->in_forward);
+	forward -= movespeed * CL_KeyState (player, &ci->in_back);
 
 	cmd->forwardmove = ClampChar( forward );
 	cmd->rightmove = ClampChar( side );
@@ -445,11 +445,11 @@ void CG_KeyMove( cglc_t *lc, clientInput_t *ci, usercmd_t *cmd ) {
 CG_MouseMove
 =================
 */
-void CG_MouseMove(cglc_t *lc, clientInput_t *ci, usercmd_t *cmd, float mx, float my)
+void CG_MouseMove( localPlayer_t *player, clientInput_t *ci, usercmd_t *cmd, float mx, float my )
 {
 	// ingame FOV
-	mx *= lc->zoomSensitivity;
-	my *= lc->zoomSensitivity;
+	mx *= player->zoomSensitivity;
+	my *= player->zoomSensitivity;
 
 	// add mouse X/Y movement to cmd
 	if(ci->in_strafe.active)
@@ -457,10 +457,10 @@ void CG_MouseMove(cglc_t *lc, clientInput_t *ci, usercmd_t *cmd, float mx, float
 		cmd->rightmove = ClampChar(cmd->rightmove + m_side.value * mx);
 	}
 	else
-		lc->viewangles[YAW] -= m_yaw.value * mx;
+		player->viewangles[YAW] -= m_yaw.value * mx;
 
 	if ((ci->in_mlooking || cg_freelook.integer) && !ci->in_strafe.active)
-		lc->viewangles[PITCH] += m_pitch.value * my;
+		player->viewangles[PITCH] += m_pitch.value * my;
 	else
 		cmd->forwardmove = ClampChar(cmd->forwardmove - m_forward.value * my);
 }
@@ -500,13 +500,13 @@ void CG_CmdButtons( clientInput_t *ci, usercmd_t *cmd, qboolean anykeydown ) {
 CG_FinishMove
 ==============
 */
-void CG_FinishMove( cglc_t *lc, usercmd_t *cmd ) {
+void CG_FinishMove( localPlayer_t *player, usercmd_t *cmd ) {
 	int i;
 
-	cmd->stateValue = BG_ComposeUserCmdValue( lc->weaponSelect );
+	cmd->stateValue = BG_ComposeUserCmdValue( player->weaponSelect );
 
 	for (i=0 ; i<3 ; i++) {
-		cmd->angles[i] = ANGLE2SHORT(lc->viewangles[i]);
+		cmd->angles[i] = ANGLE2SHORT( player->viewangles[i] );
 	}
 }
 
@@ -518,39 +518,39 @@ CG_CreateUserCmd
 usercmd_t *CG_CreateUserCmd( int localPlayerNum, int frameTime, unsigned frameMsec, float mx, float my, qboolean anykeydown ) {
 	static usercmd_t cmd;
 	vec3_t		oldAngles;
-	cglc_t		*lc;
+	localPlayer_t *player;
 	clientInput_t *ci;
 
 	in_frameTime = frameTime;
 	in_frameMsec = frameMsec;
 
-	lc = &cg.localPlayers[localPlayerNum];
+	player = &cg.localPlayers[localPlayerNum];
 	ci = &cis[localPlayerNum];
 
-	VectorCopy( lc->viewangles, oldAngles );
+	VectorCopy( player->viewangles, oldAngles );
 
 	// keyboard angle adjustment
-	CG_AdjustAngles(lc, ci);
+	CG_AdjustAngles( player, ci );
 
 	Com_Memset( &cmd, 0, sizeof( cmd ) );
 
 	CG_CmdButtons( ci, &cmd, anykeydown );
 
 	// get basic movement from keyboard
-	CG_KeyMove( lc, ci, &cmd );
+	CG_KeyMove( player, ci, &cmd );
 
 	// get basic movement from mouse
-	CG_MouseMove( lc, ci, &cmd, mx, my );
+	CG_MouseMove( player, ci, &cmd, mx, my );
 
 	// check to make sure the angles haven't wrapped
-	if ( lc->viewangles[PITCH] - oldAngles[PITCH] > 90 ) {
-		lc->viewangles[PITCH] = oldAngles[PITCH] + 90;
-	} else if ( oldAngles[PITCH] - lc->viewangles[PITCH] > 90 ) {
-		lc->viewangles[PITCH] = oldAngles[PITCH] - 90;
+	if ( player->viewangles[PITCH] - oldAngles[PITCH] > 90 ) {
+		player->viewangles[PITCH] = oldAngles[PITCH] + 90;
+	} else if ( oldAngles[PITCH] - player->viewangles[PITCH] > 90 ) {
+		player->viewangles[PITCH] = oldAngles[PITCH] - 90;
 	}
 
 	// store out the final values
-	CG_FinishMove( lc, &cmd );
+	CG_FinishMove( player, &cmd );
 
 	return &cmd;
 }

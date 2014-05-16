@@ -663,7 +663,7 @@ typedef struct {
 	consoleLine_t	consoleLines[ MAX_CONSOLE_LINES ];
 	int				numConsoleLines;
 
-} cglc_t;
+} localPlayer_t;
  
 #define MAX_SPAWN_VARS          64
 #define MAX_SPAWN_VARS_CHARS    2048
@@ -823,10 +823,10 @@ typedef struct {
 	qboolean		testGun;
 
 	// Local player data, from events and such
-	cglc_t			*cur_lc;	// Current local client data we are working with
+	localPlayer_t	*cur_lc;	// Current local client data we are working with
 	playerState_t	*cur_ps; // Like cur_lc, but for player state
 	int				cur_localPlayerNum;
-	cglc_t			localPlayers[MAX_SPLITVIEW];
+	localPlayer_t	localPlayers[MAX_SPLITVIEW];
 
 } cg_t;
 
@@ -1462,7 +1462,7 @@ void CG_SetScoreSelection(void *menu);
 score_t *CG_GetSelectedScore( void );
 void CG_BuildSpectatorString( void );
 
-void CG_RemoveNotifyLine( cglc_t *localPlayer );
+void CG_RemoveNotifyLine( localPlayer_t *player );
 void CG_AddNotifyText( int realTime, qboolean restoredText );
 
 void CG_SetupDlightstyles( void );

@@ -519,25 +519,25 @@ static void CG_OffsetFirstPersonView( void ) {
 //======================================================================
 
 void CG_ZoomDown_f( int localPlayerNum ) {
-	cglc_t *lc = &cg.localPlayers[localPlayerNum];
+	localPlayer_t *player = &cg.localPlayers[localPlayerNum];
 
-	if ( lc->zoomed ) {
+	if ( player->zoomed ) {
 		return;
 	}
 
-	lc->zoomed = qtrue;
-	lc->zoomTime = cg.time;
+	player->zoomed = qtrue;
+	player->zoomTime = cg.time;
 }
 
 void CG_ZoomUp_f( int localPlayerNum ) {
-	cglc_t *lc = &cg.localPlayers[localPlayerNum];
+	localPlayer_t *player = &cg.localPlayers[localPlayerNum];
 
-	if ( !lc->zoomed ) {
+	if ( !player->zoomed ) {
 		return;
 	}
 
-	lc->zoomed = qfalse;
-	lc->zoomTime = cg.time;
+	player->zoomed = qfalse;
+	player->zoomTime = cg.time;
 }
 
 

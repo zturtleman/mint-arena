@@ -1545,36 +1545,36 @@ void CG_NextWeapon_f( int localPlayerNum ) {
 	int		i;
 	int		original;
 	playerState_t	*ps;
-	cglc_t			*lc;
+	localPlayer_t	*player;
 
 	if ( cg.localPlayers[localPlayerNum].clientNum == -1 ) {
 		return;
 	}
 
 	ps = &cg.snap->pss[localPlayerNum];
-	lc = &cg.localPlayers[localPlayerNum];
+	player = &cg.localPlayers[localPlayerNum];
 
 	if ( ps->pm_flags & PMF_FOLLOW ) {
 		return;
 	}
 
-	lc->weaponSelectTime = cg.time;
-	original = lc->weaponSelect;
+	player->weaponSelectTime = cg.time;
+	original = player->weaponSelect;
 
 	for ( i = 0 ; i < MAX_WEAPONS ; i++ ) {
-		lc->weaponSelect++;
-		if ( lc->weaponSelect == MAX_WEAPONS ) {
-			lc->weaponSelect = 0;
+		player->weaponSelect++;
+		if ( player->weaponSelect == MAX_WEAPONS ) {
+			player->weaponSelect = 0;
 		}
-		if ( lc->weaponSelect == WP_GAUNTLET ) {
+		if ( player->weaponSelect == WP_GAUNTLET ) {
 			continue;		// never cycle to gauntlet
 		}
-		if ( CG_WeaponSelectable( ps, lc->weaponSelect ) ) {
+		if ( CG_WeaponSelectable( ps, player->weaponSelect ) ) {
 			break;
 		}
 	}
 	if ( i == MAX_WEAPONS ) {
-		lc->weaponSelect = original;
+		player->weaponSelect = original;
 	}
 }
 
@@ -1587,36 +1587,36 @@ void CG_PrevWeapon_f( int localPlayerNum ) {
 	int		i;
 	int		original;
 	playerState_t	*ps;
-	cglc_t			*lc;
+	localPlayer_t	*player;
 
 	if ( cg.localPlayers[localPlayerNum].clientNum == -1 ) {
 		return;
 	}
 
 	ps = &cg.snap->pss[localPlayerNum];
-	lc = &cg.localPlayers[localPlayerNum];
+	player = &cg.localPlayers[localPlayerNum];
 
 	if ( ps->pm_flags & PMF_FOLLOW ) {
 		return;
 	}
 
-	lc->weaponSelectTime = cg.time;
-	original = lc->weaponSelect;
+	player->weaponSelectTime = cg.time;
+	original = player->weaponSelect;
 
 	for ( i = 0 ; i < MAX_WEAPONS ; i++ ) {
-		lc->weaponSelect--;
-		if ( lc->weaponSelect == -1 ) {
-			lc->weaponSelect = MAX_WEAPONS - 1;
+		player->weaponSelect--;
+		if ( player->weaponSelect == -1 ) {
+			player->weaponSelect = MAX_WEAPONS - 1;
 		}
-		if ( lc->weaponSelect == WP_GAUNTLET ) {
+		if ( player->weaponSelect == WP_GAUNTLET ) {
 			continue;		// never cycle to gauntlet
 		}
-		if ( CG_WeaponSelectable( ps, lc->weaponSelect ) ) {
+		if ( CG_WeaponSelectable( ps, player->weaponSelect ) ) {
 			break;
 		}
 	}
 	if ( i == MAX_WEAPONS ) {
-		lc->weaponSelect = original;
+		player->weaponSelect = original;
 	}
 }
 
@@ -1628,14 +1628,14 @@ CG_Weapon_f
 void CG_Weapon_f( int localPlayerNum ) {
 	int		num;
 	playerState_t	*ps;
-	cglc_t			*lc;
+	localPlayer_t	*player;
 
 	if ( cg.localPlayers[localPlayerNum].clientNum == -1 ) {
 		return;
 	}
 
 	ps = &cg.snap->pss[localPlayerNum];
-	lc = &cg.localPlayers[localPlayerNum];
+	player = &cg.localPlayers[localPlayerNum];
 
 	if ( ps->pm_flags & PMF_FOLLOW ) {
 		return;
@@ -1647,13 +1647,13 @@ void CG_Weapon_f( int localPlayerNum ) {
 		return;
 	}
 
-	lc->weaponSelectTime = cg.time;
+	player->weaponSelectTime = cg.time;
 
 	if ( ! ( ps->stats[STAT_WEAPONS] & ( 1 << num ) ) ) {
 		return;		// don't have the weapon
 	}
 
-	lc->weaponSelect = num;
+	player->weaponSelect = num;
 }
 
 /*
@@ -1664,7 +1664,7 @@ The current weapon has just run out of ammo
 ===================
 */
 void CG_OutOfAmmoChange( int localPlayerNum ) {
-	cglc_t			*lc;
+	localPlayer_t	*player;
 	playerState_t	*ps;
 	int				i;
 
@@ -1672,14 +1672,14 @@ void CG_OutOfAmmoChange( int localPlayerNum ) {
 		return;
 	}
 
-	lc = &cg.localPlayers[localPlayerNum];
+	player = &cg.localPlayers[localPlayerNum];
 	ps = &cg.snap->pss[localPlayerNum];
 
-	lc->weaponSelectTime = cg.time;
+	player->weaponSelectTime = cg.time;
 
 	for ( i = MAX_WEAPONS-1 ; i > 0 ; i-- ) {
 		if ( CG_WeaponSelectable( ps, i ) ) {
-			lc->weaponSelect = i;
+			player->weaponSelect = i;
 			break;
 		}
 	}

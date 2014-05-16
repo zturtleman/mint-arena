@@ -718,29 +718,29 @@ int CG_LastAttacker( int localPlayerNum ) {
 CG_RemoveNotifyLine
 =================
 */
-void CG_RemoveNotifyLine( cglc_t *localPlayer )
+void CG_RemoveNotifyLine( localPlayer_t *player )
 {
 	int i, offset, totalLength;
 
-	if( !localPlayer || localPlayer->numConsoleLines == 0 )
+	if( !player || player->numConsoleLines == 0 )
 		return;
 
-	offset = localPlayer->consoleLines[ 0 ].length;
-	totalLength = strlen( localPlayer->consoleText ) - offset;
+	offset = player->consoleLines[ 0 ].length;
+	totalLength = strlen( player->consoleText ) - offset;
 
 	// slide up consoleText
 	for ( i = 0; i <= totalLength; i++ )
-		localPlayer->consoleText[ i ] = localPlayer->consoleText[ i + offset ];
+		player->consoleText[ i ] = player->consoleText[ i + offset ];
 
 	// pop up the first consoleLine
-	for ( i = 1; i < localPlayer->numConsoleLines; i++ )
-		localPlayer->consoleLines[ i - 1 ] = localPlayer->consoleLines[ i ];
+	for ( i = 1; i < player->numConsoleLines; i++ )
+		player->consoleLines[ i - 1 ] = player->consoleLines[ i ];
 
 	// clear last slot
-	localPlayer->consoleLines[ localPlayer->numConsoleLines - 1 ].length = 0;
-	localPlayer->consoleLines[ localPlayer->numConsoleLines - 1 ].time = 0;
+	player->consoleLines[ player->numConsoleLines - 1 ].length = 0;
+	player->consoleLines[ player->numConsoleLines - 1 ].time = 0;
 
-	localPlayer->numConsoleLines--;
+	player->numConsoleLines--;
 }
 
 /*
@@ -753,7 +753,7 @@ void CG_AddNotifyText( int realTime, qboolean restoredText ) {
 	char *buffer;
 	int bufferLen;
 	int i;
-	cglc_t *localPlayer;
+	localPlayer_t *player;
 	int localPlayerBits;
 	qboolean skipnotify = qfalse;
 
@@ -798,20 +798,20 @@ void CG_AddNotifyText( int realTime, qboolean restoredText ) {
 			continue;
 		}
 
-		localPlayer = &cg.localPlayers[i];
+		player = &cg.localPlayers[i];
 
-		if( localPlayer->numConsoleLines == MAX_CONSOLE_LINES )
-			CG_RemoveNotifyLine( localPlayer );
+		if( player->numConsoleLines == MAX_CONSOLE_LINES )
+			CG_RemoveNotifyLine( player );
 
 		// free lines until there is enough space to fit buffer
-		while ( strlen( localPlayer->consoleText ) + bufferLen > MAX_CONSOLE_TEXT ) {
-			CG_RemoveNotifyLine( localPlayer );
+		while ( strlen( player->consoleText ) + bufferLen > MAX_CONSOLE_TEXT ) {
+			CG_RemoveNotifyLine( player );
 		}
 
-		Q_strcat( localPlayer->consoleText, MAX_CONSOLE_TEXT, buffer );
-		localPlayer->consoleLines[ localPlayer->numConsoleLines ].time = cg.time;
-		localPlayer->consoleLines[ localPlayer->numConsoleLines ].length = bufferLen;
-		localPlayer->numConsoleLines++;
+		Q_strcat( player->consoleText, MAX_CONSOLE_TEXT, buffer );
+		player->consoleLines[ player->numConsoleLines ].time = cg.time;
+		player->consoleLines[ player->numConsoleLines ].length = bufferLen;
+		player->numConsoleLines++;
 	}
 }
 

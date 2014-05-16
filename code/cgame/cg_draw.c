@@ -1885,23 +1885,23 @@ for a few moments
 ==============
 */
 void CG_CenterPrint( int localPlayerNum, const char *str, int y, float charScale ) {
-	cglc_t	*lc;
-	char	*s;
+	localPlayer_t *player;
+	char *s;
 
-	lc = &cg.localPlayers[localPlayerNum];
+	player = &cg.localPlayers[localPlayerNum];
 
-	Q_strncpyz( lc->centerPrint, str, sizeof(lc->centerPrint) );
+	Q_strncpyz( player->centerPrint, str, sizeof(player->centerPrint) );
 
-	lc->centerPrintTime = cg.time;
-	lc->centerPrintY = y;
-	lc->centerPrintCharScale = charScale;
+	player->centerPrintTime = cg.time;
+	player->centerPrintY = y;
+	player->centerPrintCharScale = charScale;
 
 	// count the number of lines for centering
-	lc->centerPrintLines = 1;
-	s = lc->centerPrint;
+	player->centerPrintLines = 1;
+	s = player->centerPrint;
 	while( *s ) {
 		if (*s == '\n')
-			lc->centerPrintLines++;
+			player->centerPrintLines++;
 		s++;
 	}
 }

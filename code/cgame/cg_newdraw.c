@@ -66,7 +66,7 @@ void CG_SetPrintString(q3print_t type, const char *p) {
 }
 
 void CG_CheckOrderPending( int localPlayerNum ) {
-	cglc_t *localPlayer;
+	localPlayer_t *localPlayer;
 
 	if (cgs.gametype < GT_CTF) {
 		return;
@@ -1726,7 +1726,7 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
 
 void CG_MouseEvent(int localPlayerNum, int x, int y) {
 	int n;
-	cglc_t *lc;
+	localPlayer_t *player;
 
 	if (localPlayerNum != 0) {
 		// Missionpack HUD currently only supports one cursor
@@ -1738,9 +1738,9 @@ void CG_MouseEvent(int localPlayerNum, int x, int y) {
 	cgDC.cursorx = cgs.cursorX;
 	cgDC.cursory = cgs.cursorY;
 
-	lc = &cg.localPlayers[0];
+	player = &cg.localPlayers[0];
 
-	if ( (lc->predictedPlayerState.pm_type == PM_NORMAL || lc->predictedPlayerState.pm_type == PM_SPECTATOR) && lc->showScores == qfalse) {
+	if ( (player->predictedPlayerState.pm_type == PM_NORMAL || player->predictedPlayerState.pm_type == PM_SPECTATOR) && player->showScores == qfalse) {
     trap_Key_SetCatcher(0);
 		return;
 	}
@@ -1822,7 +1822,7 @@ void CG_EventHandling(int type) {
 
 
 void CG_KeyEvent(int key, qboolean down) {
-	cglc_t *lc;
+	localPlayer_t *player;
 
 	if (!down) {
 		return;
@@ -1837,9 +1837,9 @@ void CG_KeyEvent(int key, qboolean down) {
 		return;
 	}
 
-	lc = &cg.localPlayers[0];
+	player = &cg.localPlayers[0];
 
-	if ( lc->predictedPlayerState.pm_type == PM_NORMAL || (lc->predictedPlayerState.pm_type == PM_SPECTATOR && lc->showScores == qfalse)) {
+	if ( player->predictedPlayerState.pm_type == PM_NORMAL || (player->predictedPlayerState.pm_type == PM_SPECTATOR && player->showScores == qfalse)) {
 		CG_EventHandling(CGAME_EVENT_NONE);
     trap_Key_SetCatcher(0);
 		return;

@@ -411,7 +411,7 @@ static void UI_TeamOrdersMenu_BuildBotList( void ) {
 	for( n = 0; n < numPlayers && teamOrdersMenuInfo.numBots < 9; n++ ) {
 		trap_GetConfigString( CS_PLAYERS + n, info, MAX_INFO_STRING );
 
-		if( n == cg.localClients[0].clientNum ) {
+		if( n == cg.localPlayers[0].clientNum ) {
 			playerTeam = *Info_ValueForKey( info, "t" );
 			continue;
 		}
@@ -531,10 +531,10 @@ void UI_TeamOrdersMenu_f( void ) {
 	}
 
 	// not available to spectators
-	if ( cg.localClients[0].clientNum == -1 ) {
+	if ( cg.localPlayers[0].clientNum == -1 ) {
 		return;
 	}
-	trap_GetConfigString( CS_PLAYERS + cg.localClients[0].clientNum, info, MAX_INFO_STRING );
+	trap_GetConfigString( CS_PLAYERS + cg.localPlayers[0].clientNum, info, MAX_INFO_STRING );
 	team = atoi( Info_ValueForKey( info, "t" ) );
 	if( team == TEAM_SPECTATOR ) {
 		return;

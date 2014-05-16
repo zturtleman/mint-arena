@@ -78,7 +78,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 //  
 //  wins/losses are drawn on bot icon now
 
-static qboolean localClient; // true if local client has been displayed
+static qboolean localPlayer; // true if local player has been displayed
 
 
 							 /*
@@ -196,7 +196,7 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 			ps = NULL;
 		}
 	} else {
-		ps = CG_LocalClientPlayerStateForClientNum(score->client);
+		ps = CG_LocalPlayerState(score->client);
 	}
 
 	// highlight your position
@@ -204,7 +204,7 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 		float	hcolor[4];
 		int		rank;
 
-		localClient = qtrue;
+		localPlayer = qtrue;
 
 		if ( ps->persistant[PERS_TEAM] == TEAM_SPECTATOR || cgs.gametype >= GT_TEAM ) {
 			rank = -1;
@@ -380,7 +380,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 		bottomBorderSize = 16;
 	}
 
-	localClient = qfalse;
+	localPlayer = qfalse;
 
 	if ( cgs.gametype >= GT_TEAM ) {
 		//
@@ -420,7 +420,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 		y += (n2 * lineHeight) + BIGCHAR_HEIGHT;
 	}
 
-	if (cg.cur_ps && !localClient) {
+	if (cg.cur_ps && !localPlayer) {
 		// draw local client at the bottom
 		for ( i = 0 ; i < cg.numScores ; i++ ) {
 			if ( cg.scores[i].client == cg.cur_ps->clientNum ) {

@@ -43,10 +43,10 @@ void	UI_Init( qboolean inGameLoad, int maxSplitView );
 void	UI_Shutdown( void );
 
 void	UI_KeyEvent( int key, qboolean down );
-void	UI_MouseEvent( int localClientNum, int dx, int dy );
+void	UI_MouseEvent( int localPlayerNum, int dx, int dy );
 
-void	UI_GetCursorPos( int localClientNum, int *x, int *y );
-void	UI_SetCursorPos( int localClientNum, int x, int y );
+void	UI_GetCursorPos( int localPlayerNum, int *x, int *y );
+void	UI_SetCursorPos( int localPlayerNum, int x, int y );
 
 qboolean UI_IsFullscreen( void );
 

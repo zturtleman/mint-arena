@@ -906,7 +906,7 @@ static void CG_CalcEntityLerpPositions( centity_t *cent ) {
 	// adjust for riding a mover if it wasn't rolled into the predicted
 	// player state
 	for (i = 0; i < CG_MaxSplitView(); ++i) {
-		if (cent == &cg.localClients[i].predictedPlayerEntity) {
+		if (cent == &cg.localPlayers[i].predictedPlayerEntity) {
 			break;
 		}
 	}
@@ -1233,12 +1233,12 @@ void CG_AddPacketEntities( void ) {
 
 	// generate and add the entity from the playerstate
 	for ( num = 0 ; num < CG_MaxSplitView() ; num++ ) {
-		if ( cg.localClients[num].clientNum == -1 ) {
+		if ( cg.localPlayers[num].clientNum == -1 ) {
 			continue;
 		}
-		ps = &cg.localClients[num].predictedPlayerState;
-		BG_PlayerStateToEntityState( ps, &cg.localClients[num].predictedPlayerEntity.currentState, qfalse );
-		CG_AddCEntity( &cg.localClients[num].predictedPlayerEntity );
+		ps = &cg.localPlayers[num].predictedPlayerState;
+		BG_PlayerStateToEntityState( ps, &cg.localPlayers[num].predictedPlayerEntity.currentState, qfalse );
+		CG_AddCEntity( &cg.localPlayers[num].predictedPlayerEntity );
 
 		// lerp the non-predicted value for lightning gun origins
 		CG_CalcEntityLerpPositions( &cg_entities[ cg.snap->pss[num].clientNum ] );

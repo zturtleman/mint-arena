@@ -360,7 +360,7 @@ extern void UI_SetupMenu(void);
 //
 // ui_team.c
 //
-extern void UI_TeamMainMenu( int localClient );
+extern void UI_TeamMainMenu( int localPlayerNum );
 extern void TeamMain_Cache( void );
 
 //
@@ -377,14 +377,14 @@ extern void UI_SelectPlayer_Cache( void );
 //
 // ui_controls2.c
 //
-extern void UI_ControlsMenu( int localClient );
+extern void UI_ControlsMenu( int localPlayerNum );
 extern void Controls_Cache( void );
 extern qboolean Controls_WantsBindKeys( void );
 
 //
 // ui_joystick.c
 //
-void UI_JoystickMenu( int localClient );
+void UI_JoystickMenu( int localPlayerNum );
 void UI_Joystick_Cache( void );
 
 //
@@ -409,13 +409,13 @@ extern void UI_ModsMenu_Cache( void );
 //
 // ui_playermodel.c
 //
-extern void UI_PlayerModelMenu( int localClient );
+extern void UI_PlayerModelMenu( int localPlayerNum );
 extern void PlayerModel_Cache( void );
 
 //
 // ui_playersettings.c
 //
-extern void UI_PlayerSettingsMenu( int localClient );
+extern void UI_PlayerSettingsMenu( int localPlayerNum );
 extern void PlayerSettings_Cache( void );
 
 //
@@ -569,7 +569,6 @@ extern void			UI_PopMenu (void);
 extern void			UI_ForceMenuOff (void);
 extern void			UI_Refresh( int time );
 extern int			UI_MaxSplitView(void);
-extern int			UI_NumLocalClients(void);
 extern qboolean		m_entersound;
 extern uiStatic_t	uis;
 

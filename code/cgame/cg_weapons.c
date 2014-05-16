@@ -1257,9 +1257,9 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	VectorMA(gun.origin, lerped.origin[0], parent->axis[0], gun.origin);
 
 	// Make weapon appear left-handed for 2 and centered for 3
-	if(ps && cg_drawGun[cg.cur_localClientNum].integer == 2)
+	if(ps && cg_drawGun[cg.cur_localPlayerNum].integer == 2)
 		VectorMA(gun.origin, -lerped.origin[1], parent->axis[1], gun.origin);
-	else if(!ps || cg_drawGun[cg.cur_localClientNum].integer != 3)
+	else if(!ps || cg_drawGun[cg.cur_localPlayerNum].integer != 3)
 	       	VectorMA(gun.origin, lerped.origin[1], parent->axis[1], gun.origin);
 
 	VectorMA(gun.origin, lerped.origin[2], parent->axis[2], gun.origin);
@@ -1372,7 +1372,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 
 
 	// allow the gun to be completely removed
-	if ( !cg_drawGun[cg.cur_localClientNum].integer ) {
+	if ( !cg_drawGun[cg.cur_localPlayerNum].integer ) {
 		vec3_t		origin;
 
 		if ( cg.cur_lc->predictedPlayerState.eFlags & EF_FIRING ) {
@@ -1541,18 +1541,18 @@ static qboolean CG_WeaponSelectable( playerState_t *ps, int i ) {
 CG_NextWeapon_f
 ===============
 */
-void CG_NextWeapon_f( int localClient ) {
+void CG_NextWeapon_f( int localPlayerNum ) {
 	int		i;
 	int		original;
 	playerState_t	*ps;
 	cglc_t			*lc;
 
-	if ( cg.localClients[localClient].clientNum == -1 ) {
+	if ( cg.localPlayers[localPlayerNum].clientNum == -1 ) {
 		return;
 	}
 
-	ps = &cg.snap->pss[localClient];
-	lc = &cg.localClients[localClient];
+	ps = &cg.snap->pss[localPlayerNum];
+	lc = &cg.localPlayers[localPlayerNum];
 
 	if ( ps->pm_flags & PMF_FOLLOW ) {
 		return;
@@ -1583,18 +1583,18 @@ void CG_NextWeapon_f( int localClient ) {
 CG_PrevWeapon_f
 ===============
 */
-void CG_PrevWeapon_f( int localClient ) {
+void CG_PrevWeapon_f( int localPlayerNum ) {
 	int		i;
 	int		original;
 	playerState_t	*ps;
 	cglc_t			*lc;
 
-	if ( cg.localClients[localClient].clientNum == -1 ) {
+	if ( cg.localPlayers[localPlayerNum].clientNum == -1 ) {
 		return;
 	}
 
-	ps = &cg.snap->pss[localClient];
-	lc = &cg.localClients[localClient];
+	ps = &cg.snap->pss[localPlayerNum];
+	lc = &cg.localPlayers[localPlayerNum];
 
 	if ( ps->pm_flags & PMF_FOLLOW ) {
 		return;
@@ -1625,17 +1625,17 @@ void CG_PrevWeapon_f( int localClient ) {
 CG_Weapon_f
 ===============
 */
-void CG_Weapon_f( int localClient ) {
+void CG_Weapon_f( int localPlayerNum ) {
 	int		num;
 	playerState_t	*ps;
 	cglc_t			*lc;
 
-	if ( cg.localClients[localClient].clientNum == -1 ) {
+	if ( cg.localPlayers[localPlayerNum].clientNum == -1 ) {
 		return;
 	}
 
-	ps = &cg.snap->pss[localClient];
-	lc = &cg.localClients[localClient];
+	ps = &cg.snap->pss[localPlayerNum];
+	lc = &cg.localPlayers[localPlayerNum];
 
 	if ( ps->pm_flags & PMF_FOLLOW ) {
 		return;
@@ -1663,17 +1663,17 @@ CG_OutOfAmmoChange
 The current weapon has just run out of ammo
 ===================
 */
-void CG_OutOfAmmoChange( int localClient ) {
+void CG_OutOfAmmoChange( int localPlayerNum ) {
 	cglc_t			*lc;
 	playerState_t	*ps;
 	int				i;
 
-	if ( cg.localClients[localClient].clientNum == -1 ) {
+	if ( cg.localPlayers[localPlayerNum].clientNum == -1 ) {
 		return;
 	}
 
-	lc = &cg.localClients[localClient];
-	ps = &cg.snap->pss[localClient];
+	lc = &cg.localPlayers[localPlayerNum];
+	ps = &cg.snap->pss[localPlayerNum];
 
 	lc->weaponSelectTime = cg.time;
 
@@ -2208,7 +2208,7 @@ static qboolean	CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle ) {
 	int			anim;
 	playerState_t *ps;
 
-	ps = CG_LocalClientPlayerStateForClientNum(entityNum);
+	ps = CG_LocalPlayerState(entityNum);
 	if ( ps ) {
 		VectorCopy( ps->origin, muzzle );
 		muzzle[2] += ps->viewheight;

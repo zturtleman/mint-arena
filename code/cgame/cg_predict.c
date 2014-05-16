@@ -303,7 +303,7 @@ static void CG_InterpolatePlayerState( qboolean grabAngles ) {
 		int			cmdNum;
 
 		cmdNum = trap_GetCurrentCmdNumber();
-		trap_GetUserCmd( cmdNum, &cmd, cg.cur_localClientNum );
+		trap_GetUserCmd( cmdNum, &cmd, cg.cur_localPlayerNum );
 
 		PM_UpdateViewAngles( out, &cmd );
 	}
@@ -317,13 +317,13 @@ static void CG_InterpolatePlayerState( qboolean grabAngles ) {
 		return;
 	}
 
-	if (prev->playerNums[cg.cur_localClientNum] == -1 ||
-		next->playerNums[cg.cur_localClientNum] == -1) {
+	if (prev->playerNums[cg.cur_localPlayerNum] == -1 ||
+		next->playerNums[cg.cur_localPlayerNum] == -1) {
 		return;
 	}
 
-	prevPS = &prev->pss[cg.cur_localClientNum];
-	nextPS = &next->pss[cg.cur_localClientNum];
+	prevPS = &prev->pss[cg.cur_localPlayerNum];
+	nextPS = &next->pss[cg.cur_localPlayerNum];
 
 	f = (float)( cg.time - prev->serverTime ) / ( next->serverTime - prev->serverTime );
 
@@ -564,7 +564,7 @@ void CG_PredictPlayerState( void ) {
 	// can't accurately predict a current position, so just freeze at
 	// the last good position we had
 	cmdNum = current - CMD_BACKUP + 1;
-	trap_GetUserCmd( cmdNum, &oldestCmd, cg.cur_localClientNum );
+	trap_GetUserCmd( cmdNum, &oldestCmd, cg.cur_localPlayerNum );
 	if ( oldestCmd.serverTime > cg.cur_ps->commandTime 
 		&& oldestCmd.serverTime < cg.time ) {	// special check for map_restart
 		if ( cg_showmiss.integer ) {
@@ -574,15 +574,15 @@ void CG_PredictPlayerState( void ) {
 	}
 
 	// get the latest command so we can know which commands are from previous map_restarts
-	trap_GetUserCmd( current, &latestCmd, cg.cur_localClientNum );
+	trap_GetUserCmd( current, &latestCmd, cg.cur_localPlayerNum );
 
 	// get the most recent information we have, even if
 	// the server time is beyond our current cg.time,
 	// because predicted player positions are going to 
 	// be ahead of everything else anyway
 	if ( cg.nextSnap && !cg.nextFrameTeleport && !cg.thisFrameTeleport
-		&& cg.nextSnap->playerNums[cg.cur_localClientNum] != -1) {
-		cg.cur_lc->predictedPlayerState = cg.nextSnap->pss[cg.cur_localClientNum];
+		&& cg.nextSnap->playerNums[cg.cur_localPlayerNum] != -1) {
+		cg.cur_lc->predictedPlayerState = cg.nextSnap->pss[cg.cur_localPlayerNum];
 		cg.physicsTime = cg.nextSnap->serverTime;
 	} else {
 		cg.cur_lc->predictedPlayerState = *cg.cur_ps;
@@ -605,7 +605,7 @@ void CG_PredictPlayerState( void ) {
 	moved = qfalse;
 	for ( cmdNum = current - CMD_BACKUP + 1 ; cmdNum <= current ; cmdNum++ ) {
 		// get the command
-		trap_GetUserCmd( cmdNum, &cg_pmove.cmd, cg.cur_localClientNum );
+		trap_GetUserCmd( cmdNum, &cg_pmove.cmd, cg.cur_localPlayerNum );
 
 		if ( cg_pmove.pmove_fixed ) {
 			PM_UpdateViewAngles( cg_pmove.ps, &cg_pmove.cmd );

@@ -49,24 +49,6 @@ int UI_MaxSplitView(void) {
 
 /*
 =================
-UI_NumLocalClients
-=================
-*/
-int UI_NumLocalClients(void) {
-	int numLocalClients = 0;
-	int i;
-
-	for (i = 0; i < UI_MaxSplitView(); i++) {
-		if (cg.localClients[i].clientNum >= 0 && cg.localClients[i].clientNum < MAX_CLIENTS) {
-			numLocalClients++;
-		}
-	}
-
-	return numLocalClients;
-}
-
-/*
-=================
 UI_PushMenu
 =================
 */
@@ -859,14 +841,14 @@ void UI_KeyEvent( int key, qboolean down ) {
 UI_MouseEvent
 =================
 */
-void UI_MouseEvent( int localClientNum, int dx, int dy )
+void UI_MouseEvent( int localPlayerNum, int dx, int dy )
 {
 	float			ax, ay, aw, ah;
 	int				xbias, ybias;
 	int				i;
 	menucommon_s*	m;
 
-	if (localClientNum != 0) {
+	if ( localPlayerNum != 0 ) {
 		// q3_ui currently only supports one cursor
 		return;
 	}
@@ -930,9 +912,9 @@ void UI_MouseEvent( int localClientNum, int dx, int dy )
 UI_GetCursorPos
 =================
 */
-void UI_GetCursorPos( int localClientNum, int *x, int *y )
+void UI_GetCursorPos( int localPlayerNum, int *x, int *y )
 {
-	if (localClientNum != 0) {
+	if (localPlayerNum != 0) {
 		// ui currently only supports one cursor
 		if ( x ) *x = 0;
 		if ( y ) *y = 0;
@@ -947,9 +929,9 @@ void UI_GetCursorPos( int localClientNum, int *x, int *y )
 UI_SetCursorPos
 =================
 */
-void UI_SetCursorPos( int localClientNum, int x, int y )
+void UI_SetCursorPos( int localPlayerNum, int x, int y )
 {
-	if (localClientNum != 0) {
+	if (localPlayerNum != 0) {
 		// ui currently only supports one cursor
 		return;
 	}
@@ -961,7 +943,7 @@ void UI_SetCursorPos( int localClientNum, int x, int y )
 
 	uis.cursorx = x;
 	uis.cursory = y;
-	UI_MouseEvent( localClientNum, 0, 0 );
+	UI_MouseEvent( localPlayerNum, 0, 0 );
 }
 
 /*

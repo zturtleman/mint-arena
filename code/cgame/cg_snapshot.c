@@ -164,10 +164,10 @@ static void CG_TransitionSnapshot( void ) {
 	for (i = 0; i < CG_MaxSplitView(); i++) {
 		// Server added or removed local client
 		if ( oldFrame && oldFrame->playerNums[i] != cg.snap->playerNums[i] ) {
-			CG_LocalClientRemoved( i );
+			CG_LocalPlayerRemoved( i );
 
 			if ( cg.snap->playerNums[i] != -1 ) {
-				CG_LocalClientAdded( i, cg.snap->playerNums[i] );
+				CG_LocalPlayerAdded( i, cg.snap->playerNums[i] );
 			}
 		}
 
@@ -196,8 +196,8 @@ static void CG_TransitionSnapshot( void ) {
 				continue;
 			}
 
-			cg.cur_localClientNum = i;
-			cg.cur_lc = &cg.localClients[i];
+			cg.cur_localPlayerNum = i;
+			cg.cur_lc = &cg.localPlayers[i];
 			cg.cur_ps = &cg.snap->pss[i];
 
 			ops = &oldFrame->pss[i];
@@ -217,7 +217,7 @@ static void CG_TransitionSnapshot( void ) {
 		}
 	}
 
-	cg.cur_localClientNum = -1;
+	cg.cur_localPlayerNum = -1;
 	cg.cur_lc = NULL;
 	cg.cur_ps = NULL;
 }
@@ -471,10 +471,10 @@ void CG_RestoreSnapshot( void ) {
 
 /*
 =============
-CG_LocalClientPlayerStateForClientNum
+CG_LocalPlayerState
 =============
 */
-playerState_t *CG_LocalClientPlayerStateForClientNum(int clientNum) {
+playerState_t *CG_LocalPlayerState(int clientNum) {
 	int i;
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
@@ -488,19 +488,19 @@ playerState_t *CG_LocalClientPlayerStateForClientNum(int clientNum) {
 
 /*
 =============
-CG_NumLocalClients
+CG_NumLocalPlayers
 =============
 */
-int CG_NumLocalClients( void ) {
-	int numLocalClients = 0;
+int CG_NumLocalPlayers( void ) {
+	int numLocalPlayers = 0;
 	int i;
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if (cg.localClients[i].clientNum != -1) {
-			numLocalClients++;
+		if (cg.localPlayers[i].clientNum != -1) {
+			numLocalPlayers++;
 		}
 	}
 
-	return numLocalClients;
+	return numLocalPlayers;
 }
 

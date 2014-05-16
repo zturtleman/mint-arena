@@ -48,9 +48,9 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo );
 void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 );
 void CG_Shutdown( void );
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime );
-static char *CG_VoIPString( int localClientNum );
-static int CG_MousePosition( int localClientNum );
-static void CG_SetMousePosition( int localClientNum, int x, int y );
+static char *CG_VoIPString( int localPlayerNum );
+static int CG_MousePosition( int localPlayerNum );
+static void CG_SetMousePosition( int localPlayerNum, int x, int y );
 static void CG_UpdateGlconfig( qboolean initial );
 
 
@@ -689,28 +689,28 @@ void CG_UpdateCvars( void ) {
 #endif
 }
 
-int CG_CrosshairPlayer( int localClientNum ) {
-	if (!cg.snap || localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
+int CG_CrosshairPlayer( int localPlayerNum ) {
+	if (!cg.snap || localPlayerNum < 0 || localPlayerNum >= CG_MaxSplitView()) {
 		return -1;
 	}
 
-	if ( cg.time > ( cg.localClients[localClientNum].crosshairClientTime + 1000 ) ) {
+	if ( cg.time > ( cg.localPlayers[localPlayerNum].crosshairClientTime + 1000 ) ) {
 		return -1;
 	}
 
-	return cg.localClients[localClientNum].crosshairClientNum;
+	return cg.localPlayers[localPlayerNum].crosshairClientNum;
 }
 
-int CG_LastAttacker( int localClientNum ) {
-	if (!cg.snap || localClientNum < 0 || localClientNum >= CG_MaxSplitView() ) {
+int CG_LastAttacker( int localPlayerNum ) {
+	if (!cg.snap || localPlayerNum < 0 || localPlayerNum >= CG_MaxSplitView() ) {
 		return -1;
 	}
 
-	if ( !cg.localClients[localClientNum].attackerTime || cg.localClients[localClientNum].clientNum == -1 ) {
+	if ( !cg.localPlayers[localPlayerNum].attackerTime || cg.localPlayers[localPlayerNum].clientNum == -1 ) {
 		return -1;
 	}
 
-	return cg.snap->pss[localClientNum].persistant[PERS_ATTACKER];
+	return cg.snap->pss[localPlayerNum].persistant[PERS_ATTACKER];
 }
 
 /*
@@ -718,29 +718,29 @@ int CG_LastAttacker( int localClientNum ) {
 CG_RemoveNotifyLine
 =================
 */
-void CG_RemoveNotifyLine( cglc_t *localClient )
+void CG_RemoveNotifyLine( cglc_t *localPlayer )
 {
 	int i, offset, totalLength;
 
-	if( !localClient || localClient->numConsoleLines == 0 )
+	if( !localPlayer || localPlayer->numConsoleLines == 0 )
 		return;
 
-	offset = localClient->consoleLines[ 0 ].length;
-	totalLength = strlen( localClient->consoleText ) - offset;
+	offset = localPlayer->consoleLines[ 0 ].length;
+	totalLength = strlen( localPlayer->consoleText ) - offset;
 
 	// slide up consoleText
 	for ( i = 0; i <= totalLength; i++ )
-		localClient->consoleText[ i ] = localClient->consoleText[ i + offset ];
+		localPlayer->consoleText[ i ] = localPlayer->consoleText[ i + offset ];
 
 	// pop up the first consoleLine
-	for ( i = 1; i < localClient->numConsoleLines; i++ )
-		localClient->consoleLines[ i - 1 ] = localClient->consoleLines[ i ];
+	for ( i = 1; i < localPlayer->numConsoleLines; i++ )
+		localPlayer->consoleLines[ i - 1 ] = localPlayer->consoleLines[ i ];
 
 	// clear last slot
-	localClient->consoleLines[ localClient->numConsoleLines - 1 ].length = 0;
-	localClient->consoleLines[ localClient->numConsoleLines - 1 ].time = 0;
+	localPlayer->consoleLines[ localPlayer->numConsoleLines - 1 ].length = 0;
+	localPlayer->consoleLines[ localPlayer->numConsoleLines - 1 ].time = 0;
 
-	localClient->numConsoleLines--;
+	localPlayer->numConsoleLines--;
 }
 
 /*
@@ -752,17 +752,17 @@ void CG_AddNotifyText( int realTime, qboolean restoredText ) {
 	char text[1024];
 	char *buffer;
 	int bufferLen;
-	int lc;
-	cglc_t *localClient;
-	int localClientBits;
+	int i;
+	cglc_t *localPlayer;
+	int localPlayerBits;
 	qboolean skipnotify = qfalse;
 
 	trap_LiteralArgs( text, sizeof ( text ) );
 
 	if( !text[ 0 ] ) {
-		for ( lc = 0; lc < CG_MaxSplitView(); lc++ ) {
-			cg.localClients[lc].consoleText[ 0 ] = '\0';
-			cg.localClients[lc].numConsoleLines = 0;
+		for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+			cg.localPlayers[i].consoleText[ 0 ] = '\0';
+			cg.localPlayers[i].numConsoleLines = 0;
 		}
 		return;
 	}
@@ -784,34 +784,34 @@ void CG_AddNotifyText( int realTime, qboolean restoredText ) {
 
 	// [player #] perfix for text that only shows up in notify area for one local client
 	if ( !Q_strncmp( buffer, "[player ", 8 ) && isdigit(buffer[8]) && buffer[9] == ']' ) {
-		localClientBits = 1 << ( atoi( &buffer[8] ) - 1 );
+		localPlayerBits = 1 << ( atoi( &buffer[8] ) - 1 );
 
 		buffer += 10;
 	} else {
-		localClientBits = ~0;
+		localPlayerBits = ~0;
 	}
 
 	bufferLen = strlen( buffer );
 
-	for ( lc = 0; lc < CG_MaxSplitView(); lc++ ) {
-		if ( !( localClientBits & ( 1 << lc ) ) ) {
+	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+		if ( !( localPlayerBits & ( 1 << i ) ) ) {
 			continue;
 		}
 
-		localClient = &cg.localClients[lc];
+		localPlayer = &cg.localPlayers[i];
 
-		if( localClient->numConsoleLines == MAX_CONSOLE_LINES )
-			CG_RemoveNotifyLine( localClient );
+		if( localPlayer->numConsoleLines == MAX_CONSOLE_LINES )
+			CG_RemoveNotifyLine( localPlayer );
 
 		// free lines until there is enough space to fit buffer
-		while ( strlen( localClient->consoleText ) + bufferLen > MAX_CONSOLE_TEXT ) {
-			CG_RemoveNotifyLine( localClient );
+		while ( strlen( localPlayer->consoleText ) + bufferLen > MAX_CONSOLE_TEXT ) {
+			CG_RemoveNotifyLine( localPlayer );
 		}
 
-		Q_strcat( localClient->consoleText, MAX_CONSOLE_TEXT, buffer );
-		localClient->consoleLines[ localClient->numConsoleLines ].time = cg.time;
-		localClient->consoleLines[ localClient->numConsoleLines ].length = bufferLen;
-		localClient->numConsoleLines++;
+		Q_strcat( localPlayer->consoleText, MAX_CONSOLE_TEXT, buffer );
+		localPlayer->consoleLines[ localPlayer->numConsoleLines ].time = cg.time;
+		localPlayer->consoleLines[ localPlayer->numConsoleLines ].length = bufferLen;
+		localPlayer->numConsoleLines++;
 	}
 }
 
@@ -819,15 +819,15 @@ void CG_AddNotifyText( int realTime, qboolean restoredText ) {
 =================
 CG_NotifyPrintf
 
-Only printed in notify area for localClientNum (and client console)
+Only printed in notify area for localPlayerNum (and client console)
 =================
 */
-void QDECL CG_NotifyPrintf( int localClientNum, const char *msg, ... ) {
+void QDECL CG_NotifyPrintf( int localPlayerNum, const char *msg, ... ) {
 	va_list		argptr;
 	char		text[1024];
 	int			prefixLen;
 
-	Com_sprintf( text, sizeof(text), "[player %d]", localClientNum + 1 );
+	Com_sprintf( text, sizeof(text), "[player %d]", localPlayerNum + 1 );
 	prefixLen = strlen(text);
 
 	va_start (argptr, msg);
@@ -841,10 +841,10 @@ void QDECL CG_NotifyPrintf( int localClientNum, const char *msg, ... ) {
 =================
 CG_NotifyBitsPrintf
 
-Only printed in notify area for players specified in localClientBits (and client console)
+Only printed in notify area for players specified in localPlayerBits (and client console)
 =================
 */
-void QDECL CG_NotifyBitsPrintf( int localClientBits, const char *msg, ... ) {
+void QDECL CG_NotifyBitsPrintf( int localPlayerBits, const char *msg, ... ) {
 	va_list		argptr;
 	char		text[1024];
 	int i;
@@ -854,7 +854,7 @@ void QDECL CG_NotifyBitsPrintf( int localClientBits, const char *msg, ... ) {
 	va_end (argptr);
 
 	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
-		if ( localClientBits & ( 1 << i ) ) {
+		if ( localPlayerBits & ( 1 << i ) ) {
 			CG_NotifyPrintf( i, "%s", text );
 		}
 	}
@@ -1663,26 +1663,26 @@ static void CG_RegisterGraphics( void ) {
 
 /*
 ==================
-CG_LocalClientAdded
+CG_LocalPlayerAdded
 ==================
 */
-void CG_LocalClientAdded(int localClientNum, int clientNum) {
+void CG_LocalPlayerAdded(int localPlayerNum, int clientNum) {
 	if (clientNum < 0 || clientNum >= MAX_CLIENTS)
 		return;
 
-	cg.localClients[localClientNum].clientNum = clientNum;
+	cg.localPlayers[localPlayerNum].clientNum = clientNum;
 }
 
 /*
 ==================
-CG_LocalClientRemoved
+CG_LocalPlayerRemoved
 ==================
 */
-void CG_LocalClientRemoved(int localClientNum) {
-	if (cg.localClients[localClientNum].clientNum == -1)
+void CG_LocalPlayerRemoved(int localPlayerNum) {
+	if (cg.localPlayers[localPlayerNum].clientNum == -1)
 		return;
 
-	cg.localClients[localClientNum].clientNum = -1;
+	cg.localPlayers[localPlayerNum].clientNum = -1;
 }
 
 #ifdef MISSIONPACK
@@ -1714,18 +1714,18 @@ static void CG_RegisterClients( void ) {
 	int		j;
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if (cg.localClients[i].clientNum == -1) {
+		if (cg.localPlayers[i].clientNum == -1) {
 			continue;
 		}
-		CG_LoadingClient(cg.localClients[i].clientNum);
-		CG_NewClientInfo(cg.localClients[i].clientNum);
+		CG_LoadingClient(cg.localPlayers[i].clientNum);
+		CG_NewClientInfo(cg.localPlayers[i].clientNum);
 	}
 
 	for (i=0 ; i<MAX_CLIENTS ; i++) {
 		const char		*clientInfo;
 
 		for (j = 0; j < CG_MaxSplitView(); j++) {
-			if (cg.localClients[j].clientNum == i) {
+			if (cg.localPlayers[j].clientNum == i) {
 				break;
 			}
 		}
@@ -2457,7 +2457,7 @@ void CG_ClearState( qboolean everything ) {
 	cg.cinematicHandle = -1;
 
 	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
-		cg.localClients[i].clientNum = -1;
+		cg.localPlayers[i].clientNum = -1;
 	}
 }
 
@@ -2541,20 +2541,20 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 		trap_Cvar_Set( Com_LocalPlayerCvarName(i, "teampref"), "" );
 
 		if (clientNums[i] < 0 || clientNums[i] >= MAX_CLIENTS) {
-			cg.localClients[i].clientNum = -1;
+			cg.localPlayers[i].clientNum = -1;
 			continue;
 		}
 
 		trap_Mouse_SetState( i, MOUSE_CLIENT );
-		trap_GetViewAngles( i, cg.localClients[i].viewangles );
-		CG_LocalClientAdded(i, clientNums[i]);
+		trap_GetViewAngles( i, cg.localPlayers[i].viewangles );
+		CG_LocalPlayerAdded(i, clientNums[i]);
 	}
 
 	cgs.processedSnapshotNum = serverMessageNum;
 	cgs.serverCommandSequence = serverCommandSequence;
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		cg.localClients[i].weaponSelect = WP_MACHINEGUN;
+		cg.localPlayers[i].weaponSelect = WP_MACHINEGUN;
 	}
 
 	cgs.redflag = cgs.blueflag = -1; // For compatibily, default to unset for
@@ -2663,7 +2663,7 @@ void CG_Shutdown( void ) {
 	int i;
 
 	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
-		trap_SetViewAngles( i, cg.localClients[ i ].viewangles );
+		trap_SetViewAngles( i, cg.localPlayers[ i ].viewangles );
 	}
 
 	// some mods may need to do cleanup work here,
@@ -2997,7 +2997,7 @@ void CG_EventHandling(int type) {
 void CG_KeyEvent(int key, qboolean down) {
 }
 
-void CG_MouseEvent(int localClientNum, int x, int y) {
+void CG_MouseEvent(int localPlayerNum, int x, int y) {
 }
 #endif
 
@@ -3008,7 +3008,7 @@ CG_MousePosition
 returns bitshifted combo of x and y in window coords
 =================
 */
-static int CG_MousePosition( int localClientNum )
+static int CG_MousePosition( int localPlayerNum )
 {
 	float ax, ay, aw, ah, xbias, ybias;
 	int cursorx, cursory;
@@ -3029,7 +3029,7 @@ static int CG_MousePosition( int localClientNum )
 	xbias = ax/aw;
 	ybias = ay/ah;
 
-	UI_GetCursorPos( localClientNum, &cursorx, &cursory );
+	UI_GetCursorPos( localPlayerNum, &cursorx, &cursory );
 
 	x = ( cursorx + xbias ) / ( SCREEN_WIDTH + xbias * 2 ) * cgs.glconfig.vidWidth;
 	y = ( cursory + ybias ) / ( SCREEN_HEIGHT + ybias * 2 ) * cgs.glconfig.vidHeight;
@@ -3044,7 +3044,7 @@ CG_SetMousePosition
 x and y are in window coords
 =================
 */
-static void CG_SetMousePosition( int localClientNum, int x, int y )
+static void CG_SetMousePosition( int localPlayerNum, int x, int y )
 {
 	float ax, ay, aw, ah, xbias, ybias;
 	int cursorx, cursory;
@@ -3067,7 +3067,7 @@ static void CG_SetMousePosition( int localClientNum, int x, int y )
 	cursorx = (float)x / cgs.glconfig.vidWidth * ( SCREEN_WIDTH + xbias * 2 ) - xbias;
 	cursory = (float)y / cgs.glconfig.vidHeight * ( SCREEN_HEIGHT + ybias * 2 ) - ybias;
 
-	UI_SetCursorPos( localClientNum, cursorx, cursory );
+	UI_SetCursorPos( localPlayerNum, cursorx, cursory );
 }
 
 /*
@@ -3077,12 +3077,12 @@ CG_JoystickEvent
 Internal function for general joystick event handling (not called for up events).
 =================
 */
-void CG_JoystickEvent( int localClientNum, const joyevent_t *joyevent ) {
+void CG_JoystickEvent( int localPlayerNum, const joyevent_t *joyevent ) {
 	if ( cg_joystickDebug.integer ) {
 		char str[32];
 
 		trap_JoyEventToString( joyevent, str, sizeof ( str ) );
-		CG_Printf("Player %d pressed %s\n", localClientNum+1, str );
+		CG_Printf("Player %d pressed %s\n", localPlayerNum+1, str );
 	}
 }
 
@@ -3093,12 +3093,12 @@ CG_JoystickAxisEvent
 Joystick values stay set until changed
 =================
 */
-void CG_JoystickAxisEvent( int localClientNum, int axis, int value, unsigned time, connstate_t state ) {
+void CG_JoystickAxisEvent( int localPlayerNum, int axis, int value, unsigned time, connstate_t state ) {
 	joyevent_t negEvent, posEvent;
 	int negKey, posKey;
 	int oldvalue;
 
-	if ( localClientNum < 0 || localClientNum >= MAX_SPLITVIEW) {
+	if ( localPlayerNum < 0 || localPlayerNum >= MAX_SPLITVIEW) {
 		return;
 	}
 	if ( axis < 0 || axis >= MAX_JOYSTICK_AXIS ) {
@@ -3108,15 +3108,15 @@ void CG_JoystickAxisEvent( int localClientNum, int axis, int value, unsigned tim
 	negEvent.type = JOYEVENT_AXIS;
 	negEvent.value.axis.num = axis;
 	negEvent.value.axis.sign = -1;
-	negKey = trap_GetKeyForJoyEvent( localClientNum, &negEvent );
+	negKey = trap_GetKeyForJoyEvent( localPlayerNum, &negEvent );
 
 	posEvent.type = JOYEVENT_AXIS;
 	posEvent.value.axis.num = axis;
 	posEvent.value.axis.sign = 1;
-	posKey = trap_GetKeyForJoyEvent( localClientNum, &posEvent );
+	posKey = trap_GetKeyForJoyEvent( localPlayerNum, &posEvent );
 
-	oldvalue = cg.localClients[localClientNum].joystickAxis[axis];
-	cg.localClients[localClientNum].joystickAxis[axis] = value;
+	oldvalue = cg.localPlayers[localPlayerNum].joystickAxis[axis];
+	cg.localPlayers[localPlayerNum].joystickAxis[axis] = value;
 
 	// stick released or switched pos/neg
 	if ( value == 0 || !!( value < 0 ) != !!( oldvalue < 0 ) ) {
@@ -3133,12 +3133,12 @@ void CG_JoystickAxisEvent( int localClientNum, int axis, int value, unsigned tim
 
 	// move in new pos or neg direction
 	if ( value < 0 && oldvalue >= 0 ) {
-		CG_JoystickEvent( localClientNum, &negEvent );
+		CG_JoystickEvent( localPlayerNum, &negEvent );
 		if ( negKey != -1 ) {
 			CG_DistributeKeyEvent( negKey, qtrue, time, state, -(axis+1) );
 		}
 	} else if ( value > 0 && oldvalue <= 0 ) {
-		CG_JoystickEvent( localClientNum, &posEvent );
+		CG_JoystickEvent( localPlayerNum, &posEvent );
 		if ( posKey != -1 ) {
 			CG_DistributeKeyEvent( posKey, qtrue, time, state, axis+1 );
 		}
@@ -3150,11 +3150,11 @@ void CG_JoystickAxisEvent( int localClientNum, int axis, int value, unsigned tim
 CG_JoystickButtonEvent
 =================
 */
-void CG_JoystickButtonEvent( int localClientNum, int button, qboolean down, unsigned time, connstate_t state ) {
+void CG_JoystickButtonEvent( int localPlayerNum, int button, qboolean down, unsigned time, connstate_t state ) {
 	joyevent_t joyevent;
 	int key;
 
-	if ( localClientNum < 0 || localClientNum >= MAX_SPLITVIEW) {
+	if ( localPlayerNum < 0 || localPlayerNum >= MAX_SPLITVIEW) {
 		return;
 	}
 	if ( button < 0 || button >= MAX_JOYSTICK_BUTTONS ) {
@@ -3163,10 +3163,10 @@ void CG_JoystickButtonEvent( int localClientNum, int button, qboolean down, unsi
 
 	joyevent.type = JOYEVENT_BUTTON;
 	joyevent.value.button = button;
-	key = trap_GetKeyForJoyEvent( localClientNum, &joyevent );
+	key = trap_GetKeyForJoyEvent( localPlayerNum, &joyevent );
 
 	if ( down ) {
-		CG_JoystickEvent( localClientNum, &joyevent );
+		CG_JoystickEvent( localPlayerNum, &joyevent );
 	}
 
 	if ( key != -1 ) {
@@ -3179,13 +3179,13 @@ void CG_JoystickButtonEvent( int localClientNum, int button, qboolean down, unsi
 CG_JoystickHatEvent
 =================
 */
-void CG_JoystickHatEvent( int localClientNum, int hat, int value, unsigned time, connstate_t state ) {
+void CG_JoystickHatEvent( int localPlayerNum, int hat, int value, unsigned time, connstate_t state ) {
 	joyevent_t hatEvent[4];
 	int hatKeys[4];
 	int oldvalue;
 	int i;
 
-	if ( localClientNum < 0 || localClientNum >= MAX_SPLITVIEW) {
+	if ( localPlayerNum < 0 || localPlayerNum >= MAX_SPLITVIEW) {
 		return;
 	}
 	if ( hat < 0 || hat >= MAX_JOYSTICK_HATS ) {
@@ -3195,25 +3195,25 @@ void CG_JoystickHatEvent( int localClientNum, int hat, int value, unsigned time,
 	hatEvent[0].type = JOYEVENT_HAT;
 	hatEvent[0].value.hat.num = hat;
 	hatEvent[0].value.hat.mask = HAT_UP;
-	hatKeys[0] = trap_GetKeyForJoyEvent( localClientNum, &hatEvent[0] );
+	hatKeys[0] = trap_GetKeyForJoyEvent( localPlayerNum, &hatEvent[0] );
 
 	hatEvent[1].type = JOYEVENT_HAT;
 	hatEvent[1].value.hat.num = hat;
 	hatEvent[1].value.hat.mask = HAT_RIGHT;
-	hatKeys[1] = trap_GetKeyForJoyEvent( localClientNum, &hatEvent[1] );
+	hatKeys[1] = trap_GetKeyForJoyEvent( localPlayerNum, &hatEvent[1] );
 
 	hatEvent[2].type = JOYEVENT_HAT;
 	hatEvent[2].value.hat.num = hat;
 	hatEvent[2].value.hat.mask = HAT_DOWN;
-	hatKeys[2] = trap_GetKeyForJoyEvent( localClientNum, &hatEvent[2] );
+	hatKeys[2] = trap_GetKeyForJoyEvent( localPlayerNum, &hatEvent[2] );
 
 	hatEvent[3].type = JOYEVENT_HAT;
 	hatEvent[3].value.hat.num = hat;
 	hatEvent[3].value.hat.mask = HAT_LEFT;
-	hatKeys[3] = trap_GetKeyForJoyEvent( localClientNum, &hatEvent[3] );
+	hatKeys[3] = trap_GetKeyForJoyEvent( localPlayerNum, &hatEvent[3] );
 
-	oldvalue = cg.localClients[localClientNum].joystickHats[hat];
-	cg.localClients[localClientNum].joystickHats[hat] = value;
+	oldvalue = cg.localPlayers[localPlayerNum].joystickHats[hat];
+	cg.localPlayers[localPlayerNum].joystickHats[hat] = value;
 
 	// released
 	for ( i = 0; i < 4; i++ ) {
@@ -3239,7 +3239,7 @@ void CG_JoystickHatEvent( int localClientNum, int hat, int value, unsigned time,
 	// pressed
 	for ( i = 0; i < 4; i++ ) {
 		if ( !( oldvalue & (1<<i) ) && ( value & (1<<i) ) ) {
-			CG_JoystickEvent( localClientNum, &hatEvent[i] );
+			CG_JoystickEvent( localPlayerNum, &hatEvent[i] );
 			if ( hatKeys[i] != -1 ) {
 				CG_DistributeKeyEvent( hatKeys[i], qtrue, time, state, 0 );
 			}
@@ -3252,12 +3252,12 @@ void CG_JoystickHatEvent( int localClientNum, int hat, int value, unsigned time,
 CG_VoIPString
 ================
 */
-static char *CG_VoIPString( int localClientNum ) {
+static char *CG_VoIPString( int localPlayerNum ) {
 	// a generous overestimate of the space needed for 0,1,2...61,62,63
 	static char voipString[ MAX_CLIENTS * 4 ];
 	char voipSendTarget[ MAX_CVAR_VALUE_STRING ];
 
-	if ( localClientNum < 0 || localClientNum > CG_MaxSplitView() || cg.localClients[localClientNum].clientNum == -1 ) {
+	if ( localPlayerNum < 0 || localPlayerNum > CG_MaxSplitView() || cg.localPlayers[localPlayerNum].clientNum == -1 ) {
 		return NULL;
 	}
 
@@ -3268,9 +3268,9 @@ static char *CG_VoIPString( int localClientNum ) {
 		int i, slen, nlen;
 		for( slen = i = 0; i < cgs.maxclients; i++ )
 		{
-			if( !cgs.clientinfo[ i ].infoValid || i == cg.localClients[ localClientNum ].clientNum )
+			if( !cgs.clientinfo[ i ].infoValid || i == cg.localPlayers[ localPlayerNum ].clientNum )
 				continue;
-			if( cgs.clientinfo[ i ].team != cgs.clientinfo[ cg.localClients[ localClientNum ].clientNum ].team )
+			if( cgs.clientinfo[ i ].team != cgs.clientinfo[ cg.localPlayers[ localPlayerNum ].clientNum ].team )
 				continue;
 
 			nlen = Com_sprintf( &voipString[ slen ], sizeof( voipString ) - slen,
@@ -3290,10 +3290,10 @@ static char *CG_VoIPString( int localClientNum ) {
 	}
 	else if( Q_stricmpn( voipSendTarget, "crosshair", 9 ) == 0 )
 		Com_sprintf( voipString, sizeof( voipString ), "%d",
-				CG_CrosshairPlayer( localClientNum ) );
+				CG_CrosshairPlayer( localPlayerNum ) );
 	else if( Q_stricmpn( voipSendTarget, "attacker", 8 ) == 0 )
 		Com_sprintf( voipString, sizeof( voipString ), "%d",
-				CG_LastAttacker( localClientNum ) );
+				CG_LastAttacker( localPlayerNum ) );
 	else
 		return NULL;
 

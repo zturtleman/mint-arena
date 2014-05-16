@@ -206,7 +206,7 @@ void CG_Respawn( int clientNum ) {
 	allClients = ( clientNum == -1 );
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if ( cg.localClients[i].clientNum == -1 ) {
+		if ( cg.localPlayers[i].clientNum == -1 ) {
 			continue;
 		}
 		if ( !allClients && cg.snap->pss[i].clientNum != clientNum ) {
@@ -214,10 +214,10 @@ void CG_Respawn( int clientNum ) {
 		}
 
 		// display weapons available
-		cg.localClients[i].weaponSelectTime = cg.time;
+		cg.localPlayers[i].weaponSelectTime = cg.time;
 
 		// select the weapon the server says we are using
-		cg.localClients[i].weaponSelect = cg.snap->pss[i].weapon;
+		cg.localPlayers[i].weaponSelect = cg.snap->pss[i].weapon;
 	}
 }
 

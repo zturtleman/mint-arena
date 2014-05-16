@@ -66,19 +66,19 @@ void CG_SetPrintString(q3print_t type, const char *p) {
 }
 
 void CG_CheckOrderPending( int localPlayerNum ) {
-	cglc_t *localClient;
+	cglc_t *localPlayer;
 
 	if (cgs.gametype < GT_CTF) {
 		return;
 	}
 
-	localClient = &cg.localClients[localPlayerNum];
+	localPlayer = &cg.localPlayers[localPlayerNum];
 
-	if ( localClient->clientNum == -1 ) {
+	if ( localPlayer->clientNum == -1 ) {
 		return;
 	}
 
-	if (localClient->orderPending) {
+	if (localPlayer->orderPending) {
 		//clientInfo_t *ci;
 		const char *p1, *p2;
 		char	b[128];
@@ -95,7 +95,7 @@ void CG_CheckOrderPending( int localPlayerNum ) {
 
 		//ci = cgs.clientinfo + sortedTeamPlayers[team][selectedPlayer];
 
-		switch (localClient->currentOrder) {
+		switch (localPlayer->currentOrder) {
 			case TEAMTASK_OFFENSE:
 				p1 = VOICECHAT_ONOFFENSE;
 				p2 = VOICECHAT_OFFENSE;
@@ -136,7 +136,7 @@ void CG_CheckOrderPending( int localPlayerNum ) {
 		} else {
 			// for the player self
 			if (sortedTeamPlayers[team][selectedPlayer] == clientNum && p1) {
-				trap_Cmd_ExecuteText(EXEC_APPEND, va("%s %i\n", Com_LocalPlayerCvarName(localPlayerNum, "teamtask"), localClient->currentOrder));
+				trap_Cmd_ExecuteText(EXEC_APPEND, va("%s %i\n", Com_LocalPlayerCvarName(localPlayerNum, "teamtask"), localPlayer->currentOrder));
 				//trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s\n", Com_LocalPlayerCvarName(localPlayerNum, "say_team"), p2));
 				trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s\n", Com_LocalPlayerCvarName(localPlayerNum, "vsay_team"), p1));
 			} else if (p2) {
@@ -147,7 +147,7 @@ void CG_CheckOrderPending( int localPlayerNum ) {
 		if (b[0]) {
 			trap_Cmd_ExecuteText(EXEC_APPEND, b);
 		}
-		localClient->orderPending = qfalse;
+		localPlayer->orderPending = qfalse;
 	}
 }
 
@@ -161,7 +161,7 @@ static void CG_SetSelectedPlayerName( int localPlayerNum ) {
 		if (ci) {
 			trap_Cvar_Set(Com_LocalPlayerCvarName(localPlayerNum, "cg_selectedPlayerName"), ci->name);
 			trap_Cvar_SetValue(Com_LocalPlayerCvarName(localPlayerNum, "cg_selectedPlayer"), sortedTeamPlayers[team][cg_currentSelectedPlayer[ localPlayerNum ].integer]);
-			cg.localClients[ localPlayerNum ].currentOrder = ci->teamTask;
+			cg.localPlayers[ localPlayerNum ].currentOrder = ci->teamTask;
 		}
 	} else {
 		trap_Cvar_Set(Com_LocalPlayerCvarName(localPlayerNum, "cg_selectedPlayerName"), "Everyone");
@@ -369,7 +369,7 @@ static void CG_DrawSelectedPlayerHealth( rectDef_t *rect, float scale, vec4_t co
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
 
-	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )];
+	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localPlayerNum )];
 	if (ci) {
 		if (shader) {
 			trap_R_SetColor( color );
@@ -390,7 +390,7 @@ static void CG_DrawSelectedPlayerArmor( rectDef_t *rect, float scale, vec4_t col
 	int team;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )];
+	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localPlayerNum )];
 
 	if (ci) {
 		if (ci->armor > 0) {
@@ -443,7 +443,7 @@ static void CG_DrawSelectedPlayerStatus( rectDef_t *rect ) {
 	int team;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )];
+	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localPlayerNum )];
 
 	if (ci) {
 		qhandle_t h;
@@ -475,7 +475,7 @@ static void CG_DrawSelectedPlayerName( rectDef_t *rect, float scale, vec4_t colo
 	int team;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	ci = cgs.clientinfo + ((voice) ? cg.cur_lc->currentVoiceClient : sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )]);
+	ci = cgs.clientinfo + ((voice) ? cg.cur_lc->currentVoiceClient : sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localPlayerNum )]);
 	if (ci) {
 		CG_Text_Paint(rect->x, rect->y + rect->h, scale, color, ci->name, 0, 0, textStyle);
 	}
@@ -486,7 +486,7 @@ static void CG_DrawSelectedPlayerLocation( rectDef_t *rect, float scale, vec4_t 
 	int				team;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )];
+	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localPlayerNum )];
 	if (ci) {
 		const char *p = CG_ConfigString(CS_LOCATIONS + ci->location);
 		if (!p || !*p) {
@@ -514,7 +514,7 @@ static void CG_DrawSelectedPlayerWeapon( rectDef_t *rect ) {
 	int				team;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )];
+	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localPlayerNum )];
 	if (ci) {
 		if ( cg_weapons[ci->curWeapon].weaponIcon ) {
 			CG_DrawPic( rect->x, rect->y, rect->w, rect->h, cg_weapons[ci->curWeapon].weaponIcon );
@@ -576,7 +576,7 @@ static void CG_DrawSelectedPlayerPowerup( rectDef_t *rect, qboolean draw2D ) {
 	float x, y;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )];
+	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localPlayerNum )];
 	if (ci) {
 		x = rect->x;
 		y = rect->y;
@@ -606,7 +606,7 @@ static void CG_DrawSelectedPlayerHead( rectDef_t *rect, qboolean draw2D, qboolea
 	vec3_t			mins, maxs, angles;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	ci = cgs.clientinfo + ((voice) ? cg.cur_lc->currentVoiceClient : sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )]);
+	ci = cgs.clientinfo + ((voice) ? cg.cur_lc->currentVoiceClient : sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localPlayerNum )]);
 
 	if (ci) {
 		if ( cg_draw3dIcons.integer ) {
@@ -982,11 +982,11 @@ float CG_GetValue(int ownerDraw) {
 
   switch (ownerDraw) {
   case CG_SELECTEDPLAYER_ARMOR:
-    ci = cgs.clientinfo + sortedTeamPlayers[ps->persistant[PERS_TEAM]][CG_GetSelectedPlayer( cg.cur_localClientNum )];
+    ci = cgs.clientinfo + sortedTeamPlayers[ps->persistant[PERS_TEAM]][CG_GetSelectedPlayer( cg.cur_localPlayerNum )];
     return ci->armor;
     break;
   case CG_SELECTEDPLAYER_HEALTH:
-    ci = cgs.clientinfo + sortedTeamPlayers[ps->persistant[PERS_TEAM]][CG_GetSelectedPlayer( cg.cur_localClientNum )];
+    ci = cgs.clientinfo + sortedTeamPlayers[ps->persistant[PERS_TEAM]][CG_GetSelectedPlayer( cg.cur_localPlayerNum )];
     return ci->health;
     break;
   case CG_PLAYER_ARMOR_VALUE:
@@ -1070,11 +1070,11 @@ qboolean CG_YourTeamHasFlag(void) {
 qboolean CG_OwnerDrawVisible(int flags) {
 
 	if (flags & CG_SHOW_TEAMINFO) {
-		return (cg_currentSelectedPlayer[cg.cur_localClientNum].integer == numSortedTeamPlayers[cg.cur_ps->persistant[PERS_TEAM]]);
+		return (cg_currentSelectedPlayer[cg.cur_localPlayerNum].integer == numSortedTeamPlayers[cg.cur_ps->persistant[PERS_TEAM]]);
 	}
 
 	if (flags & CG_SHOW_NOTEAMINFO) {
-		return !(cg_currentSelectedPlayer[cg.cur_localClientNum].integer == numSortedTeamPlayers[cg.cur_ps->persistant[PERS_TEAM]]);
+		return !(cg_currentSelectedPlayer[cg.cur_localPlayerNum].integer == numSortedTeamPlayers[cg.cur_ps->persistant[PERS_TEAM]]);
 	}
 
 	if (flags & CG_SHOW_OTHERTEAMHASFLAG) {
@@ -1706,7 +1706,7 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
 		CG_DrawTeamSpectators(&rect, scale, color, shader);
 		break;
   case CG_TEAMINFO:
-		if (cg_currentSelectedPlayer[cg.cur_localClientNum].integer == numSortedTeamPlayers[cg.cur_ps->persistant[PERS_TEAM]]) {
+		if (cg_currentSelectedPlayer[cg.cur_localPlayerNum].integer == numSortedTeamPlayers[cg.cur_ps->persistant[PERS_TEAM]]) {
 			CG_DrawNewTeamInfo(&rect, text_x, text_y, scale, color, shader);
 		}
 		break;
@@ -1724,11 +1724,11 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
   }
 }
 
-void CG_MouseEvent(int localClientNum, int x, int y) {
+void CG_MouseEvent(int localPlayerNum, int x, int y) {
 	int n;
 	cglc_t *lc;
 
-	if (localClientNum != 0) {
+	if (localPlayerNum != 0) {
 		// Missionpack HUD currently only supports one cursor
 		return;
 	}
@@ -1738,7 +1738,7 @@ void CG_MouseEvent(int localClientNum, int x, int y) {
 	cgDC.cursorx = cgs.cursorX;
 	cgDC.cursory = cgs.cursorY;
 
-	lc = &cg.localClients[0];
+	lc = &cg.localPlayers[0];
 
 	if ( (lc->predictedPlayerState.pm_type == PM_NORMAL || lc->predictedPlayerState.pm_type == PM_SPECTATOR) && lc->showScores == qfalse) {
     trap_Key_SetCatcher(0);
@@ -1837,7 +1837,7 @@ void CG_KeyEvent(int key, qboolean down) {
 		return;
 	}
 
-	lc = &cg.localClients[0];
+	lc = &cg.localPlayers[0];
 
 	if ( lc->predictedPlayerState.pm_type == PM_NORMAL || (lc->predictedPlayerState.pm_type == PM_SPECTATOR && lc->showScores == qfalse)) {
 		CG_EventHandling(CGAME_EVENT_NONE);

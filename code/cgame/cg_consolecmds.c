@@ -151,10 +151,10 @@ Debugging command to print the current position
 =============
 */
 static void CG_Viewpos_f( int localPlayerNum ) {
-	CG_Printf ("(%i %i %i) : %i\n", (int)cg.localClients[localPlayerNum].lastViewPos[0],
-		(int)cg.localClients[localPlayerNum].lastViewPos[1],
-		(int)cg.localClients[localPlayerNum].lastViewPos[2],
-		(int)cg.localClients[localPlayerNum].lastViewAngles[YAW]);
+	CG_Printf ("(%i %i %i) : %i\n", (int)cg.localPlayers[localPlayerNum].lastViewPos[0],
+		(int)cg.localPlayers[localPlayerNum].lastViewPos[1],
+		(int)cg.localPlayers[localPlayerNum].lastViewPos[2],
+		(int)cg.localPlayers[localPlayerNum].lastViewAngles[YAW]);
 }
 
 /*
@@ -162,8 +162,8 @@ static void CG_Viewpos_f( int localPlayerNum ) {
 CG_ScoresDown
 =============
 */
-static void CG_ScoresDown_f(int localClientNum) {
-	cglc_t *lc = &cg.localClients[localClientNum];
+static void CG_ScoresDown_f(int localPlayerNum) {
+	cglc_t *lc = &cg.localPlayers[localPlayerNum];
 
 #ifdef MISSIONPACK_HUD
 	CG_BuildSpectatorString();
@@ -193,8 +193,8 @@ static void CG_ScoresDown_f(int localClientNum) {
 CG_ScoresUp_f
 =============
 */
-static void CG_ScoresUp_f( int localClientNum ) {
-	cglc_t *lc = &cg.localClients[localClientNum];
+static void CG_ScoresUp_f( int localPlayerNum ) {
+	cglc_t *lc = &cg.localPlayers[localPlayerNum];
 
 	if ( lc->showScores ) {
 		lc->showScores = qfalse;
@@ -207,17 +207,17 @@ static void CG_ScoresUp_f( int localClientNum ) {
 CG_SetModel_f
 =============
 */
-void CG_SetModel_f( int localClientNum ) {
+void CG_SetModel_f( int localPlayerNum ) {
 	const char	*arg;
 	char	name[256];
 	char	cvarName[32];
 
-	Q_strncpyz( cvarName, Com_LocalPlayerCvarName( localClientNum, "model"), sizeof (cvarName) );
+	Q_strncpyz( cvarName, Com_LocalPlayerCvarName( localPlayerNum, "model"), sizeof (cvarName) );
 
 	arg = CG_Argv( 1 );
 	if ( arg[0] ) {
 		trap_Cvar_Set( cvarName, arg );
-		trap_Cvar_Set( Com_LocalPlayerCvarName( localClientNum, "headmodel"), arg );
+		trap_Cvar_Set( Com_LocalPlayerCvarName( localPlayerNum, "headmodel"), arg );
 	} else {
 		trap_Cvar_VariableStringBuffer( cvarName, name, sizeof(name) );
 		Com_Printf("%s is set to %s\n", cvarName, name);
@@ -383,14 +383,14 @@ static void CG_PrevTeamMember_f( int localPlayerNum ) {
 // ASS U ME's enumeration order as far as task specific orders, OFFENSE is zero, CAMP is last
 //
 static void CG_NextOrder_f( int localPlayerNum ) {
-	cglc_t			*localClient;
+	cglc_t			*localPlayer;
 	clientInfo_t	*ci;
 	int				clientNum;
 	int				team;
 
-	localClient = &cg.localClients[ localPlayerNum ];
+	localPlayer = &cg.localPlayers[ localPlayerNum ];
 
-	if ( localClient->clientNum == -1 ) {
+	if ( localPlayer->clientNum == -1 ) {
 		return;
 	}
 
@@ -404,59 +404,59 @@ static void CG_NextOrder_f( int localPlayerNum ) {
 			return;
 		}
 	}
-	if (localClient->currentOrder < TEAMTASK_CAMP) {
-		localClient->currentOrder++;
+	if (localPlayer->currentOrder < TEAMTASK_CAMP) {
+		localPlayer->currentOrder++;
 
-		if (localClient->currentOrder == TEAMTASK_RETRIEVE) {
+		if (localPlayer->currentOrder == TEAMTASK_RETRIEVE) {
 			if (!CG_OtherTeamHasFlag()) {
-				localClient->currentOrder++;
+				localPlayer->currentOrder++;
 			}
 		}
 
-		if (localClient->currentOrder == TEAMTASK_ESCORT) {
+		if (localPlayer->currentOrder == TEAMTASK_ESCORT) {
 			if (!CG_YourTeamHasFlag()) {
-				localClient->currentOrder++;
+				localPlayer->currentOrder++;
 			}
 		}
 
 	} else {
-		localClient->currentOrder = TEAMTASK_OFFENSE;
+		localPlayer->currentOrder = TEAMTASK_OFFENSE;
 	}
-	localClient->orderPending = qtrue;
-	localClient->orderTime = cg.time + 3000;
+	localPlayer->orderPending = qtrue;
+	localPlayer->orderTime = cg.time + 3000;
 }
 
 
 static void CG_ConfirmOrder_f( int localPlayerNum ) {
-	cglc_t			*localClient;
+	cglc_t			*localPlayer;
 
-	localClient = &cg.localClients[ localPlayerNum ];
+	localPlayer = &cg.localPlayers[ localPlayerNum ];
 
-	if ( localClient->clientNum == -1 ) {
+	if ( localPlayer->clientNum == -1 ) {
 		return;
 	}
 
-	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %d %s\n", Com_LocalPlayerCvarName(localPlayerNum, "vtell"), localClient->acceptLeader, VOICECHAT_YES));
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %d %s\n", Com_LocalPlayerCvarName(localPlayerNum, "vtell"), localPlayer->acceptLeader, VOICECHAT_YES));
 	trap_Cmd_ExecuteText(EXEC_NOW, "+button5; wait; -button5");
-	if (cg.time < localClient->acceptOrderTime) {
-		trap_SendClientCommand(va("teamtask %d\n", localClient->acceptTask));
-		localClient->acceptOrderTime = 0;
+	if (cg.time < localPlayer->acceptOrderTime) {
+		trap_SendClientCommand(va("teamtask %d\n", localPlayer->acceptTask));
+		localPlayer->acceptOrderTime = 0;
 	}
 }
 
 static void CG_DenyOrder_f( int localPlayerNum ) {
-	cglc_t			*localClient;
+	cglc_t			*localPlayer;
 
-	localClient = &cg.localClients[ localPlayerNum ];
+	localPlayer = &cg.localPlayers[ localPlayerNum ];
 
-	if ( localClient->clientNum == -1 ) {
+	if ( localPlayer->clientNum == -1 ) {
 		return;
 	}
 
-	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %d %s\n", Com_LocalPlayerCvarName(localPlayerNum, "vtell"), localClient->acceptLeader, VOICECHAT_NO));
+	trap_Cmd_ExecuteText(EXEC_NOW, va("cmd %s %d %s\n", Com_LocalPlayerCvarName(localPlayerNum, "vtell"), localPlayer->acceptLeader, VOICECHAT_NO));
 	trap_Cmd_ExecuteText(EXEC_NOW, va("%s; wait; %s", Com_LocalPlayerCvarName(localPlayerNum, "+button6"), Com_LocalPlayerCvarName(localPlayerNum, "-button6")));
-	if (cg.time < localClient->acceptOrderTime) {
-		localClient->acceptOrderTime = 0;
+	if (cg.time < localPlayer->acceptOrderTime) {
+		localPlayer->acceptOrderTime = 0;
 	}
 }
 

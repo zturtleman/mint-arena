@@ -109,7 +109,7 @@ typedef struct
 	char			modelskin[MAX_QPATH];
 	char			headmodelskin[MAX_QPATH];
 	int				selectedmodel;
-	int				localClient;
+	int				localPlayerNum;
 	char			bannerString[32];
 } playermodel_t;
 
@@ -203,10 +203,10 @@ PlayerModel_SaveChanges
 */
 static void PlayerModel_SaveChanges( void )
 {
-	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playermodel.localClient, "model"), s_playermodel.modelskin );
-	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playermodel.localClient, "headmodel"), s_playermodel.headmodelskin );
-	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playermodel.localClient, "team_model"), s_playermodel.modelskin );
-	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playermodel.localClient, "team_headmodel"), s_playermodel.headmodelskin );
+	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playermodel.localPlayerNum, "model"), s_playermodel.modelskin );
+	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playermodel.localPlayerNum, "headmodel"), s_playermodel.headmodelskin );
+	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playermodel.localPlayerNum, "team_model"), s_playermodel.modelskin );
+	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playermodel.localPlayerNum, "team_headmodel"), s_playermodel.headmodelskin );
 }
 
 /*
@@ -477,12 +477,12 @@ static void PlayerModel_SetMenuItems( void )
 	char*			pdest;
 
 	// name
-	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playermodel.localClient, "name"), s_playermodel.playername.string, 16 );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playermodel.localPlayerNum, "name"), s_playermodel.playername.string, 16 );
 	Q_CleanStr( s_playermodel.playername.string );
 
 	// model
-	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playermodel.localClient, "model"), s_playermodel.modelskin, sizeof ( s_playermodel.modelskin ) );
-	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playermodel.localClient, "headmodel"), s_playermodel.headmodelskin, sizeof ( s_playermodel.headmodelskin ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playermodel.localPlayerNum, "model"), s_playermodel.modelskin, sizeof ( s_playermodel.modelskin ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playermodel.localPlayerNum, "headmodel"), s_playermodel.headmodelskin, sizeof ( s_playermodel.headmodelskin ) );
 	
 	// use default skin if none is set
 	if (!strchr(s_playermodel.modelskin, '/')) {
@@ -532,7 +532,7 @@ static void PlayerModel_SetMenuItems( void )
 PlayerModel_MenuInit
 =================
 */
-static void PlayerModel_MenuInit( int localClient )
+static void PlayerModel_MenuInit( int localPlayerNum )
 {
 	int			i;
 	int			j;
@@ -546,8 +546,8 @@ static void PlayerModel_MenuInit( int localClient )
 	// zero set all our globals
 	memset( &s_playermodel, 0 ,sizeof(playermodel_t) );
 
-	s_playermodel.localClient = localClient;
-	Com_sprintf(s_playermodel.bannerString, sizeof (s_playermodel.bannerString), "PLAYER %d MODEL", s_playermodel.localClient+1);
+	s_playermodel.localPlayerNum = localPlayerNum;
+	Com_sprintf(s_playermodel.bannerString, sizeof (s_playermodel.bannerString), "PLAYER %d MODEL", s_playermodel.localPlayerNum+1);
 
 	PlayerModel_Cache();
 
@@ -742,8 +742,8 @@ void PlayerModel_Cache( void )
 	}
 }
 
-void UI_PlayerModelMenu(int localClient) {
-	PlayerModel_MenuInit(localClient);
+void UI_PlayerModelMenu( int localPlayerNum ) {
+	PlayerModel_MenuInit( localPlayerNum );
 
 	UI_PushMenu( &s_playermodel.menu );
 

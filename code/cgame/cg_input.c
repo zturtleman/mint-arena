@@ -237,7 +237,7 @@ float CL_KeyState( cglc_t *lc, kbutton_t *key ) {
 	float		val;
 	int			msec;
 	float		fraction;
-	int			lcNum;
+	int			localPlayerNum;
 
 	msec = key->msec;
 	key->msec = 0;
@@ -251,8 +251,8 @@ float CL_KeyState( cglc_t *lc, kbutton_t *key ) {
 		}
 		key->downtime = in_frameTime;
 
-		lcNum = lc - cg.localClients;
-		if ( cg_joystickUseAnalog[lcNum].integer ) {
+		localPlayerNum = lc - cg.localPlayers;
+		if ( cg_joystickUseAnalog[localPlayerNum].integer ) {
 			fraction = 0;
 
 			if ( key->down[0] ) {
@@ -361,7 +361,7 @@ void IN_CenterView( int localPlayerNum ) {
 
 	ps = &cg.snap->pss[localPlayerNum];
 
-	cg.localClients[localPlayerNum].viewangles[PITCH] = -SHORT2ANGLE(ps->delta_angles[PITCH]);
+	cg.localPlayers[localPlayerNum].viewangles[PITCH] = -SHORT2ANGLE(ps->delta_angles[PITCH]);
 }
 
 //==========================================================================
@@ -375,21 +375,21 @@ Moves the local angle positions
 */
 void CG_AdjustAngles( cglc_t *lc, clientInput_t *ci ) {
 	float	speed;
-	int		lcNum = lc - cg.localClients;
+	int		localPlayerNum = lc - cg.localPlayers;
 	
 	if ( ci->in_speed.active ) {
-		speed = 0.001 * cg.frametime * cg_anglespeedkey[lcNum].value;
+		speed = 0.001 * cg.frametime * cg_anglespeedkey[localPlayerNum].value;
 	} else {
 		speed = 0.001 * cg.frametime;
 	}
 
 	if ( !ci->in_strafe.active ) {
-		lc->viewangles[YAW] -= speed*cg_yawspeed[lcNum].value*CL_KeyState (lc, &ci->in_right);
-		lc->viewangles[YAW] += speed*cg_yawspeed[lcNum].value*CL_KeyState (lc, &ci->in_left);
+		lc->viewangles[YAW] -= speed*cg_yawspeed[localPlayerNum].value*CL_KeyState (lc, &ci->in_right);
+		lc->viewangles[YAW] += speed*cg_yawspeed[localPlayerNum].value*CL_KeyState (lc, &ci->in_left);
 	}
 
-	lc->viewangles[PITCH] -= speed*cg_pitchspeed[lcNum].value * CL_KeyState (lc, &ci->in_lookup);
-	lc->viewangles[PITCH] += speed*cg_pitchspeed[lcNum].value * CL_KeyState (lc, &ci->in_lookdown);
+	lc->viewangles[PITCH] -= speed*cg_pitchspeed[localPlayerNum].value * CL_KeyState (lc, &ci->in_lookup);
+	lc->viewangles[PITCH] += speed*cg_pitchspeed[localPlayerNum].value * CL_KeyState (lc, &ci->in_lookdown);
 }
 
 /*
@@ -515,7 +515,7 @@ void CG_FinishMove( cglc_t *lc, usercmd_t *cmd ) {
 CG_CreateUserCmd
 =================
 */
-usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, unsigned frameMsec, float mx, float my, qboolean anykeydown ) {
+usercmd_t *CG_CreateUserCmd( int localPlayerNum, int frameTime, unsigned frameMsec, float mx, float my, qboolean anykeydown ) {
 	static usercmd_t cmd;
 	vec3_t		oldAngles;
 	cglc_t		*lc;
@@ -524,8 +524,8 @@ usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, unsigned frameMs
 	in_frameTime = frameTime;
 	in_frameMsec = frameMsec;
 
-	lc = &cg.localClients[localClientNum];
-	ci = &cis[localClientNum];
+	lc = &cg.localPlayers[localPlayerNum];
+	ci = &cis[localPlayerNum];
 
 	VectorCopy( lc->viewangles, oldAngles );
 

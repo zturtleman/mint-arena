@@ -919,14 +919,14 @@ void CG_AddLocalEntities( void ) {
 			continue;
 		}
 
-		// Check if local entity should be rendered by this local client.
-		if (le->localClients && !(le->localClients & (1<<cg.cur_localClientNum))) {
+		// Check if local entity should be rendered by this player.
+		if (le->localPlayerBits && !(le->localPlayerBits & (1<<cg.cur_localPlayerNum))) {
 			continue;
 		}
 
 		forceOnlyMirror = (!(le->refEntity.renderfx & RF_ONLY_MIRROR) &&
 				!cg.cur_lc->renderingThirdPerson &&
-				cg.snap->pss[cg.cur_localClientNum].clientNum == le->firstPersonEntity);
+				cg.snap->pss[cg.cur_localPlayerNum].clientNum == le->firstPersonEntity);
 
 		if ( forceOnlyMirror ) {
 			le->refEntity.renderfx |= RF_ONLY_MIRROR;

@@ -1671,7 +1671,7 @@ static void CG_DrawDisconnect( void ) {
 
 	// draw the phone jack if we are completely past our buffers
 	cmdNum = trap_GetCurrentCmdNumber() - CMD_BACKUP + 1;
-	trap_GetUserCmd( cmdNum, &cmd, cg.cur_localClientNum );
+	trap_GetUserCmd( cmdNum, &cmd, cg.cur_localPlayerNum );
 	if ( cmd.serverTime <= cg.cur_ps->commandTime
 		|| cmd.serverTime > cg.time ) {	// special check for map_restart
 		return;
@@ -1884,11 +1884,11 @@ Called for important messages that should stay in the center of the viewport
 for a few moments
 ==============
 */
-void CG_CenterPrint( int localClientNum, const char *str, int y, float charScale ) {
+void CG_CenterPrint( int localPlayerNum, const char *str, int y, float charScale ) {
 	cglc_t	*lc;
 	char	*s;
 
-	lc = &cg.localClients[localClientNum];
+	lc = &cg.localPlayers[localPlayerNum];
 
 	Q_strncpyz( lc->centerPrint, str, sizeof(lc->centerPrint) );
 
@@ -2284,7 +2284,7 @@ static void CG_DrawThirdPersonCrosshair(void)
 		return;
 	}
 
-	if ( !cg.cur_lc->renderingThirdPerson || !cg_thirdPerson[cg.cur_localClientNum].integer ) {
+	if ( !cg.cur_lc->renderingThirdPerson || !cg_thirdPerson[cg.cur_localPlayerNum].integer ) {
 		return;
 	}
 
@@ -2540,8 +2540,8 @@ static void CG_DrawVote(void) {
 		sec = 0;
 	}
 
-	CG_KeysStringForBinding( Com_LocalPlayerCvarName( cg.cur_localClientNum, "vote yes" ), yesKeys, sizeof (yesKeys) );
-	CG_KeysStringForBinding( Com_LocalPlayerCvarName( cg.cur_localClientNum, "vote no" ), noKeys, sizeof (noKeys) );
+	CG_KeysStringForBinding( Com_LocalPlayerCvarName( cg.cur_localPlayerNum, "vote yes" ), yesKeys, sizeof (yesKeys) );
+	CG_KeysStringForBinding( Com_LocalPlayerCvarName( cg.cur_localPlayerNum, "vote no" ), noKeys, sizeof (noKeys) );
 
 	s = va( "Vote (%i): %s", sec, cgs.voteString );
 	CG_DrawSmallString( 2, 58, s, 1.0F );
@@ -2599,7 +2599,7 @@ qboolean CG_AnyScoreboardShowing( void ) {
 	int i;
 
 	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
-		if ( cg.localClients[i].clientNum != -1 && cg.localClients[i].scoreBoardShowing ) {
+		if ( cg.localPlayers[i].clientNum != -1 && cg.localPlayers[i].scoreBoardShowing ) {
 			return qtrue;
 		}
 	}
@@ -2618,14 +2618,14 @@ static qboolean CG_DrawScoreboard( void ) {
 	}
 	if (cg_paused.integer) {
 		if (cg.cur_lc) {
-			firstTime[cg.cur_localClientNum] = qtrue;
+			firstTime[cg.cur_localPlayerNum] = qtrue;
 		}
 		return qfalse;
 	}
 
 	// should never happen in Team Arena
 	if (cgs.gametype == GT_SINGLE_PLAYER && cg.cur_lc && cg.cur_lc->predictedPlayerState.pm_type == PM_INTERMISSION ) {
-		firstTime[cg.cur_localClientNum] = qtrue;
+		firstTime[cg.cur_localPlayerNum] = qtrue;
 		return qfalse;
 	}
 
@@ -2640,7 +2640,7 @@ static qboolean CG_DrawScoreboard( void ) {
 		if ( !CG_FadeColor( cg.cur_lc->scoreFadeTime, FADE_TIME ) ) {
 			// next time scoreboard comes up, don't print killer
 			cg.cur_lc->killerName[0] = 0;
-			firstTime[cg.cur_localClientNum] = qtrue;
+			firstTime[cg.cur_localPlayerNum] = qtrue;
 			return qfalse;
 		}
 	}
@@ -2654,8 +2654,8 @@ static qboolean CG_DrawScoreboard( void ) {
 	}
 
 	if (menuScoreboard) {
-		if (cg.cur_lc && firstTime[cg.cur_localClientNum]) {
-			firstTime[cg.cur_localClientNum] = qfalse;
+		if (cg.cur_lc && firstTime[cg.cur_localPlayerNum]) {
+			firstTime[cg.cur_localPlayerNum] = qfalse;
 			CG_SetScoreSelection(menuScoreboard);
 
 			// Update time now to prevent spectator list from jumping.
@@ -3089,7 +3089,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 {
 #ifdef MISSIONPACK
 	if (cg.cur_lc->orderPending && cg.time > cg.cur_lc->orderTime) {
-		CG_CheckOrderPending( cg.cur_localClientNum );
+		CG_CheckOrderPending( cg.cur_localPlayerNum );
 	}
 #endif
 	// if we are taking a levelshot for the menu, don't draw anything

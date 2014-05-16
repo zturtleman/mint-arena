@@ -52,7 +52,7 @@ typedef struct
 	menutext_s		joingame;
 	menutext_s		spectate;
 
-	int				localClient;
+	int				localPlayerNum;
 } teammain_t;
 
 static teammain_t	s_teammain;
@@ -69,7 +69,7 @@ static void TeamMain_MenuEvent( void* ptr, int event ) {
 		return;
 	}
 
-	teamCmd = Com_LocalPlayerCvarName(s_teammain.localClient, "team");
+	teamCmd = Com_LocalPlayerCvarName(s_teammain.localPlayerNum, "team");
 
 	switch( ((menucommon_s*)ptr)->id ) {
 	case ID_JOINRED:
@@ -100,14 +100,14 @@ static void TeamMain_MenuEvent( void* ptr, int event ) {
 TeamMain_MenuInit
 ===============
 */
-void TeamMain_MenuInit( int localClient ) {
+void TeamMain_MenuInit( int localPlayerNum ) {
 	int		y;
 	int		gametype;
 	char	info[MAX_INFO_STRING];
 
 	memset( &s_teammain, 0, sizeof(s_teammain) );
 
-	s_teammain.localClient = localClient;
+	s_teammain.localPlayerNum = localPlayerNum;
 
 	TeamMain_Cache();
 
@@ -210,7 +210,7 @@ void TeamMain_Cache( void ) {
 UI_TeamMainMenu
 ===============
 */
-void UI_TeamMainMenu( int localClient ) {
-	TeamMain_MenuInit(localClient);
+void UI_TeamMainMenu( int localPlayerNum ) {
+	TeamMain_MenuInit( localPlayerNum );
 	UI_PushMenu ( &s_teammain.menu );
 }

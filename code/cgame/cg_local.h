@@ -340,7 +340,7 @@ typedef struct localEntity_s {
 
 	int				firstPersonEntity; // don't render in firstPersonEntity's first person view
 
-	int				localClients; // 0 means all, else check if localClients & (1<<lc)
+	int				localPlayerBits; // 0 means all, else check if localPlayerBits & (1<<localPlayerNum)
 } localEntity_t;
 
 //======================================================================
@@ -822,11 +822,11 @@ typedef struct {
 	char			testModelName[MAX_QPATH];
 	qboolean		testGun;
 
-	// Local client data, from events and such
+	// Local player data, from events and such
 	cglc_t			*cur_lc;	// Current local client data we are working with
 	playerState_t	*cur_ps; // Like cur_lc, but for player state
-	int				cur_localClientNum;
-	cglc_t			localClients[MAX_SPLITVIEW];
+	int				cur_localPlayerNum;
+	cglc_t			localPlayers[MAX_SPLITVIEW];
 
 } cg_t;
 
@@ -1437,32 +1437,32 @@ void QDECL CG_DPrintf( const char *msg, ... ) __attribute__ ((format (printf, 1,
 void QDECL CG_Printf( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
 void QDECL CG_Error( const char *msg, ... ) __attribute__ ((noreturn, format (printf, 1, 2)));
 
-void QDECL CG_NotifyPrintf( int localClientNum, const char *msg, ... ) __attribute__ ((format (printf, 2, 3)));
-void QDECL CG_NotifyBitsPrintf( int localClientNum, const char *msg, ... ) __attribute__ ((format (printf, 2, 3)));
+void QDECL CG_NotifyPrintf( int localPlayerNum, const char *msg, ... ) __attribute__ ((format (printf, 2, 3)));
+void QDECL CG_NotifyBitsPrintf( int localPlayerNum, const char *msg, ... ) __attribute__ ((format (printf, 2, 3)));
 
-void CG_LocalClientAdded(int localClientNum, int clientNum);
-void CG_LocalClientRemoved(int localClientNum);
+void CG_LocalPlayerAdded(int localPlayerNum, int clientNum);
+void CG_LocalPlayerRemoved(int localPlayerNum);
 
 void CG_StartMusic( void );
 
 void CG_UpdateCvars( void );
 
-int CG_CrosshairPlayer( int localClientNum );
-int CG_LastAttacker( int localClientNum );
+int CG_CrosshairPlayer( int localPlayerNum );
+int CG_LastAttacker( int localPlayerNum );
 void CG_LoadMenus(const char *menuFile);
 void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state, int axisNum );
 void CG_KeyEvent(int key, qboolean down);
-void CG_MouseEvent(int localClientNum, int x, int y);
-void CG_JoystickAxisEvent( int localClientNum, int axis, int value, unsigned time, connstate_t state );
-void CG_JoystickButtonEvent( int localClientNum, int button, qboolean down, unsigned time, connstate_t state );
-void CG_JoystickHatEvent( int localClientNum, int hat, int value, unsigned time, connstate_t state );
+void CG_MouseEvent(int localPlayerNum, int x, int y);
+void CG_JoystickAxisEvent( int localPlayerNum, int axis, int value, unsigned time, connstate_t state );
+void CG_JoystickButtonEvent( int localPlayerNum, int button, qboolean down, unsigned time, connstate_t state );
+void CG_JoystickHatEvent( int localPlayerNum, int hat, int value, unsigned time, connstate_t state );
 void CG_EventHandling(int type);
 void CG_RankRunFrame( void );
 void CG_SetScoreSelection(void *menu);
 score_t *CG_GetSelectedScore( void );
 void CG_BuildSpectatorString( void );
 
-void CG_RemoveNotifyLine( cglc_t *localClient );
+void CG_RemoveNotifyLine( cglc_t *localPlayer );
 void CG_AddNotifyText( int realTime, qboolean restoredText );
 
 void CG_SetupDlightstyles( void );
@@ -1491,8 +1491,8 @@ void CG_TestModelNextFrame_f (void);
 void CG_TestModelPrevFrame_f (void);
 void CG_TestModelNextSkin_f (void);
 void CG_TestModelPrevSkin_f (void);
-void CG_ZoomUp_f( int localClient );
-void CG_ZoomDown_f( int localClient );
+void CG_ZoomUp_f( int localPlayerNum );
+void CG_ZoomDown_f( int localPlayerNum );
 void CG_AddBufferedSound( sfxHandle_t sfx);
 void CG_StepOffset( vec3_t vieworg );
 
@@ -1578,7 +1578,7 @@ extern  char teamChat2[256];
 
 void CG_AddLagometerFrameInfo( void );
 void CG_AddLagometerSnapshotInfo( snapshot_t *snap );
-void CG_CenterPrint( int localClientNum, const char *str, int y, float charScale );
+void CG_CenterPrint( int localPlayerNum, const char *str, int y, float charScale );
 void CG_GlobalCenterPrint( const char *str, int y, float charScale );
 void CG_DrawHead( float x, float y, float w, float h, int clientNum, vec3_t headAngles );
 void CG_DrawActive( stereoFrame_t stereoView );
@@ -1661,9 +1661,9 @@ qboolean CG_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *
 //
 // cg_weapons.c
 //
-void CG_NextWeapon_f( int localClient );
-void CG_PrevWeapon_f( int localClient );
-void CG_Weapon_f( int localClient );
+void CG_NextWeapon_f( int localPlayerNum );
+void CG_PrevWeapon_f( int localPlayerNum );
+void CG_Weapon_f( int localPlayerNum );
 
 void CG_RegisterWeapon( int weaponNum );
 void CG_RegisterItemVisuals( int itemNum );
@@ -1680,7 +1680,7 @@ void CG_AddViewWeapon (playerState_t *ps);
 void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent, int team );
 void CG_DrawWeaponSelect( void );
 
-void CG_OutOfAmmoChange( int localClientNum );	// should this be in pmove?
+void CG_OutOfAmmoChange( int localPlayerNum );	// should this be in pmove?
 
 //
 // cg_marks.c
@@ -1740,8 +1740,8 @@ localEntity_t *CG_MakeExplosion( vec3_t origin, vec3_t dir,
 //
 void CG_ProcessSnapshots( qboolean initialOnly );
 void CG_RestoreSnapshot( void );
-playerState_t *CG_LocalClientPlayerStateForClientNum( int clientNum );
-int CG_NumLocalClients( void );
+playerState_t *CG_LocalPlayerState( int clientNum );
+int CG_NumLocalPlayers( void );
 
 
 //
@@ -1815,7 +1815,7 @@ void CG_SetConfigValues( void );
 void CG_ShaderStateChanged(void);
 #ifdef MISSIONPACK
 void CG_LoadVoiceChats( void );
-void CG_VoiceChatLocal( int localClientBits, int mode, qboolean voiceOnly, int clientNum, int color, const char *cmd );
+void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int clientNum, int color, const char *cmd );
 void CG_PlayBufferedVoiceChats( void );
 #endif
 
@@ -1863,7 +1863,7 @@ int CG_NewParticleArea ( int num );
 //
 void CG_RegisterInputCvars( void );
 void CG_UpdateInputCvars( void );
-usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, unsigned frameMsec, float mx, float my, qboolean anykeydown );
+usercmd_t *CG_CreateUserCmd( int localPlayerNum, int frameTime, unsigned frameMsec, float mx, float my, qboolean anykeydown );
 
 void IN_CenterView( int localPlayerNum );
 

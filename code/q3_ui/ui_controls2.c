@@ -254,7 +254,7 @@ typedef struct
 	menubitmap_s		back;
 	menutext_s			name;
 
-	int					localClient;
+	int					localPlayerNum;
 	menucommon_s		***controls;
 	bind_t				*bindings;
 } controls_t; 	
@@ -1045,8 +1045,8 @@ static void Controls_DrawPlayer( void *self ) {
 	menubitmap_s	*b;
 	char			model[MAX_QPATH], headmodel[MAX_QPATH];
 
-	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localClient, "model"), model, sizeof( model ) );
-	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localClient, "headmodel"), headmodel, sizeof( headmodel ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "model"), model, sizeof( model ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "headmodel"), headmodel, sizeof( headmodel ) );
 	if ( strcmp( model, s_controls.playerModel ) != 0 || strcmp( headmodel, s_controls.playerHead ) != 0 ) {
 		UI_PlayerInfo_SetModel( &s_controls.playerinfo, model, headmodel, NULL );
 		strcpy( s_controls.playerModel, model );
@@ -1113,17 +1113,17 @@ static void Controls_GetConfig( void )
 		}
 	}
 
-	if (s_controls.localClient == 0) {
+	if (s_controls.localPlayerNum == 0) {
 		s_controls.invertmouse.curvalue  = Controls_GetCvarValue( "m_pitch" ) < 0;
 		s_controls.smoothmouse.curvalue  = Com_Clamp( 0, 1, Controls_GetCvarValue( "m_filter" ) );
 		s_controls.sensitivity.curvalue  = Com_Clamp( 2, 30, Controls_GetCvarValue( "sensitivity" ) );
 		s_controls.freelook.curvalue     = Com_Clamp( 0, 1, Controls_GetCvarValue( "cl_freelook" ) );
 	}
 
-	s_controls.alwaysrun.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localClient, "cl_run" ) ) );
-	s_controls.autoswitch.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localClient, "cg_autoswitch" ) ) );
-	s_controls.joyanalog.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localClient, "in_joystickUseAnalog" ) ) );
-	s_controls.joythreshold.curvalue = Com_Clamp( 0.05f, 0.75f, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localClient, "in_joystickThreshold" ) ) );
+	s_controls.alwaysrun.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cl_run" ) ) );
+	s_controls.autoswitch.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_autoswitch" ) ) );
+	s_controls.joyanalog.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickUseAnalog" ) ) );
+	s_controls.joythreshold.curvalue = Com_Clamp( 0.05f, 0.75f, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickThreshold" ) ) );
 }
 
 /*
@@ -1157,11 +1157,11 @@ static void Controls_SetConfig( void )
 		}
 	}
 
-	if (s_controls.localClient != 0) {
-		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localClient, "cl_run" ), s_controls.alwaysrun.curvalue );
-		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localClient, "cg_autoswitch" ), s_controls.autoswitch.curvalue );
-		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localClient, "in_joystickUseAnalog" ), s_controls.joyanalog.curvalue );
-		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localClient, "in_joystickThreshold" ), s_controls.joythreshold.curvalue );
+	if (s_controls.localPlayerNum != 0) {
+		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cl_run" ), s_controls.alwaysrun.curvalue );
+		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_autoswitch" ), s_controls.autoswitch.curvalue );
+		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickUseAnalog" ), s_controls.joyanalog.curvalue );
+		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickThreshold" ), s_controls.joythreshold.curvalue );
 		return;
 	}
 
@@ -1202,13 +1202,13 @@ static void Controls_SetDefaults( void )
 		bindptr->bind2 = bindptr->defaultbind2;
 	}
 
-	if (s_controls.localClient != 0) {
-		s_controls.alwaysrun.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localClient, "cl_run" ) );
-		s_controls.autoswitch.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localClient, "cg_autoswitch" ) );
-		trap_Cvar_SetValue(Com_LocalPlayerCvarName(s_controls.localClient, "in_joystick"), 0);
-		trap_Cvar_SetValue(Com_LocalPlayerCvarName(s_controls.localClient, "in_joystickNo"), 0);
-		s_controls.joyanalog.curvalue    = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localClient, "in_joystickUseAnalog" ) );
-		s_controls.joythreshold.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localClient, "in_joystickThreshold" ) );
+	if (s_controls.localPlayerNum != 0) {
+		s_controls.alwaysrun.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cl_run" ) );
+		s_controls.autoswitch.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_autoswitch" ) );
+		trap_Cvar_SetValue(Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystick"), 0);
+		trap_Cvar_SetValue(Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickNo"), 0);
+		s_controls.joyanalog.curvalue    = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickUseAnalog" ) );
+		s_controls.joythreshold.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickThreshold" ) );
 		return;
 	}
 
@@ -1474,7 +1474,7 @@ static void Controls_MenuEvent( void* ptr, int event )
 		case ID_SELECTJOY:
 			if (event == QM_ACTIVATED)
 			{
-				UI_JoystickMenu(s_controls.localClient);
+				UI_JoystickMenu(s_controls.localPlayerNum);
 			}
 			break;
 	}
@@ -1513,8 +1513,8 @@ static void Controls_InitModel( void )
 
 	memset( &s_controls.playerinfo, 0, sizeof(playerInfo_t) );
 
-	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localClient, "model"), model, sizeof ( model ) );
-	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localClient, "headmodel"), headmodel, sizeof ( headmodel ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "model"), model, sizeof ( model ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "headmodel"), headmodel, sizeof ( headmodel ) );
 
 	UI_PlayerInfo_SetModel( &s_controls.playerinfo, model, headmodel, NULL );
 
@@ -1544,7 +1544,7 @@ static void Controls_InitWeapons( void ) {
 Controls_MenuInit
 =================
 */
-static void Controls_MenuInit( int localClient )
+static void Controls_MenuInit( int localPlayerNum )
 {
 	static char playername[32];
 	int			y;
@@ -1552,17 +1552,17 @@ static void Controls_MenuInit( int localClient )
 	// zero set all our globals
 	memset( &s_controls, 0 ,sizeof(controls_t) );
 
-	s_controls.localClient = localClient;
+	s_controls.localPlayerNum = localPlayerNum;
 
-	if (s_controls.localClient == 0) {
+	if (s_controls.localPlayerNum == 0) {
 		s_controls.controls = g_controls;
 		s_controls.bindings = g_bindings;
 	} else {
 		s_controls.controls = g_mini_controls;
 
-		if (s_controls.localClient == 1) {
+		if (s_controls.localPlayerNum == 1) {
 			s_controls.bindings = g_bindings2;
-		} else if (s_controls.localClient == 2) {
+		} else if (s_controls.localPlayerNum == 2) {
 			s_controls.bindings = g_bindings3;
 		} else {
 			s_controls.bindings = g_bindings4;
@@ -2057,7 +2057,7 @@ static void Controls_MenuInit( int localClient )
 
 	Menu_AddItem( &s_controls.menu, &s_controls.back );
 
-	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localClient, "name"), s_controls.name.string, 16 );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "name"), s_controls.name.string, 16 );
 	Q_CleanStr( s_controls.name.string );
 
 	// initialize the configurable cvars
@@ -2107,7 +2107,7 @@ void Controls_Cache( void ) {
 UI_ControlsMenu
 =================
 */
-void UI_ControlsMenu( int localClient ) {
-	Controls_MenuInit(localClient);
+void UI_ControlsMenu( int localPlayerNum ) {
+	Controls_MenuInit( localPlayerNum );
 	UI_PushMenu( &s_controls.menu );
 }

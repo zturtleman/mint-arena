@@ -341,16 +341,16 @@ static void CG_OffsetThirdPersonView( void ) {
 
 	VectorCopy( cg.refdef.vieworg, view );
 
-	view[2] += cg_thirdPersonHeight[cg.cur_localClientNum].value;
+	view[2] += cg_thirdPersonHeight[cg.cur_localPlayerNum].value;
 
 	cg.refdefViewAngles[PITCH] *= 0.5;
 
 	AngleVectors( cg.refdefViewAngles, forward, right, up );
 
-	forwardScale = cos( cg_thirdPersonAngle[cg.cur_localClientNum].value / 180 * M_PI );
-	sideScale = sin( cg_thirdPersonAngle[cg.cur_localClientNum].value / 180 * M_PI );
-	VectorMA( view, -cg_thirdPersonRange[cg.cur_localClientNum].value * forwardScale, forward, view );
-	VectorMA( view, -cg_thirdPersonRange[cg.cur_localClientNum].value * sideScale, right, view );
+	forwardScale = cos( cg_thirdPersonAngle[cg.cur_localPlayerNum].value / 180 * M_PI );
+	sideScale = sin( cg_thirdPersonAngle[cg.cur_localPlayerNum].value / 180 * M_PI );
+	VectorMA( view, -cg_thirdPersonRange[cg.cur_localPlayerNum].value * forwardScale, forward, view );
+	VectorMA( view, -cg_thirdPersonRange[cg.cur_localPlayerNum].value * sideScale, right, view );
 
 	// trace a ray from the origin to the viewpoint to make sure the view isn't
 	// in a solid block.  Use an 8 by 8 block to prevent the view from near clipping anything
@@ -379,7 +379,7 @@ static void CG_OffsetThirdPersonView( void ) {
 		focusDist = 1;	// should never happen
 	}
 	cg.refdefViewAngles[PITCH] = -180 / M_PI * atan2( focusPoint[2], focusDist );
-	cg.refdefViewAngles[YAW] -= cg_thirdPersonAngle[cg.cur_localClientNum].value;
+	cg.refdefViewAngles[YAW] -= cg_thirdPersonAngle[cg.cur_localPlayerNum].value;
 }
 
 /*
@@ -518,8 +518,8 @@ static void CG_OffsetFirstPersonView( void ) {
 
 //======================================================================
 
-void CG_ZoomDown_f( int localClientNum ) {
-	cglc_t *lc = &cg.localClients[localClientNum];
+void CG_ZoomDown_f( int localPlayerNum ) {
+	cglc_t *lc = &cg.localPlayers[localPlayerNum];
 
 	if ( lc->zoomed ) {
 		return;
@@ -529,8 +529,8 @@ void CG_ZoomDown_f( int localClientNum ) {
 	lc->zoomTime = cg.time;
 }
 
-void CG_ZoomUp_f( int localClientNum ) {
-	cglc_t *lc = &cg.localClients[localClientNum];
+void CG_ZoomUp_f( int localPlayerNum ) {
+	cglc_t *lc = &cg.localPlayers[localPlayerNum];
 
 	if ( !lc->zoomed ) {
 		return;
@@ -778,7 +778,7 @@ static int CG_CalcViewValues( void ) {
 
 	if (cg_cameraOrbit.integer) {
 		if (cg.time > cg.nextOrbitTime) {
-			cg_thirdPersonAngle[cg.cur_localClientNum].value += cg_cameraOrbit.value;
+			cg_thirdPersonAngle[cg.cur_localPlayerNum].value += cg_cameraOrbit.value;
 		}
 	}
 	// add error decay
@@ -975,7 +975,7 @@ Generates and draws a game scene and status information at the given time.
 */
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback ) {
 	int		inwater;
-	qboolean renderClientViewport[MAX_SPLITVIEW];
+	qboolean renderPlayerViewport[MAX_SPLITVIEW];
 	int		i;
 
 	cg.time = serverTime;
@@ -1014,29 +1014,29 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 	// Use single camera/viewport at intermission
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if ( cg.localClients[i].clientNum != -1 && cg.snap->pss[i].pm_type != PM_INTERMISSION ) {
+		if ( cg.localPlayers[i].clientNum != -1 && cg.snap->pss[i].pm_type != PM_INTERMISSION ) {
 			// client present and not at intermission, keep viewports separate.
 			break;
 		}
 	}
-	cg.singleCamera = ( CG_NumLocalClients() > 1 && i == CG_MaxSplitView() );
+	cg.singleCamera = ( CG_NumLocalPlayers() > 1 && i == CG_MaxSplitView() );
 
 	cg.numViewports = 0;
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if ( cg.localClients[i].clientNum == -1 ) {
-			renderClientViewport[i] = qfalse;
+		if ( cg.localPlayers[i].clientNum == -1 ) {
+			renderPlayerViewport[i] = qfalse;
 			continue;
 		}
-		cg.cur_localClientNum = i;
-		cg.cur_lc = &cg.localClients[i];
+		cg.cur_localPlayerNum = i;
+		cg.cur_lc = &cg.localPlayers[i];
 		cg.cur_ps = &cg.snap->pss[i];
 
 		// Check if viewport should be drawn.
 		if ( cg.singleCamera && cg.numViewports >= 1 ) {
-			renderClientViewport[i] = qfalse;
+			renderPlayerViewport[i] = qfalse;
 		} else {
 			cg.numViewports++;
-			renderClientViewport[i] = qtrue;
+			renderPlayerViewport[i] = qtrue;
 		}
 
 		// update cg.predictedPlayerState
@@ -1048,14 +1048,14 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		}
 	}
 
-	cg.cur_localClientNum = -1;
+	cg.cur_localPlayerNum = -1;
 	cg.cur_lc = NULL;
 	cg.cur_ps = NULL;
 
 	// If all local clients dropped out from playing still draw main local client.
 	if (cg.numViewports == 0) {
 		cg.numViewports = 1;
-		renderClientViewport[0] = qtrue;
+		renderPlayerViewport[0] = qtrue;
 	}
 
 	// play lead change annoucement and time/frag limit warnings
@@ -1070,17 +1070,17 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 #endif
 
 	for (i = 0, cg.viewport = -1; i < CG_MaxSplitView(); i++) {
-		if (!renderClientViewport[i]) {
+		if (!renderPlayerViewport[i]) {
 			continue;
 		}
 		cg.viewport++;
-		cg.cur_localClientNum = i;
-		cg.cur_lc = &cg.localClients[i];
+		cg.cur_localPlayerNum = i;
+		cg.cur_lc = &cg.localPlayers[i];
 		cg.cur_ps = &cg.snap->pss[i];
 
 		// decide on third person view
 		cg.cur_lc->renderingThirdPerson = cg.cur_ps->persistant[PERS_TEAM] != TEAM_SPECTATOR
-							&& (cg_thirdPerson[cg.cur_localClientNum].integer || (cg.cur_ps->stats[STAT_HEALTH] <= 0));
+							&& (cg_thirdPerson[cg.cur_localPlayerNum].integer || (cg.cur_ps->stats[STAT_HEALTH] <= 0));
 
 		CG_PB_ClearPolyBuffers();
 
@@ -1147,7 +1147,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		CG_DrawActive( stereoView );
 	}
 
-	cg.cur_localClientNum = -1;
+	cg.cur_localPlayerNum = -1;
 	cg.cur_lc = NULL;
 	cg.cur_ps = NULL;
 

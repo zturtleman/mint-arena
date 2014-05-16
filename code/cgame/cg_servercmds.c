@@ -476,7 +476,7 @@ require a reload of all the media
 ===============
 */
 static void CG_MapRestart( void ) {
-	int	lc;
+	int	i;
 
 	if ( cg_showmiss.integer ) {
 		CG_Printf( "CG_MapRestart\n" );
@@ -519,11 +519,11 @@ static void CG_MapRestart( void ) {
 	}
 #endif
 
-	for (lc = 0; lc < CG_MaxSplitView(); lc++) {
-		cg.localClients[lc].rewardTime = 0;
-		cg.localClients[lc].rewardStack = 0;
+	for (i = 0; i < CG_MaxSplitView(); i++) {
+		cg.localPlayers[i].rewardTime = 0;
+		cg.localPlayers[i].rewardStack = 0;
 
-		trap_Cvar_SetValue( Com_LocalPlayerCvarName(lc, "cg_thirdPerson"), 0 );
+		trap_Cvar_SetValue( Com_LocalPlayerCvarName(i, "cg_thirdPerson"), 0 );
 	}
 }
 
@@ -844,7 +844,7 @@ voiceChatList_t *CG_VoiceChatListForClient( int clientNum ) {
 
 typedef struct bufferedVoiceChat_s
 {
-	int localClientBits;
+	int localPlayerBits;
 	int clientNum;
 	sfxHandle_t snd;
 	int voiceOnly;
@@ -874,21 +874,21 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 
 		showHead = qfalse;
 		for ( i = 0; i < CG_MaxSplitView(); i++ ) {
-			if ( ! ( vchat->localClientBits & ( 1 << i ) ) ) {
+			if ( ! ( vchat->localPlayerBits & ( 1 << i ) ) ) {
 				continue;
 			}
 
 			if ( vchat->clientNum != cg.snap->pss[i].clientNum ) {
 				int orderTask = CG_ValidOrder(vchat->cmd);
 				if (orderTask > 0) {
-					cg.localClients[i].acceptOrderTime = cg.time + 5000;
-					Q_strncpyz(cg.localClients[i].acceptVoice, vchat->cmd, sizeof(cg.localClients[i].acceptVoice));
-					cg.localClients[i].acceptTask = orderTask;
-					cg.localClients[i].acceptLeader = vchat->clientNum;
+					cg.localPlayers[i].acceptOrderTime = cg.time + 5000;
+					Q_strncpyz(cg.localPlayers[i].acceptVoice, vchat->cmd, sizeof(cg.localPlayers[i].acceptVoice));
+					cg.localPlayers[i].acceptTask = orderTask;
+					cg.localPlayers[i].acceptLeader = vchat->clientNum;
 				}
 
-				cg.localClients[i].voiceTime = cg.time;
-				cg.localClients[i].currentVoiceClient = vchat->clientNum;
+				cg.localPlayers[i].voiceTime = cg.time;
+				cg.localPlayers[i].currentVoiceClient = vchat->clientNum;
 				showHead = qtrue;
 			}
 		}
@@ -900,7 +900,7 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 	}
 	if (!vchat->voiceOnly && !cg_noVoiceText.integer) {
 		CG_AddToTeamChat( vchat->message );
-		CG_NotifyBitsPrintf( vchat->localClientBits, "%s\n", vchat->message );
+		CG_NotifyBitsPrintf( vchat->localPlayerBits, "%s\n", vchat->message );
 	}
 	voiceChatBuffer[cg.voiceChatBufferOut].snd = 0;
 #endif
@@ -951,7 +951,7 @@ void CG_AddBufferedVoiceChat( bufferedVoiceChat_t *vchat ) {
 CG_VoiceChatLocal
 =================
 */
-void CG_VoiceChatLocal( int localClientBits, int mode, qboolean voiceOnly, int clientNum, int color, const char *cmd ) {
+void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int clientNum, int color, const char *cmd ) {
 #ifdef MISSIONPACK
 	char *chat;
 	voiceChatList_t *voiceChatList;
@@ -974,7 +974,7 @@ void CG_VoiceChatLocal( int localClientBits, int mode, qboolean voiceOnly, int c
 	if ( CG_GetVoiceChat( voiceChatList, cmd, &snd, &chat ) ) {
 		//
 		if ( mode == SAY_TEAM || !cg_teamChatsOnly.integer ) {
-			vchat.localClientBits = localClientBits;
+			vchat.localPlayerBits = localPlayerBits;
 			vchat.clientNum = clientNum;
 			vchat.snd = snd;
 			vchat.voiceOnly = voiceOnly;
@@ -999,7 +999,7 @@ void CG_VoiceChatLocal( int localClientBits, int mode, qboolean voiceOnly, int c
 CG_VoiceChat
 =================
 */
-void CG_VoiceChat( int localClientBits, int mode, int start ) {
+void CG_VoiceChat( int localPlayerBits, int mode, int start ) {
 	const char *cmd;
 	int clientNum, color;
 	qboolean voiceOnly;
@@ -1017,7 +1017,7 @@ void CG_VoiceChat( int localClientBits, int mode, int start ) {
 		}
 	}
 
-	CG_VoiceChatLocal( localClientBits, mode, voiceOnly, clientNum, color, cmd );
+	CG_VoiceChatLocal( localPlayerBits, mode, voiceOnly, clientNum, color, cmd );
 }
 #endif
 
@@ -1040,10 +1040,10 @@ static void CG_RemoveChatEscapeChar( char *text ) {
 
 /*
 =================
-CG_LocalClientBitsForTeam
+CG_LocalPlayerBitsForTeam
 =================
 */
-int CG_LocalClientBitsForTeam( team_t team ) {
+int CG_LocalPlayerBitsForTeam( team_t team ) {
 	clientInfo_t	*ci;
 	int				clientNum;
 	int				bits;
@@ -1052,7 +1052,7 @@ int CG_LocalClientBitsForTeam( team_t team ) {
 	bits = 0;
 	
 	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
-		clientNum = cg.localClients[i].clientNum;
+		clientNum = cg.localPlayers[i].clientNum;
 		if ( clientNum == -1 ) {
 			continue;
 		}
@@ -1104,21 +1104,21 @@ static void CG_ServerCommand( void ) {
 
 	// Commands for team
 	if ( !Q_stricmp( cmd, "[RED]" ) ) {
-		localPlayerBits = CG_LocalClientBitsForTeam( TEAM_RED );
+		localPlayerBits = CG_LocalPlayerBitsForTeam( TEAM_RED );
 
 		// Get command
 		start++;
 		cmd = CG_Argv(start);
 	}
 	else if ( !Q_stricmp( cmd, "[BLUE]" ) ) {
-		localPlayerBits = CG_LocalClientBitsForTeam( TEAM_BLUE );
+		localPlayerBits = CG_LocalPlayerBitsForTeam( TEAM_BLUE );
 
 		// Get command
 		start++;
 		cmd = CG_Argv(start);
 	}
 	else if ( !Q_stricmp( cmd, "[SPECTATOR]" ) ) {
-		localPlayerBits = CG_LocalClientBitsForTeam( TEAM_SPECTATOR );
+		localPlayerBits = CG_LocalPlayerBitsForTeam( TEAM_SPECTATOR );
 
 		// Get command
 		start++;

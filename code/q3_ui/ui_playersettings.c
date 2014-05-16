@@ -78,7 +78,7 @@ typedef struct {
 	int					current_fx;
 	char				playerModel[MAX_QPATH];
 	char				playerHead[MAX_QPATH];
-	int					localClient;
+	int					localPlayerNum;
 	char				bannerString[32];
 } playersettings_t;
 
@@ -251,8 +251,8 @@ static void PlayerSettings_DrawPlayer( void *self ) {
 	vec3_t			viewangles;
 	char			model[MAX_QPATH], headmodel[MAX_QPATH];
 
-	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playersettings.localClient, "model"), model, sizeof( model ) );
-	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playersettings.localClient, "headmodel"), headmodel, sizeof ( headmodel ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "model"), model, sizeof( model ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "headmodel"), headmodel, sizeof ( headmodel ) );
 	if ( strcmp( model, s_playersettings.playerModel ) != 0 || strcmp( headmodel, s_playersettings.playerHead ) != 0 ) {
 		UI_PlayerInfo_SetModel( &s_playersettings.playerinfo, model, headmodel, NULL );
 		strcpy( s_playersettings.playerModel, model );
@@ -276,14 +276,14 @@ PlayerSettings_SaveChanges
 */
 static void PlayerSettings_SaveChanges( void ) {
 	// name
-	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playersettings.localClient, "name"), s_playersettings.name.field.buffer );
+	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "name"), s_playersettings.name.field.buffer );
 
 	// handicap
-	trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_playersettings.localClient, "handicap"),
+	trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "handicap"),
 			100 - s_playersettings.handicap.curvalue * 5 );
 
 	// effects color
-	trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_playersettings.localClient, "color1"),
+	trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "color1"),
 			uitogamecode[s_playersettings.effects.curvalue] );
 }
 
@@ -314,10 +314,10 @@ static void PlayerSettings_SetMenuItems( void ) {
 
 	// name
 	Q_strncpyz( s_playersettings.name.field.buffer, CG_Cvar_VariableString(
-			Com_LocalPlayerCvarName(s_playersettings.localClient, "name")), sizeof(s_playersettings.name.field.buffer) );
+			Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "name")), sizeof(s_playersettings.name.field.buffer) );
 
 	// effects color
-	c = trap_Cvar_VariableValue( Com_LocalPlayerCvarName(s_playersettings.localClient, "color1") ) - 1;
+	c = trap_Cvar_VariableValue( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "color1") ) - 1;
 	if( c < 0 || c > NUM_COLOR_EFFECTS-1 ) {
 		c = NUM_COLOR_EFFECTS-1;
 	}
@@ -330,14 +330,14 @@ static void PlayerSettings_SetMenuItems( void ) {
 	viewangles[PITCH] = 0;
 	viewangles[ROLL]  = 0;
 
-	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playersettings.localClient, "model"), model, sizeof( model ) );
-	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playersettings.localClient, "headmodel"), headmodel, sizeof ( headmodel ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "model"), model, sizeof( model ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "headmodel"), headmodel, sizeof ( headmodel ) );
 
 	UI_PlayerInfo_SetModel( &s_playersettings.playerinfo, model, headmodel, NULL );
 	UI_PlayerInfo_SetInfo( &s_playersettings.playerinfo, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
 
 	// handicap
-	h = Com_Clamp( 5, 100, trap_Cvar_VariableValue(Com_LocalPlayerCvarName(s_playersettings.localClient, "handicap")) );
+	h = Com_Clamp( 5, 100, trap_Cvar_VariableValue(Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "handicap")) );
 	s_playersettings.handicap.curvalue = 20 - h / 5;
 }
 
@@ -354,13 +354,13 @@ static void PlayerSettings_MenuEvent( void* ptr, int event ) {
 
 	switch( ((menucommon_s*)ptr)->id ) {
 	case ID_HANDICAP:
-		trap_Cvar_Set( Com_LocalPlayerCvarName(s_playersettings.localClient, "handicap"),
+		trap_Cvar_Set( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "handicap"),
 				va( "%i", 100 - 25 * s_playersettings.handicap.curvalue ) );
 		break;
 
 	case ID_MODEL:
 		PlayerSettings_SaveChanges();
-		UI_PlayerModelMenu(s_playersettings.localClient);
+		UI_PlayerModelMenu(s_playersettings.localPlayerNum);
 		break;
 
 	case ID_BACK:
@@ -376,17 +376,17 @@ static void PlayerSettings_MenuEvent( void* ptr, int event ) {
 PlayerSettings_MenuInit
 =================
 */
-static void PlayerSettings_MenuInit( int localClient )
+static void PlayerSettings_MenuInit( int localPlayerNum )
 {
 	int		y;
 
 	memset(&s_playersettings,0,sizeof(playersettings_t));
 
-	s_playersettings.localClient = localClient;
+	s_playersettings.localPlayerNum = localPlayerNum;
 	if (UI_MaxSplitView() == 1) {
 		Com_sprintf(s_playersettings.bannerString, sizeof (s_playersettings.bannerString), "PLAYER SETTINGS");
 	} else {
-		Com_sprintf(s_playersettings.bannerString, sizeof (s_playersettings.bannerString), "PLAYER %d SETTINGS", s_playersettings.localClient+1);
+		Com_sprintf(s_playersettings.bannerString, sizeof (s_playersettings.bannerString), "PLAYER %d SETTINGS", s_playersettings.localPlayerNum+1);
 	}
 
 	PlayerSettings_Cache();
@@ -547,7 +547,7 @@ void PlayerSettings_Cache( void ) {
 UI_PlayerSettingsMenu
 =================
 */
-void UI_PlayerSettingsMenu( int localClient ) {
-	PlayerSettings_MenuInit(localClient);
+void UI_PlayerSettingsMenu( int localPlayerNum ) {
+	PlayerSettings_MenuInit( localPlayerNum );
 	UI_PushMenu( &s_playersettings.menu );
 }

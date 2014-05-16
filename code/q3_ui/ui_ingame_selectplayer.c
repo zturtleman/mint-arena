@@ -146,7 +146,7 @@ void InSelectPlayer_MenuInit( const char *banner, qboolean disableMissingPlayers
 		s_setupplayers.player[i].string				= s_setupplayers.playerString[i];
 		if (!disableMissingPlayers) {
 			// Have players in game be red and not ingame be white.
-			if (cg.localClients[i].clientNum == -1) {
+			if (cg.localPlayers[i].clientNum == -1) {
 				s_setupplayers.player[i].color		= color_white;
 			} else {
 				s_setupplayers.player[i].color		= color_red;
@@ -156,7 +156,7 @@ void InSelectPlayer_MenuInit( const char *banner, qboolean disableMissingPlayers
 		}
 		s_setupplayers.player[i].style				= UI_CENTER|UI_SMALLFONT;
 
-		if (disableMissingPlayers && cg.localClients[i].clientNum == -1) {
+		if (disableMissingPlayers && cg.localPlayers[i].clientNum == -1) {
 			s_setupplayers.player[i].generic.flags |= QMF_GRAYED;
 		}
 
@@ -204,7 +204,7 @@ void InSelectPlayerMenu( void (*playerfunc)(int), const char *banner, qboolean d
 
 		// check if there is only one local player and find local client index
 		for ( i = 0, playerNum = -1; i < UI_MaxSplitView(); i++) {
-			if ( cg.localClients[i].clientNum >= 0 && cg.localClients[i].clientNum < MAX_CLIENTS ) {
+			if ( cg.localPlayers[i].clientNum >= 0 && cg.localPlayers[i].clientNum < MAX_CLIENTS ) {
 				if ( playerNum == -1 ) {
 					playerNum = i;
 				} else {

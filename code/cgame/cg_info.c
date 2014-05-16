@@ -99,17 +99,17 @@ void CG_LoadingItem( int itemNum ) {
 
 /*
 ===================
-CG_LoadingClient
+CG_LoadingPlayer
 ===================
 */
-void CG_LoadingClient( int clientNum ) {
+void CG_LoadingPlayer( int playerNum ) {
 	const char		*info;
 	char			*skin;
 	char			personality[MAX_QPATH];
 	char			model[MAX_QPATH];
 	char			iconName[MAX_QPATH];
 
-	info = CG_ConfigString( CS_PLAYERS + clientNum );
+	info = CG_ConfigString( CS_PLAYERS + playerNum );
 
 	if ( loadingPlayerIconCount < MAX_LOADING_PLAYER_ICONS ) {
 		Q_strncpyz( model, Info_ValueForKey( info, "model" ), sizeof( model ) );

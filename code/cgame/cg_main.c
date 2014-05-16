@@ -45,7 +45,7 @@ int blueTeamNameModificationCount = -1;
 #endif
 
 void CG_Init( connstate_t state, int maxSplitView, int playVideo );
-void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 );
+void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int playerNum0, int playerNum1, int playerNum2, int playerNum3 );
 void CG_Shutdown( void );
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime );
 static char *CG_VoIPString( int localPlayerNum );
@@ -452,8 +452,8 @@ static cvarTable_t cgameCvarTable[] = {
 };
 
 static userCvarTable_t userCvarTable[] = {
-	{ cg_color1, "color1", XSTRING( DEFAULT_CLIENT_COLOR1 ), CVAR_USERINFO | CVAR_ARCHIVE, RANGE_ALL },
-	{ cg_color2, "color2", XSTRING( DEFAULT_CLIENT_COLOR2 ), CVAR_USERINFO | CVAR_ARCHIVE, RANGE_ALL },
+	{ cg_color1, "color1", XSTRING( DEFAULT_PLAYER_COLOR1 ), CVAR_USERINFO | CVAR_ARCHIVE, RANGE_ALL },
+	{ cg_color2, "color2", XSTRING( DEFAULT_PLAYER_COLOR2 ), CVAR_USERINFO | CVAR_ARCHIVE, RANGE_ALL },
 	{ cg_handicap, "handicap", "100", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_ALL },
 	{ cg_teamtask, "teamtask", "0", CVAR_USERINFO, RANGE_ALL },
 	{ cg_teampref, "teampref", "", CVAR_USERINFO, RANGE_ALL },
@@ -544,9 +544,9 @@ void CG_RegisterUserCvars( void ) {
 	// cvars with per-player defaults
 	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
 		if ( i == 0 ) {
-			name = DEFAULT_CLIENT_NAME;
+			name = DEFAULT_PLAYER_NAME;
 		} else {
-			name = va("%s%d", DEFAULT_CLIENT_NAME, i + 1);
+			name = va("%s%d", DEFAULT_PLAYER_NAME, i + 1);
 		}
 
 		trap_Cvar_Register( NULL, Com_LocalPlayerCvarName(i, "name"), name, userInfo[i] | CVAR_ARCHIVE );
@@ -592,13 +592,13 @@ static void CG_ForceModelChange( void ) {
 	int		i;
 
 	for (i=0 ; i<MAX_CLIENTS ; i++) {
-		const char		*clientInfo;
+		const char		*playerInfo;
 
-		clientInfo = CG_ConfigString( CS_PLAYERS+i );
-		if ( !clientInfo[0] ) {
+		playerInfo = CG_ConfigString( CS_PLAYERS+i );
+		if ( !playerInfo[0] ) {
 			continue;
 		}
-		CG_NewClientInfo( i );
+		CG_NewPlayerInfo( i );
 	}
 }
 
@@ -694,11 +694,11 @@ int CG_CrosshairPlayer( int localPlayerNum ) {
 		return -1;
 	}
 
-	if ( cg.time > ( cg.localPlayers[localPlayerNum].crosshairClientTime + 1000 ) ) {
+	if ( cg.time > ( cg.localPlayers[localPlayerNum].crosshairPlayerTime + 1000 ) ) {
 		return -1;
 	}
 
-	return cg.localPlayers[localPlayerNum].crosshairClientNum;
+	return cg.localPlayers[localPlayerNum].crosshairPlayerNum;
 }
 
 int CG_LastAttacker( int localPlayerNum ) {
@@ -706,7 +706,7 @@ int CG_LastAttacker( int localPlayerNum ) {
 		return -1;
 	}
 
-	if ( !cg.localPlayers[localPlayerNum].attackerTime || cg.localPlayers[localPlayerNum].clientNum == -1 ) {
+	if ( !cg.localPlayers[localPlayerNum].attackerTime || cg.localPlayers[localPlayerNum].playerNum == -1 ) {
 		return -1;
 	}
 
@@ -782,7 +782,7 @@ void CG_AddNotifyText( int realTime, qboolean restoredText ) {
 		return;
 	}
 
-	// [player #] perfix for text that only shows up in notify area for one local client
+	// [player #] perfix for text that only shows up in notify area for one local player
 	if ( !Q_strncmp( buffer, "[player ", 8 ) && isdigit(buffer[8]) && buffer[9] == ']' ) {
 		localPlayerBits = 1 << ( atoi( &buffer[8] ) - 1 );
 
@@ -1666,11 +1666,11 @@ static void CG_RegisterGraphics( void ) {
 CG_LocalPlayerAdded
 ==================
 */
-void CG_LocalPlayerAdded(int localPlayerNum, int clientNum) {
-	if (clientNum < 0 || clientNum >= MAX_CLIENTS)
+void CG_LocalPlayerAdded(int localPlayerNum, int playerNum) {
+	if (playerNum < 0 || playerNum >= MAX_CLIENTS)
 		return;
 
-	cg.localPlayers[localPlayerNum].clientNum = clientNum;
+	cg.localPlayers[localPlayerNum].playerNum = playerNum;
 }
 
 /*
@@ -1679,10 +1679,10 @@ CG_LocalPlayerRemoved
 ==================
 */
 void CG_LocalPlayerRemoved(int localPlayerNum) {
-	if (cg.localPlayers[localPlayerNum].clientNum == -1)
+	if (cg.localPlayers[localPlayerNum].playerNum == -1)
 		return;
 
-	cg.localPlayers[localPlayerNum].clientNum = -1;
+	cg.localPlayers[localPlayerNum].playerNum = -1;
 }
 
 #ifdef MISSIONPACK
@@ -1706,26 +1706,26 @@ void CG_BuildSpectatorString(void) {
 
 /*																																			
 ===================
-CG_RegisterClients
+CG_RegisterPlayers
 ===================
 */
-static void CG_RegisterClients( void ) {
+static void CG_RegisterPlayers( void ) {
 	int		i;
 	int		j;
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if (cg.localPlayers[i].clientNum == -1) {
+		if (cg.localPlayers[i].playerNum == -1) {
 			continue;
 		}
-		CG_LoadingClient(cg.localPlayers[i].clientNum);
-		CG_NewClientInfo(cg.localPlayers[i].clientNum);
+		CG_LoadingPlayer(cg.localPlayers[i].playerNum);
+		CG_NewPlayerInfo(cg.localPlayers[i].playerNum);
 	}
 
 	for (i=0 ; i<MAX_CLIENTS ; i++) {
-		const char		*clientInfo;
+		const char		*playerInfo;
 
 		for (j = 0; j < CG_MaxSplitView(); j++) {
-			if (cg.localPlayers[j].clientNum == i) {
+			if (cg.localPlayers[j].playerNum == i) {
 				break;
 			}
 		}
@@ -1733,12 +1733,12 @@ static void CG_RegisterClients( void ) {
 			continue;
 		}
 
-		clientInfo = CG_ConfigString( CS_PLAYERS+i );
-		if ( !clientInfo[0]) {
+		playerInfo = CG_ConfigString( CS_PLAYERS+i );
+		if ( !playerInfo[0]) {
 			continue;
 		}
-		CG_LoadingClient( i );
-		CG_NewClientInfo( i );
+		CG_LoadingPlayer( i );
+		CG_NewPlayerInfo( i );
 	}
 #ifdef MISSIONPACK
 	CG_BuildSpectatorString();
@@ -2136,7 +2136,7 @@ void CG_SetScoreSelection(void *p) {
 		} else if (cg.scores[i].team == TEAM_BLUE) {
 			blue++;
 		}
-		if (ps && ps->clientNum == cg.scores[i].client) {
+		if (ps && ps->playerNum == cg.scores[i].playerNum) {
 			cg.selectedScore = i;
 		}
 	}
@@ -2168,14 +2168,14 @@ static playerInfo_t * CG_InfoFromScoreIndex(int index, int team, int *scoreIndex
 			if (cg.scores[i].team == team) {
 				if (count == index) {
 					*scoreIndex = i;
-					return &cgs.playerinfo[cg.scores[i].client];
+					return &cgs.playerinfo[cg.scores[i].playerNum];
 				}
 				count++;
 			}
 		}
 	}
 	*scoreIndex = index;
-	return &cgs.playerinfo[ cg.scores[index].client ];
+	return &cgs.playerinfo[ cg.scores[index].playerNum ];
 }
 
 static const char *CG_FeederItemText(float feederID, int index, int column, qhandle_t *handle) {
@@ -2224,7 +2224,7 @@ static const char *CG_FeederItemText(float feederID, int index, int column, qhan
 				}
 		  break;
 			case 2:
-				if ( Com_ClientListContains( &cg.readyPlayers, sp->client ) ) {
+				if ( Com_ClientListContains( &cg.readyPlayers, sp->playerNum ) ) {
 					return "Ready";
 				}
 				if (team == -1) {
@@ -2457,7 +2457,7 @@ void CG_ClearState( qboolean everything ) {
 	cg.cinematicHandle = -1;
 
 	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
-		cg.localPlayers[i].clientNum = -1;
+		cg.localPlayers[i].playerNum = -1;
 	}
 }
 
@@ -2523,31 +2523,31 @@ Called after every level change or subsystem restart
 Will perform callbacks to make the loading info screen update.
 =================
 */
-void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 ) {
-	int	clientNums[MAX_SPLITVIEW];
+void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int playerNum0, int playerNum1, int playerNum2, int playerNum3 ) {
+	int	playerNums[MAX_SPLITVIEW];
 	const char	*s;
 	int			i;
 
 	cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
 	cg.numViewports = 1;
 
-	clientNums[0] = clientNum0;
-	clientNums[1] = clientNum1;
-	clientNums[2] = clientNum2;
-	clientNums[3] = clientNum3;
+	playerNums[0] = playerNum0;
+	playerNums[1] = playerNum1;
+	playerNums[2] = playerNum2;
+	playerNums[3] = playerNum3;
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
 		// clear team preference if was previously set (only want it used for one game)
 		trap_Cvar_Set( Com_LocalPlayerCvarName(i, "teampref"), "" );
 
-		if (clientNums[i] < 0 || clientNums[i] >= MAX_CLIENTS) {
-			cg.localPlayers[i].clientNum = -1;
+		if (playerNums[i] < 0 || playerNums[i] >= MAX_CLIENTS) {
+			cg.localPlayers[i].playerNum = -1;
 			continue;
 		}
 
 		trap_Mouse_SetState( i, MOUSE_CLIENT );
 		trap_GetViewAngles( i, cg.localPlayers[i].viewangles );
-		CG_LocalPlayerAdded(i, clientNums[i]);
+		CG_LocalPlayerAdded(i, playerNums[i]);
 	}
 
 	cgs.processedSnapshotNum = serverMessageNum;
@@ -2595,9 +2595,9 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 
 	CG_RegisterGraphics();
 
-	CG_LoadingString( "clients" );
+	CG_LoadingString( "players" );
 
-	CG_RegisterClients();		// if low on memory, some clients will be deferred
+	CG_RegisterPlayers();		// if low on memory, some players will be deferred
 
 #ifdef MISSIONPACK_HUD
 	CG_AssetCache();
@@ -3257,7 +3257,7 @@ static char *CG_VoIPString( int localPlayerNum ) {
 	static char voipString[ MAX_CLIENTS * 4 ];
 	char voipSendTarget[ MAX_CVAR_VALUE_STRING ];
 
-	if ( localPlayerNum < 0 || localPlayerNum > CG_MaxSplitView() || cg.localPlayers[localPlayerNum].clientNum == -1 ) {
+	if ( localPlayerNum < 0 || localPlayerNum > CG_MaxSplitView() || cg.localPlayers[localPlayerNum].playerNum == -1 ) {
 		return NULL;
 	}
 
@@ -3266,11 +3266,11 @@ static char *CG_VoIPString( int localPlayerNum ) {
 	if( Q_stricmpn( voipSendTarget, "team", 4 ) == 0 )
 	{
 		int i, slen, nlen;
-		for( slen = i = 0; i < cgs.maxclients; i++ )
+		for( slen = i = 0; i < cgs.maxplayers; i++ )
 		{
-			if( !cgs.playerinfo[ i ].infoValid || i == cg.localPlayers[ localPlayerNum ].clientNum )
+			if( !cgs.playerinfo[ i ].infoValid || i == cg.localPlayers[ localPlayerNum ].playerNum )
 				continue;
-			if( cgs.playerinfo[ i ].team != cgs.playerinfo[ cg.localPlayers[ localPlayerNum ].clientNum ].team )
+			if( cgs.playerinfo[ i ].team != cgs.playerinfo[ cg.localPlayers[ localPlayerNum ].playerNum ].team )
 				continue;
 
 			nlen = Com_sprintf( &voipString[ slen ], sizeof( voipString ) - slen,

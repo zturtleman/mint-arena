@@ -926,7 +926,7 @@ void CG_AddLocalEntities( void ) {
 
 		forceOnlyMirror = (!(le->refEntity.renderfx & RF_ONLY_MIRROR) &&
 				!cg.cur_lc->renderingThirdPerson &&
-				cg.snap->pss[cg.cur_localPlayerNum].clientNum == le->firstPersonEntity);
+				cg.snap->pss[cg.cur_localPlayerNum].playerNum == le->firstPersonEntity);
 
 		if ( forceOnlyMirror ) {
 			le->refEntity.renderfx |= RF_ONLY_MIRROR;

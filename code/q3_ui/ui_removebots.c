@@ -81,7 +81,7 @@ typedef struct {
 	int				baseBotNum;
 	int				selectedBotNum;
 	char			botnames[7][32];
-	int				botClientNums[MAX_BOTS];
+	int				botPlayerNums[MAX_BOTS];
 } removeBotsMenuInfo_t;
 
 static removeBotsMenuInfo_t	removeBotsMenuInfo;
@@ -97,7 +97,7 @@ static void UI_RemoveBotsMenu_SetBotNames( void ) {
 	char	info[MAX_INFO_STRING];
 
 	for ( n = 0; (n < 7) && (removeBotsMenuInfo.baseBotNum + n < removeBotsMenuInfo.numBots); n++ ) {
-		trap_GetConfigString( CS_PLAYERS + removeBotsMenuInfo.botClientNums[removeBotsMenuInfo.baseBotNum + n], info, MAX_INFO_STRING );
+		trap_GetConfigString( CS_PLAYERS + removeBotsMenuInfo.botPlayerNums[removeBotsMenuInfo.baseBotNum + n], info, MAX_INFO_STRING );
 		Q_strncpyz( removeBotsMenuInfo.botnames[n], Info_ValueForKey( info, "n" ), sizeof(removeBotsMenuInfo.botnames[n]) );
 		Q_CleanStr( removeBotsMenuInfo.botnames[n] );
 	}
@@ -115,7 +115,7 @@ static void UI_RemoveBotsMenu_DeleteEvent( void* ptr, int event ) {
 		return;
 	}
 
-	trap_Cmd_ExecuteText( EXEC_APPEND, va("kicknum %i\n", removeBotsMenuInfo.botClientNums[removeBotsMenuInfo.baseBotNum + removeBotsMenuInfo.selectedBotNum]) );
+	trap_Cmd_ExecuteText( EXEC_APPEND, va("kicknum %i\n", removeBotsMenuInfo.botPlayerNums[removeBotsMenuInfo.baseBotNum + removeBotsMenuInfo.selectedBotNum]) );
 }
 
 
@@ -205,7 +205,7 @@ static void UI_RemoveBotsMenu_GetBots( void ) {
 			continue;
 		}
 
-		removeBotsMenuInfo.botClientNums[removeBotsMenuInfo.numBots] = n;
+		removeBotsMenuInfo.botPlayerNums[removeBotsMenuInfo.numBots] = n;
 		removeBotsMenuInfo.numBots++;
 	}
 }

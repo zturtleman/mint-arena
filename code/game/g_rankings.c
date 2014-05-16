@@ -56,25 +56,25 @@ void G_RankRunFrame()
 	
 	if( trap_RankActive() )
 	{
-		for( i = 0; i < level.maxclients; i++ )
+		for( i = 0; i < level.maxplayers; i++ )
 		{
 			ent = &(g_entities[i]);
 			if ( !ent->inuse )
 				continue;
-			if ( ent->client == NULL )
+			if ( ent->player == NULL )
 				continue;
 			if ( ent->r.svFlags & SVF_BOT)
 			{
 				// no bots in ranked games
 				trap_SendConsoleCommand( EXEC_INSERT, va("kick %s\n", 
-					ent->client->pers.netname) );
+					ent->player->pers.netname) );
 				continue;
 			}
 
-			old_status = ent->client->client_status;
+			old_status = ent->player->client_status;
 			status = trap_RankUserStatus( i );
 			
-			if( ent->client->client_status != status )
+			if( ent->player->client_status != status )
 			{
 				// inform client of current status
 				// not needed for client side log in
@@ -83,18 +83,18 @@ void G_RankRunFrame()
 				{
 					int j = 0;
 				}
-				ent->client->client_status = status;
+				ent->player->client_status = status;
 			}
 			
 			switch( status )
 			{
 			case QGR_STATUS_NEW:
 			case QGR_STATUS_SPECTATOR:
-				if( ent->client->sess.sessionTeam != TEAM_SPECTATOR )
+				if( ent->player->sess.sessionTeam != TEAM_SPECTATOR )
 				{
-					ent->client->sess.sessionTeam = TEAM_SPECTATOR;
-					ent->client->sess.spectatorState = SPECTATOR_FREE;
-					ClientSpawn( ent );
+					ent->player->sess.sessionTeam = TEAM_SPECTATOR;
+					ent->player->sess.spectatorState = SPECTATOR_FREE;
+					PlayerSpawn( ent );
 					// make sure by now CS_GRAND rankingsGameID is ready
 					trap_SendServerCommand( i, va("rank_status %i\n",status) );
 					trap_SendServerCommand( i, "rank_menu\n" );
@@ -108,11 +108,11 @@ void G_RankRunFrame()
 			case QGR_STATUS_ERROR:
 				if( (ent->r.svFlags & SVF_BOT) == 0 )
 				{
-					trap_RankUserReset( ent->s.clientNum );
+					trap_RankUserReset( ent->s.playerNum );
 				}
 				break;
 			case QGR_STATUS_ACTIVE:
-				if( (ent->client->sess.sessionTeam == TEAM_SPECTATOR) &&
+				if( (ent->player->sess.sessionTeam == TEAM_SPECTATOR) &&
 					(g_gametype.integer < GT_TEAM) )
 				{
 					SetTeam( ent, "free" );
@@ -121,12 +121,12 @@ void G_RankRunFrame()
 				if( old_status != QGR_STATUS_ACTIVE )
 				{
 					// player has just become active
-					for( j = 0; j < level.maxclients; j++ )
+					for( j = 0; j < level.maxplayers; j++ )
 					{
 						ent2 = &(g_entities[j]);
 						if ( !ent2->inuse )
 							continue;
-						if ( ent2->client == NULL )
+						if ( ent2->player == NULL )
 							continue;
 						if ( ent2->r.svFlags & SVF_BOT)
 							continue;
@@ -158,16 +158,16 @@ void G_RankRunFrame()
 	// tell time to clients so they can show current match rating
 	if( level.intermissiontime == 0 )
 	{
-		for( i = 0; i < level.maxclients; i++ )
+		for( i = 0; i < level.maxplayers; i++ )
 		{
 			ent = &(g_entities[i]);
-			if( ent->client == NULL )
+			if( ent->player == NULL )
 			{
 				continue;
 			}
 
-			time = (level.time - ent->client->pers.enterTime) / 1000;
-			ent->client->ps.persistant[PERS_MATCH_TIME] = time;
+			time = (level.time - ent->player->pers.enterTime) / 1000;
+			ent->player->ps.persistant[PERS_MATCH_TIME] = time;
 		}
 	}
 }
@@ -266,7 +266,7 @@ void G_RankDamage( int self, int attacker, int damage, int means_of_death )
 	// the gauntlet only "fires" when it actually hits something
 	if( (attacker != ENTITYNUM_WORLD) && (attacker != self) && 
 		(means_of_death == MOD_GAUNTLET)  && 
-		(g_entities[attacker].client) )
+		(g_entities[attacker].player) )
 	{
 		trap_RankReportInt( attacker, -1, QGR_KEY_SHOT_FIRED_GAUNTLET, 1, 1 );
 	}
@@ -439,8 +439,8 @@ void G_RankDamage( int self, int attacker, int damage, int means_of_death )
 		// report general and specific hit given
 		// jwu 8/26/00
 		// had a case where attacker is 245 which is grnadeshooter attacker is 
-		// g_entities index not necessarilly clientnum
-		if (g_entities[attacker].client) {
+		// g_entities index not necessarilly playernum
+		if (g_entities[attacker].player) {
 			if( new_hit )
 			{
 				trap_RankReportInt( attacker, -1, QGR_KEY_HIT_GIVEN, 1, 1 );
@@ -463,7 +463,7 @@ void G_RankDamage( int self, int attacker, int damage, int means_of_death )
 	// friendly fire
 	if( (attacker != self) && 
 		OnSameTeam( &(g_entities[self]), &(g_entities[attacker])) &&
-		(g_entities[attacker].client) )
+		(g_entities[attacker].player) )
 	{
 		// report teammate hit
 		if( new_hit )
@@ -649,7 +649,7 @@ G_RankWeaponTime
 */
 void G_RankWeaponTime( int self, int weapon )
 {
-	gclient_t*	client;
+	gplayer_t*	player;
 	int			time;
 
 	if( level.warmupTime != 0 )
@@ -658,9 +658,9 @@ void G_RankWeaponTime( int self, int weapon )
 		return;
 	}
 	
-	client = g_entities[self].client;
-	time = (level.time - client->weapon_change_time) / 1000;
-	client->weapon_change_time = level.time;
+	player = g_entities[self].player;
+	time = (level.time - player->weapon_change_time) / 1000;
+	player->weapon_change_time = level.time;
 
 	if( time <= 0 )
 	{
@@ -1043,7 +1043,7 @@ G_RankClientDisconnect
 */
 void G_RankClientDisconnect( int self )
 {
-	gclient_t*	client;
+	gplayer_t*	player;
 	int			time;
 	int			match_rating;
 	
@@ -1054,15 +1054,15 @@ void G_RankClientDisconnect( int self )
 	}
 	
 	// match rating
-	client = g_entities[self].client;
-	time = (level.time - client->pers.enterTime) / 1000;
+	player = g_entities[self].player;
+	time = (level.time - player->pers.enterTime) / 1000;
 	if( time < 60 )
 	{
 		match_rating = 0;
 	}
 	else
 	{
-		match_rating = client->ps.persistant[PERS_MATCH_RATING] / time;
+		match_rating = player->ps.persistant[PERS_MATCH_RATING] / time;
 	}
 	trap_RankReportInt( self, -1, QGR_KEY_MATCH_RATING, match_rating, 0 );
 }
@@ -1084,7 +1084,7 @@ void G_RankGameOver( void )
 		return;
 	}
 	
-	for( i = 0; i < level.maxclients; i++ )
+	for( i = 0; i < level.maxplayers; i++ )
 	{
 		if( trap_RankUserStatus( i ) == QGR_STATUS_ACTIVE )
 		{
@@ -1116,7 +1116,7 @@ void G_RankGameOver( void )
 	num = trap_Cvar_VariableIntegerValue("timelimit");
 	trap_RankReportInt( -1, -1, QGR_KEY_TIMELIMIT, num, 0 );
 
-	// maxclients
+	// maxplayers
 	num = trap_Cvar_VariableIntegerValue("sv_maxclients");
 	trap_RankReportInt( -1, -1, QGR_KEY_MAXCLIENTS, num, 0 );
 

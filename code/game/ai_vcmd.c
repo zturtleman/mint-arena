@@ -407,7 +407,7 @@ BotVoiceChat_StartLeader
 ==================
 */
 void BotVoiceChat_StartLeader(bot_state_t *bs, int client, int mode) {
-	ClientName(client, bs->teamleader, sizeof(bs->teamleader));
+	PlayerName(client, bs->teamleader, sizeof(bs->teamleader));
 }
 
 /*
@@ -418,7 +418,7 @@ BotVoiceChat_StopLeader
 void BotVoiceChat_StopLeader(bot_state_t *bs, int client, int mode) {
 	char netname[MAX_MESSAGE_SIZE];
 
-	if (!Q_stricmp(bs->teamleader, ClientName(client, netname, sizeof(netname)))) {
+	if (!Q_stricmp(bs->teamleader, PlayerName(client, netname, sizeof(netname)))) {
 		bs->teamleader[0] = '\0';
 		notleader[client] = qtrue;
 	}
@@ -434,7 +434,7 @@ void BotVoiceChat_WhoIsLeader(bot_state_t *bs, int client, int mode) {
 
 	if (!TeamPlayIsOn()) return;
 
-	ClientName(bs->client, netname, sizeof(netname));
+	PlayerName(bs->playernum, netname, sizeof(netname));
 	//if this bot IS the team leader
 	if (!Q_stricmp(netname, bs->teamleader)) {
 		BotAI_BotInitialChat(bs, "iamteamleader", NULL);
@@ -461,7 +461,7 @@ void BotVoiceChat_WantOnDefense(bot_state_t *bs, int client, int mode) {
 	BotAI_BotInitialChat(bs, "keepinmind", netname, NULL);
 	BotEnterChat(bs->cs, client, CHAT_TELL);
 	BotVoiceChatOnly(bs, client, VOICECHAT_YES);
-	EA_Action(bs->client, ACTION_AFFIRMATIVE);
+	EA_Action(bs->playernum, ACTION_AFFIRMATIVE);
 }
 
 /*
@@ -482,7 +482,7 @@ void BotVoiceChat_WantOnOffense(bot_state_t *bs, int client, int mode) {
 	BotAI_BotInitialChat(bs, "keepinmind", netname, NULL);
 	BotEnterChat(bs->cs, client, CHAT_TELL);
 	BotVoiceChatOnly(bs, client, VOICECHAT_YES);
-	EA_Action(bs->client, ACTION_AFFIRMATIVE);
+	EA_Action(bs->playernum, ACTION_AFFIRMATIVE);
 }
 
 void BotVoiceChat_Dummy(bot_state_t *bs, int client, int mode) {
@@ -507,7 +507,7 @@ voiceCommand_t voiceCommands[] = {
 };
 
 int BotVoiceChatCommand(bot_state_t *bs, int mode, char *voiceChat) {
-	int i, clientNum;
+	int i, playerNum;
 	//int voiceOnly, color;
 	char *ptr, buf[MAX_MESSAGE_SIZE], *cmd;
 
@@ -526,18 +526,18 @@ int BotVoiceChatCommand(bot_state_t *bs, int mode, char *voiceChat) {
 	//voiceOnly = atoi(ptr);
 	for (ptr = cmd; *cmd && *cmd > ' '; cmd++);
 	while (*cmd && *cmd <= ' ') *cmd++ = '\0';
-	clientNum = atoi(ptr);
+	playerNum = atoi(ptr);
 	for (ptr = cmd; *cmd && *cmd > ' '; cmd++);
 	while (*cmd && *cmd <= ' ') *cmd++ = '\0';
 	//color = atoi(ptr);
 
-	if (!BotSameTeam(bs, clientNum)) {
+	if (!BotSameTeam(bs, playerNum)) {
 		return qfalse;
 	}
 
 	for (i = 0; voiceCommands[i].cmd; i++) {
 		if (!Q_stricmp(cmd, voiceCommands[i].cmd)) {
-			voiceCommands[i].func(bs, clientNum, mode);
+			voiceCommands[i].func(bs, playerNum, mode);
 			return qtrue;
 		}
 	}

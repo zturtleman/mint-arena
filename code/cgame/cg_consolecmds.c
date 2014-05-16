@@ -312,63 +312,63 @@ static void CG_spLose_f( void) {
 #endif
 
 static void CG_TellTarget_f( int localPlayerNum ) {
-	int		clientNum;
+	int		playerNum;
 	char	command[128];
 	char	message[128];
 
-	clientNum = CG_CrosshairPlayer( localPlayerNum );
-	if ( clientNum == -1 ) {
+	playerNum = CG_CrosshairPlayer( localPlayerNum );
+	if ( playerNum == -1 ) {
 		return;
 	}
 
 	trap_Args( message, 128 );
-	Com_sprintf( command, 128, "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "tell" ), clientNum, message );
+	Com_sprintf( command, 128, "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "tell" ), playerNum, message );
 	trap_SendClientCommand( command );
 }
 
 static void CG_TellAttacker_f( int localPlayerNum ) {
-	int		clientNum;
+	int		playerNum;
 	char	command[128];
 	char	message[128];
 
-	clientNum = CG_LastAttacker( localPlayerNum );
-	if ( clientNum == -1 ) {
+	playerNum = CG_LastAttacker( localPlayerNum );
+	if ( playerNum == -1 ) {
 		return;
 	}
 
 	trap_Args( message, 128 );
-	Com_sprintf( command, 128, "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "tell" ), clientNum, message );
+	Com_sprintf( command, 128, "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "tell" ), playerNum, message );
 	trap_SendClientCommand( command );
 }
 
 #ifdef MISSIONPACK
 static void CG_VoiceTellTarget_f( int localPlayerNum ) {
-	int		clientNum;
+	int		playerNum;
 	char	command[128];
 	char	message[128];
 
-	clientNum = CG_CrosshairPlayer( localPlayerNum );
-	if ( clientNum == -1 ) {
+	playerNum = CG_CrosshairPlayer( localPlayerNum );
+	if ( playerNum == -1 ) {
 		return;
 	}
 
 	trap_Args( message, 128 );
-	Com_sprintf( command, 128, "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "vtell" ), clientNum, message );
+	Com_sprintf( command, 128, "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "vtell" ), playerNum, message );
 	trap_SendClientCommand( command );
 }
 
 static void CG_VoiceTellAttacker_f( int localPlayerNum ) {
-	int		clientNum;
+	int		playerNum;
 	char	command[128];
 	char	message[128];
 
-	clientNum = CG_LastAttacker( localPlayerNum );
-	if ( clientNum == -1 ) {
+	playerNum = CG_LastAttacker( localPlayerNum );
+	if ( playerNum == -1 ) {
 		return;
 	}
 
 	trap_Args( message, 128 );
-	Com_sprintf( command, 128, "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "vtell" ), clientNum, message );
+	Com_sprintf( command, 128, "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "vtell" ), playerNum, message );
 	trap_SendClientCommand( command );
 }
 
@@ -385,22 +385,22 @@ static void CG_PrevTeamMember_f( int localPlayerNum ) {
 static void CG_NextOrder_f( int localPlayerNum ) {
 	localPlayer_t	*player;
 	playerInfo_t	*pi;
-	int				clientNum;
+	int				playerNum;
 	int				team;
 
 	player = &cg.localPlayers[ localPlayerNum ];
 
-	if ( player->clientNum == -1 ) {
+	if ( player->playerNum == -1 ) {
 		return;
 	}
 
-	clientNum = cg.snap->pss[ localPlayerNum ].clientNum;
+	playerNum = cg.snap->pss[ localPlayerNum ].playerNum;
 	team = cg.snap->pss[ localPlayerNum ].persistant[PERS_TEAM];
 
-	pi = cgs.playerinfo + clientNum;
+	pi = cgs.playerinfo + playerNum;
 
 	if (pi) {
-		if (!pi->teamLeader && sortedTeamPlayers[team][cg_currentSelectedPlayer[localPlayerNum].integer] != clientNum) {
+		if (!pi->teamLeader && sortedTeamPlayers[team][cg_currentSelectedPlayer[localPlayerNum].integer] != playerNum) {
 			return;
 		}
 	}
@@ -432,7 +432,7 @@ static void CG_ConfirmOrder_f( int localPlayerNum ) {
 
 	player = &cg.localPlayers[ localPlayerNum ];
 
-	if ( player->clientNum == -1 ) {
+	if ( player->playerNum == -1 ) {
 		return;
 	}
 
@@ -449,7 +449,7 @@ static void CG_DenyOrder_f( int localPlayerNum ) {
 
 	player = &cg.localPlayers[ localPlayerNum ];
 
-	if ( player->clientNum == -1 ) {
+	if ( player->playerNum == -1 ) {
 		return;
 	}
 
@@ -524,15 +524,15 @@ static void CG_TauntGauntlet_f( int localPlayerNum ) {
 }
 
 static void CG_TaskSuicide_f( int localPlayerNum ) {
-	int		clientNum;
+	int		playerNum;
 	char	command[128];
 
-	clientNum = CG_CrosshairPlayer(0);
-	if ( clientNum == -1 ) {
+	playerNum = CG_CrosshairPlayer(0);
+	if ( playerNum == -1 ) {
 		return;
 	}
 
-	Com_sprintf( command, 128, "%s %i suicide", Com_LocalPlayerCvarName( localPlayerNum, "tell" ), clientNum );
+	Com_sprintf( command, 128, "%s %i suicide", Com_LocalPlayerCvarName( localPlayerNum, "tell" ), playerNum );
 	trap_SendClientCommand( command );
 }
 

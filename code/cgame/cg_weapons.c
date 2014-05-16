@@ -980,7 +980,7 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 	memset( &beam, 0, sizeof( beam ) );
 
 	// CPMA  "true" lightning
-	if ((cent->currentState.number == cg.cur_lc->predictedPlayerState.clientNum) && (cg_trueLightning.value != 0)) {
+	if ((cent->currentState.number == cg.cur_lc->predictedPlayerState.playerNum) && (cg_trueLightning.value != 0)) {
 		vec3_t angle;
 		int i;
 
@@ -1213,7 +1213,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	CG_RegisterWeapon( weaponNum );
 	weapon = &cg_weapons[weaponNum];
 
-	pi = &cgs.playerinfo[cent->currentState.clientNum];
+	pi = &cgs.playerinfo[cent->currentState.playerNum];
 
 	// add the weapon
 	memset( &gun, 0, sizeof( gun ) );
@@ -1288,12 +1288,12 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	}
 
 	// make sure we aren't looking at cg.cur_lc->predictedPlayerEntity for LG
-	nonPredictedCent = &cg_entities[cent->currentState.clientNum];
+	nonPredictedCent = &cg_entities[cent->currentState.playerNum];
 
-	// if the index of the nonPredictedCent is not the same as the clientNum
+	// if the index of the nonPredictedCent is not the same as the playerNum
 	// then this is a fake player (like on teh single player podiums), so
 	// go ahead and use the cent
-	if( ( nonPredictedCent - cg_entities ) != cent->currentState.clientNum ) {
+	if( ( nonPredictedCent - cg_entities ) != cent->currentState.playerNum ) {
 		nonPredictedCent = cent;
 	}
 
@@ -1330,7 +1330,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	CG_AddRefEntityWithMinLight( &flash );
 
 	if ( ps || cg.cur_lc->renderingThirdPerson ||
-		cent->currentState.number != cg.cur_lc->predictedPlayerState.clientNum ) {
+		cent->currentState.number != cg.cur_lc->predictedPlayerState.playerNum ) {
 		// add lightning bolt
 		CG_LightningBolt( nonPredictedCent, flash.origin );
 
@@ -1379,7 +1379,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 			// special hack for lightning gun...
 			VectorCopy( cg.refdef.vieworg, origin );
 			VectorMA( origin, -8, cg.refdef.viewaxis[2], origin );
-			CG_LightningBolt( &cg_entities[ps->clientNum], origin );
+			CG_LightningBolt( &cg_entities[ps->playerNum], origin );
 		}
 		return;
 	}
@@ -1399,7 +1399,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		fovOffset[0] = -0.2 * ( cg.fov - 90 ) * cg.refdef.fov_x / cg.fov;
 	}
 
-	cent = &cg.cur_lc->predictedPlayerEntity;	// &cg_entities[cg.snap->ps.clientNum];
+	cent = &cg.cur_lc->predictedPlayerEntity;	// &cg_entities[cg.snap->ps.playerNum];
 	CG_RegisterWeapon( ps->weapon );
 	weapon = &cg_weapons[ ps->weapon ];
 
@@ -1420,8 +1420,8 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		hand.frame = hand.oldframe = cg_gun_frame.integer;
 		hand.backlerp = 0;
 	} else {
-		// get clientinfo for animation map
-		pi = &cgs.playerinfo[ cent->currentState.clientNum ];
+		// get playerinfo for animation map
+		pi = &cgs.playerinfo[ cent->currentState.playerNum ];
 		hand.frame = CG_MapTorsoToWeaponFrame( pi, cent->pe.torso.frame );
 		hand.oldframe = CG_MapTorsoToWeaponFrame( pi, cent->pe.torso.oldFrame );
 		hand.backlerp = cent->pe.torso.backlerp;
@@ -1547,7 +1547,7 @@ void CG_NextWeapon_f( int localPlayerNum ) {
 	playerState_t	*ps;
 	localPlayer_t	*player;
 
-	if ( cg.localPlayers[localPlayerNum].clientNum == -1 ) {
+	if ( cg.localPlayers[localPlayerNum].playerNum == -1 ) {
 		return;
 	}
 
@@ -1589,7 +1589,7 @@ void CG_PrevWeapon_f( int localPlayerNum ) {
 	playerState_t	*ps;
 	localPlayer_t	*player;
 
-	if ( cg.localPlayers[localPlayerNum].clientNum == -1 ) {
+	if ( cg.localPlayers[localPlayerNum].playerNum == -1 ) {
 		return;
 	}
 
@@ -1630,7 +1630,7 @@ void CG_Weapon_f( int localPlayerNum ) {
 	playerState_t	*ps;
 	localPlayer_t	*player;
 
-	if ( cg.localPlayers[localPlayerNum].clientNum == -1 ) {
+	if ( cg.localPlayers[localPlayerNum].playerNum == -1 ) {
 		return;
 	}
 
@@ -1668,7 +1668,7 @@ void CG_OutOfAmmoChange( int localPlayerNum ) {
 	playerState_t	*ps;
 	int				i;
 
-	if ( cg.localPlayers[localPlayerNum].clientNum == -1 ) {
+	if ( cg.localPlayers[localPlayerNum].playerNum == -1 ) {
 		return;
 	}
 
@@ -1765,7 +1765,7 @@ CG_MissileHitWall
 Caused by an EV_MISSILE_MISS event, or directly by local bullet tracing
 =================
 */
-void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, impactSound_t soundType ) {
+void CG_MissileHitWall( int weapon, int playerNum, vec3_t origin, vec3_t dir, impactSound_t soundType ) {
 	qhandle_t		mod;
 	qhandle_t		mark;
 	qhandle_t		shader;
@@ -1943,7 +1943,7 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, im
 		VectorCopy( lightColor, le->lightColor );
 
 		// colorize with client color
-		VectorCopy( cgs.playerinfo[clientNum].color1, le->color );
+		VectorCopy( cgs.playerinfo[playerNum].color1, le->color );
 		le->refEntity.shaderRGBA[0] = le->color[0] * 0xff;
 		le->refEntity.shaderRGBA[1] = le->color[1] * 0xff;
 		le->refEntity.shaderRGBA[2] = le->color[2] * 0xff;
@@ -1957,8 +1957,8 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, im
 	if ( weapon == WP_RAILGUN ) {
 		float	*color;
 
-		// colorize with client color
-		color = cgs.playerinfo[clientNum].color1;
+		// colorize with player color
+		color = cgs.playerinfo[playerNum].color1;
 		CG_ImpactMark( mark, origin, dir, random()*360, color[0],color[1], color[2],1, alphaFade, radius, qfalse );
 	} else {
 		CG_ImpactMark( mark, origin, dir, random()*360, 1,1,1,1, alphaFade, radius, qfalse );

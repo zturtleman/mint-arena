@@ -196,20 +196,20 @@ CG_Respawn
 A respawn happened this snapshot
 ================
 */
-void CG_Respawn( int clientNum ) {
+void CG_Respawn( int playerNum ) {
 	int i;
-	qboolean allClients;
+	qboolean allLocalPlayers;
 
 	// no error decay on player movement
 	cg.thisFrameTeleport = qtrue;
 
-	allClients = ( clientNum == -1 );
+	allLocalPlayers = ( playerNum == -1 );
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if ( cg.localPlayers[i].clientNum == -1 ) {
+		if ( cg.localPlayers[i].playerNum == -1 ) {
 			continue;
 		}
-		if ( !allClients && cg.snap->pss[i].clientNum != clientNum ) {
+		if ( !allLocalPlayers && cg.snap->pss[i].playerNum != playerNum ) {
 			continue;
 		}
 
@@ -234,13 +234,13 @@ void CG_CheckPlayerstateEvents( playerState_t *ps, playerState_t *ops ) {
 	centity_t	*cent;
 
 	if ( ps->externalEvent && ps->externalEvent != ops->externalEvent ) {
-		cent = &cg_entities[ ps->clientNum ];
+		cent = &cg_entities[ ps->playerNum ];
 		cent->currentState.event = ps->externalEvent;
 		cent->currentState.eventParm = ps->externalEventParm;
 		CG_EntityEvent( cent, cent->lerpOrigin );
 	}
 
-	cent = &cg.cur_lc->predictedPlayerEntity; // cg_entities[ ps->clientNum ];
+	cent = &cg.cur_lc->predictedPlayerEntity; // cg_entities[ ps->playerNum ];
 	// go through the predictable events buffer
 	for ( i = ps->eventSequence - MAX_PS_EVENTS ; i < ps->eventSequence ; i++ ) {
 		// if we have a new predictable event
@@ -557,7 +557,7 @@ CG_TransitionPlayerState
 */
 void CG_TransitionPlayerState( playerState_t *ps, playerState_t *ops ) {
 	// check for changing follow mode
-	if ( ps->clientNum != ops->clientNum ) {
+	if ( ps->playerNum != ops->playerNum ) {
 		cg.thisFrameTeleport = qtrue;
 		// make sure we don't get any unwanted transition effects
 		*ops = *ps;
@@ -570,7 +570,7 @@ void CG_TransitionPlayerState( playerState_t *ps, playerState_t *ops ) {
 
 	// respawning
 	if ( ps->persistant[PERS_SPAWN_COUNT] != ops->persistant[PERS_SPAWN_COUNT] ) {
-		CG_Respawn(ps->clientNum);
+		CG_Respawn(ps->playerNum);
 	}
 
 	if ( cg.mapRestart ) {

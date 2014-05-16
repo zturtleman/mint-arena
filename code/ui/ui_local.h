@@ -236,7 +236,7 @@ typedef struct {
 void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int time );
 void UI_PlayerInfo_SetModel( uiPlayerInfo_t *pi, const char *model, const char *headmodel, char *teamName );
 void UI_PlayerInfo_SetInfo( uiPlayerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNum, qboolean chat );
-qboolean UI_RegisterClientModelname( uiPlayerInfo_t *pi, const char *modelSkinName , const char *headName, const char *teamName);
+qboolean UI_RegisterPlayerModelname( uiPlayerInfo_t *pi, const char *modelSkinName , const char *headName, const char *teamName);
 
 // new ui stuff
 #define UI_NUMFX 7
@@ -421,9 +421,9 @@ typedef struct {
 	int playerNumber; 
 	qboolean teamLeader;
 	char playerNames[MAX_CLIENTS][MAX_NAME_LENGTH];
-	int playerClientNums[MAX_CLIENTS];
-	char teamNames[MAX_CLIENTS][MAX_NAME_LENGTH];
-	int teamClientNums[MAX_CLIENTS];
+	int playerNums[MAX_CLIENTS];
+	char teamPlayerNames[MAX_CLIENTS][MAX_NAME_LENGTH];
+	int teamPlayerNums[MAX_CLIENTS];
 
 	int mapCount;
 	mapInfo mapList[MAX_MAPS];

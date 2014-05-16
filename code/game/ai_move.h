@@ -88,7 +88,7 @@ typedef struct bot_initmove_s
 	vec3_t velocity;			//velocity of the bot
 	vec3_t viewoffset;			//view offset
 	int entitynum;				//entity number of the bot
-	int client;					//client number of the bot
+	int playernum;				//player number of the bot
 	float thinktime;			//time the bot thinks
 	int presencetype;			//presencetype of the bot
 	vec3_t viewangles;			//view angles of the bot
@@ -128,7 +128,7 @@ typedef struct bot_movestate_s
 	vec3_t velocity;							//velocity of the bot
 	vec3_t viewoffset;							//view offset
 	int entitynum;								//entity number of the bot
-	int client;									//client number of the bot
+	int playernum;								//player number of the bot
 	float thinktime;							//time the bot thinks
 	int presencetype;							//presencetype of the bot
 	vec3_t viewangles;							//view angles of the bot
@@ -163,7 +163,7 @@ void BotResetAvoidReach(int movestate);
 //resets the last avoid reachability
 void BotResetLastAvoidReach(int movestate);
 //returns a reachability area if the origin is in one
-int BotReachabilityArea(vec3_t origin, int client);
+int BotReachabilityArea(vec3_t origin, int passEnt);
 //view target based on movement
 int BotMovementViewTarget(int movestate, bot_goal_t *goal, int travelflags, float lookahead, vec3_t target);
 //predict the position of a player based on movement towards a goal

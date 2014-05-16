@@ -47,7 +47,7 @@ static char		*g_arenaInfos[MAX_ARENAS];
 #define BOT_SPAWN_QUEUE_DEPTH	16
 
 typedef struct {
-	int		clientNum;
+	int		playerNum;
 	int		spawnTime;
 } botSpawnQueue_t;
 
@@ -238,13 +238,13 @@ Returns number of bots named 'value' on team 'team' (or whole server if 'team' i
 int G_BotsInGame( const char *value, int team ) {
 	int			i, total;
 	char		userinfo[MAX_INFO_VALUE];
-	gclient_t	*cl;
+	gplayer_t	*cl;
 
 	total = 0;
 
 	// check if bot is connecting or connected
-	for ( i=0 ; i< g_maxclients.integer ; i++ ) {
-		cl = level.clients + i;
+	for ( i=0 ; i< g_maxplayers.integer ; i++ ) {
+		cl = level.players + i;
 		if ( cl->pers.connected == CON_DISCONNECTED ) {
 			continue;
 		}
@@ -268,12 +268,12 @@ int G_BotsInGame( const char *value, int team ) {
 			continue;
 		}
 
-		cl = level.clients + botSpawnQueue[i].clientNum;
+		cl = level.players + botSpawnQueue[i].playerNum;
 		if ( team >= 0 && cl->sess.sessionTeam != team ) {
 			continue;
 		}
 
-		trap_GetUserinfo( botSpawnQueue[i].clientNum, userinfo, sizeof(userinfo) );
+		trap_GetUserinfo( botSpawnQueue[i].playerNum, userinfo, sizeof(userinfo) );
 		if ( !Q_stricmp( value, Info_ValueForKey (userinfo, "name") ) ) {
 			total++;
 		}
@@ -296,7 +296,7 @@ int G_SelectRandomBotForAdd( int team ) {
 	// To improve random bot selection when there are few bot types, duplicate bots are
 	// allowed on separate teams to try to keep each team from having duplicate bots.
 	// If there are enough bot types to fill the server, avoid duplicating bots on any team.
-	if ( g_numBots >= level.maxclients ) {
+	if ( g_numBots >= level.maxplayers ) {
 		team = -1;
 	}
 
@@ -364,10 +364,10 @@ G_RemoveRandomBot
 */
 int G_RemoveRandomBot( int team ) {
 	int i;
-	gclient_t	*cl;
+	gplayer_t	*cl;
 
-	for ( i=0 ; i< g_maxclients.integer ; i++ ) {
-		cl = level.clients + i;
+	for ( i=0 ; i< g_maxplayers.integer ; i++ ) {
+		cl = level.players + i;
 		if ( cl->pers.connected != CON_CONNECTED ) {
 			continue;
 		}
@@ -390,11 +390,11 @@ G_CountHumanPlayers
 */
 int G_CountHumanPlayers( int team ) {
 	int i, num;
-	gclient_t	*cl;
+	gplayer_t	*cl;
 
 	num = 0;
-	for ( i=0 ; i< g_maxclients.integer ; i++ ) {
-		cl = level.clients + i;
+	for ( i=0 ; i< g_maxplayers.integer ; i++ ) {
+		cl = level.players + i;
 		if ( cl->pers.connected != CON_CONNECTED ) {
 			continue;
 		}
@@ -416,11 +416,11 @@ G_CountBotPlayers
 */
 int G_CountBotPlayers( int team ) {
 	int i, n, num;
-	gclient_t	*cl;
+	gplayer_t	*cl;
 
 	num = 0;
-	for ( i=0 ; i< g_maxclients.integer ; i++ ) {
-		cl = level.clients + i;
+	for ( i=0 ; i< g_maxplayers.integer ; i++ ) {
+		cl = level.players + i;
 		if ( cl->pers.connected != CON_CONNECTED ) {
 			continue;
 		}
@@ -465,8 +465,8 @@ void G_CheckMinimumPlayers( void ) {
 	if (minplayers <= 0) return;
 
 	if (g_gametype.integer >= GT_TEAM) {
-		if (minplayers >= g_maxclients.integer / 2) {
-			minplayers = (g_maxclients.integer / 2) -1;
+		if (minplayers >= g_maxplayers.integer / 2) {
+			minplayers = (g_maxplayers.integer / 2) -1;
 		}
 
 		humanplayers = G_CountHumanPlayers( TEAM_RED );
@@ -488,8 +488,8 @@ void G_CheckMinimumPlayers( void ) {
 		}
 	}
 	else if (g_gametype.integer == GT_TOURNAMENT ) {
-		if (minplayers >= g_maxclients.integer) {
-			minplayers = g_maxclients.integer-1;
+		if (minplayers >= g_maxplayers.integer) {
+			minplayers = g_maxplayers.integer-1;
 		}
 		humanplayers = G_CountHumanPlayers( -1 );
 		botplayers = G_CountBotPlayers( -1 );
@@ -505,8 +505,8 @@ void G_CheckMinimumPlayers( void ) {
 		}
 	}
 	else if (g_gametype.integer == GT_FFA) {
-		if (minplayers >= g_maxclients.integer) {
-			minplayers = g_maxclients.integer-1;
+		if (minplayers >= g_maxplayers.integer) {
+			minplayers = g_maxplayers.integer-1;
 		}
 		humanplayers = G_CountHumanPlayers( TEAM_FREE );
 		botplayers = G_CountBotPlayers( TEAM_FREE );
@@ -537,11 +537,11 @@ void G_CheckBotSpawn( void ) {
 		if ( botSpawnQueue[n].spawnTime > level.time ) {
 			continue;
 		}
-		ClientBegin( botSpawnQueue[n].clientNum );
+		PlayerBegin( botSpawnQueue[n].playerNum );
 		botSpawnQueue[n].spawnTime = 0;
 
 		if( g_gametype.integer == GT_SINGLE_PLAYER ) {
-			trap_GetUserinfo( botSpawnQueue[n].clientNum, userinfo, sizeof(userinfo) );
+			trap_GetUserinfo( botSpawnQueue[n].playerNum, userinfo, sizeof(userinfo) );
 			PlayerIntroSound( Info_ValueForKey (userinfo, "model") );
 		}
 	}
@@ -553,19 +553,19 @@ void G_CheckBotSpawn( void ) {
 AddBotToSpawnQueue
 ===============
 */
-static void AddBotToSpawnQueue( int clientNum, int delay ) {
+static void AddBotToSpawnQueue( int playerNum, int delay ) {
 	int		n;
 
 	for( n = 0; n < BOT_SPAWN_QUEUE_DEPTH; n++ ) {
 		if( !botSpawnQueue[n].spawnTime ) {
 			botSpawnQueue[n].spawnTime = level.time + delay;
-			botSpawnQueue[n].clientNum = clientNum;
+			botSpawnQueue[n].playerNum = playerNum;
 			return;
 		}
 	}
 
 	G_Printf( S_COLOR_YELLOW "Unable to delay spawn\n" );
-	ClientBegin( clientNum );
+	PlayerBegin( playerNum );
 }
 
 
@@ -573,15 +573,15 @@ static void AddBotToSpawnQueue( int clientNum, int delay ) {
 ===============
 G_RemoveQueuedBotBegin
 
-Called on client disconnect to make sure the delayed spawn
+Called on player disconnect to make sure the delayed spawn
 doesn't happen on a freed index
 ===============
 */
-void G_RemoveQueuedBotBegin( int clientNum ) {
+void G_RemoveQueuedBotBegin( int playerNum ) {
 	int		n;
 
 	for( n = 0; n < BOT_SPAWN_QUEUE_DEPTH; n++ ) {
-		if( botSpawnQueue[n].clientNum == clientNum ) {
+		if( botSpawnQueue[n].playerNum == playerNum ) {
 			botSpawnQueue[n].spawnTime = 0;
 			return;
 		}
@@ -594,17 +594,17 @@ void G_RemoveQueuedBotBegin( int clientNum ) {
 G_BotConnect
 ===============
 */
-qboolean G_BotConnect( int clientNum, qboolean restart ) {
+qboolean G_BotConnect( int playerNum, qboolean restart ) {
 	bot_settings_t	settings;
 	char			userinfo[MAX_INFO_STRING];
 
-	trap_GetUserinfo( clientNum, userinfo, sizeof(userinfo) );
+	trap_GetUserinfo( playerNum, userinfo, sizeof(userinfo) );
 
 	Q_strncpyz( settings.characterfile, Info_ValueForKey( userinfo, "characterfile" ), sizeof(settings.characterfile) );
 	settings.skill = atof( Info_ValueForKey( userinfo, "skill" ) );
 
-	if (!BotAISetupClient( clientNum, &settings, restart )) {
-		trap_DropClient( clientNum, "BotAISetupClient failed" );
+	if (!BotAISetupPlayer( playerNum, &settings, restart )) {
+		trap_DropClient( playerNum, "BotAISetupPlayer failed" );
 		return qfalse;
 	}
 
@@ -620,7 +620,7 @@ G_AddBot
 static void G_AddBot( const char *name, float skill, const char *team, int delay, char *altname) {
 	int				value;
 	int				connectionNum;
-	int				clientNum;
+	int				playerNum;
 	int				t;
 	char			*botinfo;
 	char			*key;
@@ -639,14 +639,14 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 		return;
 	}
 
-	// get connection and client numbers
+	// get connection and player numbers
 	connectionNum = value & 0xFFFF;
-	clientNum = value >> 16;
+	playerNum = value >> 16;
 
 	// set default team
 	if( !team || !*team ) {
 		if( g_gametype.integer >= GT_TEAM ) {
-			if( PickTeam(clientNum) == TEAM_RED) {
+			if( PickTeam(playerNum) == TEAM_RED) {
 				team = "red";
 			}
 			else {
@@ -677,7 +677,7 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 
 	if ( !botinfo ) {
 		G_Printf( S_COLOR_RED "Error: Bot '%s' not defined\n", name );
-		trap_BotFreeClient( clientNum );
+		trap_BotFreeClient( playerNum );
 		return;
 	}
 
@@ -734,39 +734,39 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	key = "color1";
 	s = Info_ValueForKey( botinfo, key );
 	if ( !*s ) {
-		s = va("%d", DEFAULT_CLIENT_COLOR1);
+		s = va("%d", DEFAULT_PLAYER_COLOR1);
 	}
 	Info_SetValueForKey( userinfo, key, s );
 
 	key = "color2";
 	s = Info_ValueForKey( botinfo, key );
 	if ( !*s ) {
-		s = va("%d", DEFAULT_CLIENT_COLOR2);
+		s = va("%d", DEFAULT_PLAYER_COLOR2);
 	}
 	Info_SetValueForKey( userinfo, key, s );
 
 	s = Info_ValueForKey(botinfo, "aifile");
 	if (!*s ) {
 		trap_Print( S_COLOR_RED "Error: bot has no aifile specified\n" );
-		trap_BotFreeClient( clientNum );
+		trap_BotFreeClient( playerNum );
 		return;
 	}
 	Info_SetValueForKey( userinfo, "characterfile", s );
 
 	// register the userinfo
-	trap_SetUserinfo( clientNum, userinfo );
+	trap_SetUserinfo( playerNum, userinfo );
 
-	// have it connect to the game as a normal client
-	if ( ClientConnect( clientNum, qtrue, qtrue, connectionNum, 0 ) ) {
+	// have it connect to the game as a normal player
+	if ( PlayerConnect( playerNum, qtrue, qtrue, connectionNum, 0 ) ) {
 		return;
 	}
 
 	if( delay == 0 ) {
-		ClientBegin( clientNum );
+		PlayerBegin( playerNum );
 		return;
 	}
 
-	AddBotToSpawnQueue( clientNum, delay );
+	AddBotToSpawnQueue( playerNum, delay );
 }
 
 
@@ -845,7 +845,7 @@ void Svcmd_BotList_f( void ) {
 	for (i = 0; i < g_numBots; i++) {
 		strcpy(name, Info_ValueForKey( g_botInfos[i], "name" ));
 		if ( !*name ) {
-			strcpy(name, DEFAULT_CLIENT_NAME);
+			strcpy(name, DEFAULT_PLAYER_NAME);
 		}
 		strcpy(funname, Info_ValueForKey( g_botInfos[i], "funname" ));
 		if ( !*funname ) {

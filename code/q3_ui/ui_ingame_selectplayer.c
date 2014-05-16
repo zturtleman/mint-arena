@@ -32,12 +32,12 @@ Suite 120, Rockville, Maryland 20850 USA.
 /*
 =======================================================================
 
-INGAME LOCAL CLIENT SELECT MENU
+INGAME LOCAL PLAYER SELECT MENU
 
-This is a general select local client menu. Used for accessing menus for a specific local client.
-It runs a function, passing the selected client to the function.
-Automaticly disables players not in the game, so the function can expect that the client is ingame.
-If there is only one local client simply runs the function.
+This is a general select local player menu. Used for accessing menus for a specific local player.
+It runs a function, passing the selected player to the function.
+Automaticly disables players not in the game, so the function can expect that the player is ingame.
+If there is only one local player simply runs the function.
 
 =======================================================================
 */
@@ -146,7 +146,7 @@ void InSelectPlayer_MenuInit( const char *banner, qboolean disableMissingPlayers
 		s_setupplayers.player[i].string				= s_setupplayers.playerString[i];
 		if (!disableMissingPlayers) {
 			// Have players in game be red and not ingame be white.
-			if (cg.localPlayers[i].clientNum == -1) {
+			if (cg.localPlayers[i].playerNum == -1) {
 				s_setupplayers.player[i].color		= color_white;
 			} else {
 				s_setupplayers.player[i].color		= color_red;
@@ -156,7 +156,7 @@ void InSelectPlayer_MenuInit( const char *banner, qboolean disableMissingPlayers
 		}
 		s_setupplayers.player[i].style				= UI_CENTER|UI_SMALLFONT;
 
-		if (disableMissingPlayers && cg.localPlayers[i].clientNum == -1) {
+		if (disableMissingPlayers && cg.localPlayers[i].playerNum == -1) {
 			s_setupplayers.player[i].generic.flags |= QMF_GRAYED;
 		}
 
@@ -202,9 +202,9 @@ void InSelectPlayerMenu( void (*playerfunc)(int), const char *banner, qboolean d
 	if (disableMissingPlayers) {
 		int i, playerNum;
 
-		// check if there is only one local player and find local client index
+		// check if there is only one local player and find local player index
 		for ( i = 0, playerNum = -1; i < UI_MaxSplitView(); i++) {
-			if ( cg.localPlayers[i].clientNum >= 0 && cg.localPlayers[i].clientNum < MAX_CLIENTS ) {
+			if ( cg.localPlayers[i].playerNum >= 0 && cg.localPlayers[i].playerNum < MAX_CLIENTS ) {
 				if ( playerNum == -1 ) {
 					playerNum = i;
 				} else {

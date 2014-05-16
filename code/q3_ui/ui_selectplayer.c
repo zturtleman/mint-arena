@@ -32,10 +32,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 /*
 =======================================================================
 
-LOCAL CLIENT SELECT MENU
+LOCAL PLAYER SELECT MENU
 
-This is a general select local client menu. Used for accessing menus for a specific local client.
-It runs a function, passing the selected client to the function.
+This is a general select local player menu. Used for accessing menus for a specific local player.
+It runs a function, passing the selected player to the function.
 
 =======================================================================
 */

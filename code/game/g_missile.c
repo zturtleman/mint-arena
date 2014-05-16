@@ -93,7 +93,7 @@ void G_ExplodeMissile( gentity_t *ent ) {
 	if ( ent->splashDamage ) {
 		if( G_RadiusDamage( ent->r.currentOrigin, ent->parent, ent->splashDamage, ent->splashRadius, ent
 			, ent->splashMethodOfDeath ) ) {
-			g_entities[ent->r.ownerNum].client->accuracy_hits++;
+			g_entities[ent->r.ownerNum].player->accuracy_hits++;
 		}
 	}
 
@@ -135,7 +135,7 @@ void ProximityMine_Trigger( gentity_t *trigger, gentity_t *other, trace_t *trace
 	vec3_t		v;
 	gentity_t	*mine;
 
-	if( !other->client ) {
+	if( !other->player ) {
 		return;
 	}
 
@@ -148,7 +148,7 @@ void ProximityMine_Trigger( gentity_t *trigger, gentity_t *other, trace_t *trace
 
 	if ( g_gametype.integer >= GT_TEAM ) {
 		// don't trigger same team mines
-		if (trigger->parent->s.team == other->client->sess.sessionTeam) {
+		if (trigger->parent->s.team == other->player->sess.sessionTeam) {
 			return;
 		}
 	}
@@ -215,12 +215,12 @@ static void ProximityMine_ExplodeOnPlayer( gentity_t *mine ) {
 	gentity_t	*player;
 
 	player = mine->enemy;
-	player->client->ps.eFlags &= ~EF_TICKING;
+	player->player->ps.eFlags &= ~EF_TICKING;
 
-	if ( player->client->invulnerabilityTime > level.time ) {
+	if ( player->player->invulnerabilityTime > level.time ) {
 		G_Damage( player, mine->parent, mine->parent, vec3_origin, mine->s.origin, 1000, DAMAGE_NO_KNOCKBACK, MOD_JUICED );
-		player->client->invulnerabilityTime = 0;
-		G_TempEntity( player->client->ps.origin, EV_JUICED );
+		player->player->invulnerabilityTime = 0;
+		G_TempEntity( player->player->ps.origin, EV_JUICED );
 	}
 	else {
 		G_SetOrigin( mine, player->s.pos.trBase );
@@ -251,7 +251,7 @@ static void ProximityMine_Player( gentity_t *mine, gentity_t *player ) {
 		return;
 	}
 
-	player->client->ps.eFlags |= EF_TICKING;
+	player->player->ps.eFlags |= EF_TICKING;
 	player->activator = mine;
 
 	mine->s.eFlags |= EF_NODRAW;
@@ -261,7 +261,7 @@ static void ProximityMine_Player( gentity_t *mine, gentity_t *player ) {
 
 	mine->enemy = player;
 	mine->think = ProximityMine_ExplodeOnPlayer;
-	if ( player->client->invulnerabilityTime > level.time ) {
+	if ( player->player->invulnerabilityTime > level.time ) {
 		mine->nextthink = level.time + 2 * 1000;
 	}
 	else {
@@ -295,7 +295,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 #ifdef MISSIONPACK
 	if ( other->takedamage ) {
 		if ( ent->s.weapon != WP_PROX_LAUNCHER ) {
-			if ( other->client && other->client->invulnerabilityTime > level.time ) {
+			if ( other->player && other->player->invulnerabilityTime > level.time ) {
 				//
 				VectorCopy( ent->s.pos.trDelta, forward );
 				VectorNormalize( forward );
@@ -319,7 +319,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 			vec3_t	velocity;
 
 			if( LogAccuracyHit( other, &g_entities[ent->r.ownerNum] ) ) {
-				g_entities[ent->r.ownerNum].client->accuracy_hits++;
+				g_entities[ent->r.ownerNum].player->accuracy_hits++;
 				hitClient = qtrue;
 			}
 			BG_EvaluateTrajectoryDelta( &ent->s.pos, level.time, velocity );
@@ -374,7 +374,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 		vec3_t v;
 
 		nent = G_Spawn();
-		if ( other->takedamage && other->client ) {
+		if ( other->takedamage && other->player ) {
 
 			G_AddEvent( nent, EV_MISSILE_HIT, DirToByte( trace->plane.normal ) );
 			nent->s.otherEntityNum = other->s.number;
@@ -405,8 +405,8 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 		ent->think = Weapon_HookThink;
 		ent->nextthink = level.time + FRAMETIME;
 
-		ent->parent->client->ps.pm_flags |= PMF_GRAPPLE_PULL;
-		VectorCopy( ent->r.currentOrigin, ent->parent->client->ps.grapplePoint);
+		ent->parent->player->ps.pm_flags |= PMF_GRAPPLE_PULL;
+		VectorCopy( ent->r.currentOrigin, ent->parent->player->ps.grapplePoint);
 
 		trap_LinkEntity( ent );
 		trap_LinkEntity( nent );
@@ -417,7 +417,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 	// is it cheaper in bandwidth to just remove this ent and create a new
 	// one, rather than changing the missile into the explosion?
 
-	if ( other->takedamage && other->client ) {
+	if ( other->takedamage && other->player ) {
 		G_AddEvent( ent, EV_MISSILE_HIT, DirToByte( trace->plane.normal ) );
 		ent->s.otherEntityNum = other->s.number;
 	} else if( trace->surfaceFlags & SURF_METALSTEPS ) {
@@ -440,7 +440,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 		if( G_RadiusDamage( trace->endpos, ent->parent, ent->splashDamage, ent->splashRadius, 
 			other, ent->splashMethodOfDeath ) ) {
 			if( !hitClient ) {
-				g_entities[ent->r.ownerNum].client->accuracy_hits++;
+				g_entities[ent->r.ownerNum].player->accuracy_hits++;
 			}
 		}
 	}
@@ -493,8 +493,8 @@ void G_RunMissile( gentity_t *ent ) {
 		// never explode or bounce on sky
 		if ( tr.surfaceFlags & SURF_NOIMPACT ) {
 			// If grapple, reset owner
-			if (ent->parent && ent->parent->client && ent->parent->client->hook == ent) {
-				ent->parent->client->hook = NULL;
+			if (ent->parent && ent->parent->player && ent->parent->player->hook == ent) {
+				ent->parent->player->hook = NULL;
 			}
 			G_FreeEntity( ent );
 			return;
@@ -557,8 +557,8 @@ gentity_t *fire_plasma (gentity_t *self, vec3_t start, vec3_t dir) {
 
 	VectorCopy (start, bolt->r.currentOrigin);
 
-	if ( self->client ) {
-		bolt->s.team = self->client->sess.sessionTeam;
+	if ( self->player ) {
+		bolt->s.team = self->player->sess.sessionTeam;
 	} else {
 		bolt->s.team = TEAM_FREE;
 	}
@@ -605,8 +605,8 @@ gentity_t *fire_grenade (gentity_t *self, vec3_t start, vec3_t dir) {
 
 	VectorCopy (start, bolt->r.currentOrigin);
 
-	if ( self->client ) {
-		bolt->s.team = self->client->sess.sessionTeam;
+	if ( self->player ) {
+		bolt->s.team = self->player->sess.sessionTeam;
 	} else {
 		bolt->s.team = TEAM_FREE;
 	}
@@ -651,8 +651,8 @@ gentity_t *fire_bfg (gentity_t *self, vec3_t start, vec3_t dir) {
 	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
 	VectorCopy (start, bolt->r.currentOrigin);
 
-	if ( self->client ) {
-		bolt->s.team = self->client->sess.sessionTeam;
+	if ( self->player ) {
+		bolt->s.team = self->player->sess.sessionTeam;
 	} else {
 		bolt->s.team = TEAM_FREE;
 	}
@@ -697,8 +697,8 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
 	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
 	VectorCopy (start, bolt->r.currentOrigin);
 
-	if ( self->client ) {
-		bolt->s.team = self->client->sess.sessionTeam;
+	if ( self->player ) {
+		bolt->s.team = self->player->sess.sessionTeam;
 	} else {
 		bolt->s.team = TEAM_FREE;
 	}
@@ -737,9 +737,9 @@ gentity_t *fire_grapple (gentity_t *self, vec3_t start, vec3_t dir) {
 	SnapVector( hook->s.pos.trDelta );			// save net bandwidth
 	VectorCopy (start, hook->r.currentOrigin);
 
-	if ( self->client ) {
-		self->client->hook = hook;
-		hook->s.team = self->client->sess.sessionTeam;
+	if ( self->player ) {
+		self->player->hook = hook;
+		hook->s.team = self->player->sess.sessionTeam;
 	} else {
 		hook->s.team = TEAM_FREE;
 	}
@@ -795,8 +795,8 @@ gentity_t *fire_nail( gentity_t *self, vec3_t start, vec3_t forward, vec3_t righ
 
 	VectorCopy( start, bolt->r.currentOrigin );
 
-	if ( self->client ) {
-		bolt->s.team = self->client->sess.sessionTeam;
+	if ( self->player ) {
+		bolt->s.team = self->player->sess.sessionTeam;
 	} else {
 		bolt->s.team = TEAM_FREE;
 	}
@@ -844,8 +844,8 @@ gentity_t *fire_prox( gentity_t *self, vec3_t start, vec3_t dir ) {
 
 	VectorCopy (start, bolt->r.currentOrigin);
 
-	if ( self->client ) {
-		bolt->s.team = self->client->sess.sessionTeam;
+	if ( self->player ) {
+		bolt->s.team = self->player->sess.sessionTeam;
 	} else {
 		bolt->s.team = TEAM_FREE;
 	}

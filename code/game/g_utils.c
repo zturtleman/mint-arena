@@ -141,11 +141,11 @@ Broadcasts a command to only a specific client.
 ZTM: NOTE: Function name kept to reduce source code changes.
 ================
 */
-void trap_SendServerCommand( int clientNum, char *cmd ) {
-	if ( clientNum == -1 ) {
+void trap_SendServerCommand( int playerNum, char *cmd ) {
+	if ( playerNum == -1 ) {
 		trap_SendServerCommandEx( -1, -1, cmd );
 	} else {
-		trap_SendServerCommandEx( level.clients[clientNum].pers.connectionNum, level.clients[clientNum].pers.localPlayerNum, cmd );
+		trap_SendServerCommandEx( level.players[playerNum].pers.connectionNum, level.players[playerNum].pers.localPlayerNum, cmd );
 	}
 }
 
@@ -159,15 +159,15 @@ Broadcasts a command to only a specific team
 */
 void G_TeamCommand( team_t team, char *cmd ) {
 	gconnection_t	*connection;
-	int				i, j, clientNum;
+	int				i, j, playerNum;
 
 	for ( i = 0 ; i < level.maxconnections ; i++ ) {
 		connection = &level.connections[i];
 
 		for ( j = 0; j < MAX_SPLITVIEW; j++ ) {
-			clientNum = connection->localPlayerNums[j];
+			playerNum = connection->localPlayerNums[j];
 
-			if ( level.clients[clientNum].sess.sessionTeam == team )
+			if ( level.players[playerNum].sess.sessionTeam == team )
 				break;			
 		}
 
@@ -496,7 +496,7 @@ gentity_t *G_Spawn( void ) {
 
 	// let the server system know that there are more entities
 	trap_LocateGameData( level.gentities, level.num_entities, sizeof( gentity_t ), 
-		&level.clients[0].ps, sizeof( level.clients[0] ) );
+		&level.players[0].ps, sizeof( level.players[0] ) );
 
 	G_InitGentity( e );
 	return e;
@@ -601,13 +601,13 @@ void G_KillBox (gentity_t *ent) {
 	gentity_t	*hit;
 	vec3_t		mins, maxs;
 
-	VectorAdd( ent->client->ps.origin, ent->s.mins, mins );
-	VectorAdd( ent->client->ps.origin, ent->s.maxs, maxs );
+	VectorAdd( ent->player->ps.origin, ent->s.mins, mins );
+	VectorAdd( ent->player->ps.origin, ent->s.maxs, maxs );
 	num = trap_EntitiesInBox( mins, maxs, touch, MAX_GENTITIES );
 
 	for (i=0 ; i<num ; i++) {
 		hit = &g_entities[touch[i]];
-		if ( !hit->client ) {
+		if ( !hit->player ) {
 			continue;
 		}
 
@@ -630,10 +630,10 @@ Adds an event+parm and twiddles the event counter
 ===============
 */
 void G_AddPredictableEvent( gentity_t *ent, int event, int eventParm ) {
-	if ( !ent->client ) {
+	if ( !ent->player ) {
 		return;
 	}
-	BG_AddPredictableEventToPlayerstate( event, eventParm, &ent->client->ps );
+	BG_AddPredictableEventToPlayerstate( event, eventParm, &ent->player->ps );
 }
 
 
@@ -653,12 +653,12 @@ void G_AddEvent( gentity_t *ent, int event, int eventParm ) {
 	}
 
 	// clients need to add the event in playerState_t instead of entityState_t
-	if ( ent->client ) {
-		bits = ent->client->ps.externalEvent & EV_EVENT_BITS;
+	if ( ent->player ) {
+		bits = ent->player->ps.externalEvent & EV_EVENT_BITS;
 		bits = ( bits + EV_EVENT_BIT1 ) & EV_EVENT_BITS;
-		ent->client->ps.externalEvent = event | bits;
-		ent->client->ps.externalEventParm = eventParm;
-		ent->client->ps.externalEventTime = level.time;
+		ent->player->ps.externalEvent = event | bits;
+		ent->player->ps.externalEventParm = eventParm;
+		ent->player->ps.externalEventTime = level.time;
 	} else {
 		bits = ent->s.event & EV_EVENT_BITS;
 		bits = ( bits + EV_EVENT_BIT1 ) & EV_EVENT_BITS;

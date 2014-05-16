@@ -956,7 +956,7 @@ vmNetField_t	bg_entityStateFields[] =
 { NETF(eFlags), 32 },
 { NETF(otherEntityNum), GENTITYNUM_BITS },
 { NETF(weapon), MAX( 8, WEAPONNUM_BITS ) }, // because 'weapon' is used for things besides weaponnum it must be minimum of 8 bits
-{ NETF(clientNum), 8 },
+{ NETF(playerNum), 8 },
 { NETF(angles[1]), 0 },
 { NETF(pos.trDuration), 32 },
 { NETF(apos.trType), 8 },
@@ -1054,7 +1054,7 @@ vmNetField_t	bg_playerStateFields[] =
 { PSF(torsoTimer), 12 },
 { PSF(eventParms[0]), 8 },
 { PSF(eventParms[1]), 8 },
-{ PSF(clientNum), 8 },
+{ PSF(playerNum), 8 },
 { PSF(weapon), WEAPONNUM_BITS },
 { PSF(viewangles[2]), 0 },
 { PSF(grapplePoint[0]), 0 },
@@ -1740,7 +1740,7 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 		s->eType = ET_PLAYER;
 	}
 
-	s->number = ps->clientNum;
+	s->number = ps->playerNum;
 
 	s->pos.trType = TR_INTERPOLATE;
 	VectorCopy( ps->origin, s->pos.trBase );
@@ -1759,7 +1759,7 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 	s->angles2[YAW] = ps->movementDir;
 	s->legsAnim = ps->legsAnim;
 	s->torsoAnim = ps->torsoAnim;
-	s->clientNum = ps->clientNum;		// ET_PLAYER looks here instead of at number
+	s->playerNum = ps->playerNum;		// ET_PLAYER looks here instead of at number
 										// so corpses can also reference the proper config
 	s->eFlags = ps->eFlags;
 	if ( ps->stats[STAT_HEALTH] <= 0 ) {
@@ -1825,7 +1825,7 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 		s->eType = ET_PLAYER;
 	}
 
-	s->number = ps->clientNum;
+	s->number = ps->playerNum;
 
 	s->pos.trType = TR_LINEAR_STOP;
 	VectorCopy( ps->origin, s->pos.trBase );
@@ -1848,7 +1848,7 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	s->angles2[YAW] = ps->movementDir;
 	s->legsAnim = ps->legsAnim;
 	s->torsoAnim = ps->torsoAnim;
-	s->clientNum = ps->clientNum;		// ET_PLAYER looks here instead of at number
+	s->playerNum = ps->playerNum;		// ET_PLAYER looks here instead of at number
 										// so corpses can also reference the proper config
 	s->eFlags = ps->eFlags;
 	if ( ps->stats[STAT_HEALTH] <= 0 ) {

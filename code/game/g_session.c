@@ -48,21 +48,21 @@ G_WriteClientSessionData
 Called on game shutdown
 ================
 */
-void G_WriteClientSessionData( gclient_t *client ) {
+void G_WriteClientSessionData( gplayer_t *player ) {
 	const char	*s;
 	const char	*var;
 
 	s = va("%i %i %i %i %i %i %i", 
-		client->sess.sessionTeam,
-		client->sess.spectatorNum,
-		client->sess.spectatorState,
-		client->sess.spectatorClient,
-		client->sess.wins,
-		client->sess.losses,
-		client->sess.teamLeader
+		player->sess.sessionTeam,
+		player->sess.spectatorNum,
+		player->sess.spectatorState,
+		player->sess.spectatorPlayer,
+		player->sess.wins,
+		player->sess.losses,
+		player->sess.teamLeader
 		);
 
-	var = va( "session%i", (int)(client - level.clients) );
+	var = va( "session%i", (int)(player - level.players) );
 
 	trap_Cvar_Set( var, s );
 }
@@ -74,29 +74,29 @@ G_ReadSessionData
 Called on a reconnect
 ================
 */
-void G_ReadSessionData( gclient_t *client ) {
+void G_ReadSessionData( gplayer_t *player ) {
 	char	s[MAX_STRING_CHARS];
 	const char	*var;
 	int teamLeader;
 	int spectatorState;
 	int sessionTeam;
 
-	var = va( "session%i", (int)(client - level.clients) );
+	var = va( "session%i", (int)(player - level.players) );
 	trap_Cvar_VariableStringBuffer( var, s, sizeof(s) );
 
 	sscanf( s, "%i %i %i %i %i %i %i",
 		&sessionTeam,
-		&client->sess.spectatorNum,
+		&player->sess.spectatorNum,
 		&spectatorState,
-		&client->sess.spectatorClient,
-		&client->sess.wins,
-		&client->sess.losses,
+		&player->sess.spectatorPlayer,
+		&player->sess.wins,
+		&player->sess.losses,
 		&teamLeader
 		);
 
-	client->sess.sessionTeam = (team_t)sessionTeam;
-	client->sess.spectatorState = (spectatorState_t)spectatorState;
-	client->sess.teamLeader = (qboolean)teamLeader;
+	player->sess.sessionTeam = (team_t)sessionTeam;
+	player->sess.spectatorState = (spectatorState_t)spectatorState;
+	player->sess.teamLeader = (qboolean)teamLeader;
 }
 
 
@@ -107,11 +107,11 @@ G_InitSessionData
 Called on a first-time connect
 ================
 */
-void G_InitSessionData( gclient_t *client, char *userinfo ) {
-	clientSession_t	*sess;
+void G_InitSessionData( gplayer_t *player, char *userinfo ) {
+	playerSession_t	*sess;
 	const char		*value;
 
-	sess = &client->sess;
+	sess = &player->sess;
 
 	// initial team determination
 	if ( g_gametype.integer >= GT_TEAM ) {
@@ -123,7 +123,7 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 		value = Info_ValueForKey( userinfo, "teampref" );
 
 		if ( value[0] || g_teamAutoJoin.integer ) {
-			SetTeam( &g_entities[client - level.clients], value );
+			SetTeam( &g_entities[player - level.players], value );
 		}
 	} else {
 		value = Info_ValueForKey( userinfo, "teampref" );
@@ -135,8 +135,8 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 			default:
 			case GT_FFA:
 			case GT_SINGLE_PLAYER:
-				if ( g_maxGameClients.integer > 0 && 
-					level.numNonSpectatorClients >= g_maxGameClients.integer ) {
+				if ( g_maxGamePlayers.integer > 0 && 
+					level.numNonSpectatorPlayers >= g_maxGamePlayers.integer ) {
 					sess->sessionTeam = TEAM_SPECTATOR;
 				} else {
 					sess->sessionTeam = TEAM_FREE;
@@ -144,7 +144,7 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 				break;
 			case GT_TOURNAMENT:
 				// if the game is full, go into a waiting mode
-				if ( level.numNonSpectatorClients >= 2 ) {
+				if ( level.numNonSpectatorPlayers >= 2 ) {
 					sess->sessionTeam = TEAM_SPECTATOR;
 				} else {
 					sess->sessionTeam = TEAM_FREE;
@@ -156,9 +156,9 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 		sess->spectatorState = SPECTATOR_FREE;
 	}
 
-	AddTournamentQueue(client);
+	AddTournamentQueue(player);
 
-	G_WriteClientSessionData( client );
+	G_WriteClientSessionData( player );
 }
 
 
@@ -194,9 +194,9 @@ void G_WriteSessionData( void ) {
 
 	trap_Cvar_SetValue( "session", g_gametype.integer );
 
-	for ( i = 0 ; i < level.maxclients ; i++ ) {
-		if ( level.clients[i].pers.connected == CON_CONNECTED ) {
-			G_WriteClientSessionData( &level.clients[i] );
+	for ( i = 0 ; i < level.maxplayers ; i++ ) {
+		if ( level.players[i].pers.connected == CON_CONNECTED ) {
+			G_WriteClientSessionData( &level.players[i] );
 		}
 	}
 }

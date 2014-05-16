@@ -768,7 +768,7 @@ ServerOptions_Start
 static void ServerOptions_Start( void ) {
 	int		timelimit;
 	int		fraglimit;
-	int		maxclients;
+	int		maxplayers;
 	int		localPlayerBits;
 	int		publicserver;
 	int		dedicated;
@@ -789,15 +789,15 @@ static void ServerOptions_Start( void ) {
 	pure		 = s_serveroptions.pure.curvalue;
 	skill		 = s_serveroptions.botSkill.curvalue + 1;
 
-	//set maxclients
-	for( n = 0, maxclients = 0; n < PLAYER_SLOTS; n++ ) {
+	//set maxplayers
+	for( n = 0, maxplayers = 0; n < PLAYER_SLOTS; n++ ) {
 		if( s_serveroptions.playerType[n].curvalue == PT_CLOSED ) {
 			continue;
 		}
 		if( (s_serveroptions.playerType[n].curvalue == PT_BOT) && (s_serveroptions.botNameBuffers[n][0] == 0) ) {
 			continue;
 		}
-		maxclients++;
+		maxplayers++;
 	}
 	for( n = 0, localPlayerBits = 1; n < UI_MaxSplitView(); n++ ) {
 		if( s_serveroptions.playerType[n].curvalue != PT_HUMAN ) {
@@ -806,7 +806,6 @@ static void ServerOptions_Start( void ) {
 		localPlayerBits |= (1<<n);
 	}
 
-	// Set the number of local clients
 	trap_Cvar_SetValue( "cl_localPlayers", localPlayerBits );
 
 	switch( s_serveroptions.gametype ) {
@@ -854,7 +853,7 @@ static void ServerOptions_Start( void ) {
 #endif
 	}
 
-	trap_Cvar_SetValue( "sv_maxclients", Com_Clamp( 0, 12, maxclients ) );
+	trap_Cvar_SetValue( "sv_maxclients", Com_Clamp( 0, 12, maxplayers ) );
 	if( s_serveroptions.multiplayer ) {
 		trap_Cvar_SetValue( "ui_publicServer", Com_Clamp( 0, 1, publicserver ) );
 		trap_Cvar_SetValue( "sv_public", Com_Clamp( 0, 1, publicserver ) );

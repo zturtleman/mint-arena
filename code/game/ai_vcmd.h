@@ -39,6 +39,6 @@ Suite 120, Rockville, Maryland 20850 USA.
  *****************************************************************************/
 
 int BotVoiceChatCommand(bot_state_t *bs, int mode, char *voicechat);
-void BotVoiceChat_Defend(bot_state_t *bs, int client, int mode);
+void BotVoiceChat_Defend(bot_state_t *bs, int playerNum, int mode);
 
 

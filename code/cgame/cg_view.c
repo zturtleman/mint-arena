@@ -356,7 +356,7 @@ static void CG_OffsetThirdPersonView( void ) {
 	// in a solid block.  Use an 8 by 8 block to prevent the view from near clipping anything
 
 	if (!cg_cameraMode.integer) {
-		CG_Trace( &trace, cg.refdef.vieworg, mins, maxs, view, cg.cur_lc->predictedPlayerState.clientNum, MASK_SOLID );
+		CG_Trace( &trace, cg.refdef.vieworg, mins, maxs, view, cg.cur_lc->predictedPlayerState.playerNum, MASK_SOLID );
 
 		if ( trace.fraction != 1.0 ) {
 			VectorCopy( trace.endpos, view );
@@ -364,7 +364,7 @@ static void CG_OffsetThirdPersonView( void ) {
 			// try another trace to this position, because a tunnel may have the ceiling
 			// close enough that this is poking out
 
-			CG_Trace( &trace, cg.refdef.vieworg, mins, maxs, view, cg.cur_lc->predictedPlayerState.clientNum, MASK_SOLID );
+			CG_Trace( &trace, cg.refdef.vieworg, mins, maxs, view, cg.cur_lc->predictedPlayerState.playerNum, MASK_SOLID );
 			VectorCopy( trace.endpos, view );
 		}
 	}
@@ -566,7 +566,7 @@ static int CG_CalcFov( void ) {
 	} else {
 		// user selectable
 		if ( cgs.dmflags & DF_FIXED_FOV ) {
-			// dmflag to prevent wide fov for all clients
+			// dmflag to prevent wide fov for all players
 			fov_x = 90;
 		} else {
 			fov_x = cg_fov.value;
@@ -846,7 +846,7 @@ static void CG_PowerupTimerSounds( void ) {
 			continue;
 		}
 		if ( ( t - cg.time ) / POWERUP_BLINK_TIME != ( t - cg.oldTime ) / POWERUP_BLINK_TIME ) {
-			trap_S_StartSound( NULL, cg.cur_ps->clientNum, CHAN_ITEM, cgs.media.wearOffSound );
+			trap_S_StartSound( NULL, cg.cur_ps->playerNum, CHAN_ITEM, cgs.media.wearOffSound );
 		}
 	}
 }
@@ -1014,8 +1014,8 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 	// Use single camera/viewport at intermission
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if ( cg.localPlayers[i].clientNum != -1 && cg.snap->pss[i].pm_type != PM_INTERMISSION ) {
-			// client present and not at intermission, keep viewports separate.
+		if ( cg.localPlayers[i].playerNum != -1 && cg.snap->pss[i].pm_type != PM_INTERMISSION ) {
+			// player present and not at intermission, keep viewports separate.
 			break;
 		}
 	}
@@ -1023,7 +1023,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 	cg.numViewports = 0;
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if ( cg.localPlayers[i].clientNum == -1 ) {
+		if ( cg.localPlayers[i].playerNum == -1 ) {
 			renderPlayerViewport[i] = qfalse;
 			continue;
 		}
@@ -1052,7 +1052,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	cg.cur_lc = NULL;
 	cg.cur_ps = NULL;
 
-	// If all local clients dropped out from playing still draw main local client.
+	// If all local players dropped out from playing still draw main local player.
 	if (cg.numViewports == 0) {
 		cg.numViewports = 1;
 		renderPlayerViewport[0] = qtrue;
@@ -1116,7 +1116,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		CG_PowerupTimerSounds();
 
 		// update audio positions
-		trap_S_Respatialize( cg.cur_ps->clientNum, cg.refdef.vieworg, cg.refdef.viewaxis, inwater, !cg.cur_lc->renderingThirdPerson );
+		trap_S_Respatialize( cg.cur_ps->playerNum, cg.refdef.vieworg, cg.refdef.viewaxis, inwater, !cg.cur_lc->renderingThirdPerson );
 
 		// make sure the lagometerSample and frame timing isn't done twice when in stereo
 		if ( stereoView != STEREO_RIGHT && cg.viewport == 0 ) {

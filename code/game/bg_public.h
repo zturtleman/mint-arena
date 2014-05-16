@@ -244,7 +244,7 @@ typedef struct entityState_s {
 	int		loopSound;		// constantly loop this sound
 
 	int		modelindex2;
-	int		clientNum;		// 0 to (MAX_CLIENTS - 1), for players and corpses
+	int		playerNum;		// 0 to (MAX_CLIENTS - 1), for players and corpses
 	int		frame;
 
 	int		event;			// impulse events -- muzzle flashes, footsteps, etc
@@ -294,7 +294,7 @@ typedef struct playerState_s {
 
 	qboolean	linked;			// set by server
 
-	int			clientNum;		// ranges from 0 to MAX_CLIENTS-1
+	int			playerNum;		// ranges from 0 to MAX_CLIENTS-1
 
 	vec3_t		viewangles;		// for fixed views
 	int			viewheight;
@@ -353,7 +353,7 @@ typedef struct playerState_s {
 	int			externalEventParm;
 	int			externalEventTime;
 
-	//int			clientNum;		// ranges from 0 to MAX_CLIENTS-1
+	//int			playerNum;		// ranges from 0 to MAX_CLIENTS-1
 	int			weapon;			// copied to entityState_t->weapon
 	int			weaponstate;
 
@@ -540,7 +540,7 @@ typedef enum {
 	PERS_TEAM,						// player team
 	PERS_SPAWN_COUNT,				// incremented every respawn
 	PERS_PLAYEREVENTS,				// 16 bits that can be flipped for events
-	PERS_ATTACKER,					// clientnum of last damage inflicter
+	PERS_ATTACKER,					// playerNum of last damage inflicter
 	PERS_ATTACKEE_ARMOR,			// health/armor of last person we attacked
 	PERS_KILLED,					// count of the number of times you died
 	// player awards tracking
@@ -856,9 +856,9 @@ typedef struct animation_s {
 #define	ANIM_TOGGLEBIT		128
 
 
-#define DEFAULT_CLIENT_NAME		"UnnamedPlayer"
-#define DEFAULT_CLIENT_COLOR1	4
-#define DEFAULT_CLIENT_COLOR2	5
+#define DEFAULT_PLAYER_NAME		"UnnamedPlayer"
+#define DEFAULT_PLAYER_COLOR1	4
+#define DEFAULT_PLAYER_COLOR2	5
 
 // Default player model names for the splitscreen clients
 #define DEFAULT_MODEL			"sarge"

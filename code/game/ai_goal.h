@@ -63,7 +63,7 @@ typedef struct bot_goalstate_s
 	struct weightconfig_s *itemweightconfig;	//weight config
 	int itemweightindex[MAX_ITEMS];				//index from item to weight
 	//
-	int client;									//client using this goal state
+	int playernum;								//player using this goal state
 	int lastreachabilityarea;					//last area with reachabilities the bot was in
 	//
 	bot_goal_t goalstack[MAX_GOALSTACK];		//goal stack
@@ -133,7 +133,7 @@ int BotLoadItemWeights(int goalstate, char *filename);
 //frees the item weights of the bot
 void BotFreeItemWeights(int goalstate);
 //returns the handle of a newly allocated goal state
-int BotAllocGoalState(int client);
+int BotAllocGoalState(int player);
 //free the given goal state
 void BotFreeGoalState(int handle);
 //setup the goal AI

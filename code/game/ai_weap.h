@@ -125,5 +125,5 @@ int BotLoadWeaponWeights(int weaponstate, char *filename);
 void BotFreeWeaponState(int weaponstate);
 //resets the whole weapon state
 void BotResetWeaponState(int weaponstate);
-//returns handle to weapon state for clientNum
-#define BotAllocWeaponState(clientNum)		(clientNum+1)
+//returns handle to weapon state for playerNum
+#define BotAllocWeaponState(playerNum)		(playerNum+1)

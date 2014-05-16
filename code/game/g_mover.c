@@ -62,9 +62,9 @@ gentity_t	*G_TestEntityPosition( gentity_t *ent ) {
 	vec3_t	origin;
 	int		mask;
 
-	if ( ent->client ) {
-		VectorCopy( ent->client->ps.origin, origin );
-		collisionType = ent->client->ps.collisionType;
+	if ( ent->player ) {
+		VectorCopy( ent->player->ps.origin, origin );
+		collisionType = ent->player->ps.collisionType;
 	} else {
 		VectorCopy( ent->s.pos.trBase, origin );
 		collisionType = ent->s.collisionType;
@@ -152,9 +152,9 @@ qboolean	G_TryPushingEntity( gentity_t *check, gentity_t *pusher, vec3_t move, v
 	pushed_p->ent = check;
 	VectorCopy (check->s.pos.trBase, pushed_p->origin);
 	VectorCopy (check->s.apos.trBase, pushed_p->angles);
-	if ( check->client ) {
-		pushed_p->deltayaw = check->client->ps.delta_angles[YAW];
-		VectorCopy (check->client->ps.origin, pushed_p->origin);
+	if ( check->player ) {
+		pushed_p->deltayaw = check->player->ps.delta_angles[YAW];
+		VectorCopy (check->player->ps.origin, pushed_p->origin);
 	}
 	pushed_p++;
 
@@ -162,8 +162,8 @@ qboolean	G_TryPushingEntity( gentity_t *check, gentity_t *pusher, vec3_t move, v
 	// figure movement due to the pusher's amove
 	G_CreateRotationMatrix( amove, transpose );
 	G_TransposeMatrix( transpose, matrix );
-	if ( check->client ) {
-		VectorSubtract (check->client->ps.origin, pusher->r.currentOrigin, org);
+	if ( check->player ) {
+		VectorSubtract (check->player->ps.origin, pusher->r.currentOrigin, org);
 	}
 	else {
 		VectorSubtract (check->s.pos.trBase, pusher->r.currentOrigin, org);
@@ -174,11 +174,11 @@ qboolean	G_TryPushingEntity( gentity_t *check, gentity_t *pusher, vec3_t move, v
 	// add movement
 	VectorAdd (check->s.pos.trBase, move, check->s.pos.trBase);
 	VectorAdd (check->s.pos.trBase, move2, check->s.pos.trBase);
-	if ( check->client ) {
-		VectorAdd (check->client->ps.origin, move, check->client->ps.origin);
-		VectorAdd (check->client->ps.origin, move2, check->client->ps.origin);
+	if ( check->player ) {
+		VectorAdd (check->player->ps.origin, move, check->player->ps.origin);
+		VectorAdd (check->player->ps.origin, move2, check->player->ps.origin);
 		// make sure the client's view rotates when on a rotating mover
-		check->client->ps.delta_angles[YAW] += ANGLE2SHORT(amove[YAW]);
+		check->player->ps.delta_angles[YAW] += ANGLE2SHORT(amove[YAW]);
 	}
 
 	// may have pushed them off an edge
@@ -189,8 +189,8 @@ qboolean	G_TryPushingEntity( gentity_t *check, gentity_t *pusher, vec3_t move, v
 	block = G_TestEntityPosition( check );
 	if (!block) {
 		// pushed ok
-		if ( check->client ) {
-			VectorCopy( check->client->ps.origin, check->r.currentOrigin );
+		if ( check->player ) {
+			VectorCopy( check->player->ps.origin, check->r.currentOrigin );
 		} else {
 			VectorCopy( check->s.pos.trBase, check->r.currentOrigin );
 		}
@@ -202,8 +202,8 @@ qboolean	G_TryPushingEntity( gentity_t *check, gentity_t *pusher, vec3_t move, v
 	// this is only relevent for riding entities, not pushed
 	// Sliding trapdoors can cause this.
 	VectorCopy( (pushed_p-1)->origin, check->s.pos.trBase);
-	if ( check->client ) {
-		VectorCopy( (pushed_p-1)->origin, check->client->ps.origin);
+	if ( check->player ) {
+		VectorCopy( (pushed_p-1)->origin, check->player->ps.origin);
 	}
 	VectorCopy( (pushed_p-1)->angles, check->s.apos.trBase );
 	block = G_TestEntityPosition (check);
@@ -418,9 +418,9 @@ qboolean G_MoverPush( gentity_t *pusher, vec3_t move, vec3_t amove, gentity_t **
 		for ( p=pushed_p-1 ; p>=pushed ; p-- ) {
 			VectorCopy (p->origin, p->ent->s.pos.trBase);
 			VectorCopy (p->angles, p->ent->s.apos.trBase);
-			if ( p->ent->client ) {
-				p->ent->client->ps.delta_angles[YAW] = p->deltayaw;
-				VectorCopy (p->origin, p->ent->client->ps.origin);
+			if ( p->ent->player ) {
+				p->ent->player->ps.delta_angles[YAW] = p->deltayaw;
+				VectorCopy (p->origin, p->ent->player->ps.origin);
 			}
 			trap_LinkEntity (p->ent);
 		}
@@ -817,8 +817,8 @@ Blocked_Door
 ================
 */
 void Blocked_Door( gentity_t *ent, gentity_t *other ) {
-	// remove anything other than a client
-	if ( !other->client ) {
+	// remove anything other than a player
+	if ( !other->player ) {
 		// except CTF flags!!!!
 		if( other->s.eType == ET_ITEM && other->item->giType == IT_TEAM ) {
 			Team_DroppedFlagThink( other );
@@ -855,7 +855,7 @@ static void Touch_DoorTriggerSpectator( gentity_t *ent, gentity_t *other, trace_
 	doorMin = ent->r.absmin[axis] + 100;
 	doorMax = ent->r.absmax[axis] - 100;
 
-	VectorCopy(other->client->ps.origin, origin);
+	VectorCopy(other->player->ps.origin, origin);
 
 	if (origin[axis] < doorMin || origin[axis] > doorMax) return;
 
@@ -874,7 +874,7 @@ Touch_DoorTrigger
 ================
 */
 void Touch_DoorTrigger( gentity_t *ent, gentity_t *other, trace_t *trace ) {
-	if ( other->client && other->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+	if ( other->player && other->player->sess.sessionTeam == TEAM_SPECTATOR ) {
 		// if the door is not open and not opening
 		if ( ent->parent->moverState != MOVER_1TO2 &&
 			ent->parent->moverState != MOVER_POS2) {
@@ -1046,7 +1046,7 @@ Don't allow decent if a living player is on it
 ===============
 */
 void Touch_Plat( gentity_t *ent, gentity_t *other, trace_t *trace ) {
-	if ( !other->client || other->client->ps.stats[STAT_HEALTH] <= 0 ) {
+	if ( !other->player || other->player->ps.stats[STAT_HEALTH] <= 0 ) {
 		return;
 	}
 
@@ -1064,7 +1064,7 @@ If the plat is at the bottom position, start it going up
 ===============
 */
 void Touch_PlatCenterTrigger(gentity_t *ent, gentity_t *other, trace_t *trace ) {
-	if ( !other->client ) {
+	if ( !other->player ) {
 		return;
 	}
 
@@ -1189,7 +1189,7 @@ Touch_Button
 ===============
 */
 void Touch_Button(gentity_t *ent, gentity_t *other, trace_t *trace ) {
-	if ( !other->client ) {
+	if ( !other->player ) {
 		return;
 	}
 

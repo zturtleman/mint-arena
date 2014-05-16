@@ -322,14 +322,14 @@ CG_DrawHead
 Used for both the status bar and the scoreboard
 ================
 */
-void CG_DrawHead( float x, float y, float w, float h, int clientNum, vec3_t headAngles ) {
+void CG_DrawHead( float x, float y, float w, float h, int playerNum, vec3_t headAngles ) {
 	clipHandle_t	cm;
 	playerInfo_t	*pi;
 	float			len;
 	vec3_t			origin;
 	vec3_t			mins, maxs;
 
-	pi = &cgs.playerinfo[ clientNum ];
+	pi = &cgs.playerinfo[ playerNum ];
 
 	if ( cg_draw3dIcons.integer ) {
 		cm = pi->headModel;
@@ -479,7 +479,7 @@ static void CG_DrawStatusBarHead( float x ) {
 	angles[PITCH] = cg.cur_lc->headStartPitch + ( cg.cur_lc->headEndPitch - cg.cur_lc->headStartPitch ) * frac;
 
 	CG_DrawHead( x, 480 - size, size, size, 
-				cg.cur_ps->clientNum, angles );
+				cg.cur_ps->playerNum, angles );
 }
 #endif // MISSIONPACK_HUD
 
@@ -554,7 +554,7 @@ static void CG_DrawStatusBar( void ) {
 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_BOTTOM);
 
 	ps = cg.cur_ps;
-	cent = &cg_entities[ps->clientNum];
+	cent = &cg_entities[ps->playerNum];
 
 	// draw the team background
 	CG_DrawTeamBackground( 0, 420, 640, 60, 0.33f, ps->persistant[PERS_TEAM] );
@@ -681,7 +681,7 @@ static float CG_DrawAttacker( float y ) {
 	vec3_t		angles;
 	const char	*info;
 	const char	*name;
-	int			clientNum;
+	int			playerNum;
 
 	if ( cg.cur_lc->predictedPlayerState.stats[STAT_HEALTH] <= 0 ) {
 		return y;
@@ -691,8 +691,8 @@ static float CG_DrawAttacker( float y ) {
 		return y;
 	}
 
-	clientNum = cg.cur_lc->predictedPlayerState.persistant[PERS_ATTACKER];
-	if ( clientNum < 0 || clientNum >= MAX_CLIENTS || clientNum == cg.cur_ps->clientNum ) {
+	playerNum = cg.cur_lc->predictedPlayerState.persistant[PERS_ATTACKER];
+	if ( playerNum < 0 || playerNum >= MAX_CLIENTS || playerNum == cg.cur_ps->playerNum ) {
 		return y;
 	}
 
@@ -707,9 +707,9 @@ static float CG_DrawAttacker( float y ) {
 	angles[PITCH] = 0;
 	angles[YAW] = 180;
 	angles[ROLL] = 0;
-	CG_DrawHead( 640 - size, y, size, size, clientNum, angles );
+	CG_DrawHead( 640 - size, y, size, size, playerNum, angles );
 
-	info = CG_ConfigString( CS_PLAYERS + clientNum );
+	info = CG_ConfigString( CS_PLAYERS + playerNum );
 	name = Info_ValueForKey(  info, "n" );
 	y += size;
 	CG_DrawBigString( 640 - ( Q_PrintStrlen( name ) * BIGCHAR_WIDTH), y, name, 0.5 );
@@ -1841,7 +1841,7 @@ void CG_DrawVoipMeter( void ) {
 		return; // player doesn't want to show meter at all.
 	}
 
-	voipTime = trap_GetVoipTime( cg.cur_lc->clientNum );
+	voipTime = trap_GetVoipTime( cg.cur_lc->playerNum );
 
 	// check if voip was used in the last 1/4 second
 	if ( !voipTime || voipTime < cg.time - 250 ) {
@@ -1850,7 +1850,7 @@ void CG_DrawVoipMeter( void ) {
 
 	CG_SetScreenPlacement( PLACE_CENTER, PLACE_TOP );
 
-	voipPower = trap_GetVoipPower( cg.cur_lc->clientNum );
+	voipPower = trap_GetVoipPower( cg.cur_lc->playerNum );
 
 	limit = (int) (voipPower * 10.0f);
 	if (limit > 10)
@@ -2350,7 +2350,7 @@ static void CG_ScanForCrosshairEntity( void ) {
 	VectorMA( start, 131072, cg.refdef.viewaxis[0], end );
 
 	CG_Trace( &trace, start, vec3_origin, vec3_origin, end, 
-		cg.cur_ps->clientNum, CONTENTS_SOLID|CONTENTS_BODY );
+		cg.cur_ps->playerNum, CONTENTS_SOLID|CONTENTS_BODY );
 	if ( trace.entityNum >= MAX_CLIENTS ) {
 		return;
 	}
@@ -2367,8 +2367,8 @@ static void CG_ScanForCrosshairEntity( void ) {
 	}
 
 	// update the fade timer
-	cg.cur_lc->crosshairClientNum = trace.entityNum;
-	cg.cur_lc->crosshairClientTime = cg.time;
+	cg.cur_lc->crosshairPlayerNum = trace.entityNum;
+	cg.cur_lc->crosshairPlayerTime = cg.time;
 }
 
 
@@ -2398,13 +2398,13 @@ static void CG_DrawCrosshairNames( void ) {
 	CG_ScanForCrosshairEntity();
 
 	// draw the name of the player being looked at
-	color = CG_FadeColor( cg.cur_lc->crosshairClientTime, 1000 );
+	color = CG_FadeColor( cg.cur_lc->crosshairPlayerTime, 1000 );
 	if ( !color ) {
 		trap_R_SetColor( NULL );
 		return;
 	}
 
-	name = cgs.playerinfo[ cg.cur_lc->crosshairClientNum ].name;
+	name = cgs.playerinfo[ cg.cur_lc->crosshairPlayerNum ].name;
 #ifdef MISSIONPACK_HUD
 	color[3] *= 0.5f;
 	w = CG_Text_Width(name, 0.3f, 0);
@@ -2417,8 +2417,8 @@ static void CG_DrawCrosshairNames( void ) {
 
 	if ( cg_voipShowCrosshairMeter.integer )
 	{
-		float voipPower = trap_GetVoipPower( cg.cur_lc->crosshairClientNum );
-		int voipTime = trap_GetVoipTime( cg.cur_lc->crosshairClientNum );
+		float voipPower = trap_GetVoipPower( cg.cur_lc->crosshairPlayerNum );
+		int voipTime = trap_GetVoipTime( cg.cur_lc->crosshairPlayerNum );
 
 		if ( voipPower > 0 && voipTime > 0 && voipTime >= cg.time - 250 ) {
 			int limit, i;
@@ -2467,7 +2467,7 @@ static void CG_DrawShaderInfo( void ) {
 	VectorMA( start, 131072, cg.refdef.viewaxis[0], end );
 
 	CG_Trace( &trace, start, vec3_origin, vec3_origin, end,
-		cg.cur_ps->clientNum, everything ? ~0 : CONTENTS_SOLID );
+		cg.cur_ps->playerNum, everything ? ~0 : CONTENTS_SOLID );
 
 	if ( trace.surfaceNum <= 0 )
 		return;
@@ -2562,9 +2562,9 @@ static void CG_DrawTeamVote(void) {
 	char	*s;
 	int		sec, cs_offset;
 
-	if ( cgs.playerinfo[cg.cur_ps->clientNum].team == TEAM_RED )
+	if ( cgs.playerinfo[cg.cur_ps->playerNum].team == TEAM_RED )
 		cs_offset = 0;
-	else if ( cgs.playerinfo[cg.cur_ps->clientNum].team == TEAM_BLUE )
+	else if ( cgs.playerinfo[cg.cur_ps->playerNum].team == TEAM_BLUE )
 		cs_offset = 1;
 	else
 		return;
@@ -2599,7 +2599,7 @@ qboolean CG_AnyScoreboardShowing( void ) {
 	int i;
 
 	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
-		if ( cg.localPlayers[i].clientNum != -1 && cg.localPlayers[i].scoreBoardShowing ) {
+		if ( cg.localPlayers[i].playerNum != -1 && cg.localPlayers[i].scoreBoardShowing ) {
 			return qtrue;
 		}
 	}
@@ -2696,7 +2696,7 @@ static void CG_DrawIntermission( void ) {
 =================
 CG_DrawBotInfo
 
-Draw info for bot that client is following.
+Draw info for bot that player is following.
 =================
 */
 static qboolean CG_DrawBotInfo( int y ) {
@@ -2707,7 +2707,7 @@ static qboolean CG_DrawBotInfo( int y ) {
 		return qfalse;
 	}
 
-	info = CG_ConfigString( CS_BOTINFO + cg.cur_ps->clientNum );
+	info = CG_ConfigString( CS_BOTINFO + cg.cur_ps->playerNum );
 
 	if (!*info) {
 		return qfalse;
@@ -2780,7 +2780,7 @@ static qboolean CG_DrawFollow( void ) {
 
 	CG_DrawBigString( 320 - 9 * 8, 24, "following", 1.0F );
 
-	name = cgs.playerinfo[ cg.cur_ps->clientNum ].name;
+	name = cgs.playerinfo[ cg.cur_ps->playerNum ].name;
 
 	x = 0.5 * ( 640 - GIANT_WIDTH * CG_DrawStrlen( name ) );
 
@@ -2901,7 +2901,7 @@ static void CG_DrawWarmup( void ) {
 		// find the two active players
 		ci1 = NULL;
 		ci2 = NULL;
-		for ( i = 0 ; i < cgs.maxclients ; i++ ) {
+		for ( i = 0 ; i < cgs.maxplayers ; i++ ) {
 			if ( cgs.playerinfo[i].infoValid && cgs.playerinfo[i].team == TEAM_FREE ) {
 				if ( !ci1 ) {
 					ci1 = &cgs.playerinfo[i];
@@ -3048,7 +3048,7 @@ void CG_DrawNotify( void ) {
 
 #ifdef MISSIONPACK_HUD
 	// voice head is being shown
-	if ( cg.cur_lc->voiceTime && cg.cur_lc->clientNum != cg.cur_lc->currentVoiceClient )
+	if ( cg.cur_lc->voiceTime && cg.cur_lc->playerNum != cg.cur_lc->currentVoicePlayerNum )
 		x = 72;
 	else
 #endif
@@ -3073,7 +3073,7 @@ void CG_DrawTimedMenus( void ) {
 		}
 	}
 
-	if ( cg.cur_lc->voiceTime && cg.cur_lc->clientNum != cg.cur_lc->currentVoiceClient ) {
+	if ( cg.cur_lc->voiceTime && cg.cur_lc->playerNum != cg.cur_lc->currentVoicePlayerNum ) {
 		Menus_OpenByName("voiceMenu");
 	} else {
 		Menus_CloseByName("voiceMenu");

@@ -125,7 +125,7 @@ static void CG_Obituary( entityState_t *ent ) {
 
 	message2 = "";
 
-	// check for single client messages
+	// check for single player messages
 
 	switch( mod ) {
 	case MOD_SUICIDE:
@@ -219,13 +219,13 @@ static void CG_Obituary( entityState_t *ent ) {
 		return;
 	}
 
-	// check for kill messages from the current clientNum
+	// check for kill messages from the current playerNum
 	if ( CG_LocalPlayerState(attacker) ) {
 		char	*s;
 		playerState_t	*ps;
 
 		for (i = 0; i < CG_MaxSplitView(); i++) {
-			if ( attacker != cg.snap->pss[i].clientNum ) {
+			if ( attacker != cg.snap->pss[i].playerNum ) {
 				continue;
 			}
 
@@ -250,16 +250,16 @@ static void CG_Obituary( entityState_t *ent ) {
 		// print the text message as well
 	}
 
-	// check for double client messages
+	// check for double player messages
 	if ( !attackerInfo ) {
 		attacker = ENTITYNUM_WORLD;
 		strcpy( attackerName, "noname" );
 	} else {
 		Q_strncpyz( attackerName, Info_ValueForKey( attackerInfo, "n" ), sizeof(attackerName) - 2);
 		strcat( attackerName, S_COLOR_WHITE );
-		// check for kill messages about the current clientNum
+		// check for kill messages about the current playerNum
 		for (i = 0; i < CG_MaxSplitView(); i++) {
-			if ( target == cg.snap->pss[i].clientNum ) {
+			if ( target == cg.snap->pss[i].playerNum ) {
 				Q_strncpyz( cg.localPlayers[i].killerName, attackerName, sizeof( cg.localPlayers[i].killerName ) );
 			}
 		}
@@ -363,7 +363,7 @@ CG_UseItem
 */
 static void CG_UseItem( centity_t *cent ) {
 	playerInfo_t *pi;
-	int			itemNum, clientNum;
+	int			itemNum, playerNum;
 	gitem_t		*item;
 	entityState_t *es;
 	int			i;
@@ -377,7 +377,7 @@ static void CG_UseItem( centity_t *cent ) {
 
 	// print a message if the local player
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if ( es->number != cg.snap->pss[i].clientNum ) {
+		if ( es->number != cg.snap->pss[i].playerNum ) {
 			continue;
 		}
 
@@ -399,9 +399,9 @@ static void CG_UseItem( centity_t *cent ) {
 		break;
 
 	case HI_MEDKIT:
-		clientNum = cent->currentState.clientNum;
-		if ( clientNum >= 0 && clientNum < MAX_CLIENTS ) {
-			pi = &cgs.playerinfo[ clientNum ];
+		playerNum = cent->currentState.playerNum;
+		if ( playerNum >= 0 && playerNum < MAX_CLIENTS ) {
+			pi = &cgs.playerinfo[ playerNum ];
 			pi->medkitUsageTime = cg.time;
 		}
 		trap_S_StartSound (NULL, es->number, CHAN_BODY, cgs.media.medkitSound );
@@ -547,7 +547,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	int				event;
 	vec3_t			dir;
 	const char		*s;
-	int				clientNum;
+	int				playerNum;
 	playerInfo_t	*pi;
 	int				i;
 	int				thisClientNum;
@@ -564,13 +564,13 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		return;
 	}
 
-	clientNum = es->clientNum;
-	if ( clientNum < 0 || clientNum >= MAX_CLIENTS ) {
-		clientNum = 0;
+	playerNum = es->playerNum;
+	if ( playerNum < 0 || playerNum >= MAX_CLIENTS ) {
+		playerNum = 0;
 	}
-	pi = &cgs.playerinfo[ clientNum ];
+	pi = &cgs.playerinfo[ playerNum ];
 
-	thisClientNum = cg.snap->pss[0].clientNum;
+	thisClientNum = cg.snap->pss[0].playerNum;
 
 	switch ( event ) {
 	//
@@ -617,7 +617,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME("EV_FALL_SHORT");
 		trap_S_StartSound (NULL, es->number, CHAN_AUTO, cgs.media.landSound );
 		for (i = 0; i < CG_MaxSplitView(); i++) {
-			if ( clientNum == cg.snap->pss[i].clientNum ) {
+			if ( playerNum == cg.snap->pss[i].playerNum ) {
 				// smooth landing z changes
 				cg.localPlayers[i].landChange = -8;
 				cg.localPlayers[i].landTime = cg.time;
@@ -629,7 +629,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		// use normal pain sound
 		trap_S_StartSound( NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*pain100_1.wav" ) );
 		for (i = 0; i < CG_MaxSplitView(); i++) {
-			if ( clientNum == cg.snap->pss[i].clientNum ) {
+			if ( playerNum == cg.snap->pss[i].playerNum ) {
 				// smooth landing z changes
 				cg.localPlayers[i].landChange = -16;
 				cg.localPlayers[i].landTime = cg.time;
@@ -641,7 +641,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		trap_S_StartSound (NULL, es->number, CHAN_AUTO, CG_CustomSound( es->number, "*fall1.wav" ) );
 		cent->pe.painTime = cg.time;	// don't play a pain sound right after this
 		for (i = 0; i < CG_MaxSplitView(); i++) {
-			if ( clientNum == cg.snap->pss[i].clientNum ) {
+			if ( playerNum == cg.snap->pss[i].playerNum ) {
 				// smooth landing z changes
 				cg.localPlayers[i].landChange = -24;
 				cg.localPlayers[i].landTime = cg.time;
@@ -665,7 +665,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			player = &cg.localPlayers[i];
 			ps = &cg.snap->pss[i];
 
-			if ( clientNum != ps->clientNum ) {
+			if ( playerNum != ps->playerNum ) {
 				continue;
 			}
 
@@ -805,7 +805,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 			// show icon and name on status bar
 			for (i = 0; i < CG_MaxSplitView(); i++) {
-				if ( es->number == cg.snap->pss[i].clientNum ) {
+				if ( es->number == cg.snap->pss[i].playerNum ) {
 					CG_ItemPickup( i, index );
 				}
 			}
@@ -827,7 +827,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 			// show icon and name on status bar
 			for (i = 0; i < CG_MaxSplitView(); i++) {
-				if ( es->number == cg.snap->pss[i].clientNum ) {
+				if ( es->number == cg.snap->pss[i].playerNum ) {
 					CG_ItemPickup( i, index );
 				}
 			}
@@ -841,7 +841,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME("EV_NOAMMO");
 //		trap_S_StartSound (NULL, es->number, CHAN_AUTO, cgs.media.noAmmoSound );
 		for (i = 0; i < CG_MaxSplitView(); i++) {
-			if ( es->number == cg.snap->pss[i].clientNum ) {
+			if ( es->number == cg.snap->pss[i].playerNum ) {
 				CG_OutOfAmmoChange(i);
 			}
 		}
@@ -1023,9 +1023,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME("EV_RAILTRAIL");
 		cent->currentState.weapon = WP_RAILGUN;
 
-		if ( es->clientNum >= 0 && es->clientNum < MAX_CLIENTS ) {
+		if ( es->playerNum >= 0 && es->playerNum < MAX_CLIENTS ) {
 			for (i = 0; i < CG_MaxSplitView(); i++) {
-				if ( es->clientNum == cg.snap->pss[i].clientNum
+				if ( es->playerNum == cg.snap->pss[i].playerNum
 					&& !cg.localPlayers[i].renderingThirdPerson)
 				{
 					if(cg_drawGun[i].integer == 2)
@@ -1042,7 +1042,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		// if the end was on a nomark surface, don't make an explosion
 		if ( es->eventParm != 255 ) {
 			ByteToDir( es->eventParm, dir );
-			CG_MissileHitWall( es->weapon, es->clientNum, position, dir, IMPACTSOUND_DEFAULT );
+			CG_MissileHitWall( es->weapon, es->playerNum, position, dir, IMPACTSOUND_DEFAULT );
 		}
 		break;
 
@@ -1091,7 +1091,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			qboolean localHasRed		= qfalse;
 			qboolean localHasNeutral	= qfalse;
 
-			// Check if any local client is on blue/red team or has flags.
+			// Check if any local player is on blue/red team or has flags.
 			for (i = 0; i < CG_MaxSplitView(); i++) {
 				if (cg.snap->playerNums[i] == -1) {
 					continue;
@@ -1114,7 +1114,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				}
 			}
 
-			// ZTM: NOTE: Some of these sounds don't really work with local clients on different teams.
+			// ZTM: NOTE: Some of these sounds don't really work with local player on different teams.
 			//     New games might want to replace you/enemy sounds with red/blue.
 			//     See http://github.com/zturtleman/spearmint/wiki/New-Sounds
 
@@ -1302,7 +1302,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_POWERUP_QUAD:
 		DEBUGNAME("EV_POWERUP_QUAD");
 		for (i = 0; i < CG_MaxSplitView(); i++) {
-			if ( es->number == cg.snap->pss[i].clientNum ) {
+			if ( es->number == cg.snap->pss[i].playerNum ) {
 				cg.localPlayers[i].powerupActive = PW_QUAD;
 				cg.localPlayers[i].powerupTime = cg.time;
 			}
@@ -1312,7 +1312,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_POWERUP_BATTLESUIT:
 		DEBUGNAME("EV_POWERUP_BATTLESUIT");
 		for (i = 0; i < CG_MaxSplitView(); i++) {
-			if ( es->number == cg.snap->pss[i].clientNum ) {
+			if ( es->number == cg.snap->pss[i].playerNum ) {
 				cg.localPlayers[i].powerupActive = PW_BATTLESUIT;
 				cg.localPlayers[i].powerupTime = cg.time;
 			}
@@ -1322,7 +1322,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_POWERUP_REGEN:
 		DEBUGNAME("EV_POWERUP_REGEN");
 		for (i = 0; i < CG_MaxSplitView(); i++) {
-			if ( es->number == cg.snap->pss[i].clientNum ) {
+			if ( es->number == cg.snap->pss[i].playerNum ) {
 				cg.localPlayers[i].powerupActive = PW_REGEN;
 				cg.localPlayers[i].powerupTime = cg.time;
 			}
@@ -1362,7 +1362,7 @@ void CG_CheckEvents( centity_t *cent ) {
 		if ( cent->previousEvent ) {
 			return;	// already fired
 		}
-		// if this is a player event set the entity number of the client entity number
+		// if this is a player event set the entity number of the player entity number
 		if ( cent->currentState.eFlags & EF_PLAYER_EVENT ) {
 			cent->currentState.number = cent->currentState.otherEntityNum;
 		}

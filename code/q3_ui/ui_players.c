@@ -941,10 +941,10 @@ static qboolean	UI_FileExists(const char *filename) {
 
 /*
 ==========================
-UI_FindClientHeadFile
+UI_FindPlayerHeadFile
 ==========================
 */
-static qboolean	UI_FindClientHeadFile( char *filename, int length, const char *teamName, const char *headModelName, const char *headSkinName, const char *base, const char *ext ) {
+static qboolean	UI_FindPlayerHeadFile( char *filename, int length, const char *teamName, const char *headModelName, const char *headSkinName, const char *base, const char *ext ) {
 	char *team, *headsFolder;
 	int i;
 
@@ -993,10 +993,10 @@ static qboolean	UI_FindClientHeadFile( char *filename, int length, const char *t
 
 /*
 ==========================
-UI_RegisterClientSkin
+UI_RegisterPlayerSkin
 ==========================
 */
-static qboolean UI_RegisterClientSkin( uiPlayerInfo_t *pi, const char *modelName, const char *skinName, const char *headModelName, const char *headSkinName , const char *teamName) {
+static qboolean	UI_RegisterPlayerSkin( uiPlayerInfo_t *pi, const char *modelName, const char *skinName, const char *headModelName, const char *headSkinName , const char *teamName) {
 	char		filename[MAX_QPATH];
 	qboolean	legsSkin, torsoSkin, headSkin;
 
@@ -1014,7 +1014,7 @@ static qboolean UI_RegisterClientSkin( uiPlayerInfo_t *pi, const char *modelName
 	}
 	torsoSkin = CG_RegisterSkin( filename, &pi->modelSkin, qtrue );
 
-	if ( UI_FindClientHeadFile( filename, sizeof(filename), teamName, headModelName, headSkinName, "head", "skin" ) ) {
+	if ( UI_FindPlayerHeadFile( filename, sizeof(filename), teamName, headModelName, headSkinName, "head", "skin" ) ) {
 		headSkin = CG_RegisterSkin( filename, &pi->modelSkin, qtrue );
 	} else {
 		headSkin = qfalse;
@@ -1152,10 +1152,10 @@ static qboolean UI_ParseAnimationFile( const char *filename, animation_t *animat
 
 /*
 ==========================
-UI_RegisterClientModelname
+UI_RegisterPlayerModelname
 ==========================
 */
-qboolean UI_RegisterClientModelname( uiPlayerInfo_t *pi, const char *modelSkinName, const char *headModelSkinName, const char *teamName ) {
+qboolean UI_RegisterPlayerModelname( uiPlayerInfo_t *pi, const char *modelSkinName, const char *headModelSkinName, const char *teamName ) {
 	char		modelName[MAX_QPATH];
 	char		skinName[MAX_QPATH];
 	char		headModelName[MAX_QPATH];
@@ -1225,8 +1225,8 @@ qboolean UI_RegisterClientModelname( uiPlayerInfo_t *pi, const char *modelSkinNa
 	}
 
 	// if any skins failed to load, fall back to default
-	if ( !UI_RegisterClientSkin( pi, modelName, skinName, headModelName, headSkinName, teamName) ) {
-		if ( !UI_RegisterClientSkin( pi, modelName, "default", headModelName, "default", teamName ) ) {
+	if ( !UI_RegisterPlayerSkin( pi, modelName, skinName, headModelName, headSkinName, teamName) ) {
+		if ( !UI_RegisterPlayerSkin( pi, modelName, "default", headModelName, "default", teamName ) ) {
 			Com_Printf( "Failed to load skin file: %s : %s\n", modelName, skinName );
 			return qfalse;
 		}
@@ -1250,7 +1250,7 @@ UI_PlayerInfo_SetModel
 */
 void UI_PlayerInfo_SetModel( uiPlayerInfo_t *pi, const char *model, const char *headmodel, char *teamName ) {
 	memset( pi, 0, sizeof(*pi) );
-	UI_RegisterClientModelname( pi, model, headmodel, teamName );
+	UI_RegisterPlayerModelname( pi, model, headmodel, teamName );
 	pi->weapon = WP_MACHINEGUN;
 	pi->currentWeapon = pi->weapon;
 	pi->lastWeapon = pi->weapon;

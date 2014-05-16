@@ -324,7 +324,7 @@ static void CG_General( centity_t *cent ) {
 	ent.hModel = cgs.gameModels[s1->modelindex];
 
 	// player model
-	if (s1->number == cg.cur_ps->clientNum) {
+	if (s1->number == cg.cur_ps->playerNum) {
 		ent.renderfx |= RF_ONLY_MIRROR;
 	}
 
@@ -343,7 +343,7 @@ Speaker entities can automatically play sounds
 ==================
 */
 static void CG_Speaker( centity_t *cent ) {
-	if ( ! cent->currentState.clientNum ) {	// FIXME: use something other than clientNum...
+	if ( ! cent->currentState.playerNum ) {	// FIXME: use something other than playerNum...
 		return;		// not auto triggering
 	}
 
@@ -354,8 +354,8 @@ static void CG_Speaker( centity_t *cent ) {
 	trap_S_StartSound (NULL, cent->currentState.number, CHAN_ITEM, cgs.gameSounds[cent->currentState.eventParm] );
 
 	//	ent->s.frame = ent->wait * 10;
-	//	ent->s.clientNum = ent->random * 10;
-	cent->miscTime = cg.time + cent->currentState.frame * 100 + cent->currentState.clientNum * 100 * crandom();
+	//	ent->s.playerNum = ent->random * 10;
+	cent->miscTime = cg.time + cent->currentState.frame * 100 + cent->currentState.playerNum * 100 * crandom();
 }
 
 /*
@@ -435,7 +435,7 @@ static void CG_Item( centity_t *cent ) {
 	}
 	
 	if( item->giType == IT_WEAPON ) {
-		playerInfo_t *pi = &cgs.playerinfo[cg.cur_ps->clientNum];
+		playerInfo_t *pi = &cgs.playerinfo[cg.cur_ps->playerNum];
 		Byte4Copy( pi->c1RGBA, ent.shaderRGBA );
 	}
 
@@ -786,7 +786,7 @@ static void CG_Portal( centity_t *cent ) {
 	ent.reType = RT_PORTALSURFACE;
 	ent.oldframe = s1->powerups;
 	ent.frame = s1->frame;		// rotation speed
-	ent.skinNum = s1->clientNum/256.0 * 360;	// roll offset
+	ent.skinNum = s1->playerNum/256.0 * 360;	// roll offset
 
 	// add to refresh list
 	CG_AddRefEntityWithMinLight(&ent);
@@ -797,7 +797,7 @@ static void CG_Portal( centity_t *cent ) {
 =========================
 CG_AdjustPositionForMover
 
-Also called by client movement prediction code
+Also called by player movement prediction code
 =========================
 */
 void CG_AdjustPositionForMover(const vec3_t in, int moverNum, int fromTime, int toTime, vec3_t out, vec3_t angles_in, vec3_t angles_out) {
@@ -879,7 +879,7 @@ static void CG_CalcEntityLerpPositions( centity_t *cent ) {
 
 	// if this player does not want to see extrapolated players
 	if ( !cg_smoothClients.integer ) {
-		// make sure the clients use TR_INTERPOLATE
+		// make sure the players use TR_INTERPOLATE
 		if ( cent->currentState.number < MAX_CLIENTS ) {
 			cent->currentState.pos.trType = TR_INTERPOLATE;
 			cent->nextState.pos.trType = TR_INTERPOLATE;
@@ -892,7 +892,7 @@ static void CG_CalcEntityLerpPositions( centity_t *cent ) {
 	}
 
 	// first see if we can interpolate between two snaps for
-	// linear extrapolated clients
+	// linear extrapolated players
 	if ( cent->interpolate && cent->currentState.pos.trType == TR_LINEAR_STOP &&
 											cent->currentState.number < MAX_CLIENTS) {
 		CG_InterpolateEntityPosition( cent );
@@ -1233,7 +1233,7 @@ void CG_AddPacketEntities( void ) {
 
 	// generate and add the entity from the playerstate
 	for ( num = 0 ; num < CG_MaxSplitView() ; num++ ) {
-		if ( cg.localPlayers[num].clientNum == -1 ) {
+		if ( cg.localPlayers[num].playerNum == -1 ) {
 			continue;
 		}
 		ps = &cg.localPlayers[num].predictedPlayerState;
@@ -1241,7 +1241,7 @@ void CG_AddPacketEntities( void ) {
 		CG_AddCEntity( &cg.localPlayers[num].predictedPlayerEntity );
 
 		// lerp the non-predicted value for lightning gun origins
-		CG_CalcEntityLerpPositions( &cg_entities[ cg.snap->pss[num].clientNum ] );
+		CG_CalcEntityLerpPositions( &cg_entities[ cg.snap->pss[num].playerNum ] );
 	}
 
 	// add each entity sent over by the server

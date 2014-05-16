@@ -425,13 +425,13 @@ static qboolean	PM_CheckWaterJump( void ) {
 
 	VectorMA (pm->ps->origin, 30, flatforward, spot);
 	spot[2] += 4;
-	cont = pm->pointcontents (spot, pm->ps->clientNum );
+	cont = pm->pointcontents (spot, pm->ps->playerNum );
 	if ( !(cont & CONTENTS_SOLID) ) {
 		return qfalse;
 	}
 
 	spot[2] += 16;
-	cont = pm->pointcontents (spot, pm->ps->clientNum );
+	cont = pm->pointcontents (spot, pm->ps->playerNum );
 	if ( cont & (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BODY) ) {
 		return qfalse;
 	}
@@ -1018,7 +1018,7 @@ PM_CheckStuck
 void PM_CheckStuck(void) {
 	trace_t trace;
 
-	pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, pm->ps->origin, pm->ps->clientNum, pm->tracemask);
+	pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, pm->ps->origin, pm->ps->playerNum, pm->tracemask);
 	if (trace.allsolid) {
 		//int shit = qtrue;
 	}
@@ -1046,13 +1046,13 @@ static int PM_CorrectAllSolid( trace_t *trace ) {
 				point[0] += (float) i;
 				point[1] += (float) j;
 				point[2] += (float) k;
-				pm->trace (trace, point, pm->ps->mins, pm->ps->maxs, point, pm->ps->clientNum, pm->tracemask);
+				pm->trace (trace, point, pm->ps->mins, pm->ps->maxs, point, pm->ps->playerNum, pm->tracemask);
 				if ( !trace->allsolid ) {
 					point[0] = pm->ps->origin[0];
 					point[1] = pm->ps->origin[1];
 					point[2] = pm->ps->origin[2] - 0.25;
 
-					pm->trace (trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, point, pm->ps->clientNum, pm->tracemask);
+					pm->trace (trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, point, pm->ps->playerNum, pm->tracemask);
 					pml.groundTrace = *trace;
 					return qtrue;
 				}
@@ -1090,7 +1090,7 @@ static void PM_GroundTraceMissed( void ) {
 		VectorCopy( pm->ps->origin, point );
 		point[2] -= 64;
 
-		pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, point, pm->ps->clientNum, pm->tracemask);
+		pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, point, pm->ps->playerNum, pm->tracemask);
 		if ( trace.fraction == 1.0 ) {
 			if ( pm->cmd.forwardmove >= 0 ) {
 				PM_ForceLegsAnim( LEGS_JUMP );
@@ -1121,7 +1121,7 @@ static void PM_GroundTrace( void ) {
 	point[1] = pm->ps->origin[1];
 	point[2] = pm->ps->origin[2] - 0.25;
 
-	pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, point, pm->ps->clientNum, pm->tracemask);
+	pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, point, pm->ps->playerNum, pm->tracemask);
 	pml.groundTrace = trace;
 
 	// do something corrective if the trace starts in a solid...
@@ -1226,7 +1226,7 @@ static void PM_SetWaterLevel( void ) {
 	point[0] = pm->ps->origin[0];
 	point[1] = pm->ps->origin[1];
 	point[2] = pm->ps->origin[2] + MINS_Z + 1;	
-	cont = pm->pointcontents( point, pm->ps->clientNum );
+	cont = pm->pointcontents( point, pm->ps->playerNum );
 
 	if ( cont & MASK_WATER ) {
 		sample2 = pm->ps->viewheight - MINS_Z;
@@ -1235,11 +1235,11 @@ static void PM_SetWaterLevel( void ) {
 		pm->watertype = cont;
 		pm->waterlevel = 1;
 		point[2] = pm->ps->origin[2] + MINS_Z + sample1;
-		cont = pm->pointcontents (point, pm->ps->clientNum );
+		cont = pm->pointcontents (point, pm->ps->playerNum );
 		if ( cont & MASK_WATER ) {
 			pm->waterlevel = 2;
 			point[2] = pm->ps->origin[2] + MINS_Z + sample2;
-			cont = pm->pointcontents (point, pm->ps->clientNum );
+			cont = pm->pointcontents (point, pm->ps->playerNum );
 			if ( cont & MASK_WATER ){
 				pm->waterlevel = 3;
 			}
@@ -1300,7 +1300,7 @@ static void PM_CheckDuck (void)
 		{
 			// try to stand up
 			pm->ps->maxs[2] = 32;
-			pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, pm->ps->origin, pm->ps->clientNum, pm->tracemask );
+			pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, pm->ps->origin, pm->ps->playerNum, pm->tracemask );
 			if (!trace.allsolid)
 				pm->ps->pm_flags &= ~PMF_DUCKED;
 		}

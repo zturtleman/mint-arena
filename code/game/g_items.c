@@ -57,12 +57,12 @@ Suite 120, Rockville, Maryland 20850 USA.
 int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 	int			quantity;
 	int			i;
-	gclient_t	*client;
+	gplayer_t	*player;
 
-	if ( !other->client->ps.powerups[ent->item->giTag] ) {
+	if ( !other->player->ps.powerups[ent->item->giTag] ) {
 		// round timing to seconds to make multiple powerup timers
 		// count in sync
-		other->client->ps.powerups[ent->item->giTag] = 
+		other->player->ps.powerups[ent->item->giTag] = 
 			level.time - ( level.time % 1000 );
 	}
 
@@ -72,53 +72,53 @@ int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 		quantity = ent->item->quantity;
 	}
 
-	other->client->ps.powerups[ent->item->giTag] += quantity * 1000;
+	other->player->ps.powerups[ent->item->giTag] += quantity * 1000;
 
 	// give any nearby players a "denied" anti-reward
-	for ( i = 0 ; i < level.maxclients ; i++ ) {
+	for ( i = 0 ; i < level.maxplayers ; i++ ) {
 		vec3_t		delta;
 		float		len;
 		vec3_t		forward;
 		trace_t		tr;
 
-		client = &level.clients[i];
-		if ( client == other->client ) {
+		player = &level.players[i];
+		if ( player == other->player ) {
 			continue;
 		}
-		if ( client->pers.connected == CON_DISCONNECTED ) {
+		if ( player->pers.connected == CON_DISCONNECTED ) {
 			continue;
 		}
-		if ( client->ps.stats[STAT_HEALTH] <= 0 ) {
+		if ( player->ps.stats[STAT_HEALTH] <= 0 ) {
 			continue;
 		}
 
     // if same team in team game, no sound
     // cannot use OnSameTeam as it expects to g_entities, not clients
-  	if ( g_gametype.integer >= GT_TEAM && other->client->sess.sessionTeam == client->sess.sessionTeam  ) {
+  	if ( g_gametype.integer >= GT_TEAM && other->player->sess.sessionTeam == player->sess.sessionTeam  ) {
       continue;
     }
 
 		// if too far away, no sound
-		VectorSubtract( ent->s.pos.trBase, client->ps.origin, delta );
+		VectorSubtract( ent->s.pos.trBase, player->ps.origin, delta );
 		len = VectorNormalize( delta );
 		if ( len > 192 ) {
 			continue;
 		}
 
 		// if not facing, no sound
-		AngleVectors( client->ps.viewangles, forward, NULL, NULL );
+		AngleVectors( player->ps.viewangles, forward, NULL, NULL );
 		if ( DotProduct( delta, forward ) < 0.4 ) {
 			continue;
 		}
 
 		// if not line of sight, no sound
-		trap_Trace( &tr, client->ps.origin, NULL, NULL, ent->s.pos.trBase, ENTITYNUM_NONE, CONTENTS_SOLID );
+		trap_Trace( &tr, player->ps.origin, NULL, NULL, ent->s.pos.trBase, ENTITYNUM_NONE, CONTENTS_SOLID );
 		if ( tr.fraction != 1.0 ) {
 			continue;
 		}
 
 		// anti-reward
-		client->ps.persistant[PERS_PLAYEREVENTS] ^= PLAYEREVENT_DENIEDREWARD;
+		player->ps.persistant[PERS_PLAYEREVENTS] ^= PLAYEREVENT_DENIEDREWARD;
 	}
 	return RESPAWN_POWERUP;
 }
@@ -130,35 +130,35 @@ int Pickup_PersistantPowerup( gentity_t *ent, gentity_t *other ) {
 	float	handicap;
 	int		max;
 
-	other->client->ps.stats[STAT_PERSISTANT_POWERUP] = BG_ItemNumForItem( ent->item );
-	other->client->persistantPowerup = ent;
+	other->player->ps.stats[STAT_PERSISTANT_POWERUP] = BG_ItemNumForItem( ent->item );
+	other->player->persistantPowerup = ent;
 
-	handicap = ClientHandicap( other->client );
+	handicap = PlayerHandicap( other->player );
 
 	switch( ent->item->giTag ) {
 	case PW_GUARD:
 		max = (int)(2 *  handicap);
 
 		other->health = max;
-		other->client->ps.stats[STAT_HEALTH] = max;
-		other->client->ps.stats[STAT_MAX_HEALTH] = max;
-		other->client->ps.stats[STAT_ARMOR] = max;
-		other->client->pers.maxHealth = max;
+		other->player->ps.stats[STAT_HEALTH] = max;
+		other->player->ps.stats[STAT_MAX_HEALTH] = max;
+		other->player->ps.stats[STAT_ARMOR] = max;
+		other->player->pers.maxHealth = max;
 		break;
 
 	case PW_SCOUT:
-		other->client->pers.maxHealth = handicap;
-		other->client->ps.stats[STAT_ARMOR] = 0;
+		other->player->pers.maxHealth = handicap;
+		other->player->ps.stats[STAT_ARMOR] = 0;
 		break;
 
 	case PW_AMMOREGEN:
-		other->client->pers.maxHealth = handicap;
-		memset(other->client->ammoTimes, 0, sizeof(other->client->ammoTimes));
+		other->player->pers.maxHealth = handicap;
+		memset(other->player->ammoTimes, 0, sizeof(other->player->ammoTimes));
 		break;
 
 	case PW_DOUBLER:
 	default:
-		other->client->pers.maxHealth = handicap;
+		other->player->pers.maxHealth = handicap;
 		break;
 	}
 
@@ -170,10 +170,10 @@ int Pickup_PersistantPowerup( gentity_t *ent, gentity_t *other ) {
 
 int Pickup_Holdable( gentity_t *ent, gentity_t *other ) {
 
-	other->client->ps.stats[STAT_HOLDABLE_ITEM] = BG_ItemNumForItem( ent->item );
+	other->player->ps.stats[STAT_HOLDABLE_ITEM] = BG_ItemNumForItem( ent->item );
 
 	if( ent->item->giTag == HI_KAMIKAZE ) {
-		other->client->ps.eFlags |= EF_KAMIKAZE;
+		other->player->ps.eFlags |= EF_KAMIKAZE;
 	}
 
 	return RESPAWN_HOLDABLE;
@@ -184,9 +184,9 @@ int Pickup_Holdable( gentity_t *ent, gentity_t *other ) {
 
 void Add_Ammo (gentity_t *ent, int weapon, int count)
 {
-	ent->client->ps.ammo[weapon] += count;
-	if ( ent->client->ps.ammo[weapon] > 200 ) {
-		ent->client->ps.ammo[weapon] = 200;
+	ent->player->ps.ammo[weapon] += count;
+	if ( ent->player->ps.ammo[weapon] > 200 ) {
+		ent->player->ps.ammo[weapon] = 200;
 	}
 }
 
@@ -224,8 +224,8 @@ int Pickup_Weapon (gentity_t *ent, gentity_t *other) {
 		if ( ! (ent->flags & FL_DROPPED_ITEM) && g_gametype.integer != GT_TEAM ) {
 			// respawning rules
 			// drop the quantity if the already have over the minimum
-			if ( other->client->ps.ammo[ ent->item->giTag ] < quantity ) {
-				quantity = quantity - other->client->ps.ammo[ ent->item->giTag ];
+			if ( other->player->ps.ammo[ ent->item->giTag ] < quantity ) {
+				quantity = quantity - other->player->ps.ammo[ ent->item->giTag ];
 			} else {
 				quantity = 1;		// only add a single shot
 			}
@@ -233,12 +233,12 @@ int Pickup_Weapon (gentity_t *ent, gentity_t *other) {
 	}
 
 	// add the weapon
-	other->client->ps.stats[STAT_WEAPONS] |= ( 1 << ent->item->giTag );
+	other->player->ps.stats[STAT_WEAPONS] |= ( 1 << ent->item->giTag );
 
 	Add_Ammo( other, ent->item->giTag, quantity );
 
 	if (ent->item->giTag == WP_GRAPPLING_HOOK)
-		other->client->ps.ammo[ent->item->giTag] = -1; // unlimited ammo
+		other->player->ps.ammo[ent->item->giTag] = -1; // unlimited ammo
 
 	// team deathmatch has slow weapon respawns
 	if ( g_gametype.integer == GT_TEAM ) {
@@ -257,15 +257,15 @@ int Pickup_Health (gentity_t *ent, gentity_t *other) {
 
 	// small and mega healths will go over the max
 #ifdef MISSIONPACK
-	if( BG_ItemForItemNum( other->client->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_GUARD ) {
-		max = other->client->ps.stats[STAT_MAX_HEALTH];
+	if( BG_ItemForItemNum( other->player->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_GUARD ) {
+		max = other->player->ps.stats[STAT_MAX_HEALTH];
 	}
 	else
 #endif
 	if ( ent->item->quantity != 5 && ent->item->quantity != 100 ) {
-		max = other->client->ps.stats[STAT_MAX_HEALTH];
+		max = other->player->ps.stats[STAT_MAX_HEALTH];
 	} else {
-		max = other->client->ps.stats[STAT_MAX_HEALTH] * 2;
+		max = other->player->ps.stats[STAT_MAX_HEALTH] * 2;
 	}
 
 	if ( ent->count ) {
@@ -279,7 +279,7 @@ int Pickup_Health (gentity_t *ent, gentity_t *other) {
 	if (other->health > max ) {
 		other->health = max;
 	}
-	other->client->ps.stats[STAT_HEALTH] = other->health;
+	other->player->ps.stats[STAT_HEALTH] = other->health;
 
 	if ( ent->item->quantity == 100 ) {		// mega health respawns slow
 		return RESPAWN_MEGAHEALTH;
@@ -294,22 +294,22 @@ int Pickup_Armor( gentity_t *ent, gentity_t *other ) {
 #ifdef MISSIONPACK
 	int		upperBound;
 
-	other->client->ps.stats[STAT_ARMOR] += ent->item->quantity;
+	other->player->ps.stats[STAT_ARMOR] += ent->item->quantity;
 
-	if( other->client && BG_ItemForItemNum( other->client->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_GUARD ) {
-		upperBound = other->client->ps.stats[STAT_MAX_HEALTH];
+	if( other->player && BG_ItemForItemNum( other->player->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_GUARD ) {
+		upperBound = other->player->ps.stats[STAT_MAX_HEALTH];
 	}
 	else {
-		upperBound = other->client->ps.stats[STAT_MAX_HEALTH] * 2;
+		upperBound = other->player->ps.stats[STAT_MAX_HEALTH] * 2;
 	}
 
-	if ( other->client->ps.stats[STAT_ARMOR] > upperBound ) {
-		other->client->ps.stats[STAT_ARMOR] = upperBound;
+	if ( other->player->ps.stats[STAT_ARMOR] > upperBound ) {
+		other->player->ps.stats[STAT_ARMOR] = upperBound;
 	}
 #else
-	other->client->ps.stats[STAT_ARMOR] += ent->item->quantity;
-	if ( other->client->ps.stats[STAT_ARMOR] > other->client->ps.stats[STAT_MAX_HEALTH] * 2 ) {
-		other->client->ps.stats[STAT_ARMOR] = other->client->ps.stats[STAT_MAX_HEALTH] * 2;
+	other->player->ps.stats[STAT_ARMOR] += ent->item->quantity;
+	if ( other->player->ps.stats[STAT_ARMOR] > other->player->ps.stats[STAT_MAX_HEALTH] * 2 ) {
+		other->player->ps.stats[STAT_ARMOR] = other->player->ps.stats[STAT_MAX_HEALTH] * 2;
 	}
 #endif
 
@@ -395,19 +395,19 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	int			respawn;
 	qboolean	predict;
 
-	if (!other->client)
+	if (!other->player)
 		return;
 	if (other->health < 1)
 		return;		// dead people can't pickup
 
 	// the same pickup rules are used for client side and server side
-	if ( !BG_CanItemBeGrabbed( g_gametype.integer, &ent->s, &other->client->ps ) ) {
+	if ( !BG_CanItemBeGrabbed( g_gametype.integer, &ent->s, &other->player->ps ) ) {
 		return;
 	}
 
 	G_LogPrintf( "Item: %i %s\n", other->s.number, ent->item->classname );
 
-	predict = other->client->pers.predictItemPickup;
+	predict = other->player->pers.predictItemPickup;
 
 	// call the item-specific pickup function
 	switch( ent->item->giType ) {

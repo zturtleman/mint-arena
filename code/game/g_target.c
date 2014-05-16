@@ -39,7 +39,7 @@ void Use_Target_Give( gentity_t *ent, gentity_t *other, gentity_t *activator ) {
 	gentity_t	*t;
 	trace_t		trace;
 
-	if ( !activator->client ) {
+	if ( !activator->player ) {
 		return;
 	}
 
@@ -73,19 +73,19 @@ takes away all the activators powerups.
 Used to drop flight powerups into death puts.
 */
 void Use_target_remove_powerups( gentity_t *ent, gentity_t *other, gentity_t *activator ) {
-	if( !activator->client ) {
+	if( !activator->player ) {
 		return;
 	}
 
-	if( activator->client->ps.powerups[PW_REDFLAG] ) {
+	if( activator->player->ps.powerups[PW_REDFLAG] ) {
 		Team_ReturnFlag( TEAM_RED );
-	} else if( activator->client->ps.powerups[PW_BLUEFLAG] ) {
+	} else if( activator->player->ps.powerups[PW_BLUEFLAG] ) {
 		Team_ReturnFlag( TEAM_BLUE );
-	} else if( activator->client->ps.powerups[PW_NEUTRALFLAG] ) {
+	} else if( activator->player->ps.powerups[PW_NEUTRALFLAG] ) {
 		Team_ReturnFlag( TEAM_FREE );
 	}
 
-	memset( activator->client->ps.powerups, 0, sizeof( activator->client->ps.powerups ) );
+	memset( activator->player->ps.powerups, 0, sizeof( activator->player->ps.powerups ) );
 }
 
 void SP_target_remove_powerups( gentity_t *ent ) {
@@ -148,7 +148,7 @@ void SP_target_score( gentity_t *ent ) {
 If "private", only the activator gets the message.  If no checks, all clients get the message.
 */
 void Use_Target_Print (gentity_t *ent, gentity_t *other, gentity_t *activator) {
-	if ( activator->client && ( ent->spawnflags & 4 ) ) {
+	if ( activator->player && ( ent->spawnflags & 4 ) ) {
 		trap_SendServerCommand( activator-g_entities, va("cp \"%s\"", ent->message ));
 		return;
 	}
@@ -247,7 +247,7 @@ void SP_target_speaker( gentity_t *ent ) {
 	ent->s.eType = ET_SPEAKER;
 	ent->s.eventParm = ent->noise_index;
 	ent->s.frame = ent->wait * 10;
-	ent->s.clientNum = ent->random * 10;
+	ent->s.playerNum = ent->random * 10;
 
 
 	// check for prestarted looping sound
@@ -374,7 +374,7 @@ void SP_target_laser (gentity_t *self)
 void target_teleporter_use( gentity_t *self, gentity_t *other, gentity_t *activator ) {
 	gentity_t	*dest;
 
-	if (!activator->client)
+	if (!activator->player)
 		return;
 	dest = 	G_PickTarget( self->target );
 	if (!dest) {
@@ -404,12 +404,12 @@ The activator can be forced to be from a certain team.
 if RANDOM is checked, only one of the targets will be fired, not all of them
 */
 void target_relay_use (gentity_t *self, gentity_t *other, gentity_t *activator) {
-	if ( ( self->spawnflags & 1 ) && activator->client 
-		&& activator->client->sess.sessionTeam != TEAM_RED ) {
+	if ( ( self->spawnflags & 1 ) && activator->player 
+		&& activator->player->sess.sessionTeam != TEAM_RED ) {
 		return;
 	}
-	if ( ( self->spawnflags & 2 ) && activator->client 
-		&& activator->client->sess.sessionTeam != TEAM_BLUE ) {
+	if ( ( self->spawnflags & 2 ) && activator->player 
+		&& activator->player->sess.sessionTeam != TEAM_BLUE ) {
 		return;
 	}
 	if ( self->spawnflags & 4 ) {

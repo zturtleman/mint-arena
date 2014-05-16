@@ -74,7 +74,7 @@ void CG_CheckOrderPending( int localPlayerNum ) {
 
 	localPlayer = &cg.localPlayers[localPlayerNum];
 
-	if ( localPlayer->clientNum == -1 ) {
+	if ( localPlayer->playerNum == -1 ) {
 		return;
 	}
 
@@ -82,14 +82,14 @@ void CG_CheckOrderPending( int localPlayerNum ) {
 		//playerInfo_t *pi;
 		const char *p1, *p2;
 		char	b[128];
-		int		clientNum;
+		int		playerNum;
 		int		team;
 		int		selectedPlayer;
 
 		p1 = p2 = NULL;
 		b[0] = '\0';
 
-		clientNum = cg.snap->pss[localPlayerNum].clientNum;
+		playerNum = cg.snap->pss[localPlayerNum].playerNum;
 		team = cg.snap->pss[localPlayerNum].persistant[PERS_TEAM];
 		selectedPlayer = cg_currentSelectedPlayer[localPlayerNum].integer;
 
@@ -135,7 +135,7 @@ void CG_CheckOrderPending( int localPlayerNum ) {
 			trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s\n", Com_LocalPlayerCvarName(localPlayerNum, "vsay_team"), p2));
 		} else {
 			// for the player self
-			if (sortedTeamPlayers[team][selectedPlayer] == clientNum && p1) {
+			if (sortedTeamPlayers[team][selectedPlayer] == playerNum && p1) {
 				trap_Cmd_ExecuteText(EXEC_APPEND, va("%s %i\n", Com_LocalPlayerCvarName(localPlayerNum, "teamtask"), localPlayer->currentOrder));
 				//trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s\n", Com_LocalPlayerCvarName(localPlayerNum, "say_team"), p2));
 				trap_Cmd_ExecuteText(EXEC_APPEND, va("cmd %s %s\n", Com_LocalPlayerCvarName(localPlayerNum, "vsay_team"), p1));
@@ -262,7 +262,7 @@ static void CG_DrawPlayerAmmoIcon( rectDef_t *rect, qboolean draw2D ) {
 	vec3_t		angles;
 	vec3_t		origin;
 
-	cent = &cg_entities[cg.cur_ps->clientNum];
+	cent = &cg_entities[cg.cur_ps->playerNum];
 
 	if ( draw2D || (!cg_draw3dIcons.integer && cg_drawIcons.integer) ) {
 		qhandle_t	icon;
@@ -288,7 +288,7 @@ static void CG_DrawPlayerAmmoValue(rectDef_t *rect, float scale, vec4_t color, q
 	centity_t	*cent;
 	playerState_t	*ps;
 
-	cent = &cg_entities[cg.cur_ps->clientNum];
+	cent = &cg_entities[cg.cur_ps->playerNum];
 	ps = cg.cur_ps;
 
 	if ( cent->currentState.weapon ) {
@@ -358,7 +358,7 @@ static void CG_DrawPlayerHead(rectDef_t *rect, qboolean draw2D) {
 	angles[YAW] = cg.cur_lc->headStartYaw + ( cg.cur_lc->headEndYaw - cg.cur_lc->headStartYaw ) * frac;
 	angles[PITCH] = cg.cur_lc->headStartPitch + ( cg.cur_lc->headEndPitch - cg.cur_lc->headStartPitch ) * frac;
 
-	CG_DrawHead( x, rect->y, rect->w, rect->h, cg.cur_ps->clientNum, angles );
+	CG_DrawHead( x, rect->y, rect->w, rect->h, cg.cur_ps->playerNum, angles );
 }
 
 static void CG_DrawSelectedPlayerHealth( rectDef_t *rect, float scale, vec4_t color, qhandle_t shader, int textStyle ) {
@@ -462,7 +462,7 @@ static void CG_DrawSelectedPlayerStatus( rectDef_t *rect ) {
 
 
 static void CG_DrawPlayerStatus( rectDef_t *rect ) {
-	playerInfo_t *pi = &cgs.playerinfo[cg.cur_ps->clientNum];
+	playerInfo_t *pi = &cgs.playerinfo[cg.cur_ps->playerNum];
 	if (pi) {
 		qhandle_t h = CG_StatusHandle(pi->teamTask);
 		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, h);
@@ -475,7 +475,7 @@ static void CG_DrawSelectedPlayerName( rectDef_t *rect, float scale, vec4_t colo
 	int team;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	pi = cgs.playerinfo + ((voice) ? cg.cur_lc->currentVoiceClient : sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localPlayerNum )]);
+	pi = cgs.playerinfo + ((voice) ? cg.cur_lc->currentVoicePlayerNum : sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localPlayerNum )]);
 	if (pi) {
 		CG_Text_Paint(rect->x, rect->y + rect->h, scale, color, pi->name, 0, 0, textStyle);
 	}
@@ -497,7 +497,7 @@ static void CG_DrawSelectedPlayerLocation( rectDef_t *rect, float scale, vec4_t 
 }
 
 static void CG_DrawPlayerLocation( rectDef_t *rect, float scale, vec4_t color, int textStyle  ) {
-	playerInfo_t *pi = &cgs.playerinfo[cg.cur_ps->clientNum];
+	playerInfo_t *pi = &cgs.playerinfo[cg.cur_ps->playerNum];
 	if (pi) {
 		const char *p = CG_ConfigString(CS_LOCATIONS + pi->location);
 		if (!p || !*p) {
@@ -606,7 +606,7 @@ static void CG_DrawSelectedPlayerHead( rectDef_t *rect, qboolean draw2D, qboolea
 	vec3_t			mins, maxs, angles;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	pi = cgs.playerinfo + ((voice) ? cg.cur_lc->currentVoiceClient : sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localPlayerNum )]);
+	pi = cgs.playerinfo + ((voice) ? cg.cur_lc->currentVoicePlayerNum : sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localPlayerNum )]);
 
 	if (pi) {
 		if ( cg_draw3dIcons.integer ) {
@@ -705,7 +705,7 @@ static void CG_DrawBlueName(rectDef_t *rect, float scale, vec4_t color, int text
 
 static void CG_DrawBlueFlagName(rectDef_t *rect, float scale, vec4_t color, int textStyle ) {
   int i;
-  for ( i = 0 ; i < cgs.maxclients ; i++ ) {
+  for ( i = 0 ; i < cgs.maxplayers ; i++ ) {
 	  if ( cgs.playerinfo[i].infoValid && cgs.playerinfo[i].team == TEAM_RED  && cgs.playerinfo[i].powerups & ( 1<< PW_BLUEFLAG )) {
       CG_Text_Paint(rect->x, rect->y + rect->h, scale, color, cgs.playerinfo[i].name, 0, 0, textStyle);
       return;
@@ -742,7 +742,7 @@ static void CG_DrawBlueFlagStatus(rectDef_t *rect, qhandle_t shader) {
 
 static void CG_DrawBlueFlagHead(rectDef_t *rect) {
   int i;
-  for ( i = 0 ; i < cgs.maxclients ; i++ ) {
+  for ( i = 0 ; i < cgs.maxplayers ; i++ ) {
 	  if ( cgs.playerinfo[i].infoValid && cgs.playerinfo[i].team == TEAM_RED  && cgs.playerinfo[i].powerups & ( 1<< PW_BLUEFLAG )) {
       vec3_t angles;
       VectorClear( angles );
@@ -755,7 +755,7 @@ static void CG_DrawBlueFlagHead(rectDef_t *rect) {
 
 static void CG_DrawRedFlagName(rectDef_t *rect, float scale, vec4_t color, int textStyle ) {
   int i;
-  for ( i = 0 ; i < cgs.maxclients ; i++ ) {
+  for ( i = 0 ; i < cgs.maxplayers ; i++ ) {
 	  if ( cgs.playerinfo[i].infoValid && cgs.playerinfo[i].team == TEAM_BLUE  && cgs.playerinfo[i].powerups & ( 1<< PW_REDFLAG )) {
       CG_Text_Paint(rect->x, rect->y + rect->h, scale, color, cgs.playerinfo[i].name, 0, 0, textStyle);
       return;
@@ -792,7 +792,7 @@ static void CG_DrawRedFlagStatus(rectDef_t *rect, qhandle_t shader) {
 
 static void CG_DrawRedFlagHead(rectDef_t *rect) {
   int i;
-  for ( i = 0 ; i < cgs.maxclients ; i++ ) {
+  for ( i = 0 ; i < cgs.maxplayers ; i++ ) {
 	  if ( cgs.playerinfo[i].infoValid && cgs.playerinfo[i].team == TEAM_BLUE  && cgs.playerinfo[i].powerups & ( 1<< PW_REDFLAG )) {
       vec3_t angles;
       VectorClear( angles );
@@ -978,7 +978,7 @@ float CG_GetValue(int ownerDraw) {
 	playerState_t	*ps;
 
 	ps = cg.cur_ps;
-	cent = &cg_entities[ps->clientNum];
+	cent = &cg_entities[ps->playerNum];
 
   switch (ownerDraw) {
   case CG_SELECTEDPLAYER_ARMOR:
@@ -1865,9 +1865,9 @@ void CG_KeyEvent(int key, qboolean down) {
 }
 #endif // MISSIONPACK_HUD
 
-int CG_ClientNumFromName(const char *p) {
+int CG_PlayerNumFromName(const char *p) {
   int i;
-  for (i = 0; i < cgs.maxclients; i++) {
+  for (i = 0; i < cgs.maxplayers; i++) {
     if (cgs.playerinfo[i].infoValid && Q_stricmp(cgs.playerinfo[i].name, p) == 0) {
       return i;
     }

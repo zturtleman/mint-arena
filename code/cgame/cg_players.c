@@ -54,7 +54,7 @@ CG_CustomSound
 
 ================
 */
-sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
+sfxHandle_t	CG_CustomSound( int playerNum, const char *soundName ) {
 	playerInfo_t *pi;
 	int			i;
 
@@ -62,10 +62,10 @@ sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
 		return trap_S_RegisterSound( soundName, qfalse );
 	}
 
-	if ( clientNum < 0 || clientNum >= MAX_CLIENTS ) {
-		clientNum = 0;
+	if ( playerNum < 0 || playerNum >= MAX_CLIENTS ) {
+		playerNum = 0;
 	}
-	pi = &cgs.playerinfo[ clientNum ];
+	pi = &cgs.playerinfo[ playerNum ];
 
 	for ( i = 0 ; i < MAX_CUSTOM_SOUNDS && cg_customSoundNames[i] ; i++ ) {
 		if ( !strcmp( soundName, cg_customSoundNames[i] ) ) {
@@ -82,7 +82,7 @@ sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
 /*
 =============================================================================
 
-CLIENT INFO
+PLAYER INFO
 
 =============================================================================
 */
@@ -315,10 +315,10 @@ static qboolean	CG_FileExists(const char *filename) {
 
 /*
 ==========================
-CG_FindClientModelFile
+CG_FindPlayerModelFile
 ==========================
 */
-static qboolean	CG_FindClientModelFile( char *filename, int length, playerInfo_t *pi, const char *teamName, const char *modelName, const char *skinName, const char *base, const char *ext ) {
+static qboolean	CG_FindPlayerModelFile( char *filename, int length, playerInfo_t *pi, const char *teamName, const char *modelName, const char *skinName, const char *base, const char *ext ) {
 	char *team;
 	int i;
 
@@ -383,10 +383,10 @@ static qboolean	CG_FindClientModelFile( char *filename, int length, playerInfo_t
 
 /*
 ==========================
-CG_FindClientHeadFile
+CG_FindPlayerHeadFile
 ==========================
 */
-static qboolean	CG_FindClientHeadFile( char *filename, int length, playerInfo_t *pi, const char *teamName, const char *headModelName, const char *headSkinName, const char *base, const char *ext ) {
+static qboolean	CG_FindPlayerHeadFile( char *filename, int length, playerInfo_t *pi, const char *teamName, const char *headModelName, const char *headSkinName, const char *base, const char *ext ) {
 	char *team, *headsFolder;
 	int i;
 
@@ -589,10 +589,10 @@ qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append ) {
 
 /*
 ==========================
-CG_RegisterClientSkin
+CG_RegisterPlayerSkin
 ==========================
 */
-static qboolean	CG_RegisterClientSkin( playerInfo_t *pi, const char *teamName, const char *modelName, const char *skinName, const char *headModelName, const char *headSkinName ) {
+static qboolean	CG_RegisterPlayerSkin( playerInfo_t *pi, const char *teamName, const char *modelName, const char *skinName, const char *headModelName, const char *headSkinName ) {
 	char filename[MAX_QPATH];
 	qboolean legsSkin, torsoSkin, headSkin;
 
@@ -611,21 +611,21 @@ static qboolean	CG_RegisterClientSkin( playerInfo_t *pi, const char *teamName, c
 		Com_Printf( "Torso skin load failure: %s\n", filename );
 	}
 	*/
-	if ( CG_FindClientModelFile( filename, sizeof(filename), pi, teamName, modelName, skinName, "lower", "skin" ) ) {
+	if ( CG_FindPlayerModelFile( filename, sizeof(filename), pi, teamName, modelName, skinName, "lower", "skin" ) ) {
 		legsSkin = CG_RegisterSkin( filename, &pi->modelSkin, qfalse );
 	}
 	if (!legsSkin) {
 		Com_Printf( "Leg skin load failure: %s\n", filename );
 	}
 
-	if ( CG_FindClientModelFile( filename, sizeof(filename), pi, teamName, modelName, skinName, "upper", "skin" ) ) {
+	if ( CG_FindPlayerModelFile( filename, sizeof(filename), pi, teamName, modelName, skinName, "upper", "skin" ) ) {
 		torsoSkin = CG_RegisterSkin( filename, &pi->modelSkin, qtrue );
 	}
 	if (!torsoSkin) {
 		Com_Printf( "Torso skin load failure: %s\n", filename );
 	}
 
-	if ( CG_FindClientHeadFile( filename, sizeof(filename), pi, teamName, headModelName, headSkinName, "head", "skin" ) ) {
+	if ( CG_FindPlayerHeadFile( filename, sizeof(filename), pi, teamName, headModelName, headSkinName, "head", "skin" ) ) {
 		headSkin = CG_RegisterSkin( filename, &pi->modelSkin, qtrue );
 	}
 	if (!headSkin) {
@@ -641,10 +641,10 @@ static qboolean	CG_RegisterClientSkin( playerInfo_t *pi, const char *teamName, c
 
 /*
 ==========================
-CG_RegisterClientModelname
+CG_RegisterPlayerModelname
 ==========================
 */
-static qboolean CG_RegisterClientModelname( playerInfo_t *pi, const char *modelName, const char *skinName, const char *headModelName, const char *headSkinName, const char *teamName ) {
+static qboolean CG_RegisterPlayerModelname( playerInfo_t *pi, const char *modelName, const char *skinName, const char *headModelName, const char *headSkinName, const char *teamName ) {
 	char	filename[MAX_QPATH];
 	const char		*headName;
 	char newTeamName[MAX_QPATH];
@@ -688,7 +688,7 @@ static qboolean CG_RegisterClientModelname( playerInfo_t *pi, const char *modelN
 	}
 
 	// if any skins failed to load, return failure
-	if ( !CG_RegisterClientSkin( pi, teamName, modelName, skinName, headName, headSkinName ) ) {
+	if ( !CG_RegisterPlayerSkin( pi, teamName, modelName, skinName, headName, headSkinName ) ) {
 		if ( teamName && *teamName) {
 			Com_Printf( "Failed to load skin file: %s : %s : %s, %s : %s\n", teamName, modelName, skinName, headName, headSkinName );
 			if( pi->team == TEAM_BLUE ) {
@@ -697,7 +697,7 @@ static qboolean CG_RegisterClientModelname( playerInfo_t *pi, const char *modelN
 			else {
 				Com_sprintf(newTeamName, sizeof(newTeamName), "%s/", DEFAULT_REDTEAM_NAME);
 			}
-			if ( !CG_RegisterClientSkin( pi, newTeamName, modelName, skinName, headName, headSkinName ) ) {
+			if ( !CG_RegisterPlayerSkin( pi, newTeamName, modelName, skinName, headName, headSkinName ) ) {
 				Com_Printf( "Failed to load skin file: %s : %s : %s, %s : %s\n", newTeamName, modelName, skinName, headName, headSkinName );
 				return qfalse;
 			}
@@ -714,7 +714,7 @@ static qboolean CG_RegisterClientModelname( playerInfo_t *pi, const char *modelN
 		return qfalse;
 	}
 
-	if ( CG_FindClientHeadFile( filename, sizeof(filename), pi, teamName, headName, headSkinName, "icon", "$image" ) ) {
+	if ( CG_FindPlayerHeadFile( filename, sizeof(filename), pi, teamName, headName, headSkinName, "icon", "$image" ) ) {
 		pi->modelIcon = trap_R_RegisterShaderNoMip( filename );
 	}
 
@@ -755,13 +755,13 @@ static void CG_ColorFromString( const char *v, vec3_t color ) {
 
 /*
 ===================
-CG_LoadClientInfo
+CG_LoadPlayerInfo
 
 Load it now, taking the disk hits.
 This will usually be deferred to a safe time
 ===================
 */
-static void CG_LoadClientInfo( int clientNum, playerInfo_t *pi ) {
+static void CG_LoadPlayerInfo( int playerNum, playerInfo_t *pi ) {
 	const char	*dir, *fallback;
 	int			i, modelloaded;
 	const char	*s;
@@ -781,9 +781,9 @@ static void CG_LoadClientInfo( int clientNum, playerInfo_t *pi ) {
 	}
 #endif
 	modelloaded = qtrue;
-	if ( !CG_RegisterClientModelname( pi, pi->modelName, pi->skinName, pi->headModelName, pi->headSkinName, teamname ) ) {
+	if ( !CG_RegisterPlayerModelname( pi, pi->modelName, pi->skinName, pi->headModelName, pi->headSkinName, teamname ) ) {
 		if ( cg_buildScript.integer ) {
-			CG_Error( "CG_RegisterClientModelname( %s, %s, %s, %s %s ) failed", pi->modelName, pi->skinName, pi->headModelName, pi->headSkinName, teamname );
+			CG_Error( "CG_RegisterPlayerModelname( %s, %s, %s, %s %s ) failed", pi->modelName, pi->skinName, pi->headModelName, pi->headSkinName, teamname );
 		}
 
 		// fall back to default team name
@@ -794,11 +794,11 @@ static void CG_LoadClientInfo( int clientNum, playerInfo_t *pi ) {
 			} else {
 				Q_strncpyz(teamname, DEFAULT_REDTEAM_NAME, sizeof(teamname) );
 			}
-			if ( !CG_RegisterClientModelname( pi, DEFAULT_TEAM_MODEL, pi->skinName, DEFAULT_TEAM_HEAD, pi->skinName, teamname ) ) {
+			if ( !CG_RegisterPlayerModelname( pi, DEFAULT_TEAM_MODEL, pi->skinName, DEFAULT_TEAM_HEAD, pi->skinName, teamname ) ) {
 				CG_Error( "DEFAULT_TEAM_MODEL / skin (%s/%s) failed to register", DEFAULT_TEAM_MODEL, pi->skinName );
 			}
 		} else {
-			if ( !CG_RegisterClientModelname( pi, DEFAULT_MODEL, "default", DEFAULT_HEAD, "default", teamname ) ) {
+			if ( !CG_RegisterPlayerModelname( pi, DEFAULT_MODEL, "default", DEFAULT_HEAD, "default", teamname ) ) {
 				CG_Error( "DEFAULT_MODEL (%s) failed to register", DEFAULT_MODEL );
 			}
 		}
@@ -842,7 +842,7 @@ static void CG_LoadClientInfo( int clientNum, playerInfo_t *pi ) {
 	// reset any existing players and bodies, because they might be in bad
 	// frames for this new model
 	for ( i = 0 ; i < MAX_GENTITIES ; i++ ) {
-		if ( cg_entities[i].currentState.clientNum == clientNum
+		if ( cg_entities[i].currentState.playerNum == playerNum
 			&& cg_entities[i].currentState.eType == ET_PLAYER ) {
 			CG_ResetPlayerEntity( &cg_entities[i] );
 		}
@@ -851,10 +851,10 @@ static void CG_LoadClientInfo( int clientNum, playerInfo_t *pi ) {
 
 /*
 ======================
-CG_CopyClientInfoModel
+CG_CopyPlayerInfoModel
 ======================
 */
-static void CG_CopyClientInfoModel( playerInfo_t *from, playerInfo_t *to ) {
+static void CG_CopyPlayerInfoModel( playerInfo_t *from, playerInfo_t *to ) {
 	VectorCopy( from->headOffset, to->headOffset );
 	to->footsteps = from->footsteps;
 	to->gender = from->gender;
@@ -873,14 +873,14 @@ static void CG_CopyClientInfoModel( playerInfo_t *from, playerInfo_t *to ) {
 
 /*
 ======================
-CG_ScanForExistingClientInfo
+CG_ScanForExistingPlayerInfo
 ======================
 */
-static qboolean CG_ScanForExistingClientInfo( playerInfo_t *pi ) {
+static qboolean CG_ScanForExistingPlayerInfo( playerInfo_t *pi ) {
 	int		i;
 	playerInfo_t	*match;
 
-	for ( i = 0 ; i < cgs.maxclients ; i++ ) {
+	for ( i = 0 ; i < cgs.maxplayers ; i++ ) {
 		match = &cgs.playerinfo[ i ];
 		if ( !match->infoValid ) {
 			continue;
@@ -897,11 +897,11 @@ static qboolean CG_ScanForExistingClientInfo( playerInfo_t *pi ) {
 			&& !Q_stricmp( pi->redTeam, match->redTeam )
 #endif
 			&& (cgs.gametype < GT_TEAM || pi->team == match->team) ) {
-			// this clientinfo is identical, so use its handles
+			// this playerinfo is identical, so use its handles
 
 			pi->deferred = qfalse;
 
-			CG_CopyClientInfoModel( match, pi );
+			CG_CopyPlayerInfoModel( match, pi );
 
 			return qtrue;
 		}
@@ -913,19 +913,19 @@ static qboolean CG_ScanForExistingClientInfo( playerInfo_t *pi ) {
 
 /*
 ======================
-CG_SetDeferredClientInfo
+CG_SetDeferredPlayerInfo
 
 We aren't going to load it now, so grab some other
-client's info to use until we have some spare time.
+plsyrt's info to use until we have some spare time.
 ======================
 */
-static void CG_SetDeferredClientInfo( int clientNum, playerInfo_t *pi ) {
+static void CG_SetDeferredPlayerInfo( int playerNum, playerInfo_t *pi ) {
 	int		i;
 	playerInfo_t	*match;
 
 	// if someone else is already the same models and skins we
-	// can just load the client info
-	for ( i = 0 ; i < cgs.maxclients ; i++ ) {
+	// can just load the player info
+	for ( i = 0 ; i < cgs.maxplayers ; i++ ) {
 		match = &cgs.playerinfo[ i ];
 		if ( !match->infoValid || match->deferred ) {
 			continue;
@@ -938,13 +938,13 @@ static void CG_SetDeferredClientInfo( int clientNum, playerInfo_t *pi ) {
 			continue;
 		}
 		// just load the real info cause it uses the same models and skins
-		CG_LoadClientInfo( clientNum, pi );
+		CG_LoadPlayerInfo( playerNum, pi );
 		return;
 	}
 
 	// if we are in teamplay, only grab a model if the skin is correct
 	if ( cgs.gametype >= GT_TEAM ) {
-		for ( i = 0 ; i < cgs.maxclients ; i++ ) {
+		for ( i = 0 ; i < cgs.maxplayers ; i++ ) {
 			match = &cgs.playerinfo[ i ];
 			if ( !match->infoValid || match->deferred ) {
 				continue;
@@ -954,51 +954,51 @@ static void CG_SetDeferredClientInfo( int clientNum, playerInfo_t *pi ) {
 				continue;
 			}
 			pi->deferred = qtrue;
-			CG_CopyClientInfoModel( match, pi );
+			CG_CopyPlayerInfoModel( match, pi );
 			return;
 		}
 		// load the full model, because we don't ever want to show
 		// an improper team skin.  This will cause a hitch for the first
 		// player, when the second enters.  Combat shouldn't be going on
 		// yet, so it shouldn't matter
-		CG_LoadClientInfo( clientNum, pi );
+		CG_LoadPlayerInfo( playerNum, pi );
 		return;
 	}
 
-	// find the first valid clientinfo and grab its stuff
-	for ( i = 0 ; i < cgs.maxclients ; i++ ) {
+	// find the first valid playerinfo and grab its stuff
+	for ( i = 0 ; i < cgs.maxplayers ; i++ ) {
 		match = &cgs.playerinfo[ i ];
 		if ( !match->infoValid ) {
 			continue;
 		}
 
 		pi->deferred = qtrue;
-		CG_CopyClientInfoModel( match, pi );
+		CG_CopyPlayerInfoModel( match, pi );
 		return;
 	}
 
 	// we should never get here...
-	CG_Printf( "CG_SetDeferredClientInfo: no valid clients!\n" );
+	CG_Printf( "CG_SetDeferredPlayerInfo: no valid players!\n" );
 
-	CG_LoadClientInfo( clientNum, pi );
+	CG_LoadPlayerInfo( playerNum, pi );
 }
 
 
 /*
 ======================
-CG_NewClientInfo
+CG_NewPlayerInfo
 ======================
 */
-void CG_NewClientInfo( int clientNum ) {
+void CG_NewPlayerInfo( int playerNum ) {
 	playerInfo_t *pi;
 	playerInfo_t newInfo;
 	const char	*configstring;
 	const char	*v;
 	char		*slash;
 
-	pi = &cgs.playerinfo[clientNum];
+	pi = &cgs.playerinfo[playerNum];
 
-	configstring = CG_ConfigString( clientNum + CS_PLAYERS );
+	configstring = CG_ConfigString( playerNum + CS_PLAYERS );
 	if ( !configstring[0] ) {
 		memset( pi, 0, sizeof( *pi ) );
 		return;		// player just left
@@ -1151,9 +1151,9 @@ void CG_NewClientInfo( int clientNum ) {
 		}
 	}
 
-	// scan for an existing clientinfo that matches this modelname
+	// scan for an existing playerinfo that matches this modelname
 	// so we can avoid loading checks if possible
-	if ( !CG_ScanForExistingClientInfo( &newInfo ) ) {
+	if ( !CG_ScanForExistingPlayerInfo( &newInfo ) ) {
 		qboolean	forceDefer;
 
 		forceDefer = trap_MemoryRemaining() < 4000000;
@@ -1161,14 +1161,14 @@ void CG_NewClientInfo( int clientNum ) {
 		// if we are defering loads, just have it pick the first valid
 		if ( forceDefer || (cg_deferPlayers.integer && !cg_buildScript.integer && !cg.loading ) ) {
 			// keep whatever they had if it won't violate team skins
-			CG_SetDeferredClientInfo( clientNum, &newInfo );
+			CG_SetDeferredPlayerInfo( playerNum, &newInfo );
 			// if we are low on memory, leave them with this model
 			if ( forceDefer ) {
 				CG_Printf( "Memory is low. Using deferred model.\n" );
 				newInfo.deferred = qfalse;
 			}
 		} else {
-			CG_LoadClientInfo( clientNum, &newInfo );
+			CG_LoadPlayerInfo( playerNum, &newInfo );
 		}
 	}
 
@@ -1193,7 +1193,7 @@ void CG_LoadDeferredPlayers( void ) {
 	playerInfo_t	*pi;
 
 	// scan for a deferred player to load
-	for ( i = 0, pi = cgs.playerinfo ; i < cgs.maxclients ; i++, pi++ ) {
+	for ( i = 0, pi = cgs.playerinfo ; i < cgs.maxplayers ; i++, pi++ ) {
 		if ( pi->infoValid && pi->deferred ) {
 			// if we are low on memory, leave it deferred
 			if ( trap_MemoryRemaining() < 4000000 ) {
@@ -1201,7 +1201,7 @@ void CG_LoadDeferredPlayers( void ) {
 				pi->deferred = qfalse;
 				continue;
 			}
-			CG_LoadClientInfo( i, pi );
+			CG_LoadPlayerInfo( i, pi );
 //			break;
 		}
 	}
@@ -1354,10 +1354,10 @@ CG_PlayerAnimation
 static void CG_PlayerAnimation( centity_t *cent, int *legsOld, int *legs, float *legsBackLerp,
 						int *torsoOld, int *torso, float *torsoBackLerp ) {
 	playerInfo_t	*pi;
-	int				clientNum;
+	int				playerNum;
 	float			speedScale;
 
-	clientNum = cent->currentState.clientNum;
+	playerNum = cent->currentState.playerNum;
 
 	if ( cg_noPlayerAnims.integer ) {
 		*legsOld = *legs = *torsoOld = *torso = 0;
@@ -1370,7 +1370,7 @@ static void CG_PlayerAnimation( centity_t *cent, int *legsOld, int *legs, float 
 		speedScale = 1;
 	}
 
-	pi = &cgs.playerinfo[ clientNum ];
+	pi = &cgs.playerinfo[ playerNum ];
 
 	// do the shuffle turn frames locally
 	if ( cent->pe.legs.yawing && ( cent->currentState.legsAnim & ~ANIM_TOGGLEBIT ) == LEGS_IDLE ) {
@@ -1503,7 +1503,7 @@ static void CG_PlayerAngles( centity_t *cent, vec3_t legs[3], vec3_t torso[3], v
 	static	int	movementOffsets[8] = { 0, 22, 45, -22, 0, 22, -45, -22 };
 	vec3_t		velocity;
 	float		speed;
-	int			dir, clientNum;
+	int			dir, playerNum;
 	playerInfo_t	*pi;
 
 	VectorCopy( cent->lerpAngles, headAngles );
@@ -1556,9 +1556,9 @@ static void CG_PlayerAngles( centity_t *cent, vec3_t legs[3], vec3_t torso[3], v
 	torsoAngles[PITCH] = cent->pe.torso.pitchAngle;
 
 	//
-	clientNum = cent->currentState.clientNum;
-	if ( clientNum >= 0 && clientNum < MAX_CLIENTS ) {
-		pi = &cgs.playerinfo[ clientNum ];
+	playerNum = cent->currentState.playerNum;
+	if ( playerNum >= 0 && playerNum < MAX_CLIENTS ) {
+		pi = &cgs.playerinfo[ playerNum ];
 		if ( pi->fixedtorso ) {
 			torsoAngles[PITCH] = 0.0f;
 		}
@@ -1585,9 +1585,9 @@ static void CG_PlayerAngles( centity_t *cent, vec3_t legs[3], vec3_t torso[3], v
 	}
 
 	//
-	clientNum = cent->currentState.clientNum;
-	if ( clientNum >= 0 && clientNum < MAX_CLIENTS ) {
-		pi = &cgs.playerinfo[ clientNum ];
+	playerNum = cent->currentState.playerNum;
+	if ( playerNum >= 0 && playerNum < MAX_CLIENTS ) {
+		pi = &cgs.playerinfo[ playerNum ];
 		if ( pi->fixedlegs ) {
 			legsAngles[YAW] = torsoAngles[YAW];
 			legsAngles[PITCH] = 0.0f;
@@ -1661,15 +1661,13 @@ static void CG_BreathPuffs( centity_t *cent, refEntity_t *head) {
 	vec3_t origin;
 	int contents;
 
-	pi = &cgs.playerinfo[ cent->currentState.number ];
-
 	if ( cent->currentState.number >= MAX_CLIENTS ) {
 		return;
 	}
 
 	pi = &cgs.playerinfo[ cent->currentState.number ];
 
-	if ( cent->currentState.number == cg.cur_ps->clientNum && !cg.cur_lc->renderingThirdPerson) {
+	if ( cent->currentState.number == cg.cur_ps->playerNum && !cg.cur_lc->renderingThirdPerson) {
 		return;
 	}
 	if ( cent->currentState.eFlags & EF_DEAD ) {
@@ -1771,7 +1769,7 @@ static void CG_TrailItem( centity_t *cent, qhandle_t hModel ) {
 	angles[YAW] += 90;
 	AnglesToAxis( angles, ent.axis );
 
-	if (cent->currentState.clientNum == cg.cur_lc->predictedPlayerState.clientNum
+	if (cent->currentState.playerNum == cg.cur_lc->predictedPlayerState.playerNum
 		&& cg_thirdPerson[cg.cur_localPlayerNum].integer)
 	{
 		// flag blocks view in third person, so only draw in mirrors
@@ -1887,7 +1885,7 @@ static void CG_PlayerFlag( centity_t *cent, const cgSkin_t *skin, refEntity_t *t
 	// set the yaw angle
 	angles[YAW] = cent->pe.flag.yawAngle;
 	// lerp the flag animation frames
-	pi = &cgs.playerinfo[ cent->currentState.clientNum ];
+	pi = &cgs.playerinfo[ cent->currentState.playerNum ];
 	CG_RunLerpFrame( pi, &cent->pe.flag, flagAnim, 1 );
 	flag.oldframe = cent->pe.flag.oldFrame;
 	flag.frame = cent->pe.flag.frame;
@@ -1946,7 +1944,7 @@ static void CG_PlayerTokens( centity_t *cent, int renderfx ) {
 	}
 
 	memset( &ent, 0, sizeof( ent ) );
-	if( cgs.playerinfo[ cent->currentState.clientNum ].team == TEAM_BLUE ) {
+	if( cgs.playerinfo[ cent->currentState.playerNum ].team == TEAM_BLUE ) {
 		ent.hModel = cgs.media.redCubeModel;
 	} else {
 		ent.hModel = cgs.media.blueCubeModel;
@@ -1995,7 +1993,7 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
 		trap_S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin, cgs.media.flightSound );
 	}
 
-	pi = &cgs.playerinfo[ cent->currentState.clientNum ];
+	pi = &cgs.playerinfo[ cent->currentState.playerNum ];
 	// redflag
 	if ( powerups & ( 1 << PW_REDFLAG ) ) {
 		if (pi->newAnims) {
@@ -2076,8 +2074,8 @@ static void CG_PlayerSprites( centity_t *cent, const refEntity_t *parent ) {
 	VectorCopy( parent->origin, origin );
 	origin[2] += 42;
 
-	if ( cent->currentState.number == cg.cur_ps->clientNum ) {
-		// current client's team sprite should only be shown in mirrors
+	if ( cent->currentState.number == cg.cur_ps->playerNum ) {
+		// current player's team sprite should only be shown in mirrors
 		friendFlags = RF_ONLY_MIRROR;
 
 		if ( !cg.cur_lc->renderingThirdPerson ) {
@@ -2136,7 +2134,7 @@ static void CG_PlayerSprites( centity_t *cent, const refEntity_t *parent ) {
 		return;
 	}
 
-	team = cgs.playerinfo[ cent->currentState.clientNum ].team;
+	team = cgs.playerinfo[ cent->currentState.playerNum ].team;
 	if ( !(cent->currentState.eFlags & EF_DEAD) && 
 		cg.cur_ps->persistant[PERS_TEAM] == team &&
 		cgs.gametype >= GT_TEAM) {
@@ -2394,7 +2392,7 @@ CG_Corpse
 ===============
 */
 #define BODY_SINK_DIST 15
-void CG_Corpse( centity_t *cent, int clientNum, float *bodySinkOffset, float *shadowAlpha ) {
+void CG_Corpse( centity_t *cent, int playerNum, float *bodySinkOffset, float *shadowAlpha ) {
 	float offset;
 
 	// After sitting around for five seconds, fall into the ground and dissapear.
@@ -2429,7 +2427,7 @@ void CG_Player( centity_t *cent ) {
 	refEntity_t		legs;
 	refEntity_t		torso;
 	refEntity_t		head;
-	int				clientNum;
+	int				playerNum;
 	int				renderfx;
 	qboolean		shadow;
 	float			shadowPlane;
@@ -2446,17 +2444,17 @@ void CG_Player( centity_t *cent ) {
 	vec3_t			dir, angles;
 #endif
 
-	// the client number is stored in clientNum.  It can't be derived
-	// from the entity number, because a single client may have
-	// multiple corpses on the level using the same clientinfo
-	clientNum = cent->currentState.clientNum;
-	if ( clientNum < 0 || clientNum >= MAX_CLIENTS ) {
-		CG_Error( "Bad clientNum on player entity");
+	// the player number is stored in playerNum.  It can't be derived
+	// from the entity number, because a single player may have
+	// multiple corpses on the level using the same playerinfo
+	playerNum = cent->currentState.playerNum;
+	if ( playerNum < 0 || playerNum >= MAX_CLIENTS ) {
+		CG_Error( "Bad playerNum on player entity");
 	}
-	pi = &cgs.playerinfo[ clientNum ];
+	pi = &cgs.playerinfo[ playerNum ];
 
 	// it is possible to see corpses from disconnected players that may
-	// not have valid clientinfo
+	// not have valid playerinfo
 	if ( !pi->infoValid ) {
 		return;
 	}
@@ -2467,7 +2465,7 @@ void CG_Player( centity_t *cent ) {
 
 	// get the player model information
 	renderfx = 0;
-	if ( cent->currentState.number == cg.cur_ps->clientNum) {
+	if ( cent->currentState.number == cg.cur_ps->playerNum) {
 		CG_StepOffset( cent->lerpOrigin );
 
 		if (!cg.cur_lc->renderingThirdPerson) {
@@ -2491,8 +2489,8 @@ void CG_Player( centity_t *cent ) {
 	CG_PlayerAnimation( cent, &legs.oldframe, &legs.frame, &legs.backlerp,
 		 &torso.oldframe, &torso.frame, &torso.backlerp );
 
-	if ( cent->currentState.number != clientNum && ( cent->currentState.contents & CONTENTS_CORPSE ) ) {
-		CG_Corpse( cent, clientNum, &bodySinkOffset, &shadowAlpha );
+	if ( cent->currentState.number != playerNum && ( cent->currentState.contents & CONTENTS_CORPSE ) ) {
+		CG_Corpse( cent, playerNum, &bodySinkOffset, &shadowAlpha );
 	} else {
 		bodySinkOffset = 0;
 		shadowAlpha = 1;
@@ -2821,8 +2819,8 @@ void CG_ResetPlayerEntity( centity_t *cent ) {
 	cent->errorTime = -99999;		// guarantee no error decay added
 	cent->extrapolated = qfalse;	
 
-	CG_ClearLerpFrame( &cgs.playerinfo[ cent->currentState.clientNum ], &cent->pe.legs, cent->currentState.legsAnim );
-	CG_ClearLerpFrame( &cgs.playerinfo[ cent->currentState.clientNum ], &cent->pe.torso, cent->currentState.torsoAnim );
+	CG_ClearLerpFrame( &cgs.playerinfo[ cent->currentState.playerNum ], &cent->pe.legs, cent->currentState.legsAnim );
+	CG_ClearLerpFrame( &cgs.playerinfo[ cent->currentState.playerNum ], &cent->pe.torso, cent->currentState.torsoAnim );
 
 	BG_EvaluateTrajectory( &cent->currentState.pos, cg.time, cent->lerpOrigin );
 	BG_EvaluateTrajectory( &cent->currentState.apos, cg.time, cent->lerpAngles );

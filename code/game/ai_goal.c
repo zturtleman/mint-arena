@@ -1253,7 +1253,7 @@ int BotChooseLTGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 	if (!gs->itemweightconfig)
 		return qfalse;
 	//get the area the bot is in
-	areanum = BotReachabilityArea(origin, gs->client);
+	areanum = BotReachabilityArea(origin, gs->playernum);
 	//if the bot is in solid or if the area the bot is in has no reachability links
 	if (!areanum || !trap_AAS_AreaReachability(areanum))
 	{
@@ -1419,7 +1419,7 @@ int BotChooseNBGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 	if (!gs->itemweightconfig)
 		return qfalse;
 	//get the area the bot is in
-	areanum = BotReachabilityArea(origin, gs->client);
+	areanum = BotReachabilityArea(origin, gs->playernum);
 	//if the bot is in solid or if the area the bot is in has no reachability links
 	if (!areanum || !trap_AAS_AreaReachability(areanum))
 	{
@@ -1685,10 +1685,10 @@ void BotFreeItemWeights(int goalstate)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int BotAllocGoalState(int client)
+int BotAllocGoalState(int playernum)
 {
-	botgoalstates[client+1].client = client;
-	return client+1;
+	botgoalstates[playernum+1].playernum = playernum;
+	return playernum+1;
 } //end of the function BotAllocGoalState
 //========================================================================
 //

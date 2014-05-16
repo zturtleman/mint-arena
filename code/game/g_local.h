@@ -72,7 +72,7 @@ typedef enum {
 //============================================================================
 
 typedef struct gentity_s gentity_t;
-typedef struct gclient_s gclient_t;
+typedef struct gplayer_s gplayer_t;
 
 struct gentity_s {
 	entityShared_t	r;				// shared by both the server system and game
@@ -82,7 +82,7 @@ struct gentity_s {
 	// EXPECTS THE FIELDS IN THAT ORDER!
 	//================================
 
-	struct gclient_s	*client;			// NULL if not a client
+	struct gplayer_s	*player;			// NULL if not a player
 
 	qboolean	inuse;
 
@@ -238,7 +238,7 @@ typedef struct {
 	float		lastfraggedcarrier;
 } playerTeamState_t;
 
-// client data that stays across multiple levels or tournament restarts
+// player data that stays across multiple levels or tournament restarts
 // this is achieved by writing all the data to cvar strings at game shutdown
 // time and reading them back at connection time.  Anything added here
 // MUST be dealt with in G_InitSessionData() / G_ReadSessionData() / G_WriteSessionData()
@@ -246,17 +246,17 @@ typedef struct {
 	team_t		sessionTeam;
 	int			spectatorNum;		// for determining next-in-line to play
 	spectatorState_t	spectatorState;
-	int			spectatorClient;	// for chasecam and follow mode
+	int			spectatorPlayer;	// for chasecam and follow mode
 	int			wins, losses;		// tournament stats
-	qboolean	teamLeader;			// true when this client is a team leader
-} clientSession_t;
+	qboolean	teamLeader;			// true when this player is a team leader
+} playerSession_t;
 
 //
 #define MAX_NETNAME			36
 #define	MAX_VOTE_COUNT		3
 
-// client data that stays across multiple respawns, but is cleared
-// on each level change or team change at ClientBegin()
+// player data that stays across multiple respawns, but is cleared
+// on each level change or team change at PlayerBegin()
 typedef struct {
 	int			connectionNum;		// index in level.connections
 	int			localPlayerNum;		// client's local player number in range of 0 to MAX_SPLITVIEW-1
@@ -268,23 +268,23 @@ typedef struct {
 	qboolean	pmoveFixed;			//
 	char		netname[MAX_NETNAME];
 	int			maxHealth;			// for handicapping
-	int			enterTime;			// level.time the client entered the game
+	int			enterTime;			// level.time the player entered the game
 	playerTeamState_t teamState;	// status in teamplay games
 	int			voteCount;			// to prevent people from constantly calling votes
 	int			teamVoteCount;		// to prevent people from constantly calling votes
 	qboolean	teamInfo;			// send team overlay updates?
-} clientPersistant_t;
+} playerPersistant_t;
 
 
-// this structure is cleared on each ClientSpawn(),
-// except for 'client->pers' and 'client->sess'
-struct gclient_s {
+// this structure is cleared on each PlayerSpawn(),
+// except for 'player->pers' and 'player->sess'
+struct gplayer_s {
 	// ps MUST be the first element, because the server expects it
 	playerState_t	ps;				// communicated by server to clients
 
 	// the rest of the structure is private to game
-	clientPersistant_t	pers;
-	clientSession_t		sess;
+	playerPersistant_t	pers;
+	playerSession_t		sess;
 
 	qboolean	readyToExit;		// wishes to leave the intermission
 
@@ -313,9 +313,9 @@ struct gclient_s {
 	int			accuracy_hits;		// total number of hits
 
 	//
-	int			lastkilled_client;	// last client that this client killed
-	int			lasthurt_client;	// last client that damaged this client
-	int			lasthurt_mod;		// type of damage the client did
+	int			lastkilled_player;	// last player that this player killed
+	int			lasthurt_player;	// last player that damaged this player
+	int			lasthurt_mod;		// type of damage the player did
 
 	// timers
 	int			respawnTime;		// can respawn when time > this, force after g_forcerespwan
@@ -361,7 +361,7 @@ typedef struct gconnection_s {
 #define	MAX_SPAWN_VARS_CHARS	4096
 
 typedef struct {
-	struct gclient_s	*clients;		// [maxclients]
+	struct gplayer_s	*players;		// [maxplayers]
 
 	struct gentity_s	*gentities;
 	int			gentitySize;
@@ -374,7 +374,7 @@ typedef struct {
 	fileHandle_t	logFile;
 
 	// store latched cvars here that we want to get at often
-	int			maxclients;
+	int			maxplayers;
 	int			maxconnections;
 
 	int			framenum;
@@ -392,9 +392,9 @@ typedef struct {
 	qboolean	restarted;				// waiting for a map_restart to fire
 
 	int			numConnectedClients;
-	int			numNonSpectatorClients;	// includes connecting clients
+	int			numNonSpectatorPlayers;	// includes connecting clients
 	int			numPlayingClients;		// connected, non-spectators
-	int			sortedClients[MAX_CLIENTS];		// sorted by score
+	int			sortedPlayers[MAX_CLIENTS];		// sorted by score
 	int			follow1, follow2;		// clientNums for auto-follow spectators
 
 	int			snd_fry;				// sound index for standing in lava
@@ -433,7 +433,7 @@ typedef struct {
 										// kills during this delay
 	int			intermissiontime;		// time the intermission was started
 	char		*changemap;
-	qboolean	readyToExit;			// at least one client wants to exit
+	qboolean	readyToExit;			// at least one player wants to exit
 	int			exitTime;
 	vec3_t		intermission_origin;	// also used for spectator spawns
 	vec3_t		intermission_angle;
@@ -464,7 +464,7 @@ char *G_NewString( const char *string );
 //
 void Cmd_Score_f (gentity_t *ent);
 void StopFollowing( gentity_t *ent );
-void BroadcastTeamChange( gclient_t *client, int oldTeam );
+void BroadcastTeamChange( gplayer_t *player, int oldTeam );
 void SetTeam( gentity_t *ent, const char *s );
 void Cmd_FollowCycle_f( gentity_t *ent, int dir );
 
@@ -497,7 +497,7 @@ void SaveRegisteredItems( void );
 int		G_FindConfigstringIndex( char *name, int start, int max, qboolean create );
 int		G_ModelIndex( char *name );
 int		G_SoundIndex( char *name );
-void	trap_SendServerCommand( int clientNum, char *cmd );
+void	trap_SendServerCommand( int playerNum, char *cmd );
 void	G_TeamCommand( team_t team, char *cmd );
 void	G_KillBox (gentity_t *ent);
 gentity_t *G_Find (gentity_t *from, int fieldofs, const char *match);
@@ -601,16 +601,16 @@ void Weapon_HookThink (gentity_t *ent);
 //
 // g_client.c
 //
-int TeamCount( int ignoreClientNum, team_t team );
+int TeamCount( int ignorePlayerNum, team_t team );
 int TeamLeader( int team );
-team_t PickTeam( int ignoreClientNum );
+team_t PickTeam( int ignorePlayerNum );
 void SetClientViewAngle( gentity_t *ent, vec3_t angle );
 gentity_t *SelectSpawnPoint (vec3_t avoidPoint, vec3_t origin, vec3_t angles, qboolean isbot);
 void CopyToBodyQue( gentity_t *ent );
-void ClientRespawn(gentity_t *ent);
+void PlayerRespawn(gentity_t *ent);
 void BeginIntermission (void);
 void InitBodyQue (void);
-void ClientSpawn( gentity_t *ent );
+void PlayerSpawn( gentity_t *ent );
 void player_die (gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod);
 void AddScore( gentity_t *ent, vec3_t origin, int score );
 void CalculateRanks( void );
@@ -641,12 +641,12 @@ char *ConcatArgs( int start );
 //
 // g_main.c
 //
-void MoveClientToIntermission( gentity_t *ent );
+void MovePlayerToIntermission( gentity_t *ent );
 void FindIntermissionPoint( void );
-void SetLeader(int team, int client);
+void SetLeader(int team, int player);
 void CheckTeamLeader( int team );
 void G_RunThink (gentity_t *ent);
-void AddTournamentQueue(gclient_t *client);
+void AddTournamentQueue(gplayer_t *player);
 void QDECL G_LogPrintf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 void SendScoreboardMessageToAllClients( void );
 void QDECL G_DPrintf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
@@ -656,19 +656,19 @@ void QDECL G_Error( const char *fmt, ... ) __attribute__ ((noreturn, format (pri
 //
 // g_client.c
 //
-char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot, int connectionNum, int localPlayerNum );
-void ClientUserinfoChanged( int clientNum );
-void ClientDisconnect( int clientNum );
-void ClientBegin( int clientNum );
-void ClientCommand( int clientNum );
-float ClientHandicap( gclient_t *client );
+char *PlayerConnect( int playerNum, qboolean firstTime, qboolean isBot, int connectionNum, int localPlayerNum );
+void PlayerUserinfoChanged( int playerNum );
+void PlayerDisconnect( int playerNum );
+void PlayerBegin( int playerNum );
+void ClientCommand( int connectionNum );
+float PlayerHandicap( gplayer_t *player );
 
 //
 // g_active.c
 //
-void ClientThink( int clientNum );
-void ClientEndFrame( gentity_t *ent );
-void G_RunClient( gentity_t *ent );
+void PlayerThink( int playerNum );
+void PlayerEndFrame( gentity_t *ent );
+void G_RunPlayer( gentity_t *ent );
 
 //
 // g_team.c
@@ -680,8 +680,8 @@ qboolean CheckObeliskAttack( gentity_t *obelisk, gentity_t *attacker );
 //
 // g_session.c
 //
-void G_ReadSessionData( gclient_t *client );
-void G_InitSessionData( gclient_t *client, char *userinfo );
+void G_ReadSessionData( gplayer_t *player );
+void G_InitSessionData( gplayer_t *player, char *userinfo );
 
 void G_InitWorldSession( void );
 void G_WriteSessionData( void );
@@ -700,8 +700,8 @@ void G_InitBots( qboolean restart );
 char *G_GetBotInfoByNumber( int num );
 char *G_GetBotInfoByName( const char *name );
 void G_CheckBotSpawn( void );
-void G_RemoveQueuedBotBegin( int clientNum );
-qboolean G_BotConnect( int clientNum, qboolean restart );
+void G_RemoveQueuedBotBegin( int playerNum );
+qboolean G_BotConnect( int playerNum, qboolean restart );
 void Svcmd_AddBot_f( void );
 void Svcmd_BotList_f( void );
 void BotInterbreedEndMatch( void );
@@ -719,8 +719,8 @@ typedef struct bot_settings_s
 int BotAISetup( int restart );
 int BotAIShutdown( int restart );
 int BotAILoadMap( int restart );
-int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean restart);
-int BotAIShutdownClient( int client, qboolean restart );
+int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean restart);
+int BotAIShutdownPlayer( int playernum, qboolean restart );
 int BotAIStartFrame( int time );
 void BotTestAAS(vec3_t origin);
 void Svcmd_BotTeamplayReport_f( void );
@@ -737,8 +737,8 @@ extern	gentity_t		g_entities[MAX_GENTITIES];
 extern	vmCvar_t	g_gametype;
 extern	vmCvar_t	g_dedicated;
 extern	vmCvar_t	g_cheats;
-extern	vmCvar_t	g_maxclients;			// allow this many total, including spectators
-extern	vmCvar_t	g_maxGameClients;		// allow this many active
+extern	vmCvar_t	g_maxplayers;			// allow this many total, including spectators
+extern	vmCvar_t	g_maxGamePlayers;		// allow this many active
 extern	vmCvar_t	g_restarted;
 
 extern	vmCvar_t	g_dmflags;

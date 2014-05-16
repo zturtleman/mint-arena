@@ -113,7 +113,7 @@ UI_TogglePlayerIngame
 */
 void UI_TogglePlayerIngame( int localPlayerNum )
 {
-	if (cg.localPlayers[localPlayerNum].clientNum == -1) {
+	if (cg.localPlayers[localPlayerNum].playerNum == -1) {
 		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalPlayerCvarName(localPlayerNum, "dropin")) );
 	} else {
 		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalPlayerCvarName(localPlayerNum, "dropout")) );
@@ -259,11 +259,11 @@ void InGame_MenuInit( void ) {
 	s_ingame.teamorders.color				= text_big_color;
 	s_ingame.teamorders.style				= UI_CENTER|UI_SMALLFONT;
 	if( !(trap_Cvar_VariableValue( "g_gametype" ) >= GT_TEAM)
-		|| cg.localPlayers[0].clientNum == -1 ) {
+		|| cg.localPlayers[0].playerNum == -1 ) {
 		s_ingame.teamorders.generic.flags |= QMF_GRAYED;
 	}
 	else {
-		trap_GetConfigString( CS_PLAYERS + cg.localPlayers[0].clientNum, info, MAX_INFO_STRING );
+		trap_GetConfigString( CS_PLAYERS + cg.localPlayers[0].playerNum, info, MAX_INFO_STRING );
 		team = atoi( Info_ValueForKey( info, "t" ) );
 		if( team == TEAM_SPECTATOR ) {
 			s_ingame.teamorders.generic.flags |= QMF_GRAYED;

@@ -386,35 +386,35 @@ void	Svcmd_EntityList_f (void) {
 	}
 }
 
-gclient_t	*ClientForString( const char *s ) {
-	gclient_t	*cl;
+gplayer_t	*PlayerForString( const char *s ) {
+	gplayer_t	*player;
 	int			i;
 	int			idnum;
 
 	// numeric values are just slot numbers
 	if ( s[0] >= '0' && s[0] <= '9' ) {
 		idnum = atoi( s );
-		if ( idnum < 0 || idnum >= level.maxclients ) {
+		if ( idnum < 0 || idnum >= level.maxplayers ) {
 			Com_Printf( "Bad client slot: %i\n", idnum );
 			return NULL;
 		}
 
-		cl = &level.clients[idnum];
-		if ( cl->pers.connected == CON_DISCONNECTED ) {
+		player = &level.players[idnum];
+		if ( player->pers.connected == CON_DISCONNECTED ) {
 			G_Printf( "Client %i is not connected\n", idnum );
 			return NULL;
 		}
-		return cl;
+		return player;
 	}
 
 	// check for a name match
-	for ( i=0 ; i < level.maxclients ; i++ ) {
-		cl = &level.clients[i];
-		if ( cl->pers.connected == CON_DISCONNECTED ) {
+	for ( i=0 ; i < level.maxplayers ; i++ ) {
+		player = &level.players[i];
+		if ( player->pers.connected == CON_DISCONNECTED ) {
 			continue;
 		}
-		if ( !Q_stricmp( cl->pers.netname, s ) ) {
-			return cl;
+		if ( !Q_stricmp( player->pers.netname, s ) ) {
+			return player;
 		}
 	}
 
@@ -431,7 +431,7 @@ forceTeam <player> <team>
 ===================
 */
 void	Svcmd_ForceTeam_f( void ) {
-	gclient_t	*cl;
+	gplayer_t	*player;
 	char		str[MAX_TOKEN_CHARS];
 
 	if ( trap_Argc() < 3 ) {
@@ -441,14 +441,14 @@ void	Svcmd_ForceTeam_f( void ) {
 
 	// find the player
 	trap_Argv( 1, str, sizeof( str ) );
-	cl = ClientForString( str );
-	if ( !cl ) {
+	player = PlayerForString( str );
+	if ( !player ) {
 		return;
 	}
 
 	// set the team
 	trap_Argv( 2, str, sizeof( str ) );
-	SetTeam( &g_entities[cl - level.clients], str );
+	SetTeam( &g_entities[player - level.players], str );
 }
 
 /*

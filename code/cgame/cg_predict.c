@@ -30,7 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 // cg_predict.c -- this file generates cg.predictedPlayerState by either
 // interpolating between snapshots from the server or locally predicting
-// ahead the client's movement.
+// ahead the player's movement.
 // It also handles local physics interaction, like fragments bouncing off walls
 
 #include "cg_local.h"
@@ -84,13 +84,13 @@ void CG_BuildSolidList( void ) {
 		}
 	}
 
-	// Add local clients to solid entity list
+	// Add local players to solid entity list
 	for ( i = 0 ; i < CG_MaxSplitView() ; i++ ) {
 		if ( snap->playerNums[i] == -1 ) {
 			continue;
 		}
 		ps = &snap->pss[i];
-		cent = &cg_entities[ps->clientNum];
+		cent = &cg_entities[ps->playerNum];
 		if ( ps->linked && ps->contents ) {
 			cg_solidEntities[cg_numSolidEntities] = cent;
 			cg_numSolidEntities++;
@@ -423,7 +423,7 @@ static void CG_TouchTriggerPrediction( void ) {
 	centity_t	*cent;
 	qboolean	spectator;
 
-	// dead clients don't activate triggers
+	// dead players don't activate triggers
 	if ( cg.cur_lc->predictedPlayerState.stats[STAT_HEALTH] <= 0 ) {
 		return;
 	}

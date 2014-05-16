@@ -104,42 +104,42 @@ void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
 	noAngles = (angles[0] > 999999.0);
 	// use temp events at source and destination to prevent the effect
 	// from getting dropped by a second player event
-	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) {
-		tent = G_TempEntity( player->client->ps.origin, EV_PLAYER_TELEPORT_OUT );
-		tent->s.clientNum = player->s.clientNum;
+	if ( player->player->sess.sessionTeam != TEAM_SPECTATOR ) {
+		tent = G_TempEntity( player->player->ps.origin, EV_PLAYER_TELEPORT_OUT );
+		tent->s.playerNum = player->s.playerNum;
 
 		tent = G_TempEntity( origin, EV_PLAYER_TELEPORT_IN );
-		tent->s.clientNum = player->s.clientNum;
+		tent->s.playerNum = player->s.playerNum;
 	}
 
 	// unlink to make sure it can't possibly interfere with G_KillBox
 	trap_UnlinkEntity (player);
 
-	VectorCopy ( origin, player->client->ps.origin );
-	player->client->ps.origin[2] += 1;
+	VectorCopy ( origin, player->player->ps.origin );
+	player->player->ps.origin[2] += 1;
 	if (!noAngles) {
 	// spit the player out
-	AngleVectors( angles, player->client->ps.velocity, NULL, NULL );
-	VectorScale( player->client->ps.velocity, 400, player->client->ps.velocity );
-	player->client->ps.pm_time = 160;		// hold time
-	player->client->ps.pm_flags |= PMF_TIME_KNOCKBACK;
+	AngleVectors( angles, player->player->ps.velocity, NULL, NULL );
+	VectorScale( player->player->ps.velocity, 400, player->player->ps.velocity );
+	player->player->ps.pm_time = 160;		// hold time
+	player->player->ps.pm_flags |= PMF_TIME_KNOCKBACK;
 	// set angles
 	SetClientViewAngle(player, angles);
 	}
 	// toggle the teleport bit so the client knows to not lerp
-	player->client->ps.eFlags ^= EF_TELEPORT_BIT;
+	player->player->ps.eFlags ^= EF_TELEPORT_BIT;
 	// kill anything at the destination
-	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+	if ( player->player->sess.sessionTeam != TEAM_SPECTATOR ) {
 		G_KillBox (player);
 	}
 
 	// save results of pmove
-	BG_PlayerStateToEntityState( &player->client->ps, &player->s, qtrue );
+	BG_PlayerStateToEntityState( &player->player->ps, &player->s, qtrue );
 
 	// use the precise origin for linking
-	VectorCopy( player->client->ps.origin, player->r.currentOrigin );
+	VectorCopy( player->player->ps.origin, player->r.currentOrigin );
 
-	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+	if ( player->player->sess.sessionTeam != TEAM_SPECTATOR ) {
 		trap_LinkEntity (player);
 	}
 }
@@ -273,8 +273,8 @@ void locateCamera( gentity_t *ent ) {
 		ent->s.powerups = 1;
 	}
 
-	// clientNum holds the rotate offset
-	ent->s.clientNum = owner->s.clientNum;
+	// playerNum holds the rotate offset
+	ent->s.playerNum = owner->s.playerNum;
 
 	VectorCopy( owner->s.origin, ent->s.origin2 );
 
@@ -323,7 +323,7 @@ void SP_misc_portal_camera(gentity_t *ent) {
 
 	G_SpawnFloat( "roll", "0", &roll );
 
-	ent->s.clientNum = roll/360.0 * 256;
+	ent->s.playerNum = roll/360.0 * 256;
 }
 
 /*
@@ -691,11 +691,11 @@ void DropPortalDestination( gentity_t *player ) {
 
 	trap_LinkEntity( ent );
 
-	player->client->portalID = ++level.portalSequence;
-	ent->count = player->client->portalID;
+	player->player->portalID = ++level.portalSequence;
+	ent->count = player->player->portalID;
 
 	// give the item back so they can drop the source now
-	player->client->ps.stats[STAT_HOLDABLE_ITEM] = BG_ItemNumForItem( BG_FindItem( "Portal" ) );
+	player->player->ps.stats[STAT_HOLDABLE_ITEM] = BG_ItemNumForItem( BG_FindItem( "Portal" ) );
 }
 
 
@@ -706,24 +706,24 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
 	if( other->health <= 0 ) {
 		return;
 	}
-	if( !other->client ) {
+	if( !other->player ) {
 		return;
 	}
-//	if( other->client->ps.persistant[PERS_TEAM] != self->spawnflags ) {
+//	if( other->player->ps.persistant[PERS_TEAM] != self->spawnflags ) {
 //		return;
 //	}
 
-	if ( other->client->ps.powerups[PW_NEUTRALFLAG] ) {		// only happens in One Flag CTF
+	if ( other->player->ps.powerups[PW_NEUTRALFLAG] ) {		// only happens in One Flag CTF
 		Drop_Item( other, BG_FindItemForPowerup( PW_NEUTRALFLAG ), 0 );
-		other->client->ps.powerups[PW_NEUTRALFLAG] = 0;
+		other->player->ps.powerups[PW_NEUTRALFLAG] = 0;
 	}
-	else if ( other->client->ps.powerups[PW_REDFLAG] ) {		// only happens in standard CTF
+	else if ( other->player->ps.powerups[PW_REDFLAG] ) {		// only happens in standard CTF
 		Drop_Item( other, BG_FindItemForPowerup( PW_REDFLAG ), 0 );
-		other->client->ps.powerups[PW_REDFLAG] = 0;
+		other->player->ps.powerups[PW_REDFLAG] = 0;
 	}
-	else if ( other->client->ps.powerups[PW_BLUEFLAG] ) {	// only happens in standard CTF
+	else if ( other->player->ps.powerups[PW_BLUEFLAG] ) {	// only happens in standard CTF
 		Drop_Item( other, BG_FindItemForPowerup( PW_BLUEFLAG ), 0 );
-		other->client->ps.powerups[PW_BLUEFLAG] = 0;
+		other->player->ps.powerups[PW_BLUEFLAG] = 0;
 	}
 
 	// find the destination
@@ -779,10 +779,10 @@ void DropPortalSource( gentity_t *player ) {
 
 	trap_LinkEntity( ent );
 
-	ent->count = player->client->portalID;
-	player->client->portalID = 0;
+	ent->count = player->player->portalID;
+	player->player->portalID = 0;
 
-//	ent->spawnflags = player->client->ps.persistant[PERS_TEAM];
+//	ent->spawnflags = player->player->ps.persistant[PERS_TEAM];
 
 	ent->nextthink = level.time + 1000;
 	ent->think = PortalEnable;

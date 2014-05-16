@@ -738,11 +738,11 @@ void SendPendingPredictableEvents( playerState_t *ps ) {
 		t->s.otherEntityNum = ps->clientNum;
 		t->s.contents = 0;
 		// send to everyone except the client who generated the event
-		t->r.svFlags |= SVF_CLIENTMASK;
-		Com_ClientListAll( &t->r.sendClients );
+		t->r.svFlags |= SVF_PLAYERMASK;
+		Com_ClientListAll( &t->r.sendPlayers );
 		connection = &level.connections[ level.clients[ ps->clientNum ].pers.connectionNum ];
 		for (i = 0; i < connection->numLocalPlayers; i++ ) {
-			Com_ClientListRemove( &t->r.sendClients, connection->localPlayerNums[i] );
+			Com_ClientListRemove( &t->r.sendPlayers, connection->localPlayerNums[i] );
 		}
 		// set back external event
 		ps->externalEvent = extEvent;

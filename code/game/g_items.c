@@ -469,10 +469,10 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 
 			te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_ITEM_PICKUP );
 			te->s.eventParm = ent->s.modelindex;
-			// only send this temp entity to a single client
-			te->r.svFlags |= SVF_CLIENTMASK;
-			Com_ClientListClear( &te->r.sendClients );
-			Com_ClientListAdd( &te->r.sendClients, other->s.number );
+			// only send this temp entity to a single player
+			te->r.svFlags |= SVF_PLAYERMASK;
+			Com_ClientListClear( &te->r.sendPlayers );
+			Com_ClientListAdd( &te->r.sendPlayers, other->s.number );
 		}
 	}
 

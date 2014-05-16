@@ -235,18 +235,18 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case GAME_SHUTDOWN:
 		G_ShutdownGame( arg0 );
 		return 0;
-	case GAME_CLIENT_CONNECT:
+	case GAME_PLAYER_CONNECT:
 		return (intptr_t)ClientConnect( arg0, arg1, arg2, arg3, arg4 );
-	case GAME_CLIENT_THINK:
+	case GAME_PLAYER_THINK:
 		ClientThink( arg0 );
 		return 0;
-	case GAME_CLIENT_USERINFO_CHANGED:
+	case GAME_PLAYER_USERINFO_CHANGED:
 		ClientUserinfoChanged( arg0 );
 		return 0;
-	case GAME_CLIENT_DISCONNECT:
+	case GAME_PLAYER_DISCONNECT:
 		ClientDisconnect( arg0 );
 		return 0;
-	case GAME_CLIENT_BEGIN:
+	case GAME_PLAYER_BEGIN:
 		ClientBegin( arg0 );
 		return 0;
 	case GAME_CLIENT_COMMAND:

@@ -43,10 +43,10 @@ void		trap_GetGlconfig( glconfig_t *glconfig );
 // force a screen update, only used during gamestate load
 void		trap_UpdateScreen( void );
 int			trap_MemoryRemaining( void );
-int			trap_GetVoipTime( int clientNum );
-float		trap_GetVoipPower( int clientNum );
-float		trap_GetVoipGain( int clientNum );
-qboolean	trap_GetVoipMute( int clientNum );
+int			trap_GetVoipTime( int playerNum );
+float		trap_GetVoipPower( int playerNum );
+float		trap_GetVoipGain( int playerNum );
+qboolean	trap_GetVoipMute( int playerNum );
 qboolean	trap_GetVoipMuteAll( void );
 void		trap_Cmd_AutoComplete( const char *in, char *out, int outSize );
 
@@ -81,7 +81,7 @@ qboolean	trap_GetServerCommand( int serverCommandNumber );
 // a lagged connection
 int			trap_GetCurrentCmdNumber( void );	
 
-qboolean	trap_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localClientNum );
+qboolean	trap_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localPlayerNum );
 
 // send a string to the server over the network
 void		trap_SendClientCommand( const char *s );
@@ -225,8 +225,8 @@ void			trap_Key_ClearStates( void );
 int				trap_Key_GetKey( const char *binding, int startKey );
 void			trap_Key_SetRepeat( qboolean repeat );
 
-int				trap_Mouse_GetState( int localClientNum );
-void			trap_Mouse_SetState( int localClientNum, int state );
+int				trap_Mouse_GetState( int localPlayerNum );
+void			trap_Mouse_SetState( int localPlayerNum, int state );
 
 int				trap_SetKeyForJoyEvent( int localPlayerNum, const joyevent_t *joyevent, int keynum );
 int				trap_GetKeyForJoyEvent( int localPlayerNum, const joyevent_t *joyevent );

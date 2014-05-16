@@ -214,7 +214,7 @@ typedef int		clipHandle_t;
 #define	MAX_OSPATH			256		// max length of a filesystem pathname
 #endif
 
-#define	MAX_NAME_LENGTH		32		// max length of a client name
+#define	MAX_NAME_LENGTH		32		// max length of a player name
 
 // paramters for command buffer stuffing
 typedef enum {
@@ -1200,7 +1200,7 @@ typedef struct sharedPlayerState_s {
 
 	qboolean	linked;			// set by server
 
-	int			clientNum;		// ranges from 0 to MAX_CLIENTS-1
+	int			playerNum;		// ranges from 0 to MAX_CLIENTS-1
 
 	vec3_t		viewangles;		// for fixed views
 	int			viewheight;
@@ -1271,9 +1271,15 @@ typedef enum {
 	CA_CINEMATIC		// playing a cinematic or a static pic, not connected to a server
 } connstate_t;
 
-char *Com_LocalClientCvarName(int localClient, const char *in_cvarName);
-int Com_LocalClientForCvarName(const char *in_cvarName);
-const char *Com_LocalClientBaseCvarName(const char *in_cvarName);
+char *Com_LocalPlayerCvarName(int localPlayerNum, const char *in_cvarName);
+int Com_LocalPlayerForCvarName(const char *in_cvarName);
+const char *Com_LocalPlayerBaseCvarName(const char *in_cvarName);
+
+#if 1 // ZTM: TMP
+#define Com_LocalClientCvarName Com_LocalPlayerCvarName
+#define Com_LocalClientForCvarName Com_LocalPlayerForCvarName
+#define Com_LocalClientBaseCvarName Com_LocalPlayerBaseCvarName
+#endif
 
 #define Square(x) ((x)*(x))
 

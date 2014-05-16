@@ -474,24 +474,24 @@ void		trap_GetGlconfig( glconfig_t *glconfig ) {
 	syscall( CG_GETGLCONFIG, glconfig, sizeof ( glconfig_t )  );
 }
 
-int trap_GetVoipTime( int clientNum ) {
-	return syscall( CG_GET_VOIP_TIME, clientNum );
+int trap_GetVoipTime( int playerNum ) {
+	return syscall( CG_GET_VOIP_TIME, playerNum );
 }
 
-float trap_GetVoipPower( int clientNum ) {
+float trap_GetVoipPower( int playerNum ) {
 	floatint_t fi;
-	fi.i = syscall( CG_GET_VOIP_POWER, clientNum );
+	fi.i = syscall( CG_GET_VOIP_POWER, playerNum );
 	return fi.f;
 }
 
-float trap_GetVoipGain( int clientNum ) {
+float trap_GetVoipGain( int playerNum ) {
 	floatint_t fi;
-	fi.i = syscall( CG_GET_VOIP_GAIN, clientNum );
+	fi.i = syscall( CG_GET_VOIP_GAIN, playerNum );
 	return fi.f;
 }
 
-qboolean trap_GetVoipMute( int clientNum ) {
-	return syscall( CG_GET_VOIP_MUTE_CLIENT, clientNum );
+qboolean trap_GetVoipMute( int playerNum ) {
+	return syscall( CG_GET_VOIP_MUTE_PLAYER, playerNum );
 }
 
 qboolean trap_GetVoipMuteAll( void ) {
@@ -526,8 +526,8 @@ int			trap_GetCurrentCmdNumber( void ) {
 	return syscall( CG_GETCURRENTCMDNUMBER );
 }
 
-qboolean	trap_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localClientNum ) {
-	return syscall( CG_GETUSERCMD, cmdNumber, ucmd, localClientNum );
+qboolean	trap_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localPlayerNum ) {
+	return syscall( CG_GETUSERCMD, cmdNumber, ucmd, localPlayerNum );
 }
 
 void		trap_SetNetFields( int entityStateSize, int entityNetworkSize, vmNetField_t *entityStateFields, int numEntityStateFields,
@@ -616,12 +616,12 @@ qboolean trap_Key_GetOverstrikeMode( void ) {
   return syscall( CG_KEY_GETOVERSTRIKEMODE );
 }
 
-int trap_Mouse_GetState( int localClientNum ) {
-	return syscall( CG_MOUSE_GETSTATE, localClientNum );
+int trap_Mouse_GetState( int localPlayerNum ) {
+	return syscall( CG_MOUSE_GETSTATE, localPlayerNum );
 }
 
-void trap_Mouse_SetState( int localClientNum, int state ) {
-	syscall( CG_MOUSE_SETSTATE, localClientNum, state );
+void trap_Mouse_SetState( int localPlayerNum, int state ) {
+	syscall( CG_MOUSE_SETSTATE, localPlayerNum, state );
 }
 
 int trap_SetKeyForJoyEvent( int localPlayerNum, const joyevent_t *joyevent, int keynum ) {

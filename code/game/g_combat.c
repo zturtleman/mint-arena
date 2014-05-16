@@ -42,10 +42,10 @@ void ScorePlum( gentity_t *ent, vec3_t origin, int score ) {
 	gentity_t *plum;
 
 	plum = G_TempEntity( origin, EV_SCOREPLUM );
-	// only send this temp entity to a single client
-	plum->r.svFlags |= SVF_CLIENTMASK;
-	Com_ClientListClear( &plum->r.sendClients );
-	Com_ClientListAdd( &plum->r.sendClients, ent->s.number );
+	// only send this temp entity to a single player
+	plum->r.svFlags |= SVF_PLAYERMASK;
+	Com_ClientListClear( &plum->r.sendPlayers );
+	Com_ClientListAdd( &plum->r.sendPlayers, ent->s.number );
 	//
 	plum->s.otherEntityNum = ent->s.number;
 	plum->s.time = score;

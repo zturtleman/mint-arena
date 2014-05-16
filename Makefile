@@ -93,6 +93,10 @@ ifndef VERSION
 VERSION=Alpha
 endif
 
+ifndef VM_PREFIX
+VM_PREFIX=mint-
+endif
+
 ifndef SOURCE_ARCHIVE
 SOURCE_ARCHIVE=mint-arena
 endif
@@ -645,26 +649,26 @@ endif
 ifneq ($(BUILD_GAME_SO),0)
   ifneq ($(BUILD_BASEGAME),0)
     TARGETS += \
-      $(B)/$(BASEGAME)/mint-cgame_$(SHLIBNAME) \
-      $(B)/$(BASEGAME)/mint-game_$(SHLIBNAME)
+      $(B)/$(BASEGAME)/$(VM_PREFIX)cgame_$(SHLIBNAME) \
+      $(B)/$(BASEGAME)/$(VM_PREFIX)game_$(SHLIBNAME)
   endif
   ifneq ($(BUILD_MISSIONPACK),0)
     TARGETS += \
-      $(B)/$(MISSIONPACK)/mint-cgame_$(SHLIBNAME) \
-      $(B)/$(MISSIONPACK)/mint-game_$(SHLIBNAME)
+      $(B)/$(MISSIONPACK)/$(VM_PREFIX)cgame_$(SHLIBNAME) \
+      $(B)/$(MISSIONPACK)/$(VM_PREFIX)game_$(SHLIBNAME)
   endif
 endif
 
 ifneq ($(BUILD_GAME_QVM),0)
   ifneq ($(BUILD_BASEGAME),0)
     TARGETS += \
-      $(B)/$(BASEGAME)/vm/mint-cgame.qvm \
-      $(B)/$(BASEGAME)/vm/mint-game.qvm
+      $(B)/$(BASEGAME)/vm/$(VM_PREFIX)cgame.qvm \
+      $(B)/$(BASEGAME)/vm/$(VM_PREFIX)game.qvm
   endif
   ifneq ($(BUILD_MISSIONPACK),0)
     TARGETS += \
-      $(B)/$(MISSIONPACK)/vm/mint-cgame.qvm \
-      $(B)/$(MISSIONPACK)/vm/mint-game.qvm
+      $(B)/$(MISSIONPACK)/vm/$(VM_PREFIX)cgame.qvm \
+      $(B)/$(MISSIONPACK)/vm/$(VM_PREFIX)game.qvm
   endif
 endif
 
@@ -1092,11 +1096,11 @@ Q3CGOBJ = \
 
 Q3CGVMOBJ = $(Q3CGOBJ:%.o=%.asm)
 
-$(B)/$(BASEGAME)/mint-cgame_$(SHLIBNAME): $(Q3CGOBJ)
+$(B)/$(BASEGAME)/$(VM_PREFIX)cgame_$(SHLIBNAME): $(Q3CGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3CGOBJ)
 
-$(B)/$(BASEGAME)/vm/mint-cgame.qvm: $(Q3CGVMOBJ) $(GDIR)/bg_syscalls.asm $(Q3ASM)
+$(B)/$(BASEGAME)/vm/$(VM_PREFIX)cgame.qvm: $(Q3CGVMOBJ) $(GDIR)/bg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(Q3CGVMOBJ) $(GDIR)/bg_syscalls.asm
 
@@ -1196,11 +1200,11 @@ endif
 
 MPCGVMOBJ = $(MPCGOBJ:%.o=%.asm)
 
-$(B)/$(MISSIONPACK)/mint-cgame_$(SHLIBNAME): $(MPCGOBJ)
+$(B)/$(MISSIONPACK)/$(VM_PREFIX)cgame_$(SHLIBNAME): $(MPCGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPCGOBJ)
 
-$(B)/$(MISSIONPACK)/vm/mint-cgame.qvm: $(MPCGVMOBJ) $(GDIR)/bg_syscalls.asm $(Q3ASM)
+$(B)/$(MISSIONPACK)/vm/$(VM_PREFIX)cgame.qvm: $(MPCGVMOBJ) $(GDIR)/bg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(MPCGVMOBJ) $(GDIR)/bg_syscalls.asm
 
@@ -1256,11 +1260,11 @@ Q3GOBJ = \
 
 Q3GVMOBJ = $(Q3GOBJ:%.o=%.asm)
 
-$(B)/$(BASEGAME)/mint-game_$(SHLIBNAME): $(Q3GOBJ)
+$(B)/$(BASEGAME)/$(VM_PREFIX)game_$(SHLIBNAME): $(Q3GOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3GOBJ)
 
-$(B)/$(BASEGAME)/vm/mint-game.qvm: $(Q3GVMOBJ) $(GDIR)/bg_syscalls.asm $(Q3ASM)
+$(B)/$(BASEGAME)/vm/$(VM_PREFIX)game.qvm: $(Q3GVMOBJ) $(GDIR)/bg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(Q3GVMOBJ) $(GDIR)/bg_syscalls.asm
 
@@ -1314,11 +1318,11 @@ MPGOBJ = \
 
 MPGVMOBJ = $(MPGOBJ:%.o=%.asm)
 
-$(B)/$(MISSIONPACK)/mint-game_$(SHLIBNAME): $(MPGOBJ)
+$(B)/$(MISSIONPACK)/$(VM_PREFIX)game_$(SHLIBNAME): $(MPGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPGOBJ)
 
-$(B)/$(MISSIONPACK)/vm/mint-game.qvm: $(MPGVMOBJ) $(GDIR)/bg_syscalls.asm $(Q3ASM)
+$(B)/$(MISSIONPACK)/vm/$(VM_PREFIX)game.qvm: $(MPGVMOBJ) $(GDIR)/bg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(MPGVMOBJ) $(GDIR)/bg_syscalls.asm
 
@@ -1424,15 +1428,15 @@ endif
 
 ifneq ($(BUILD_GAME_SO),0)
   ifneq ($(BUILD_BASEGAME),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/mint-cgame_$(SHLIBNAME) \
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/$(VM_PREFIX)cgame_$(SHLIBNAME) \
 					$(COPYDIR)/$(BASEGAME)/.
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/mint-game_$(SHLIBNAME) \
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/$(VM_PREFIX)game_$(SHLIBNAME) \
 					$(COPYDIR)/$(BASEGAME)/.
   endif
   ifneq ($(BUILD_MISSIONPACK),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/mint-cgame_$(SHLIBNAME) \
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/$(VM_PREFIX)cgame_$(SHLIBNAME) \
 					$(COPYDIR)/$(MISSIONPACK)/.
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/mint-game_$(SHLIBNAME) \
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/$(VM_PREFIX)game_$(SHLIBNAME) \
 					$(COPYDIR)/$(MISSIONPACK)/.
   endif
 endif

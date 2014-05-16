@@ -769,7 +769,7 @@ static void ServerOptions_Start( void ) {
 	int		timelimit;
 	int		fraglimit;
 	int		maxclients;
-	int		localClients;
+	int		localPlayerBits;
 	int		publicserver;
 	int		dedicated;
 	int		friendlyfire;
@@ -799,15 +799,15 @@ static void ServerOptions_Start( void ) {
 		}
 		maxclients++;
 	}
-	for( n = 0, localClients = 1; n < UI_MaxSplitView(); n++ ) {
+	for( n = 0, localPlayerBits = 1; n < UI_MaxSplitView(); n++ ) {
 		if( s_serveroptions.playerType[n].curvalue != PT_HUMAN ) {
 			continue;
 		}
-		localClients |= (1<<n);
+		localPlayerBits |= (1<<n);
 	}
 
 	// Set the number of local clients
-	trap_Cvar_SetValue( "cl_localClients", localClients );
+	trap_Cvar_SetValue( "cl_localPlayers", localPlayerBits );
 
 	switch( s_serveroptions.gametype ) {
 	case GT_FFA:

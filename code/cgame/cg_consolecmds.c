@@ -119,7 +119,7 @@ void CG_MessageMode3_f( void ) {
 		return;
 	}
 	Com_sprintf( cg.messageCommand, sizeof (cg.messageCommand), "tell %d", playerNum );
-	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s:", cgs.clientinfo[ playerNum ].name );
+	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s:", cgs.playerinfo[ playerNum ].name );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 30;
 	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
@@ -136,7 +136,7 @@ void CG_MessageMode4_f( void ) {
 		return;
 	}
 	Com_sprintf( cg.messageCommand, sizeof (cg.messageCommand), "tell %d", playerNum );
-	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s:", cgs.clientinfo[ playerNum ].name );
+	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s:", cgs.playerinfo[ playerNum ].name );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 30;
 	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
@@ -384,7 +384,7 @@ static void CG_PrevTeamMember_f( int localPlayerNum ) {
 //
 static void CG_NextOrder_f( int localPlayerNum ) {
 	localPlayer_t	*player;
-	clientInfo_t	*ci;
+	playerInfo_t	*pi;
 	int				clientNum;
 	int				team;
 
@@ -397,10 +397,10 @@ static void CG_NextOrder_f( int localPlayerNum ) {
 	clientNum = cg.snap->pss[ localPlayerNum ].clientNum;
 	team = cg.snap->pss[ localPlayerNum ].persistant[PERS_TEAM];
 
-	ci = cgs.clientinfo + clientNum;
+	pi = cgs.playerinfo + clientNum;
 
-	if (ci) {
-		if (!ci->teamLeader && sortedTeamPlayers[team][cg_currentSelectedPlayer[localPlayerNum].integer] != clientNum) {
+	if (pi) {
+		if (!pi->teamLeader && sortedTeamPlayers[team][cg_currentSelectedPlayer[localPlayerNum].integer] != clientNum) {
 			return;
 		}
 	}

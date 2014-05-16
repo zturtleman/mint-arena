@@ -324,15 +324,15 @@ Used for both the status bar and the scoreboard
 */
 void CG_DrawHead( float x, float y, float w, float h, int clientNum, vec3_t headAngles ) {
 	clipHandle_t	cm;
-	clientInfo_t	*ci;
+	playerInfo_t	*pi;
 	float			len;
 	vec3_t			origin;
 	vec3_t			mins, maxs;
 
-	ci = &cgs.clientinfo[ clientNum ];
+	pi = &cgs.playerinfo[ clientNum ];
 
 	if ( cg_draw3dIcons.integer ) {
-		cm = ci->headModel;
+		cm = pi->headModel;
 		if ( !cm ) {
 			return;
 		}
@@ -349,15 +349,15 @@ void CG_DrawHead( float x, float y, float w, float h, int clientNum, vec3_t head
 		origin[0] = len / 0.268;	// len / tan( fov/2 )
 
 		// allow per-model tweaking
-		VectorAdd( origin, ci->headOffset, origin );
+		VectorAdd( origin, pi->headOffset, origin );
 
-		CG_Draw3DModel( x, y, w, h, ci->headModel, &ci->modelSkin, origin, headAngles );
+		CG_Draw3DModel( x, y, w, h, pi->headModel, &pi->modelSkin, origin, headAngles );
 	} else if ( cg_drawIcons.integer ) {
-		CG_DrawPic( x, y, w, h, ci->modelIcon );
+		CG_DrawPic( x, y, w, h, pi->modelIcon );
 	}
 
 	// if they are deferred, draw a cross out
-	if ( ci->deferred ) {
+	if ( pi->deferred ) {
 		CG_DrawPic( x, y, w, h, cgs.media.deferShader );
 	}
 }
@@ -825,7 +825,7 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	int pwidth, lwidth;
 	int plyrs;
 	char st[16];
-	clientInfo_t *ci;
+	playerInfo_t *pi;
 	gitem_t	*item;
 	int ret_y, count;
 	int team;
@@ -851,10 +851,10 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	pwidth = 0;
 	count = (numSortedTeamPlayers[team] > 8) ? 8 : numSortedTeamPlayers[team];
 	for (i = 0; i < count; i++) {
-		ci = cgs.clientinfo + sortedTeamPlayers[team][i];
-		if ( ci->infoValid && ci->team == team) {
+		pi = cgs.playerinfo + sortedTeamPlayers[team][i];
+		if ( pi->infoValid && pi->team == team) {
 			plyrs++;
-			len = CG_DrawStrlen(ci->name);
+			len = CG_DrawStrlen(pi->name);
 			if (len > pwidth)
 				pwidth = len;
 		}
@@ -912,19 +912,19 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	trap_R_SetColor( NULL );
 
 	for (i = 0; i < count; i++) {
-		ci = cgs.clientinfo + sortedTeamPlayers[team][i];
-		if ( ci->infoValid && ci->team == team) {
+		pi = cgs.playerinfo + sortedTeamPlayers[team][i];
+		if ( pi->infoValid && pi->team == team) {
 
 			hcolor[0] = hcolor[1] = hcolor[2] = hcolor[3] = 1.0;
 
 			xx = x + TINYCHAR_WIDTH;
 
 			CG_DrawStringExt( xx, y,
-				ci->name, hcolor, qfalse, qfalse,
+				pi->name, hcolor, qfalse, qfalse,
 				TINYCHAR_WIDTH, TINYCHAR_HEIGHT, TEAM_OVERLAY_MAXNAME_WIDTH);
 
 			if (lwidth) {
-				p = CG_ConfigString(CS_LOCATIONS + ci->location);
+				p = CG_ConfigString(CS_LOCATIONS + pi->location);
 				if (!p || !*p)
 					p = "unknown";
 //				len = CG_DrawStrlen(p);
@@ -939,9 +939,9 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 					TEAM_OVERLAY_MAXLOCATION_WIDTH);
 			}
 
-			CG_GetColorForHealth( ci->health, ci->armor, hcolor );
+			CG_GetColorForHealth( pi->health, pi->armor, hcolor );
 
-			Com_sprintf (st, sizeof(st), "%3i %3i", ci->health,	ci->armor);
+			Com_sprintf (st, sizeof(st), "%3i %3i", pi->health,	pi->armor);
 
 			xx = x + TINYCHAR_WIDTH * 3 + 
 				TINYCHAR_WIDTH * pwidth + TINYCHAR_WIDTH * lwidth;
@@ -953,9 +953,9 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 			// draw weapon icon
 			xx += TINYCHAR_WIDTH * 3;
 
-			if ( cg_weapons[ci->curWeapon].weaponIcon ) {
+			if ( cg_weapons[pi->curWeapon].weaponIcon ) {
 				CG_DrawPic( xx, y, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 
-					cg_weapons[ci->curWeapon].weaponIcon );
+					cg_weapons[pi->curWeapon].weaponIcon );
 			} else {
 				CG_DrawPic( xx, y, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 
 					cgs.media.deferShader );
@@ -968,7 +968,7 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 				xx = x + w - TINYCHAR_WIDTH;
 			}
 			for (j = 0; j <= PW_NUM_POWERUPS; j++) {
-				if (ci->powerups & (1 << j)) {
+				if (pi->powerups & (1 << j)) {
 
 					item = BG_FindItemForPowerup( j );
 
@@ -2404,7 +2404,7 @@ static void CG_DrawCrosshairNames( void ) {
 		return;
 	}
 
-	name = cgs.clientinfo[ cg.cur_lc->crosshairClientNum ].name;
+	name = cgs.playerinfo[ cg.cur_lc->crosshairClientNum ].name;
 #ifdef MISSIONPACK_HUD
 	color[3] *= 0.5f;
 	w = CG_Text_Width(name, 0.3f, 0);
@@ -2562,9 +2562,9 @@ static void CG_DrawTeamVote(void) {
 	char	*s;
 	int		sec, cs_offset;
 
-	if ( cgs.clientinfo[cg.cur_ps->clientNum].team == TEAM_RED )
+	if ( cgs.playerinfo[cg.cur_ps->clientNum].team == TEAM_RED )
 		cs_offset = 0;
-	else if ( cgs.clientinfo[cg.cur_ps->clientNum].team == TEAM_BLUE )
+	else if ( cgs.playerinfo[cg.cur_ps->clientNum].team == TEAM_BLUE )
 		cs_offset = 1;
 	else
 		return;
@@ -2780,7 +2780,7 @@ static qboolean CG_DrawFollow( void ) {
 
 	CG_DrawBigString( 320 - 9 * 8, 24, "following", 1.0F );
 
-	name = cgs.clientinfo[ cg.cur_ps->clientNum ].name;
+	name = cgs.playerinfo[ cg.cur_ps->clientNum ].name;
 
 	x = 0.5 * ( 640 - GIANT_WIDTH * CG_DrawStrlen( name ) );
 
@@ -2879,7 +2879,7 @@ static void CG_DrawWarmup( void ) {
 #else
 	int			cw;
 #endif
-	clientInfo_t	*ci1, *ci2;
+	playerInfo_t	*ci1, *ci2;
 	const char	*s;
 
 	sec = cg.warmup;
@@ -2902,11 +2902,11 @@ static void CG_DrawWarmup( void ) {
 		ci1 = NULL;
 		ci2 = NULL;
 		for ( i = 0 ; i < cgs.maxclients ; i++ ) {
-			if ( cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == TEAM_FREE ) {
+			if ( cgs.playerinfo[i].infoValid && cgs.playerinfo[i].team == TEAM_FREE ) {
 				if ( !ci1 ) {
-					ci1 = &cgs.clientinfo[i];
+					ci1 = &cgs.playerinfo[i];
 				} else {
-					ci2 = &cgs.clientinfo[i];
+					ci2 = &cgs.playerinfo[i];
 				}
 			}
 		}

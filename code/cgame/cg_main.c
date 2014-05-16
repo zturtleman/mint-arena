@@ -1696,8 +1696,8 @@ void CG_BuildSpectatorString(void) {
 	int i;
 	cg.spectatorList[0] = 0;
 	for (i = 0; i < MAX_CLIENTS; i++) {
-		if (cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == TEAM_SPECTATOR ) {
-			Q_strcat(cg.spectatorList, sizeof(cg.spectatorList), va("%s     ", cgs.clientinfo[i].name));
+		if (cgs.playerinfo[i].infoValid && cgs.playerinfo[i].team == TEAM_SPECTATOR ) {
+			Q_strcat(cg.spectatorList, sizeof(cg.spectatorList), va("%s     ", cgs.playerinfo[i].name));
 		}
 	}
 }
@@ -2160,7 +2160,7 @@ void CG_SetScoreSelection(void *p) {
 }
 
 // FIXME: might need to cache this info
-static clientInfo_t * CG_InfoFromScoreIndex(int index, int team, int *scoreIndex) {
+static playerInfo_t * CG_InfoFromScoreIndex(int index, int team, int *scoreIndex) {
 	int i, count;
 	if ( cgs.gametype >= GT_TEAM ) {
 		count = 0;
@@ -2168,20 +2168,20 @@ static clientInfo_t * CG_InfoFromScoreIndex(int index, int team, int *scoreIndex
 			if (cg.scores[i].team == team) {
 				if (count == index) {
 					*scoreIndex = i;
-					return &cgs.clientinfo[cg.scores[i].client];
+					return &cgs.playerinfo[cg.scores[i].client];
 				}
 				count++;
 			}
 		}
 	}
 	*scoreIndex = index;
-	return &cgs.clientinfo[ cg.scores[index].client ];
+	return &cgs.playerinfo[ cg.scores[index].client ];
 }
 
 static const char *CG_FeederItemText(float feederID, int index, int column, qhandle_t *handle) {
 	gitem_t *item;
 	int scoreIndex = 0;
-	clientInfo_t *info = NULL;
+	playerInfo_t *info = NULL;
 	int team = -1;
 	score_t *sp = NULL;
 
@@ -3268,9 +3268,9 @@ static char *CG_VoIPString( int localPlayerNum ) {
 		int i, slen, nlen;
 		for( slen = i = 0; i < cgs.maxclients; i++ )
 		{
-			if( !cgs.clientinfo[ i ].infoValid || i == cg.localPlayers[ localPlayerNum ].clientNum )
+			if( !cgs.playerinfo[ i ].infoValid || i == cg.localPlayers[ localPlayerNum ].clientNum )
 				continue;
-			if( cgs.clientinfo[ i ].team != cgs.clientinfo[ cg.localPlayers[ localPlayerNum ].clientNum ].team )
+			if( cgs.playerinfo[ i ].team != cgs.playerinfo[ cg.localPlayers[ localPlayerNum ].clientNum ].team )
 				continue;
 
 			nlen = Com_sprintf( &voipString[ slen ], sizeof( voipString ) - slen,

@@ -220,7 +220,7 @@ static void CG_NailgunEjectBrass( centity_t *cent ) {
 CG_RailTrail
 ==========================
 */
-void CG_RailTrail (clientInfo_t *ci, vec3_t start, vec3_t end) {
+void CG_RailTrail (playerInfo_t *pi, vec3_t start, vec3_t end) {
 	vec3_t axis[36], move, move2, vec, temp;
 	float  len;
 	int    i, j, skip;
@@ -249,14 +249,14 @@ void CG_RailTrail (clientInfo_t *ci, vec3_t start, vec3_t end) {
 	VectorCopy(start, re->origin);
 	VectorCopy(end, re->oldorigin);
  
-	re->shaderRGBA[0] = ci->color1[0] * 255;
-	re->shaderRGBA[1] = ci->color1[1] * 255;
-	re->shaderRGBA[2] = ci->color1[2] * 255;
+	re->shaderRGBA[0] = pi->color1[0] * 255;
+	re->shaderRGBA[1] = pi->color1[1] * 255;
+	re->shaderRGBA[2] = pi->color1[2] * 255;
 	re->shaderRGBA[3] = 255;
 
-	le->color[0] = ci->color1[0] * 0.75;
-	le->color[1] = ci->color1[1] * 0.75;
-	le->color[2] = ci->color1[2] * 0.75;
+	le->color[0] = pi->color1[0] * 0.75;
+	le->color[1] = pi->color1[1] * 0.75;
+	le->color[2] = pi->color1[2] * 0.75;
 	le->color[3] = 1.0f;
 
 	AxisClear( re->axis );
@@ -302,14 +302,14 @@ void CG_RailTrail (clientInfo_t *ci, vec3_t start, vec3_t end) {
 			re->radius = 1.1f;
 			re->customShader = cgs.media.railRingsShader;
 
-			re->shaderRGBA[0] = ci->color2[0] * 255;
-			re->shaderRGBA[1] = ci->color2[1] * 255;
-			re->shaderRGBA[2] = ci->color2[2] * 255;
+			re->shaderRGBA[0] = pi->color2[0] * 255;
+			re->shaderRGBA[1] = pi->color2[1] * 255;
+			re->shaderRGBA[2] = pi->color2[2] * 255;
 			re->shaderRGBA[3] = 255;
 
-			le->color[0] = ci->color2[0] * 0.75;
-			le->color[1] = ci->color2[1] * 0.75;
-			le->color[2] = ci->color2[2] * 0.75;
+			le->color[0] = pi->color2[0] * 0.75;
+			le->color[1] = pi->color2[1] * 0.75;
+			le->color[2] = pi->color2[2] * 0.75;
 			le->color[3] = 1.0f;
 
 			le->pos.trType = TR_LINEAR;
@@ -878,24 +878,24 @@ CG_MapTorsoToWeaponFrame
 
 =================
 */
-static int CG_MapTorsoToWeaponFrame( clientInfo_t *ci, int frame ) {
+static int CG_MapTorsoToWeaponFrame( playerInfo_t *pi, int frame ) {
 
 	// change weapon
-	if ( frame >= ci->animations[TORSO_DROP].firstFrame 
-		&& frame < ci->animations[TORSO_DROP].firstFrame + 9 ) {
-		return frame - ci->animations[TORSO_DROP].firstFrame + 6;
+	if ( frame >= pi->animations[TORSO_DROP].firstFrame 
+		&& frame < pi->animations[TORSO_DROP].firstFrame + 9 ) {
+		return frame - pi->animations[TORSO_DROP].firstFrame + 6;
 	}
 
 	// stand attack
-	if ( frame >= ci->animations[TORSO_ATTACK].firstFrame 
-		&& frame < ci->animations[TORSO_ATTACK].firstFrame + 6 ) {
-		return 1 + frame - ci->animations[TORSO_ATTACK].firstFrame;
+	if ( frame >= pi->animations[TORSO_ATTACK].firstFrame 
+		&& frame < pi->animations[TORSO_ATTACK].firstFrame + 6 ) {
+		return 1 + frame - pi->animations[TORSO_ATTACK].firstFrame;
 	}
 
 	// stand attack 2
-	if ( frame >= ci->animations[TORSO_ATTACK2].firstFrame 
-		&& frame < ci->animations[TORSO_ATTACK2].firstFrame + 6 ) {
-		return 1 + frame - ci->animations[TORSO_ATTACK2].firstFrame;
+	if ( frame >= pi->animations[TORSO_ATTACK2].firstFrame 
+		&& frame < pi->animations[TORSO_ATTACK2].firstFrame + 6 ) {
+		return 1 + frame - pi->animations[TORSO_ATTACK2].firstFrame;
 	}
 	
 	return 0;
@@ -1206,14 +1206,14 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	weaponInfo_t	*weapon;
 	centity_t	*nonPredictedCent;
 	orientation_t	lerped;
-	clientInfo_t *ci;
+	playerInfo_t *pi;
 
 	weaponNum = cent->currentState.weapon;
 
 	CG_RegisterWeapon( weaponNum );
 	weapon = &cg_weapons[weaponNum];
 
-	ci = &cgs.clientinfo[cent->currentState.clientNum];
+	pi = &cgs.playerinfo[cent->currentState.clientNum];
 
 	// add the weapon
 	memset( &gun, 0, sizeof( gun ) );
@@ -1224,13 +1224,13 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	// set custom shading for railgun refire rate
 	if( weaponNum == WP_RAILGUN && cent->pe.railFireTime + 1500 > cg.time ) {
 		int scale = 255 * ( cg.time - cent->pe.railFireTime ) / 1500;
-		gun.shaderRGBA[0] = ( ci->c1RGBA[0] * scale ) >> 8;
-		gun.shaderRGBA[1] = ( ci->c1RGBA[1] * scale ) >> 8;
-		gun.shaderRGBA[2] = ( ci->c1RGBA[2] * scale ) >> 8;
+		gun.shaderRGBA[0] = ( pi->c1RGBA[0] * scale ) >> 8;
+		gun.shaderRGBA[1] = ( pi->c1RGBA[1] * scale ) >> 8;
+		gun.shaderRGBA[2] = ( pi->c1RGBA[2] * scale ) >> 8;
 		gun.shaderRGBA[3] = 255;
 	}
 	else {
-		Byte4Copy( ci->c1RGBA, gun.shaderRGBA );
+		Byte4Copy( pi->c1RGBA, gun.shaderRGBA );
 	}
 
 	gun.hModel = weapon->weaponModel;
@@ -1324,7 +1324,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	AnglesToAxis( angles, flash.axis );
 
 	// colorize the railgun blast
-	Byte4Copy( ci->c1RGBA, flash.shaderRGBA );
+	Byte4Copy( pi->c1RGBA, flash.shaderRGBA );
 
 	CG_PositionRotatedEntityOnTag( &flash, &gun, weapon->weaponModel, "tag_flash");
 	CG_AddRefEntityWithMinLight( &flash );
@@ -1351,7 +1351,7 @@ Add the weapon, and flash for the player's view
 void CG_AddViewWeapon( playerState_t *ps ) {
 	refEntity_t	hand;
 	centity_t	*cent;
-	clientInfo_t	*ci;
+	playerInfo_t	*pi;
 	vec3_t		fovOffset;
 	vec3_t		angles;
 	weaponInfo_t	*weapon;
@@ -1421,9 +1421,9 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		hand.backlerp = 0;
 	} else {
 		// get clientinfo for animation map
-		ci = &cgs.clientinfo[ cent->currentState.clientNum ];
-		hand.frame = CG_MapTorsoToWeaponFrame( ci, cent->pe.torso.frame );
-		hand.oldframe = CG_MapTorsoToWeaponFrame( ci, cent->pe.torso.oldFrame );
+		pi = &cgs.playerinfo[ cent->currentState.clientNum ];
+		hand.frame = CG_MapTorsoToWeaponFrame( pi, cent->pe.torso.frame );
+		hand.oldframe = CG_MapTorsoToWeaponFrame( pi, cent->pe.torso.oldFrame );
 		hand.backlerp = cent->pe.torso.backlerp;
 	}
 
@@ -1943,7 +1943,7 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, im
 		VectorCopy( lightColor, le->lightColor );
 
 		// colorize with client color
-		VectorCopy( cgs.clientinfo[clientNum].color1, le->color );
+		VectorCopy( cgs.playerinfo[clientNum].color1, le->color );
 		le->refEntity.shaderRGBA[0] = le->color[0] * 0xff;
 		le->refEntity.shaderRGBA[1] = le->color[1] * 0xff;
 		le->refEntity.shaderRGBA[2] = le->color[2] * 0xff;
@@ -1958,7 +1958,7 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, im
 		float	*color;
 
 		// colorize with client color
-		color = cgs.clientinfo[clientNum].color1;
+		color = cgs.playerinfo[clientNum].color1;
 		CG_ImpactMark( mark, origin, dir, random()*360, color[0],color[1], color[2],1, alphaFade, radius, qfalse );
 	} else {
 		CG_ImpactMark( mark, origin, dir, random()*360, 1,1,1,1, alphaFade, radius, qfalse );

@@ -97,7 +97,7 @@ static void CG_Obituary( entityState_t *ent ) {
 	char		targetName[32];
 	char		attackerName[32];
 	gender_t	gender;
-	clientInfo_t	*ci;
+	playerInfo_t	*pi;
 	int				i;
 
 	target = ent->otherEntityNum;
@@ -107,7 +107,7 @@ static void CG_Obituary( entityState_t *ent ) {
 	if ( target < 0 || target >= MAX_CLIENTS ) {
 		CG_Error( "CG_Obituary: target out of range" );
 	}
-	ci = &cgs.clientinfo[target];
+	pi = &cgs.playerinfo[target];
 
 	if ( attacker < 0 || attacker >= MAX_CLIENTS ) {
 		attacker = ENTITYNUM_WORLD;
@@ -158,7 +158,7 @@ static void CG_Obituary( entityState_t *ent ) {
 	}
 
 	if (attacker == target) {
-		gender = ci->gender;
+		gender = pi->gender;
 		switch (mod) {
 #ifdef MISSIONPACK
 		case MOD_KAMIKAZE:
@@ -362,7 +362,7 @@ CG_UseItem
 ===============
 */
 static void CG_UseItem( centity_t *cent ) {
-	clientInfo_t *ci;
+	playerInfo_t *pi;
 	int			itemNum, clientNum;
 	gitem_t		*item;
 	entityState_t *es;
@@ -401,8 +401,8 @@ static void CG_UseItem( centity_t *cent ) {
 	case HI_MEDKIT:
 		clientNum = cent->currentState.clientNum;
 		if ( clientNum >= 0 && clientNum < MAX_CLIENTS ) {
-			ci = &cgs.clientinfo[ clientNum ];
-			ci->medkitUsageTime = cg.time;
+			pi = &cgs.playerinfo[ clientNum ];
+			pi->medkitUsageTime = cg.time;
 		}
 		trap_S_StartSound (NULL, es->number, CHAN_BODY, cgs.media.medkitSound );
 		break;
@@ -548,7 +548,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	vec3_t			dir;
 	const char		*s;
 	int				clientNum;
-	clientInfo_t	*ci;
+	playerInfo_t	*pi;
 	int				i;
 	int				thisClientNum;
 
@@ -568,7 +568,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	if ( clientNum < 0 || clientNum >= MAX_CLIENTS ) {
 		clientNum = 0;
 	}
-	ci = &cgs.clientinfo[ clientNum ];
+	pi = &cgs.playerinfo[ clientNum ];
 
 	thisClientNum = cg.snap->pss[0].clientNum;
 
@@ -580,7 +580,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME("EV_FOOTSTEP");
 		if (cg_footsteps.integer) {
 			trap_S_StartSound (NULL, es->number, CHAN_BODY, 
-				cgs.media.footsteps[ ci->footsteps ][rand()&3] );
+				cgs.media.footsteps[ pi->footsteps ][rand()&3] );
 		}
 		break;
 	case EV_FOOTSTEP_METAL:
@@ -1037,7 +1037,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			}
 		}
 
-		CG_RailTrail(ci, es->origin2, es->pos.trBase);
+		CG_RailTrail(pi, es->origin2, es->pos.trBase);
 
 		// if the end was on a nomark surface, don't make an explosion
 		if ( es->eventParm != 255 ) {

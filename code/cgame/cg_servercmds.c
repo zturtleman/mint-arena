@@ -104,10 +104,10 @@ static void CG_ParseScores( int start ) {
 		if ( cg.scores[i].client < 0 || cg.scores[i].client >= MAX_CLIENTS ) {
 			cg.scores[i].client = 0;
 		}
-		cgs.clientinfo[ cg.scores[i].client ].score = cg.scores[i].score;
-		cgs.clientinfo[ cg.scores[i].client ].powerups = powerups;
+		cgs.playerinfo[ cg.scores[i].client ].score = cg.scores[i].score;
+		cgs.playerinfo[ cg.scores[i].client ].powerups = powerups;
 
-		cg.scores[i].team = cgs.clientinfo[cg.scores[i].client].team;
+		cg.scores[i].team = cgs.playerinfo[cg.scores[i].client].team;
 	}
 #ifdef MISSIONPACK_HUD
 	CG_SetScoreSelection(NULL);
@@ -159,11 +159,11 @@ static void CG_ParseTeamInfo( int start ) {
 
 		sortedTeamPlayers[team][i] = client;
 
-		cgs.clientinfo[ client ].location = atoi( CG_Argv( i * 6 + 4 + start ) );
-		cgs.clientinfo[ client ].health = atoi( CG_Argv( i * 6 + 5 + start ) );
-		cgs.clientinfo[ client ].armor = atoi( CG_Argv( i * 6 + 6 + start ) );
-		cgs.clientinfo[ client ].curWeapon = atoi( CG_Argv( i * 6 + 7 + start ) );
-		cgs.clientinfo[ client ].powerups = atoi( CG_Argv( i * 6 + 8 + start ) );
+		cgs.playerinfo[ client ].location = atoi( CG_Argv( i * 6 + 4 + start ) );
+		cgs.playerinfo[ client ].health = atoi( CG_Argv( i * 6 + 5 + start ) );
+		cgs.playerinfo[ client ].armor = atoi( CG_Argv( i * 6 + 6 + start ) );
+		cgs.playerinfo[ client ].curWeapon = atoi( CG_Argv( i * 6 + 7 + start ) );
+		cgs.playerinfo[ client ].powerups = atoi( CG_Argv( i * 6 + 8 + start ) );
 	}
 }
 
@@ -754,30 +754,30 @@ CG_VoiceChatListForClient
 =================
 */
 voiceChatList_t *CG_VoiceChatListForClient( int clientNum ) {
-	clientInfo_t *ci;
+	playerInfo_t *pi;
 	int voiceChatNum, i, j, k, gender;
 	char filename[MAX_QPATH], headModelName[MAX_QPATH];
 
 	if ( clientNum < 0 || clientNum >= MAX_CLIENTS ) {
 		clientNum = 0;
 	}
-	ci = &cgs.clientinfo[ clientNum ];
+	pi = &cgs.playerinfo[ clientNum ];
 
 	for ( k = 0; k < 2; k++ ) {
 		if ( k == 0 ) {
-			if (ci->headModelName[0] == '*') {
-				Com_sprintf( headModelName, sizeof(headModelName), "%s/%s", ci->headModelName+1, ci->headSkinName );
+			if (pi->headModelName[0] == '*') {
+				Com_sprintf( headModelName, sizeof(headModelName), "%s/%s", pi->headModelName+1, pi->headSkinName );
 			}
 			else {
-				Com_sprintf( headModelName, sizeof(headModelName), "%s/%s", ci->headModelName, ci->headSkinName );
+				Com_sprintf( headModelName, sizeof(headModelName), "%s/%s", pi->headModelName, pi->headSkinName );
 			}
 		}
 		else {
-			if (ci->headModelName[0] == '*') {
-				Com_sprintf( headModelName, sizeof(headModelName), "%s", ci->headModelName+1 );
+			if (pi->headModelName[0] == '*') {
+				Com_sprintf( headModelName, sizeof(headModelName), "%s", pi->headModelName+1 );
 			}
 			else {
-				Com_sprintf( headModelName, sizeof(headModelName), "%s", ci->headModelName );
+				Com_sprintf( headModelName, sizeof(headModelName), "%s", pi->headModelName );
 			}
 		}
 		// find the voice file for the head model the client uses
@@ -803,7 +803,7 @@ voiceChatList_t *CG_VoiceChatListForClient( int clientNum ) {
 			}
 		}
 	}
-	gender = ci->gender;
+	gender = pi->gender;
 	for (k = 0; k < 2; k++) {
 		// just pick the first with the right gender
 		for ( i = 0; i < MAX_VOICEFILES; i++ ) {
@@ -955,7 +955,7 @@ void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int c
 #ifdef MISSIONPACK
 	char *chat;
 	voiceChatList_t *voiceChatList;
-	clientInfo_t *ci;
+	playerInfo_t *pi;
 	sfxHandle_t snd;
 	bufferedVoiceChat_t vchat;
 
@@ -967,7 +967,7 @@ void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int c
 	if ( clientNum < 0 || clientNum >= MAX_CLIENTS ) {
 		clientNum = 0;
 	}
-	ci = &cgs.clientinfo[ clientNum ];
+	pi = &cgs.playerinfo[ clientNum ];
 
 	voiceChatList = CG_VoiceChatListForClient( clientNum );
 
@@ -980,13 +980,13 @@ void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int c
 			vchat.voiceOnly = voiceOnly;
 			Q_strncpyz(vchat.cmd, cmd, sizeof(vchat.cmd));
 			if ( mode == SAY_TELL ) {
-				Com_sprintf(vchat.message, sizeof(vchat.message), "[%s]: %c%c%s", ci->name, Q_COLOR_ESCAPE, color, chat);
+				Com_sprintf(vchat.message, sizeof(vchat.message), "[%s]: %c%c%s", pi->name, Q_COLOR_ESCAPE, color, chat);
 			}
 			else if ( mode == SAY_TEAM ) {
-				Com_sprintf(vchat.message, sizeof(vchat.message), "(%s): %c%c%s", ci->name, Q_COLOR_ESCAPE, color, chat);
+				Com_sprintf(vchat.message, sizeof(vchat.message), "(%s): %c%c%s", pi->name, Q_COLOR_ESCAPE, color, chat);
 			}
 			else {
-				Com_sprintf(vchat.message, sizeof(vchat.message), "%s: %c%c%s", ci->name, Q_COLOR_ESCAPE, color, chat);
+				Com_sprintf(vchat.message, sizeof(vchat.message), "%s: %c%c%s", pi->name, Q_COLOR_ESCAPE, color, chat);
 			}
 			CG_AddBufferedVoiceChat(&vchat);
 		}
@@ -1044,7 +1044,7 @@ CG_LocalPlayerBitsForTeam
 =================
 */
 int CG_LocalPlayerBitsForTeam( team_t team ) {
-	clientInfo_t	*ci;
+	playerInfo_t	*pi;
 	int				clientNum;
 	int				bits;
 	int				i;
@@ -1057,12 +1057,12 @@ int CG_LocalPlayerBitsForTeam( team_t team ) {
 			continue;
 		}
 		
-		ci = &cgs.clientinfo[clientNum];
-		if ( !ci->infoValid ) {
+		pi = &cgs.playerinfo[clientNum];
+		if ( !pi->infoValid ) {
 			continue;
 		}
 		
-		if ( ci->team == team ) {
+		if ( pi->team == team ) {
 			bits |= ( 1 << i );
 		}
 	}

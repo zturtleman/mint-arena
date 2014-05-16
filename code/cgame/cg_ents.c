@@ -435,8 +435,8 @@ static void CG_Item( centity_t *cent ) {
 	}
 	
 	if( item->giType == IT_WEAPON ) {
-		clientInfo_t *ci = &cgs.clientinfo[cg.cur_ps->clientNum];
-		Byte4Copy( ci->c1RGBA, ent.shaderRGBA );
+		playerInfo_t *pi = &cgs.playerinfo[cg.cur_ps->clientNum];
+		Byte4Copy( pi->c1RGBA, ent.shaderRGBA );
 	}
 
 	ent.hModel = cg_items[es->modelindex].models[0];

@@ -364,7 +364,7 @@ typedef struct {
 	int				team;
 } score_t;
 
-// each client has an associated clientInfo_t
+// each player has an associated playerInfo_t
 // that contains media references necessary to present the
 // client model and other color coded effects
 // this is regenerated each time a client's configstring changes,
@@ -437,7 +437,7 @@ typedef struct {
 	animation_t		animations[MAX_TOTALANIMATIONS];
 
 	sfxHandle_t		sounds[MAX_CUSTOM_SOUNDS];
-} clientInfo_t;
+} playerInfo_t;
 
 
 // each WP_* weapon enum has an associated weaponInfo_t
@@ -828,8 +828,8 @@ typedef struct {
 
 // all of the model, shader, and sound references that are
 // loaded at gamestate time are stored in cgMedia_t
-// Other media that can be tied to clients, weapons, or items are
-// stored in the clientInfo_t, weaponInfo_t, or itemInfo_t
+// Other media that can be tied to players, weapons, or items are
+// stored in the playerInfo_t, weaponInfo_t, or itemInfo_t
 typedef struct {
 	qhandle_t	charsetShader;
 	qhandle_t	whiteShader;
@@ -1241,7 +1241,7 @@ typedef struct {
 	qhandle_t		inlineDrawModel[MAX_SUBMODELS];
 	vec3_t			inlineModelMidpoints[MAX_SUBMODELS];
 
-	clientInfo_t	clientinfo[MAX_CLIENTS];
+	playerInfo_t	playerinfo[MAX_CLIENTS];
 
 	// teamchat width is *3 because of embedded color codes
 	char			teamChatMsgs[TEAMCHAT_HEIGHT][TEAMCHAT_WIDTH*3+1];
@@ -1669,7 +1669,7 @@ void CG_MissileHitPlayer( int weapon, vec3_t origin, vec3_t dir, int entityNum )
 void CG_ShotgunFire( entityState_t *es );
 void CG_Bullet( vec3_t origin, int sourceEntityNum, vec3_t normal, qboolean flesh, int fleshEntityNum );
 
-void CG_RailTrail( clientInfo_t *ci, vec3_t start, vec3_t end );
+void CG_RailTrail( playerInfo_t *pi, vec3_t start, vec3_t end );
 void CG_GrappleTrail( centity_t *ent, const weaponInfo_t *wi );
 void CG_AddViewWeapon (playerState_t *ps);
 void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent, int team );

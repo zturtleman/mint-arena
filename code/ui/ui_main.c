@@ -1201,7 +1201,7 @@ static qboolean updateModel = qtrue;
 static qboolean q3Model = qfalse;
 
 static void UI_DrawPlayerModel(rectDef_t *rect) {
-  static playerInfo_t info;
+  static uiPlayerInfo_t info;
   char model[MAX_QPATH];
   char team[256];
 	char head[256];
@@ -1227,7 +1227,7 @@ static void UI_DrawPlayerModel(rectDef_t *rect) {
 		}
 	}
   if (updateModel) {
-  	memset( &info, 0, sizeof(playerInfo_t) );
+  	memset( &info, 0, sizeof(uiPlayerInfo_t) );
   	viewangles[YAW]   = 180 - 10;
   	viewangles[PITCH] = 0;
   	viewangles[ROLL]  = 0;
@@ -1349,7 +1349,7 @@ static const char *UI_AIFromName(const char *name) {
 
 static qboolean updateOpponentModel = qtrue;
 static void UI_DrawOpponent(rectDef_t *rect) {
-  static playerInfo_t info2;
+  static uiPlayerInfo_t info2;
   char model[MAX_QPATH];
   char headmodel[MAX_QPATH];
   char team[256];
@@ -1362,7 +1362,7 @@ static void UI_DrawOpponent(rectDef_t *rect) {
 	  strcpy(headmodel, CG_Cvar_VariableString("ui_opponentModel"));
 		team[0] = '\0';
 
-  	memset( &info2, 0, sizeof(playerInfo_t) );
+  	memset( &info2, 0, sizeof(uiPlayerInfo_t) );
   	viewangles[YAW]   = 180 - 10;
   	viewangles[PITCH] = 0;
   	viewangles[ROLL]  = 0;

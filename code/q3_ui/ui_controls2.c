@@ -230,7 +230,7 @@ typedef struct
 	menuaction_s		showscores;
 	menuradiobutton_s	autoswitch;
 	menuaction_s		useitem;
-	playerInfo_t		playerinfo;
+	uiPlayerInfo_t		playerinfo;
 	qboolean			changesmade;
 	menuaction_s		chat;
 	menuaction_s		chat2;
@@ -1511,7 +1511,7 @@ static void Controls_InitModel( void )
 {
 	char model[MAX_QPATH], headmodel[MAX_QPATH];
 
-	memset( &s_controls.playerinfo, 0, sizeof(playerInfo_t) );
+	memset( &s_controls.playerinfo, 0, sizeof(uiPlayerInfo_t) );
 
 	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "model"), model, sizeof ( model ) );
 	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "headmodel"), headmodel, sizeof ( headmodel ) );

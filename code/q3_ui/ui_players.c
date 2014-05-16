@@ -58,7 +58,7 @@ static float		jumpHeight;
 UI_PlayerInfo_SetWeapon
 ===============
 */
-static void UI_PlayerInfo_SetWeapon( playerInfo_t *pi, weapon_t weaponNum ) {
+static void UI_PlayerInfo_SetWeapon( uiPlayerInfo_t *pi, weapon_t weaponNum ) {
 	gitem_t *	item;
 	char		path[MAX_QPATH];
 
@@ -164,7 +164,7 @@ tryagain:
 UI_ForceLegsAnim
 ===============
 */
-static void UI_ForceLegsAnim( playerInfo_t *pi, int anim ) {
+static void UI_ForceLegsAnim( uiPlayerInfo_t *pi, int anim ) {
 	pi->legsAnim = ( ( pi->legsAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | anim;
 
 	if ( anim == LEGS_JUMP ) {
@@ -178,7 +178,7 @@ static void UI_ForceLegsAnim( playerInfo_t *pi, int anim ) {
 UI_SetLegsAnim
 ===============
 */
-static void UI_SetLegsAnim( playerInfo_t *pi, int anim ) {
+static void UI_SetLegsAnim( uiPlayerInfo_t *pi, int anim ) {
 	if ( pi->pendingLegsAnim ) {
 		anim = pi->pendingLegsAnim;
 		pi->pendingLegsAnim = 0;
@@ -192,7 +192,7 @@ static void UI_SetLegsAnim( playerInfo_t *pi, int anim ) {
 UI_ForceTorsoAnim
 ===============
 */
-static void UI_ForceTorsoAnim( playerInfo_t *pi, int anim ) {
+static void UI_ForceTorsoAnim( uiPlayerInfo_t *pi, int anim ) {
 	pi->torsoAnim = ( ( pi->torsoAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | anim;
 
 	if ( anim == TORSO_GESTURE ) {
@@ -210,7 +210,7 @@ static void UI_ForceTorsoAnim( playerInfo_t *pi, int anim ) {
 UI_SetTorsoAnim
 ===============
 */
-static void UI_SetTorsoAnim( playerInfo_t *pi, int anim ) {
+static void UI_SetTorsoAnim( uiPlayerInfo_t *pi, int anim ) {
 	if ( pi->pendingTorsoAnim ) {
 		anim = pi->pendingTorsoAnim;
 		pi->pendingTorsoAnim = 0;
@@ -225,7 +225,7 @@ static void UI_SetTorsoAnim( playerInfo_t *pi, int anim ) {
 UI_TorsoSequencing
 ===============
 */
-static void UI_TorsoSequencing( playerInfo_t *pi ) {
+static void UI_TorsoSequencing( uiPlayerInfo_t *pi ) {
 	int		currentAnim;
 
 	currentAnim = pi->torsoAnim & ~ANIM_TOGGLEBIT;
@@ -270,7 +270,7 @@ static void UI_TorsoSequencing( playerInfo_t *pi ) {
 UI_LegsSequencing
 ===============
 */
-static void UI_LegsSequencing( playerInfo_t *pi ) {
+static void UI_LegsSequencing( uiPlayerInfo_t *pi ) {
 	int		currentAnim;
 
 	currentAnim = pi->legsAnim & ~ANIM_TOGGLEBIT;
@@ -365,7 +365,7 @@ static qboolean UI_PositionRotatedEntityOnTag( refEntity_t *entity, const refEnt
 UI_SetLerpFrameAnimation
 ===============
 */
-static void UI_SetLerpFrameAnimation( playerInfo_t *ci, lerpFrame_t *lf, int newAnimation ) {
+static void UI_SetLerpFrameAnimation( uiPlayerInfo_t *ci, lerpFrame_t *lf, int newAnimation ) {
 	animation_t	*anim;
 
 	lf->animationNumber = newAnimation;
@@ -387,7 +387,7 @@ static void UI_SetLerpFrameAnimation( playerInfo_t *ci, lerpFrame_t *lf, int new
 UI_RunLerpFrame
 ===============
 */
-static void UI_RunLerpFrame( playerInfo_t *ci, lerpFrame_t *lf, int newAnimation ) {
+static void UI_RunLerpFrame( uiPlayerInfo_t *ci, lerpFrame_t *lf, int newAnimation ) {
 	int			f;
 	animation_t	*anim;
 
@@ -449,7 +449,7 @@ static void UI_RunLerpFrame( playerInfo_t *ci, lerpFrame_t *lf, int newAnimation
 UI_PlayerAnimation
 ===============
 */
-static void UI_PlayerAnimation( playerInfo_t *pi, int *legsOld, int *legs, float *legsBackLerp,
+static void UI_PlayerAnimation( uiPlayerInfo_t *pi, int *legsOld, int *legs, float *legsBackLerp,
 						int *torsoOld, int *torso, float *torsoBackLerp ) {
 
 	// legs animation
@@ -551,7 +551,7 @@ static void UI_SwingAngles( float destination, float swingTolerance, float clamp
 UI_MovedirAdjustment
 ======================
 */
-static float UI_MovedirAdjustment( playerInfo_t *pi ) {
+static float UI_MovedirAdjustment( uiPlayerInfo_t *pi ) {
 	vec3_t		relativeAngles;
 	vec3_t		moveVector;
 
@@ -595,7 +595,7 @@ static float UI_MovedirAdjustment( playerInfo_t *pi ) {
 UI_PlayerAngles
 ===============
 */
-static void UI_PlayerAngles( playerInfo_t *pi, vec3_t legs[3], vec3_t torso[3], vec3_t head[3] ) {
+static void UI_PlayerAngles( uiPlayerInfo_t *pi, vec3_t legs[3], vec3_t torso[3], vec3_t head[3] ) {
 	vec3_t		legsAngles, torsoAngles, headAngles;
 	float		dest;
 	float		adjust;
@@ -654,7 +654,7 @@ static void UI_PlayerAngles( playerInfo_t *pi, vec3_t legs[3], vec3_t torso[3], 
 UI_PlayerFloatSprite
 ===============
 */
-static void UI_PlayerFloatSprite( playerInfo_t *pi, vec3_t origin, qhandle_t shader ) {
+static void UI_PlayerFloatSprite( uiPlayerInfo_t *pi, vec3_t origin, qhandle_t shader ) {
 	refEntity_t		ent;
 
 	memset( &ent, 0, sizeof( ent ) );
@@ -673,7 +673,7 @@ static void UI_PlayerFloatSprite( playerInfo_t *pi, vec3_t origin, qhandle_t sha
 UI_MachinegunSpinAngle
 ======================
 */
-float	UI_MachinegunSpinAngle( playerInfo_t *pi ) {
+float	UI_MachinegunSpinAngle( uiPlayerInfo_t *pi ) {
 	int		delta;
 	float	angle;
 	float	speed;
@@ -710,7 +710,7 @@ float	UI_MachinegunSpinAngle( playerInfo_t *pi ) {
 UI_DrawPlayer
 ===============
 */
-void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int time ) {
+void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int time ) {
 	refdef_t		refdef;
 	refEntity_t		legs;
 	refEntity_t		torso;
@@ -996,7 +996,7 @@ static qboolean	UI_FindClientHeadFile( char *filename, int length, const char *t
 UI_RegisterClientSkin
 ==========================
 */
-static qboolean UI_RegisterClientSkin( playerInfo_t *pi, const char *modelName, const char *skinName, const char *headModelName, const char *headSkinName , const char *teamName) {
+static qboolean UI_RegisterClientSkin( uiPlayerInfo_t *pi, const char *modelName, const char *skinName, const char *headModelName, const char *headSkinName , const char *teamName) {
 	char		filename[MAX_QPATH];
 	qboolean	legsSkin, torsoSkin, headSkin;
 
@@ -1155,7 +1155,7 @@ static qboolean UI_ParseAnimationFile( const char *filename, animation_t *animat
 UI_RegisterClientModelname
 ==========================
 */
-qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *modelSkinName, const char *headModelSkinName, const char *teamName ) {
+qboolean UI_RegisterClientModelname( uiPlayerInfo_t *pi, const char *modelSkinName, const char *headModelSkinName, const char *teamName ) {
 	char		modelName[MAX_QPATH];
 	char		skinName[MAX_QPATH];
 	char		headModelName[MAX_QPATH];
@@ -1248,7 +1248,7 @@ qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *modelSkinName
 UI_PlayerInfo_SetModel
 ===============
 */
-void UI_PlayerInfo_SetModel( playerInfo_t *pi, const char *model, const char *headmodel, char *teamName ) {
+void UI_PlayerInfo_SetModel( uiPlayerInfo_t *pi, const char *model, const char *headmodel, char *teamName ) {
 	memset( pi, 0, sizeof(*pi) );
 	UI_RegisterClientModelname( pi, model, headmodel, teamName );
 	pi->weapon = WP_MACHINEGUN;
@@ -1267,7 +1267,7 @@ void UI_PlayerInfo_SetModel( playerInfo_t *pi, const char *model, const char *he
 UI_PlayerInfo_SetInfo
 ===============
 */
-void UI_PlayerInfo_SetInfo( playerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNumber, qboolean chat ) {
+void UI_PlayerInfo_SetInfo( uiPlayerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNumber, qboolean chat ) {
 	int			currentAnim;
 	weapon_t	weaponNum;
 	int			c;

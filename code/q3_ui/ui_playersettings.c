@@ -74,7 +74,7 @@ typedef struct {
 
 	qhandle_t			fxBasePic;
 	qhandle_t			fxPic[NUM_COLOR_EFFECTS];
-	playerInfo_t		playerinfo;
+	uiPlayerInfo_t		playerinfo;
 	int					current_fx;
 	char				playerModel[MAX_QPATH];
 	char				playerHead[MAX_QPATH];
@@ -324,7 +324,7 @@ static void PlayerSettings_SetMenuItems( void ) {
 	s_playersettings.effects.curvalue = gamecodetoui[c];
 
 	// model/skin
-	memset( &s_playersettings.playerinfo, 0, sizeof(playerInfo_t) );
+	memset( &s_playersettings.playerinfo, 0, sizeof(uiPlayerInfo_t) );
 	
 	viewangles[YAW]   = 180 - 30;
 	viewangles[PITCH] = 0;

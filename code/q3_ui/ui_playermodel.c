@@ -101,7 +101,7 @@ typedef struct
 	menutext_s		modelname;
 	menutext_s		skinname;
 	menutext_s		playername;
-	playerInfo_t	playerinfo;
+	uiPlayerInfo_t	playerinfo;
 	int				nummodels;
 	char			modelnames[MAX_PLAYERMODELS][128];
 	int				modelpage;
@@ -185,7 +185,7 @@ static void PlayerModel_UpdateModel( void )
 	vec3_t	viewangles;
 	vec3_t	moveangles;
 
-	memset( &s_playermodel.playerinfo, 0, sizeof(playerInfo_t) );
+	memset( &s_playermodel.playerinfo, 0, sizeof(uiPlayerInfo_t) );
 	
 	viewangles[YAW]   = 180 - 30;
 	viewangles[PITCH] = 0;

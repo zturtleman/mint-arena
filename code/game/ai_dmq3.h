@@ -82,8 +82,6 @@ void BotSetTeamStatus(bot_state_t *bs);
 char *ClientName(int client, char *name, int size);
 //returns a simplified client name
 char *EasyClientName(int client, char *name, int size);
-//returns the skin used by the client
-char *ClientSkin(int client, char *skin, int size);
 // returns the appropriate synonym context for the current game type and situation
 int BotSynonymContext(bot_state_t *bs);
 // set last ordered task

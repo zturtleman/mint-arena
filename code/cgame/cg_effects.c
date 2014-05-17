@@ -104,6 +104,8 @@ void CG_BubbleTrail( vec3_t start, vec3_t end, float spacing ) {
 			le->pos.trDelta[2] = crandom()*5 + 6;
 		} else {
 			le->pos.trDelta[2] = 85 + random()*10;
+
+			VectorCopy( move, re->origin );
 		}
 
 		VectorAdd (move, vec, move);
@@ -163,6 +165,7 @@ void CG_SpawnBubbles( vec3_t origin, float baseSize, int numBubbles ) {
 		le->pos.trTime = cg.time;
 
 		VectorCopy( origin, le->pos.trBase );
+		VectorCopy( origin, re->origin );
 		le->pos.trBase[0] += crandom() * baseSize;
 		le->pos.trBase[1] += crandom() * baseSize;
 		le->pos.trBase[2] += crandom() * baseSize;

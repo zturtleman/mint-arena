@@ -1509,6 +1509,7 @@ void BotMatch_WhereAreYou(bot_state_t *bs, bot_match_t *match) {
 	int i, redtt, bluett, client;
 	char *bestitemname;
 	bot_goal_t goal;
+	gitem_t *it;
 	char netname[MAX_MESSAGE_SIZE];
 	char *nearbyitems[] = {
 #ifdef MISSIONPACK
@@ -1527,23 +1528,29 @@ void BotMatch_WhereAreYou(bot_state_t *bs, bot_match_t *match) {
 
 	bestitemname = NULL;
 	bestdist = 999999;
-	for (i = 0; i < bg_numItems; i++) {
+	for (i = 1; i < BG_NumItems(); i++) {
+		it = BG_ItemForItemNum( i );
+
+		if ( !it->classname || !*it->classname ) {
+			continue;
+		}
+
 		//ignore health, ammo, holdables, small armor, and Red Cube and Blue Cube
-		if ( bg_itemlist[i].giType == IT_HEALTH
-			|| bg_itemlist[i].giType == IT_AMMO
-			|| bg_itemlist[i].giType == IT_HOLDABLE
-			|| ( bg_itemlist[i].giType == IT_ARMOR && bg_itemlist[i].quantity < 50 )
+		if ( it->giType == IT_HEALTH
+			|| it->giType == IT_AMMO
+			|| it->giType == IT_HOLDABLE
+			|| ( it->giType == IT_ARMOR && it->quantity < 50 )
 #ifdef MISSIONPACK
-			|| ( bg_itemlist[i].giType == IT_TEAM && bg_itemlist[i].giTag == 0 )
+			|| ( it->giType == IT_TEAM && it->giTag == 0 )
 #endif
 			) {
 			continue;
 		}
 
-		dist = BotNearestVisibleItem(bs, bg_itemlist[i].pickup_name, &goal);
+		dist = BotNearestVisibleItem(bs, it->pickup_name, &goal);
 		if (dist < bestdist) {
 			bestdist = dist;
-			bestitemname = bg_itemlist[i].pickup_name;
+			bestitemname = it->pickup_name;
 		}
 	}
 	for (i = 0; nearbyitems[i]; i++) {

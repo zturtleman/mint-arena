@@ -382,7 +382,7 @@ static void CG_Item( centity_t *cent ) {
 		return;
 	}
 
-	item = &bg_itemlist[ es->modelindex ];
+	item = BG_ItemForItemNum( es->modelindex );
 	if ( cg_simpleItems.integer && item->giType != IT_TEAM ) {
 		memset( &ent, 0, sizeof( ent ) );
 		ent.reType = RT_SPRITE;

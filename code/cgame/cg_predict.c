@@ -369,7 +369,7 @@ static void CG_TouchItem( centity_t *cent ) {
 		return;		// can't hold it
 	}
 
-	item = &bg_itemlist[ cent->currentState.modelindex ];
+	item = BG_ItemForItemNum( cent->currentState.modelindex );
 
 	// Special case for flags.  
 	// We don't predict touching our own flag

@@ -1565,12 +1565,12 @@ static void PM_Weapon( void ) {
 	// check for item using
 	if ( pm->cmd.buttons & BUTTON_USE_HOLDABLE ) {
 		if ( ! ( pm->ps->pm_flags & PMF_USE_ITEM_HELD ) ) {
-			if ( bg_itemlist[pm->ps->stats[STAT_HOLDABLE_ITEM]].giTag == HI_MEDKIT
+			if ( BG_ItemForItemNum( pm->ps->stats[STAT_HOLDABLE_ITEM] )->giTag == HI_MEDKIT
 				&& pm->ps->stats[STAT_HEALTH] >= (pm->ps->stats[STAT_MAX_HEALTH] + 25) ) {
 				// don't use medkit if at max health
 			} else {
 				pm->ps->pm_flags |= PMF_USE_ITEM_HELD;
-				PM_AddEvent( EV_USE_ITEM0 + bg_itemlist[pm->ps->stats[STAT_HOLDABLE_ITEM]].giTag );
+				PM_AddEvent( EV_USE_ITEM0 + BG_ItemForItemNum( pm->ps->stats[STAT_HOLDABLE_ITEM] )->giTag );
 				pm->ps->stats[STAT_HOLDABLE_ITEM] = 0;
 			}
 			return;
@@ -1698,11 +1698,11 @@ static void PM_Weapon( void ) {
 	}
 
 #ifdef MISSIONPACK
-	if( bg_itemlist[pm->ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT ) {
+	if( BG_ItemForItemNum( pm->ps->stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_SCOUT ) {
 		addTime /= 1.5;
 	}
 	else
-	if( bg_itemlist[pm->ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_AMMOREGEN ) {
+	if( BG_ItemForItemNum( pm->ps->stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_AMMOREGEN ) {
 		addTime /= 1.3;
   }
   else

@@ -130,7 +130,7 @@ int Pickup_PersistantPowerup( gentity_t *ent, gentity_t *other ) {
 	float	handicap;
 	int		max;
 
-	other->client->ps.stats[STAT_PERSISTANT_POWERUP] = ent->item - bg_itemlist;
+	other->client->ps.stats[STAT_PERSISTANT_POWERUP] = BG_ItemNumForItem( ent->item );
 	other->client->persistantPowerup = ent;
 
 	handicap = ClientHandicap( other->client );
@@ -170,7 +170,7 @@ int Pickup_PersistantPowerup( gentity_t *ent, gentity_t *other ) {
 
 int Pickup_Holdable( gentity_t *ent, gentity_t *other ) {
 
-	other->client->ps.stats[STAT_HOLDABLE_ITEM] = ent->item - bg_itemlist;
+	other->client->ps.stats[STAT_HOLDABLE_ITEM] = BG_ItemNumForItem( ent->item );
 
 	if( ent->item->giTag == HI_KAMIKAZE ) {
 		other->client->ps.eFlags |= EF_KAMIKAZE;
@@ -257,7 +257,7 @@ int Pickup_Health (gentity_t *ent, gentity_t *other) {
 
 	// small and mega healths will go over the max
 #ifdef MISSIONPACK
-	if( bg_itemlist[other->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD ) {
+	if( BG_ItemForItemNum( other->client->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_GUARD ) {
 		max = other->client->ps.stats[STAT_MAX_HEALTH];
 	}
 	else
@@ -296,7 +296,7 @@ int Pickup_Armor( gentity_t *ent, gentity_t *other ) {
 
 	other->client->ps.stats[STAT_ARMOR] += ent->item->quantity;
 
-	if( other->client && bg_itemlist[other->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD ) {
+	if( other->client && BG_ItemForItemNum( other->client->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_GUARD ) {
 		upperBound = other->client->ps.stats[STAT_MAX_HEALTH];
 	}
 	else {
@@ -543,7 +543,7 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 	dropped = G_Spawn();
 
 	dropped->s.eType = ET_ITEM;
-	dropped->s.modelindex = item - bg_itemlist;	// store item number in modelindex
+	dropped->s.modelindex = BG_ItemNumForItem( item );	// store item number in modelindex
 	dropped->s.modelindex2 = 1; // This is non-zero is it's a dropped item
 
 	dropped->classname = item->classname;
@@ -632,7 +632,7 @@ void FinishSpawningItem( gentity_t *ent ) {
 	VectorSet( ent->s.maxs, ITEM_RADIUS, ITEM_RADIUS, ITEM_RADIUS );
 
 	ent->s.eType = ET_ITEM;
-	ent->s.modelindex = ent->item - bg_itemlist;		// store item number in modelindex
+	ent->s.modelindex = BG_ItemNumForItem( ent->item );		// store item number in modelindex
 	ent->s.modelindex2 = 0; // zero indicates this isn't a dropped item
 
 	ent->s.contents = CONTENTS_TRIGGER;
@@ -700,11 +700,11 @@ void G_CheckTeamItems( void ) {
 
 		// check for the two flags
 		item = BG_FindItem( "Red Flag" );
-		if ( !item || !itemRegistered[ item - bg_itemlist ] ) {
+		if ( !item || !itemRegistered[ BG_ItemNumForItem( item ) ] ) {
 			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTF_redflag in map\n" );
 		}
 		item = BG_FindItem( "Blue Flag" );
-		if ( !item || !itemRegistered[ item - bg_itemlist ] ) {
+		if ( !item || !itemRegistered[ BG_ItemNumForItem( item ) ] ) {
 			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTF_blueflag in map\n" );
 		}
 	}
@@ -714,15 +714,15 @@ void G_CheckTeamItems( void ) {
 
 		// check for all three flags
 		item = BG_FindItem( "Red Flag" );
-		if ( !item || !itemRegistered[ item - bg_itemlist ] ) {
+		if ( !item || !itemRegistered[ BG_ItemNumForItem( item ) ] ) {
 			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTF_redflag in map\n" );
 		}
 		item = BG_FindItem( "Blue Flag" );
-		if ( !item || !itemRegistered[ item - bg_itemlist ] ) {
+		if ( !item || !itemRegistered[ BG_ItemNumForItem( item ) ] ) {
 			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTF_blueflag in map\n" );
 		}
 		item = BG_FindItem( "Neutral Flag" );
-		if ( !item || !itemRegistered[ item - bg_itemlist ] ) {
+		if ( !item || !itemRegistered[ BG_ItemNumForItem( item ) ] ) {
 			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTF_neutralflag in map\n" );
 		}
 	}
@@ -799,7 +799,7 @@ void RegisterItem( gitem_t *item ) {
 	if ( !item ) {
 		G_Error( "RegisterItem: NULL" );
 	}
-	itemRegistered[ item - bg_itemlist ] = qtrue;
+	itemRegistered[ BG_ItemNumForItem( item ) ] = qtrue;
 }
 
 

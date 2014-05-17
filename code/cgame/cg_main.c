@@ -1031,7 +1031,7 @@ static void CG_RegisterItemSounds( int itemNum ) {
 	char			*s, *start;
 	int				len;
 
-	item = &bg_itemlist[ itemNum ];
+	item = BG_ItemForItemNum( itemNum );
 
 	if( item->pickup_sound ) {
 		cgs.media.itemPickupSounds[ itemNum ] = trap_S_RegisterSound( item->pickup_sound, qfalse );
@@ -2185,13 +2185,13 @@ static const char *CG_FeederItemText(float feederID, int index, int column, qhan
 			case 0:
 				if ( info->powerups & ( 1 << PW_NEUTRALFLAG ) ) {
 					item = BG_FindItemForPowerup( PW_NEUTRALFLAG );
-					*handle = cg_items[ ITEM_INDEX(item) ].icon;
+					*handle = cg_items[ BG_ItemNumForItem( item ) ].icon;
 				} else if ( info->powerups & ( 1 << PW_REDFLAG ) ) {
 					item = BG_FindItemForPowerup( PW_REDFLAG );
-					*handle = cg_items[ ITEM_INDEX(item) ].icon;
+					*handle = cg_items[ BG_ItemNumForItem( item ) ].icon;
 				} else if ( info->powerups & ( 1 << PW_BLUEFLAG ) ) {
 					item = BG_FindItemForPowerup( PW_BLUEFLAG );
-					*handle = cg_items[ ITEM_INDEX(item) ].icon;
+					*handle = cg_items[ BG_ItemNumForItem( item ) ].icon;
 				} else {
 					if ( info->botSkill > 0 && info->botSkill <= 5 ) {
 						*handle = cgs.media.botSkillShaders[ info->botSkill - 1 ];

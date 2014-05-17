@@ -1500,8 +1500,10 @@ Controls_InitWeapons
 */
 static void Controls_InitWeapons( void ) {
 	gitem_t *	item;
+	int			i;
 
-	for ( item = bg_itemlist + 1 ; item->classname ; item++ ) {
+	for ( i = 1; i < BG_NumItems(); i++ ) {
+		item = BG_ItemForItemNum( i );
 		if ( item->giType != IT_WEAPON ) {
 			continue;
 		}

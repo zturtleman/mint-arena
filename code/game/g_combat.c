@@ -872,7 +872,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	if ( attacker->client && attacker != targ ) {
 		max = attacker->client->ps.stats[STAT_MAX_HEALTH];
 #ifdef MISSIONPACK
-		if( bg_itemlist[attacker->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD ) {
+		if( BG_ItemForItemNum( attacker->client->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_GUARD ) {
 			max /= 2;
 		}
 #endif

@@ -430,16 +430,17 @@ A new item was picked up this frame
 */
 static void CG_ItemPickup( int localClientNum, int itemNum ) {
 	cglc_t *lc = &cg.localClients[localClientNum];
+	gitem_t *item = BG_ItemForItemNum( itemNum );
 
 	lc->itemPickup = itemNum;
 	lc->itemPickupTime = cg.time;
 	lc->itemPickupBlendTime = cg.time;
 	// see if it should be the grabbed weapon
-	if ( bg_itemlist[itemNum].giType == IT_WEAPON ) {
+	if ( item->giType == IT_WEAPON ) {
 		// select it immediately
-		if ( cg_autoswitch[localClientNum].integer && bg_itemlist[itemNum].giTag != WP_MACHINEGUN ) {
+		if ( cg_autoswitch[localClientNum].integer && item->giTag != WP_MACHINEGUN ) {
 			lc->weaponSelectTime = cg.time;
-			lc->weaponSelect = bg_itemlist[itemNum].giTag;
+			lc->weaponSelect = item->giTag;
 		}
 	}
 
@@ -775,7 +776,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			if ( index < 1 || index >= bg_numItems ) {
 				break;
 			}
-			item = &bg_itemlist[ index ];
+			item = BG_ItemForItemNum( index );
 
 			// powerups and team items will have a separate global sound, this one
 			// will be played at prediction time

@@ -73,18 +73,12 @@ tryagain:
 		return;
 	}
 
-	for ( item = bg_itemlist + 1; item->classname ; item++ ) {
-		if ( item->giType != IT_WEAPON ) {
-			continue;
-		}
-		if ( item->giTag == weaponNum ) {
-			break;
-		}
+	item = BG_FindItemForWeapon( weaponNum );
+	if ( !item ) {
+		goto tryagain;
 	}
 
-	if ( item->classname ) {
-		pi->weaponModel = trap_R_RegisterModel( item->world_model[0] );
-	}
+	pi->weaponModel = trap_R_RegisterModel( item->world_model[0] );
 
 	if( pi->weaponModel == 0 ) {
 		if( weaponNum == WP_MACHINEGUN ) {

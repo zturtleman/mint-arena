@@ -263,6 +263,7 @@ typedef enum {
 	LE_FADE_RGB,
 	LE_SCALE_FADE,
 	LE_SCOREPLUM,
+	LE_BUBBLE,
 #ifdef MISSIONPACK
 	LE_KAMIKAZE,
 	LE_INVULIMPACT,
@@ -1368,6 +1369,7 @@ extern	vmCvar_t		cg_fovAspectAdjust;
 extern	vmCvar_t		cg_fadeExplosions;
 extern	vmCvar_t		cg_skybox;
 extern	vmCvar_t		cg_drawScores;
+extern	vmCvar_t		cg_oldBubbles;
 extern	vmCvar_t		ui_stretch;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;
@@ -1674,6 +1676,7 @@ localEntity_t *CG_SmokePuff( const vec3_t p,
 				   int leFlags,
 				   qhandle_t hShader );
 void CG_BubbleTrail( vec3_t start, vec3_t end, float spacing );
+void CG_SpawnBubbles( vec3_t origin, float baseSize, int numBubbles );
 void CG_SpawnEffect( vec3_t org );
 #ifdef MISSIONPACK
 void CG_KamikazeEffect( vec3_t org );

@@ -1648,43 +1648,56 @@ static void CG_HasteTrail( centity_t *cent ) {
 	smoke->leType = LE_SCALE_FADE;
 }
 
-#ifdef MISSIONPACK
 /*
 ===============
 CG_BreathPuffs
 ===============
 */
-static void CG_BreathPuffs( centity_t *cent, refEntity_t *head) {
+static void CG_BreathPuffs( centity_t *cent, refEntity_t *head ) {
 	clientInfo_t *ci;
-	vec3_t up, origin;
+#ifdef MISSIONPACK
+	vec3_t up;
+#endif
+	vec3_t origin;
 	int contents;
+
+	if ( cent->currentState.number >= MAX_CLIENTS ) {
+		return;
+	}
 
 	ci = &cgs.clientinfo[ cent->currentState.number ];
 
-	if (!cg_enableBreath.integer) {
-		return;
-	}
 	if ( cent->currentState.number == cg.cur_ps->clientNum && !cg.cur_lc->renderingThirdPerson) {
 		return;
 	}
 	if ( cent->currentState.eFlags & EF_DEAD ) {
 		return;
 	}
-	contents = CG_PointContents( head->origin, 0 );
-	if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ) {
-		return;
-	}
 	if ( ci->breathPuffTime > cg.time ) {
 		return;
 	}
 
+#ifdef MISSIONPACK
 	VectorSet( up, 0, 0, 8 );
+#endif
 	VectorMA(head->origin, 8, head->axis[0], origin);
 	VectorMA(origin, -4, head->axis[2], origin);
-	CG_SmokePuff( origin, up, 16, 1, 1, 1, 0.66f, 1500, cg.time, cg.time + 400, LEF_PUFF_DONT_SCALE, cgs.media.shotgunSmokePuffShader );
+
+	contents = CG_PointContents( origin, 0 );
+
+	if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ) {
+		CG_SpawnBubbles( origin, 2, (int)(3 + random()*5) );
+	} else {
+#ifdef MISSIONPACK
+		if ( cg_enableBreath.integer ) {
+			CG_SmokePuff( origin, up, 16, 1, 1, 1, 0.66f, 1500, cg.time, cg.time + 400, LEF_PUFF_DONT_SCALE, cgs.media.shotgunSmokePuffShader );
+		}
+#endif
+	}
 	ci->breathPuffTime = cg.time + 2000;
 }
 
+#ifdef MISSIONPACK
 /*
 ===============
 CG_DustTrail
@@ -2721,9 +2734,9 @@ void CG_Player( centity_t *cent ) {
 
 	CG_AddRefEntityWithPowerups( &head, &cent->currentState );
 
-#ifdef MISSIONPACK
 	CG_BreathPuffs(cent, &head);
 
+#ifdef MISSIONPACK
 	CG_DustTrail(cent);
 #endif
 

@@ -1249,7 +1249,6 @@ gitem_t	*BG_FindItemForAmmo( weapon_t weapon ) {
 		}
 	}
 
-	Com_Error( ERR_DROP, "Couldn't find item for ammo %i", weapon);
 	return NULL;
 }
 

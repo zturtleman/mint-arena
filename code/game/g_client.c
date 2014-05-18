@@ -487,7 +487,6 @@ void CopyToBodyQue( gentity_t *ent ) {
 	VectorCopy (ent->r.absmax, body->r.absmax);
 
 	body->clipmask = CONTENTS_SOLID | CONTENTS_PLAYERCLIP;
-	body->s.contents = CONTENTS_CORPSE;
 	body->r.ownerNum = ent->s.number;
 
 	body->nextthink = level.time + 5000;
@@ -497,8 +496,11 @@ void CopyToBodyQue( gentity_t *ent ) {
 
 	// don't take more damage if already gibbed
 	if ( ent->health <= GIB_HEALTH ) {
+		body->s.eFlags |= EF_GIBBED;
+		body->s.contents = 0;
 		body->takedamage = qfalse;
 	} else {
+		body->s.contents = CONTENTS_CORPSE;
 		body->takedamage = qtrue;
 	}
 

@@ -89,7 +89,6 @@ vmCvar_t	g_doWarmup;
 vmCvar_t	g_restarted;
 vmCvar_t	g_logfile;
 vmCvar_t	g_logfileSync;
-vmCvar_t	g_blood;
 vmCvar_t	g_podiumDist;
 vmCvar_t	g_podiumDrop;
 vmCvar_t	g_allowVote;
@@ -170,7 +169,6 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_debugMove, "g_debugMove", "0", 0, 0, RANGE_BOOL },
 	{ &g_debugDamage, "g_debugDamage", "0", 0, 0, RANGE_BOOL },
 	{ &g_motd, "g_motd", "", 0, 0, RANGE_ALL },
-	{ &g_blood, "com_blood", "1", CVAR_ARCHIVE, 0, RANGE_ALL },
 
 	{ &g_podiumDist, "g_podiumDist", "80", 0, 0, RANGE_ALL },
 	{ &g_podiumDrop, "g_podiumDrop", "70", 0, 0, RANGE_ALL },

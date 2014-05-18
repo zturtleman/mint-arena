@@ -2417,6 +2417,10 @@ void CG_Player( centity_t *cent ) {
 		return;
 	}
 
+	if ( cg_blood.integer && cg_gibs.integer && ( cent->currentState.eFlags & EF_GIBBED ) ) {
+		return;
+	}
+
 	// get the player model information
 	renderfx = 0;
 	if ( cent->currentState.number == cg.cur_ps->clientNum) {

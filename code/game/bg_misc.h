@@ -41,7 +41,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // because games can change separately from the main system version, we need a
 // second version that must match between game and cgame
 
-#define	GAME_VERSION		MODDIR "-1"
+#define	GAME_VERSION		MODDIR "-2"
 
 #define	DEFAULT_GRAVITY		800
 #define	GIB_HEALTH			-40
@@ -569,6 +569,7 @@ typedef enum {
 #define	EF_AWARD_ASSIST		0x00020000		// draw a assist sprite
 #define EF_AWARD_DENIED		0x00040000		// denied
 #define EF_TEAMVOTED		0x00080000		// already cast a team vote
+#define EF_GIBBED			0x00100000		// player has been gibbed, client only renders player if com_blood or cg_gibs is 0
 
 // NOTE: may not have more than MAX_POWERUPS
 typedef enum {
@@ -732,7 +733,6 @@ typedef enum {
 	EV_POWERUP_BATTLESUIT,
 	EV_POWERUP_REGEN,
 
-	EV_GIB_PLAYER,			// gib a previously living player
 	EV_SCOREPLUM,			// score plum
 
 //#ifdef MISSIONPACK

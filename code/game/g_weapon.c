@@ -1135,6 +1135,7 @@ void G_StartKamikaze( gentity_t *ent ) {
 		explosion->activator = ent;
 		//
 		ent->s.eFlags &= ~EF_KAMIKAZE;
+		ent->client->ps.eFlags &= ~EF_KAMIKAZE;
 		// nuke the guy that used it
 		G_Damage( ent, ent, ent, NULL, NULL, 100000, DAMAGE_NO_PROTECTION, MOD_KAMIKAZE );
 	}

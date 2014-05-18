@@ -659,7 +659,7 @@ void CG_GibPlayer( vec3_t playerOrigin ) {
 		CG_SpawnBubbles( playerOrigin, 3, 5 + random() * 5 );
 	}
 
-	if ( !cg_blood.integer ) {
+	if ( !cg_blood.integer || !cg_gibs.integer ) {
 		return;
 	}
 
@@ -671,11 +671,6 @@ void CG_GibPlayer( vec3_t playerOrigin ) {
 		CG_LaunchGib( origin, velocity, cgs.media.gibSkull );
 	} else {
 		CG_LaunchGib( origin, velocity, cgs.media.gibBrain );
-	}
-
-	// allow gibs to be turned off for speed
-	if ( !cg_gibs.integer ) {
-		return;
 	}
 
 	VectorCopy( playerOrigin, origin );
@@ -769,16 +764,10 @@ void CG_LaunchExplode( vec3_t origin, vec3_t velocity, qhandle_t hModel ) {
 /*
 ===================
 CG_BigExplode
-
-Generated a bunch of gibs launching out from the bodies location
 ===================
 */
 void CG_BigExplode( vec3_t playerOrigin ) {
 	vec3_t	origin, velocity;
-
-	if ( !cg_blood.integer ) {
-		return;
-	}
 
 	VectorCopy( playerOrigin, origin );
 	velocity[0] = crandom()*EXP_VELOCITY;

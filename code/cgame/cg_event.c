@@ -1258,6 +1258,30 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_DEATH3:
 		DEBUGNAME("EV_DEATHx");
 
+		// check if gibbed
+		// eventParm 1 = living player gibbed
+		// eventParm 2 = corpse gibbed
+		if ( es->eventParm >= 1 ) {
+			CG_GibPlayer( cent->lerpOrigin );
+
+			if ( cg_blood.integer && cg_gibs.integer ) {
+				// don't play gib sound when using the kamikaze because it interferes
+				// with the kamikaze sound, downside is that the gib sound will also
+				// not be played when someone is gibbed while just carrying the kamikaze
+				if ( !(es->eFlags & EF_KAMIKAZE) ) {
+					trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.gibSound );
+				}
+
+				// don't play death sound
+				break;
+			}
+
+			// don't play death sound if already dead
+			if ( es->eventParm == 2 ) {
+				break;
+			}
+		}
+
 		if (CG_WaterLevel(cent) >= 1) {
 			trap_S_StartSound(NULL, es->number, CHAN_VOICE, CG_CustomSound(es->number, "*drown.wav"));
 		} else {
@@ -1304,17 +1328,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			}
 		}
 		trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.regenSound );
-		break;
-
-	case EV_GIB_PLAYER:
-		DEBUGNAME("EV_GIB_PLAYER");
-		// don't play gib sound when using the kamikaze because it interferes
-		// with the kamikaze sound, downside is that the gib sound will also
-		// not be played when someone is gibbed while just carrying the kamikaze
-		if ( !(es->eFlags & EF_KAMIKAZE) ) {
-			trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.gibSound );
-		}
-		CG_GibPlayer( cent->lerpOrigin );
 		break;
 
 	case EV_STOPLOOPINGSOUND:

@@ -87,16 +87,10 @@ tryagain:
 		goto tryagain;
 	}
 
-	if ( weaponNum == WP_MACHINEGUN || weaponNum == WP_GAUNTLET || weaponNum == WP_BFG
-#ifdef MISSIONPACK
-		|| weaponNum == WP_CHAINGUN
-#endif
-		) {
-		strcpy( path, item->world_model[0] );
-		COM_StripExtension( path, path, sizeof(path) );
-		strcat( path, "_barrel.md3" );
-		pi->barrelModel = trap_R_RegisterModel( path );
-	}
+	strcpy( path, item->world_model[0] );
+	COM_StripExtension( path, path, sizeof(path) );
+	strcat( path, "_barrel.md3" );
+	pi->barrelModel = trap_R_RegisterModel( path );
 
 	strcpy( path, item->world_model[0] );
 	COM_StripExtension( path, path, sizeof(path) );
@@ -868,11 +862,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	//
 	// add the spinning barrel
 	//
-	if ( pi->realWeapon == WP_MACHINEGUN || pi->realWeapon == WP_GAUNTLET || pi->realWeapon == WP_BFG
-#ifdef MISSIONPACK
-		|| pi->realWeapon == WP_CHAINGUN
-#endif
-		) {
+	if ( pi->barrelModel ) {
 		vec3_t	angles;
 
 		memset( &barrel, 0, sizeof(barrel) );

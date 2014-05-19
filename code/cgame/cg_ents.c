@@ -373,7 +373,7 @@ static void CG_Item( centity_t *cent ) {
 	weaponInfo_t	*wi;
 
 	es = &cent->currentState;
-	if ( es->modelindex >= bg_numItems ) {
+	if ( es->modelindex >= BG_NumItems() ) {
 		CG_Error( "Bad item index %i on entity", es->modelindex );
 	}
 

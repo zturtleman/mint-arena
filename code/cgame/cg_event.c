@@ -773,7 +773,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 			index = es->eventParm;		// player predicted
 
-			if ( index < 1 || index >= bg_numItems ) {
+			if ( index < 1 || index >= BG_NumItems() ) {
 				break;
 			}
 			item = BG_ItemForItemNum( index );
@@ -819,7 +819,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 			index = es->eventParm;		// player predicted
 
-			if ( index < 1 || index >= bg_numItems ) {
+			if ( index < 1 || index >= BG_NumItems() ) {
 				break;
 			}
 			// powerup pickups are global

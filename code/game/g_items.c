@@ -817,7 +817,7 @@ void SaveRegisteredItems( void ) {
 	int		count;
 
 	count = 0;
-	for ( i = 0 ; i < bg_numItems ; i++ ) {
+	for ( i = 0 ; i < BG_NumItems() ; i++ ) {
 		if ( itemRegistered[i] ) {
 			count++;
 			string[i] = '1';
@@ -825,7 +825,7 @@ void SaveRegisteredItems( void ) {
 			string[i] = '0';
 		}
 	}
-	string[ bg_numItems ] = 0;
+	string[ BG_NumItems() ] = 0;
 
 	G_DPrintf( "%i items registered\n", count );
 	trap_SetConfigstring(CS_ITEMS, string);

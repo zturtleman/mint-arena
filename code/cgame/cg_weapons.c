@@ -1206,11 +1206,14 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	weaponInfo_t	*weapon;
 	centity_t	*nonPredictedCent;
 	orientation_t	lerped;
+	clientInfo_t *ci;
 
 	weaponNum = cent->currentState.weapon;
 
 	CG_RegisterWeapon( weaponNum );
 	weapon = &cg_weapons[weaponNum];
+
+	ci = &cgs.clientinfo[cent->currentState.clientNum];
 
 	// add the weapon
 	memset( &gun, 0, sizeof( gun ) );
@@ -1219,18 +1222,15 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	gun.renderfx = parent->renderfx;
 
 	// set custom shading for railgun refire rate
-	if( weaponNum == WP_RAILGUN ) {
-		clientInfo_t *ci = &cgs.clientinfo[cent->currentState.clientNum];
-		if( cent->pe.railFireTime + 1500 > cg.time ) {
-			int scale = 255 * ( cg.time - cent->pe.railFireTime ) / 1500;
-			gun.shaderRGBA[0] = ( ci->c1RGBA[0] * scale ) >> 8;
-			gun.shaderRGBA[1] = ( ci->c1RGBA[1] * scale ) >> 8;
-			gun.shaderRGBA[2] = ( ci->c1RGBA[2] * scale ) >> 8;
-			gun.shaderRGBA[3] = 255;
-		}
-		else {
-			Byte4Copy( ci->c1RGBA, gun.shaderRGBA );
-		}
+	if( weaponNum == WP_RAILGUN && cent->pe.railFireTime + 1500 > cg.time ) {
+		int scale = 255 * ( cg.time - cent->pe.railFireTime ) / 1500;
+		gun.shaderRGBA[0] = ( ci->c1RGBA[0] * scale ) >> 8;
+		gun.shaderRGBA[1] = ( ci->c1RGBA[1] * scale ) >> 8;
+		gun.shaderRGBA[2] = ( ci->c1RGBA[2] * scale ) >> 8;
+		gun.shaderRGBA[3] = 255;
+	}
+	else {
+		Byte4Copy( ci->c1RGBA, gun.shaderRGBA );
 	}
 
 	gun.hModel = weapon->weaponModel;
@@ -1324,14 +1324,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	AnglesToAxis( angles, flash.axis );
 
 	// colorize the railgun blast
-	if ( weaponNum == WP_RAILGUN ) {
-		clientInfo_t	*ci;
-
-		ci = &cgs.clientinfo[ cent->currentState.clientNum ];
-		flash.shaderRGBA[0] = 255 * ci->color1[0];
-		flash.shaderRGBA[1] = 255 * ci->color1[1];
-		flash.shaderRGBA[2] = 255 * ci->color1[2];
-	}
+	Byte4Copy( ci->c1RGBA, flash.shaderRGBA );
 
 	CG_PositionRotatedEntityOnTag( &flash, &gun, weapon->weaponModel, "tag_flash");
 	CG_AddRefEntityWithMinLight( &flash );
@@ -1787,6 +1780,7 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, im
 	int				duration;
 	vec3_t			sprOrg;
 	vec3_t			sprVel;
+	float			*color;
 
 	mark = 0;
 	radius = 32;
@@ -1948,29 +1942,22 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, im
 							   duration, isSprite );
 		le->light = light;
 		VectorCopy( lightColor, le->lightColor );
-		if ( weapon == WP_RAILGUN ) {
-			// colorize with client color
-			VectorCopy( cgs.clientinfo[clientNum].color1, le->color );
-			le->refEntity.shaderRGBA[0] = le->color[0] * 0xff;
-			le->refEntity.shaderRGBA[1] = le->color[1] * 0xff;
-			le->refEntity.shaderRGBA[2] = le->color[2] * 0xff;
-			le->refEntity.shaderRGBA[3] = 0xff;
-		}
+
+		// colorize with client color
+		VectorCopy( cgs.clientinfo[clientNum].color1, le->color );
+		le->refEntity.shaderRGBA[0] = le->color[0] * 0xff;
+		le->refEntity.shaderRGBA[1] = le->color[1] * 0xff;
+		le->refEntity.shaderRGBA[2] = le->color[2] * 0xff;
+		le->refEntity.shaderRGBA[3] = 0xff;
 	}
 
 	//
 	// impact mark
 	//
 	alphaFade = (mark == cgs.media.energyMarkShader);	// plasma fades alpha, all others fade color
-	if ( weapon == WP_RAILGUN ) {
-		float	*color;
-
-		// colorize with client color
-		color = cgs.clientinfo[clientNum].color1;
-		CG_ImpactMark( mark, origin, dir, random()*360, color[0],color[1], color[2],1, alphaFade, radius, qfalse );
-	} else {
-		CG_ImpactMark( mark, origin, dir, random()*360, 1,1,1,1, alphaFade, radius, qfalse );
-	}
+	// colorize with client color
+	color = cgs.clientinfo[clientNum].color1;
+	CG_ImpactMark( mark, origin, dir, random()*360, color[0],color[1], color[2],1, alphaFade, radius, qfalse );
 }
 
 

@@ -75,11 +75,9 @@ tryagain:
 	}
 
 	item = BG_FindItemForWeapon( weaponNum );
-	if ( !item ) {
-		goto tryagain;
+	if ( item ) {
+		pi->weaponModel = trap_R_RegisterModel( item->world_model[0] );
 	}
-
-	pi->weaponModel = trap_R_RegisterModel( item->world_model[0] );
 
 	if( pi->weaponModel == 0 ) {
 		if( weaponNum == WP_MACHINEGUN ) {

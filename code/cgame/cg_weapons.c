@@ -1780,7 +1780,6 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, im
 	int				duration;
 	vec3_t			sprOrg;
 	vec3_t			sprVel;
-	float			*color;
 
 	mark = 0;
 	radius = 32;
@@ -1955,9 +1954,15 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, im
 	// impact mark
 	//
 	alphaFade = (mark == cgs.media.energyMarkShader);	// plasma fades alpha, all others fade color
-	// colorize with client color
-	color = cgs.clientinfo[clientNum].color1;
-	CG_ImpactMark( mark, origin, dir, random()*360, color[0],color[1], color[2],1, alphaFade, radius, qfalse );
+	if ( weapon == WP_RAILGUN ) {
+		float	*color;
+
+		// colorize with client color
+		color = cgs.clientinfo[clientNum].color1;
+		CG_ImpactMark( mark, origin, dir, random()*360, color[0],color[1], color[2],1, alphaFade, radius, qfalse );
+	} else {
+		CG_ImpactMark( mark, origin, dir, random()*360, 1,1,1,1, alphaFade, radius, qfalse );
+	}
 }
 
 

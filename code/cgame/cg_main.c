@@ -2927,6 +2927,46 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 	}
 }
 
+static int keyCatchers = 0;
+
+/*
+====================
+Key_GetCatcher
+====================
+*/
+int Key_GetCatcher( void ) {
+	return keyCatchers;
+}
+
+/*
+====================
+Key_SetCatcher
+====================
+*/
+void Key_SetCatcher( int catcher ) {
+	// If the catcher state is changing, clear all key states
+	if( catcher != keyCatchers ) {
+		trap_Key_ClearStates( );
+
+		// If catcher is 0, disable held key repeating so binds don't repeat
+		trap_Key_SetRepeat( catcher != 0 );
+
+		// release mouse grab and show system cursor when console is open
+		if ( catcher & KEYCATCH_CONSOLE ) {
+			trap_Mouse_SetState( 0, ( trap_Mouse_GetState( 0 ) & ~MOUSE_CLIENT ) | MOUSE_SYSTEMCURSOR );
+		} else if ( keyCatchers & KEYCATCH_CONSOLE ) {
+			int state = trap_Mouse_GetState( 0 ) & ~MOUSE_SYSTEMCURSOR;
+
+			if ( catcher == 0 ) {
+				state |= MOUSE_CLIENT;
+			}
+			trap_Mouse_SetState( 0, state );
+		}
+	}
+
+	keyCatchers = catcher;
+}
+
 /*
 ==================
 CG_EventHandling

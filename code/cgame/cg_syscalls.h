@@ -222,9 +222,8 @@ qboolean		trap_Key_IsDown( int keynum );
 qboolean		trap_Key_GetOverstrikeMode( void );
 void			trap_Key_SetOverstrikeMode( qboolean state );
 void			trap_Key_ClearStates( void );
-int				trap_Key_GetCatcher( void );
-void			trap_Key_SetCatcher( int catcher );
 int				trap_Key_GetKey( const char *binding, int startKey );
+void			trap_Key_SetRepeat( qboolean repeat );
 
 int				trap_Mouse_GetState( int localClientNum );
 void			trap_Mouse_SetState( int localClientNum, int state );

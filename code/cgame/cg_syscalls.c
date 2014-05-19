@@ -587,16 +587,12 @@ void trap_Key_ClearStates( void ) {
 	syscall( CG_KEY_CLEARSTATES );
 }
 
-int trap_Key_GetCatcher( void ) {
-	return syscall( CG_KEY_GETCATCHER );
-}
-
-void trap_Key_SetCatcher( int catcher ) {
-	syscall( CG_KEY_SETCATCHER, catcher );
-}
-
 int trap_Key_GetKey( const char *binding, int startKey ) {
 	return syscall( CG_KEY_GETKEY, binding, startKey );
+}
+
+void trap_Key_SetRepeat( qboolean repeat ) {
+	syscall( CG_KEY_SETREPEAT, repeat );
 }
 
 void trap_Key_KeynumToStringBuf( int keynum, char *buf, int buflen ) {

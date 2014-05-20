@@ -927,57 +927,36 @@ void UI_MouseEvent( int localClientNum, int dx, int dy )
 
 /*
 =================
-UI_MousePosition
+UI_GetCursorPos
 =================
 */
-int UI_MousePosition( int localClientNum )
+void UI_GetCursorPos( int localClientNum, int *x, int *y )
 {
-	float ax, ay, aw, ah;
-	int	x, y;
-
 	if (localClientNum != 0) {
 		// ui currently only supports one cursor
-		return 0;
+		if ( x ) *x = 0;
+		if ( y ) *y = 0;
 	}
 
-	ax = 0;
-	ay = 0;
-	aw = 1;
-	ah = 1;
-	CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
-	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
-
-	x = ( ( uis.cursorx + ax ) * aw );
-	y = ( ( uis.cursory + ay ) * ah );
-
-	return x | ( y << 16 );
+	if ( x ) *x = uis.cursorx;
+	if ( y ) *y = uis.cursory;
 }
 
 /*
 =================
-UI_SetMousePosition
+UI_SetCursorPos
 =================
 */
-void UI_SetMousePosition( int localClientNum, int x, int y )
+void UI_SetCursorPos( int localClientNum, int x, int y )
 {
-	float ax, ay, aw, ah;
-
 	if (localClientNum != 0) {
 		// ui currently only supports one cursor
 		return;
 	}
 
-	ax = 0;
-	ay = 0;
-	aw = 1;
-	ah = 1;
-	CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
-	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
-
-	uis.cursorx = ( x - ax ) / aw;
-	uis.cursory = ( y - ay ) / ah;
-
-	UI_MouseEvent(localClientNum, 0, 0);
+	uis.cursorx = x;
+	uis.cursory = y;
+	UI_MouseEvent( localClientNum, 0, 0 );
 }
 
 /*

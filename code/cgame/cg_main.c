@@ -49,6 +49,8 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 void CG_Shutdown( void );
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime );
 static char *CG_VoIPString( int localClientNum );
+static int CG_MousePosition( int localClientNum );
+static void CG_SetMousePosition( int localClientNum, int x, int y );
 
 
 /*
@@ -98,9 +100,9 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		}
 		return 0;
 	case CG_MOUSE_POSITION:
-		return UI_MousePosition( arg0 );
+		return CG_MousePosition( arg0 );
 	case CG_SET_MOUSE_POSITION:
-		UI_SetMousePosition( arg0, arg1, arg2 );
+		CG_SetMousePosition( arg0, arg1, arg2 );
 		return 0;
 	case CG_SET_ACTIVE_MENU:
 		UI_SetActiveMenu( arg0 );
@@ -2988,6 +2990,75 @@ void CG_KeyEvent(int key, qboolean down) {
 void CG_MouseEvent(int localClientNum, int x, int y) {
 }
 #endif
+
+/*
+=================
+CG_MousePosition
+
+returns bitshifted combo of x and y in window coords
+=================
+*/
+static int CG_MousePosition( int localClientNum )
+{
+	float ax, ay, aw, ah, xbias, ybias;
+	int cursorx, cursory;
+	int	x, y;
+
+	if ( ui_stretch.integer ) {
+		CG_SetScreenPlacement( PLACE_STRETCH, PLACE_STRETCH );
+	} else {
+		CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
+	}
+
+	ax = 0;
+	ay = 0;
+	aw = 1;
+	ah = 1;
+	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
+
+	xbias = ax/aw;
+	ybias = ay/ah;
+
+	UI_GetCursorPos( localClientNum, &cursorx, &cursory );
+
+	x = ( cursorx + xbias ) / ( SCREEN_WIDTH + xbias * 2 ) * cgs.glconfig.vidWidth;
+	y = ( cursory + ybias ) / ( SCREEN_HEIGHT + ybias * 2 ) * cgs.glconfig.vidHeight;
+
+	return x | ( y << 16 );
+}
+
+/*
+=================
+CG_SetMousePosition
+
+x and y are in window coords
+=================
+*/
+static void CG_SetMousePosition( int localClientNum, int x, int y )
+{
+	float ax, ay, aw, ah, xbias, ybias;
+	int cursorx, cursory;
+
+	if ( ui_stretch.integer ) {
+		CG_SetScreenPlacement( PLACE_STRETCH, PLACE_STRETCH );
+	} else {
+		CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
+	}
+
+	ax = 0;
+	ay = 0;
+	aw = 1;
+	ah = 1;
+	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
+
+	xbias = ax/aw;
+	ybias = ay/ah;
+
+	cursorx = (float)x / cgs.glconfig.vidWidth * ( SCREEN_WIDTH + xbias * 2 ) - xbias;
+	cursory = (float)y / cgs.glconfig.vidHeight * ( SCREEN_HEIGHT + ybias * 2 ) - ybias;
+
+	UI_SetCursorPos( localClientNum, cursorx, cursory );
+}
 
 /*
 =================

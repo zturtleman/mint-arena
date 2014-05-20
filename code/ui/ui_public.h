@@ -44,8 +44,9 @@ void	UI_Shutdown( void );
 
 void	UI_KeyEvent( int key, qboolean down );
 void	UI_MouseEvent( int localClientNum, int dx, int dy );
-int		UI_MousePosition( int localClientNum );
-void	UI_SetMousePosition( int localClientNum, int x, int y );
+
+void	UI_GetCursorPos( int localClientNum, int *x, int *y );
+void	UI_SetCursorPos( int localClientNum, int x, int y );
 
 qboolean UI_IsFullscreen( void );
 

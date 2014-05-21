@@ -141,7 +141,7 @@ Also called by event processing code
 ======================
 */
 void CG_SetEntitySoundPosition( centity_t *cent ) {
-	if ( cent->currentState.bmodel ) {
+	if ( cent->currentState.collisionType == CT_SUBMODEL ) {
 		vec3_t	origin;
 		float	*v;
 
@@ -715,7 +715,7 @@ static void CG_Mover( centity_t *cent ) {
 	ent.skinNum = ( cg.time >> 6 ) & 1;
 
 	// get the model, either as a bmodel or a modelindex
-	if ( s1->bmodel ) {
+	if ( s1->collisionType == CT_SUBMODEL ) {
 		ent.hModel = cgs.inlineDrawModel[s1->modelindex];
 	} else {
 		ent.hModel = cgs.gameModels[s1->modelindex];

@@ -677,7 +677,7 @@ void BotEntityInfo(int entnum, aas_entityinfo_t *info) {
 	VectorCopy(ent->s.mins, info->mins);
 	VectorCopy(ent->s.maxs, info->maxs);
 	info->groundent = ent->s.groundEntityNum;
-	if (ent->s.bmodel) info->solid = SOLID_BSP;
+	if (ent->s.collisionType == CT_SUBMODEL) info->solid = SOLID_BSP;
 	else info->solid = SOLID_BBOX;
 	info->modelindex = ent->s.modelindex;
 	info->modelindex2 = ent->s.modelindex2;
@@ -1555,7 +1555,7 @@ int BotAIStartFrame(int time) {
 			state.type = ent->s.eType;
 			state.flags = ent->s.eFlags;
 			//
-			if (ent->s.bmodel) {
+			if (ent->s.collisionType == CT_SUBMODEL) {
 				state.solid = SOLID_BSP;
 				//if the angles of the model changed
 				if ( !VectorCompare( state.angles, ent->lastAngles ) ) {

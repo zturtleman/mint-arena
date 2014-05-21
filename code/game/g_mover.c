@@ -58,16 +58,16 @@ G_TestEntityPosition
 */
 gentity_t	*G_TestEntityPosition( gentity_t *ent ) {
 	trace_t	tr;
-	qboolean	capsule;
+	collisionType_t	collisionType;
 	vec3_t	origin;
 	int		mask;
 
 	if ( ent->client ) {
 		VectorCopy( ent->client->ps.origin, origin );
-		capsule = ent->client->ps.capsule;
+		collisionType = ent->client->ps.collisionType;
 	} else {
 		VectorCopy( ent->s.pos.trBase, origin );
-		capsule = ent->s.capsule;
+		collisionType = ent->s.collisionType;
 	}
 
 	if ( ent->clipmask ) {
@@ -76,7 +76,7 @@ gentity_t	*G_TestEntityPosition( gentity_t *ent ) {
 		mask = MASK_SOLID;
 	}
 
-	if ( capsule ) {
+	if ( collisionType == CT_CAPSULE ) {
 		trap_TraceCapsule( &tr, origin, ent->s.mins, ent->s.maxs, origin, ent->s.number, mask );
 	} else {
 		trap_Trace( &tr, origin, ent->s.mins, ent->s.maxs, origin, ent->s.number, mask );

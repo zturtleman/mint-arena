@@ -77,7 +77,7 @@ void CG_BuildSolidList( void ) {
 			continue;
 		}
 
-		if ( ent->bmodel || ent->contents ) {
+		if ( ent->collisionType == CT_SUBMODEL || ent->contents ) {
 			cg_solidEntities[cg_numSolidEntities] = cent;
 			cg_numSolidEntities++;
 			continue;
@@ -106,7 +106,7 @@ CG_ClipMoveToEntities
 */
 static void CG_ClipMoveToEntities ( const vec3_t start, const vec3_t mins,
 		const vec3_t maxs, const vec3_t end, int skipNumber,
-		int mask, trace_t *tr, traceType_t collisionType )
+		int mask, trace_t *tr, traceType_t traceType )
 {
 	int			i;
 	trace_t		trace;
@@ -129,11 +129,11 @@ static void CG_ClipMoveToEntities ( const vec3_t start, const vec3_t mins,
 			continue;
 		}
 
-		if ( ent->bmodel ) {
+		if ( ent->collisionType == CT_SUBMODEL ) {
 			cmodel = trap_CM_InlineModel( ent->modelindex );
 			VectorCopy( cent->lerpAngles, angles );
 			BG_EvaluateTrajectory( &cent->currentState.pos, cg.physicsTime, origin );
-		} else if ( ent->capsule ) {
+		} else if ( ent->collisionType == CT_CAPSULE ) {
 			cmodel = trap_CM_TempCapsuleModel( ent->mins, ent->maxs, ent->contents );
 			VectorCopy( vec3_origin, angles );
 			VectorCopy( cent->lerpOrigin, origin );
@@ -144,17 +144,17 @@ static void CG_ClipMoveToEntities ( const vec3_t start, const vec3_t mins,
 		}
 
 
-		if( collisionType == TT_CAPSULE )
+		if( traceType == TT_CAPSULE )
 		{
 			trap_CM_TransformedCapsuleTrace ( &trace, start, end,
 					mins, maxs, cmodel,  mask, origin, angles );
 		}
-		else if( collisionType == TT_AABB )
+		else if( traceType == TT_AABB )
 		{
 			trap_CM_TransformedBoxTrace ( &trace, start, end,
 					mins, maxs, cmodel,  mask, origin, angles );
 		}
-		else if( collisionType == TT_BISPHERE )
+		else if( traceType == TT_BISPHERE )
 		{
 			trap_CM_TransformedBiSphereTrace( &trace, start, end,
 					mins[ 0 ], maxs[ 0 ], cmodel, mask, origin );
@@ -260,7 +260,7 @@ int		CG_PointContents( const vec3_t point, int passEntityNum ) {
 			continue;
 		}
 
-		if ( !ent->bmodel ) {
+		if ( ent->collisionType != CT_SUBMODEL ) {
 			continue;
 		}
 
@@ -443,7 +443,7 @@ static void CG_TouchTriggerPrediction( void ) {
 			continue;
 		}
 
-		if ( !ent->bmodel ) {
+		if ( ent->collisionType != CT_SUBMODEL ) {
 			continue;
 		}
 
@@ -452,7 +452,7 @@ static void CG_TouchTriggerPrediction( void ) {
 			continue;
 		}
 
-		if ( cg.cur_lc->predictedPlayerState.capsule ) {
+		if ( cg.cur_lc->predictedPlayerState.collisionType == CT_CAPSULE ) {
 			trap_CM_CapsuleTrace( &trace, cg.cur_lc->predictedPlayerState.origin, cg.cur_lc->predictedPlayerState.origin,
 					cg.cur_lc->predictedPlayerState.mins, cg.cur_lc->predictedPlayerState.maxs, cmodel, -1 );
 		} else {
@@ -538,7 +538,7 @@ void CG_PredictPlayerState( void ) {
 
 	// prepare for pmove
 	cg_pmove.ps = &cg.cur_lc->predictedPlayerState;
-	if (cg.cur_lc->predictedPlayerState.capsule) {
+	if (cg.cur_lc->predictedPlayerState.collisionType == CT_CAPSULE) {
 		cg_pmove.trace = CG_TraceCapsule;
 	} else {
 		cg_pmove.trace = CG_Trace;

@@ -41,7 +41,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // because games can change separately from the main system version, we need a
 // second version that must match between game and cgame
 
-#define	GAME_VERSION		MODDIR "-2"
+#define	GAME_VERSION		MODDIR "-3"
 
 #define	DEFAULT_GRAVITY		800
 #define	GIB_HEALTH			-40
@@ -199,11 +199,9 @@ typedef struct entityState_s {
 	int		contents;		// CONTENTS_TRIGGER, CONTENTS_SOLID, CONTENTS_BODY, etc
 							// a non-solid entity should set to 0
 
-	qboolean	capsule;	// if true, use capsule instead of bbox for clipping against this ent
-
-	qboolean	bmodel;		// if true, modelindex is an inline model number
-							// if false, assume an explicit mins / maxs bounding box
-							// only set by trap_SetBrushModel
+	collisionType_t	collisionType;	// if CT_SUBMODEL, modelindex is an inline model number. only set by trap_SetBrushModel
+									// if CT_CAPSULE, use capsule instead of bbox for clipping against this ent
+									// else (CT_AABB), assume an explicit mins / maxs bounding box
 
 	int		modelindex;
 
@@ -334,10 +332,10 @@ typedef struct playerState_s {
 
 	vec3_t		grapplePoint;	// location of grapple to pull towards if PMF_GRAPPLE_PULL
 
-	int			eFlags;			// copied to entityState_t->eFlags
-	int			contents;		// copied to entityState_t->contents
-	qboolean	capsule;		// copied to entityState_t->capsule
-	//qboolean	linked;			// set by server
+	int			eFlags;				// copied to entityState_t->eFlags
+	int			contents;			// copied to entityState_t->contents
+	collisionType_t	collisionType;	// copied to entityState_t->capsule
+	//qboolean	linked;				// set by server
 
 	int			eventSequence;	// pmove generated events
 	int			events[MAX_PS_EVENTS];

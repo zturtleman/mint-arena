@@ -1139,7 +1139,7 @@ void ClientSpawn(gentity_t *ent) {
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;
 	client->ps.eFlags = flags;
 	client->ps.contents = CONTENTS_BODY;
-	client->ps.capsule = ( g_playerCapsule.integer == 1 ) ? qtrue : qfalse;
+	client->ps.collisionType = ( g_playerCapsule.integer == 1 ) ? CT_CAPSULE : CT_AABB;
 
 	ent->s.groundEntityNum = ENTITYNUM_NONE;
 	ent->client = &level.clients[index];

@@ -964,8 +964,7 @@ vmNetField_t	bg_entityStateFields[] =
 { NETF(origin[1]), 0 },
 { NETF(origin[2]), 0 },
 { NETF(contents), 32 },
-{ NETF(bmodel), 1 },
-{ NETF(capsule), 1 },
+{ NETF(collisionType), 16 },
 { NETF(mins[0]), 0 },
 { NETF(mins[1]), 0 },
 { NETF(mins[2]), 0 },
@@ -1036,7 +1035,7 @@ vmNetField_t	bg_playerStateFields[] =
 { PSA(ammo), -16 },
 { PSA(powerups), 32 },
 { PSF(contents), 32 },
-{ PSF(capsule), 1 },
+{ PSF(collisionType), 16 },
 { PSF(linked), 1 },
 { PSF(externalEvent), 10 },
 { PSF(gravity), 16 },
@@ -1799,8 +1798,7 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 	s->tokens = ps->tokens;
 	s->team = ps->persistant[PERS_TEAM];
 
-	s->bmodel = qfalse;
-	s->capsule = ps->capsule;
+	s->collisionType = ps->collisionType;
 
 	VectorCopy( ps->mins, s->mins );
 	VectorCopy( ps->maxs, s->maxs );
@@ -1889,8 +1887,7 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	s->tokens = ps->tokens;
 	s->team = ps->persistant[PERS_TEAM];
 
-	s->bmodel = qfalse;
-	s->capsule = ps->capsule;
+	s->collisionType = ps->collisionType;
 
 	VectorCopy( ps->mins, s->mins );
 	VectorCopy( ps->maxs, s->maxs );

@@ -97,6 +97,7 @@ vmCvar_t	g_teamForceBalance;
 vmCvar_t	g_banIPs;
 vmCvar_t	g_filterBan;
 vmCvar_t	g_smoothClients;
+vmCvar_t	pmove_overbounce;
 vmCvar_t	pmove_fixed;
 vmCvar_t	pmove_msec;
 vmCvar_t	g_rankings;
@@ -194,6 +195,7 @@ static cvarTable_t		gameCvarTable[] = {
 #endif
 	{ &g_playerCapsule, "g_playerCapsule", "0", 0, 0, RANGE_BOOL },
 	{ &g_smoothClients, "g_smoothClients", "1", 0, 0, RANGE_BOOL },
+	{ &pmove_overbounce, "pmove_overbounce", "0", CVAR_SYSTEMINFO, 0, RANGE_BOOL },
 	{ &pmove_fixed, "pmove_fixed", "0", CVAR_SYSTEMINFO, 0, RANGE_BOOL },
 	{ &pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO, 0, RANGE_ALL },
 

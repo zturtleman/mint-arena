@@ -489,6 +489,9 @@ typedef struct {
 
 	float		xyspeed;
 
+	// enables overbounce bug
+	qboolean	pmove_overbounce;
+
 	// for fixed msec Pmove
 	int			pmove_fixed;
 	int			pmove_msec;

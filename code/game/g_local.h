@@ -42,8 +42,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define BODY_QUEUE_SIZE		64
 
-#define INFINITE			1000000
-
 #define	FRAMETIME			100					// msec
 #define	CARNAGE_REWARD_TIME	3000
 #define REWARD_SPRITE_TIME	2000

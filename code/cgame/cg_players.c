@@ -2146,7 +2146,7 @@ Returns the Z component of the surface being shadowed
 ===============
 */
 #define	SHADOW_DISTANCE		128
-static qboolean CG_PlayerShadow( centity_t *cent, vec3_t start, float *shadowPlane ) {
+static qboolean CG_PlayerShadow( centity_t *cent, vec3_t start, float alphaMult, float *shadowPlane ) {
 	vec3_t		end, mins = {-8, -8, 0}, maxs = {8, 8, 2};
 	trace_t		trace;
 	float		alpha;
@@ -2180,7 +2180,7 @@ static qboolean CG_PlayerShadow( centity_t *cent, vec3_t start, float *shadowPla
 	}
 
 	// fade the shadow out with height
-	alpha = 1.0 - trace.fraction;
+	alpha = ( 1.0 - trace.fraction ) * alphaMult;
 
 	// hack / FPE - bogus planes?
 	//assert( DotProduct( trace.plane.normal, trace.plane.normal ) != 0.0f ) 
@@ -2379,6 +2379,37 @@ int CG_LightVerts( vec3_t normal, int numVerts, polyVert_t *verts )
 
 /*
 ===============
+CG_Corpse
+===============
+*/
+#define BODY_SINK_DIST 15
+void CG_Corpse( centity_t *cent, int clientNum, float *bodySinkOffset, float *shadowAlpha ) {
+	float offset;
+
+	// After sitting around for five seconds, fall into the ground and dissapear.
+	if ( cg.time - cent->currentState.pos.trTime > BODY_SINK_DELAY ) {
+		if ( cg_smoothBodySink.integer ) {
+			float sinkFrac;
+
+			sinkFrac = ( cg.time - cent->currentState.pos.trTime - BODY_SINK_DELAY ) / (float)BODY_SINK_TIME;
+			offset = sinkFrac * BODY_SINK_DIST;
+
+			*shadowAlpha = 1.0f - sinkFrac;
+		} else {
+			// snap time to move in ( BODY_SINK_TIME / BODY_SINK_DIST ) msec jumps
+			offset = ( cg.time - cent->currentState.pos.trTime - BODY_SINK_DELAY ) / (int)( (float)BODY_SINK_TIME / BODY_SINK_DIST );
+			*shadowAlpha = 1;
+		}
+	} else {
+		offset = 0;
+		*shadowAlpha = 1;
+	}
+
+	*bodySinkOffset = offset;
+}
+
+/*
+===============
 CG_Player
 ===============
 */
@@ -2393,6 +2424,8 @@ void CG_Player( centity_t *cent ) {
 	float			shadowPlane;
 	refEntity_t		shadowRef;
 	vec3_t			shadowOrigin;
+	float			shadowAlpha;
+	float			bodySinkOffset;
 #ifdef MISSIONPACK
 	refEntity_t		skull;
 	refEntity_t		powerup;
@@ -2450,6 +2483,13 @@ void CG_Player( centity_t *cent ) {
 	// add the talk baloon or disconnect icon
 	CG_PlayerSprites( cent );
 
+	if ( cent->currentState.number != clientNum ) {
+		CG_Corpse( cent, clientNum, &bodySinkOffset, &shadowAlpha );
+	} else {
+		bodySinkOffset = 0;
+		shadowAlpha = 1;
+	}
+
 	// cast shadow from torso origin
 	memcpy(&shadowRef, &torso, sizeof(shadowRef));
 	VectorCopy(cent->lerpOrigin, legs.origin);
@@ -2463,7 +2503,10 @@ void CG_Player( centity_t *cent ) {
 	}
 
 	// add the shadow
-	shadow = CG_PlayerShadow( cent, shadowOrigin, &shadowPlane );
+	shadow = CG_PlayerShadow( cent, shadowOrigin, shadowAlpha, &shadowPlane );
+
+	// have corpse sink after shadow, so shadow doesn't disappear when origin goes into ground
+	cent->lerpOrigin[2] -= bodySinkOffset;
 
 	// add a water splash if partially in and out of water
 	CG_PlayerSplash( cent );

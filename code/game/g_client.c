@@ -383,20 +383,14 @@ void InitBodyQue (void) {
 
 /*
 =============
-BodySink
+BodyQueFree
 
-After sitting around for five seconds, fall into the ground and dissapear
+The body ques are never actually freed, they are just unlinked
 =============
 */
-void BodySink( gentity_t *ent ) {
-	if ( level.time - ent->timestamp > 6500 ) {
-		// the body ques are never actually freed, they are just unlinked
-		trap_UnlinkEntity( ent );
-		ent->physicsObject = qfalse;
-		return;	
-	}
-	ent->nextthink = level.time + 100;
-	ent->s.pos.trBase[2] -= 1;
+void BodyQueFree( gentity_t *ent ) {
+	trap_UnlinkEntity( ent );
+	ent->physicsObject = qfalse;
 }
 
 /*
@@ -455,11 +449,11 @@ void CopyToBodyQue( gentity_t *ent ) {
 	body->physicsBounce = 0;		// don't bounce
 	if ( body->s.groundEntityNum == ENTITYNUM_NONE ) {
 		body->s.pos.trType = TR_GRAVITY;
-		body->s.pos.trTime = level.time;
 		VectorCopy( ent->client->ps.velocity, body->s.pos.trDelta );
 	} else {
 		body->s.pos.trType = TR_STATIONARY;
 	}
+	body->s.pos.trTime = level.time;
 	body->s.event = 0;
 
 	// change the animation to the last-frame only, so the sequence
@@ -489,8 +483,8 @@ void CopyToBodyQue( gentity_t *ent ) {
 	body->clipmask = CONTENTS_SOLID | CONTENTS_PLAYERCLIP;
 	body->r.ownerNum = ent->s.number;
 
-	body->nextthink = level.time + 5000;
-	body->think = BodySink;
+	body->nextthink = level.time + BODY_SINK_DELAY + BODY_SINK_TIME;
+	body->think = BodyQueFree;
 
 	body->die = body_die;
 

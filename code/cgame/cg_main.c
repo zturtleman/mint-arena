@@ -244,6 +244,7 @@ vmCvar_t	cg_fadeExplosions;
 vmCvar_t	cg_skybox;
 vmCvar_t	cg_drawScores;
 vmCvar_t	cg_oldBubbles;
+vmCvar_t	cg_smoothBodySink;
 vmCvar_t	cg_introPlayed;
 vmCvar_t	ui_stretch;
 
@@ -431,6 +432,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_skybox, "cg_skybox", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_drawScores, "cg_drawScores", "1", 0, RANGE_BOOL },
 	{ &cg_oldBubbles, "cg_oldBubbles", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_smoothBodySink, "cg_smoothBodySink", "1", CVAR_ARCHIVE, RANGE_BOOL },
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
 
 	{ &cg_introPlayed, "com_introPlayed", "0", CVAR_ARCHIVE, RANGE_BOOL },

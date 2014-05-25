@@ -659,7 +659,7 @@ static void UI_PlayerFloatSprite( playerInfo_t *pi, vec3_t origin, qhandle_t sha
 
 	memset( &ent, 0, sizeof( ent ) );
 	VectorCopy( origin, ent.origin );
-	ent.origin[2] += 48;
+	ent.origin[2] += 42;
 	ent.reType = RT_SPRITE;
 	ent.customShader = shader;
 	ent.radius = 10;
@@ -905,7 +905,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	// add the chat icon
 	//
 	if ( pi->chat ) {
-		UI_PlayerFloatSprite( pi, origin, trap_R_RegisterShaderNoMip( "sprites/balloon3" ) );
+		UI_PlayerFloatSprite( pi, torso.origin, trap_R_RegisterShaderNoMip( "sprites/balloon3" ) );
 	}
 
 	//

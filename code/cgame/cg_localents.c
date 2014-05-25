@@ -225,13 +225,15 @@ void CG_ReflectVelocity( localEntity_t *le, trace_t *trace ) {
 	float	dot;
 	int		hitTime;
 
-	// reflect the velocity on the trace plane
-	hitTime = cg.time - cg.frametime + cg.frametime * trace->fraction;
-	BG_EvaluateTrajectoryDelta( &le->pos, hitTime, velocity );
-	dot = DotProduct( velocity, trace->plane.normal );
-	VectorMA( velocity, -2*dot, trace->plane.normal, le->pos.trDelta );
+	if ( !trace->allsolid ) {
+		// reflect the velocity on the trace plane
+		hitTime = cg.time - cg.frametime + cg.frametime * trace->fraction;
+		BG_EvaluateTrajectoryDelta( &le->pos, hitTime, velocity );
+		dot = DotProduct( velocity, trace->plane.normal );
+		VectorMA( velocity, -2*dot, trace->plane.normal, le->pos.trDelta );
 
-	VectorScale( le->pos.trDelta, le->bounceFactor, le->pos.trDelta );
+		VectorScale( le->pos.trDelta, le->bounceFactor, le->pos.trDelta );
+	}
 
 	VectorCopy( trace->endpos, le->pos.trBase );
 	le->pos.trTime = cg.time;
@@ -242,6 +244,9 @@ void CG_ReflectVelocity( localEntity_t *le, trace_t *trace ) {
 		( trace->plane.normal[2] > 0 && 
 		( le->pos.trDelta[2] < 40 || le->pos.trDelta[2] < -cg.frametime * le->pos.trDelta[2] ) ) ) {
 		le->pos.trType = TR_STATIONARY;
+		VectorCopy( trace->endpos, le->refEntity.origin );
+		vectoangles( le->refEntity.axis[0], le->angles.trBase );
+		le->groundEntityNum = trace->entityNum;
 	} else {
 
 	}
@@ -261,6 +266,12 @@ void CG_AddFragment( localEntity_t *le ) {
 		int		t;
 		float	oldZ;
 		
+		CG_AdjustPositionForMover( le->refEntity.origin, le->groundEntityNum,
+			le->pos.trTime, cg.time, le->refEntity.origin, le->angles.trBase, le->angles.trBase );
+
+		AnglesToAxis( le->angles.trBase, le->refEntity.axis );
+		le->pos.trTime = cg.time;
+
 		t = le->endTime - cg.time;
 		if ( t < SINK_TIME ) {
 			// we must use an explicit lighting origin, otherwise the
@@ -303,6 +314,41 @@ void CG_AddFragment( localEntity_t *le ) {
 		}
 
 		return;
+	}
+
+	// fragment inside mover, find the direction/origin of impact
+	if ( trace.allsolid && cg_entities[trace.entityNum].currentState.eType == ET_MOVER ) {
+		vec3_t	origin, angles, dir;
+		float	dist;
+		int		oldTime;
+		trace_t	tr;
+
+		// get last location
+		if ( cg.time == le->pos.trTime ) {
+			// fragment was added this frame. no good way to fix this.
+			CG_FreeLocalEntity( le );
+			return;
+		} else {
+			oldTime = le->pos.trTime;
+		}
+		BG_EvaluateTrajectory( &le->pos, oldTime, origin );
+
+		// add the distance mover has moved since then
+		CG_AdjustPositionForMover( origin, trace.entityNum,
+			oldTime, cg.time, origin, angles, angles );
+
+		// nudge the origin farther to avoid being co-planar
+		VectorSubtract( origin, newOrigin, dir );
+		dist = VectorNormalize( dir );
+		VectorMA( origin, dist, dir, origin );
+
+		CG_Trace( &tr, origin, NULL, NULL, newOrigin, -1, CONTENTS_SOLID );
+
+		// found impact. restore allsolid because trace fraction won't work correct in CG_ReflectVelocity
+		if ( !tr.allsolid ) {
+			trace = tr;
+			trace.allsolid = qtrue;
+		}
 	}
 
 	// if it is in a nodrop zone, remove it
@@ -854,6 +900,11 @@ CG_AddLocalEntities
 void CG_AddLocalEntities( void ) {
 	localEntity_t	*le, *next;
 	qboolean forceOnlyMirror;
+	int oldPhysicsTime;
+
+	// have local entities interact with movers (submodels) at their render position
+	oldPhysicsTime = cg.physicsTime;
+	cg.physicsTime = cg.time;
 
 	// walk the list backwards, so any new local entities generated
 	// (trails, marks, etc) will be present this frame
@@ -945,6 +996,8 @@ void CG_AddLocalEntities( void ) {
 			le->refEntity.renderfx &= ~RF_ONLY_MIRROR;
 		}
 	}
+
+	cg.physicsTime = oldPhysicsTime;
 }
 
 

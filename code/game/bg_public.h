@@ -185,7 +185,7 @@ ENTITY STATE / PLAYER STATE
 
 server game / client game definitions of entity state and player state.
 
-Add new fields to bg_entityStateFields / bg_playerStateFields in bg_public.c
+Add new fields to bg_entityStateFields / bg_playerStateFields in bg_misc.c
 ===================================================================================
 */
 

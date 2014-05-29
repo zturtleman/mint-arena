@@ -28,7 +28,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
-// bg_public.c -- both games misc functions, all completely stateless
+// bg_misc.c -- both games misc functions, all completely stateless
 
 #include "../qcommon/q_shared.h"
 #include "bg_public.h"

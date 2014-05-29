@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // These functions are how cgame communicates with the client system
 //
 
-// Additional shared traps in ../game/bg_misc.h
+// Additional shared traps in ../game/bg_public.h
 
 void		trap_GetClipboardData( char *buf, int bufsize );
 void		trap_GetGlconfig( glconfig_t *glconfig );

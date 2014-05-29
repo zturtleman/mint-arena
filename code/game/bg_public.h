@@ -28,7 +28,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
-// bg_misc.h -- definitions shared by both the server game and client game modules
+// bg_public.h -- definitions shared by both the server game and client game modules
 
 #ifndef MODDIR
   #ifdef MISSIONPACK

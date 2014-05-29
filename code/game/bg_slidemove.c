@@ -31,7 +31,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // bg_slidemove.c -- part of bg_pmove functionality
 
 #include "../qcommon/q_shared.h"
-#include "bg_misc.h"
+#include "bg_public.h"
 #include "bg_local.h"
 
 /*

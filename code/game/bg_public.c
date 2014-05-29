@@ -28,10 +28,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 //
-// bg_misc.c -- both games misc functions, all completely stateless
+// bg_public.c -- both games misc functions, all completely stateless
 
 #include "../qcommon/q_shared.h"
-#include "bg_misc.h"
+#include "bg_public.h"
 
 /*QUAKED item_***** ( 0 0 0 ) (-16 -16 -16) (16 16 16) suspended
 DO NOT USE THIS CLASS, IT JUST HOLDS GENERAL INFORMATION.

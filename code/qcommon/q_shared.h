@@ -1262,7 +1262,7 @@ typedef struct {
 //=========================================================
 
 // New fields cannot be added to sharedPlayerState_t without updating
-//   playerState_t in bg_misc.h (and thus breaking mod compatiblity).
+//   playerState_t in bg_public.h (and thus breaking mod compatiblity).
 
 typedef struct sharedPlayerState_s {
 	int			commandTime;	// cmd->serverTime of last executed command
@@ -1277,10 +1277,6 @@ typedef struct sharedPlayerState_s {
 	int			viewheight;
 
 	int			ping;			// server to game info for scoreboard
-
-	// ZTM: FIXME: make persistant private to game/cgame. Currently server accesses PERS_SCORE (0) in it.
-	int			persistant[1];	// stats that aren't cleared on death
-
 } sharedPlayerState_t;
 
 
@@ -1303,7 +1299,7 @@ typedef struct usercmd_s {
 //===================================================================
 
 // New fields cannot be added to sharedEntityState_t without updating
-//   entityState_t in bg_misc.h (and thus breaking mod compatiblity).
+//   entityState_t in bg_public.h (and thus breaking mod compatiblity).
 
 typedef struct sharedEntityState_s {
 	int		number;			// entity index

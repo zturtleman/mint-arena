@@ -31,7 +31,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // g_local.h -- local definitions for game module
 
 #include "../qcommon/q_shared.h"
-#include "bg_misc.h"
+#include "bg_public.h"
 #include "g_public.h"
 #include "ai_ea.h"
 

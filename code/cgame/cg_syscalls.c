@@ -30,7 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "../qcommon/q_shared.h"
 #include "../renderercommon/tr_types.h"
-#include "../game/bg_misc.h"
+#include "../game/bg_public.h"
 #include "cg_public.h"
 #include "cg_syscalls.h"
 

@@ -1016,7 +1016,7 @@ $(Q3ASM): $(Q3ASMOBJ)
 
 Q3CGOBJ = \
   $(B)/$(BASEGAME)/cgame/cg_main.o \
-  $(B)/$(BASEGAME)/cgame/bg_misc.o \
+  $(B)/$(BASEGAME)/cgame/bg_public.o \
   $(B)/$(BASEGAME)/cgame/bg_pmove.o \
   $(B)/$(BASEGAME)/cgame/bg_slidemove.o \
   $(B)/$(BASEGAME)/cgame/bg_lib.o \
@@ -1110,7 +1110,7 @@ $(B)/$(BASEGAME)/vm/$(VM_PREFIX)cgame.qvm: $(Q3CGVMOBJ) $(GDIR)/bg_syscalls.asm 
 
 MPCGOBJ = \
   $(B)/$(MISSIONPACK)/cgame/cg_main.o \
-  $(B)/$(MISSIONPACK)/cgame/bg_misc.o \
+  $(B)/$(MISSIONPACK)/cgame/bg_public.o \
   $(B)/$(MISSIONPACK)/cgame/bg_pmove.o \
   $(B)/$(MISSIONPACK)/cgame/bg_slidemove.o \
   $(B)/$(MISSIONPACK)/cgame/bg_lib.o \
@@ -1230,7 +1230,7 @@ Q3GOBJ = \
   $(B)/$(BASEGAME)/game/ai_weap.o \
   $(B)/$(BASEGAME)/game/ai_weight.o \
   $(B)/$(BASEGAME)/game/ai_vcmd.o \
-  $(B)/$(BASEGAME)/game/bg_misc.o \
+  $(B)/$(BASEGAME)/game/bg_public.o \
   $(B)/$(BASEGAME)/game/bg_pmove.o \
   $(B)/$(BASEGAME)/game/bg_slidemove.o \
   $(B)/$(BASEGAME)/game/bg_lib.o \
@@ -1288,7 +1288,7 @@ MPGOBJ = \
   $(B)/$(MISSIONPACK)/game/ai_weap.o \
   $(B)/$(MISSIONPACK)/game/ai_weight.o \
   $(B)/$(MISSIONPACK)/game/ai_vcmd.o \
-  $(B)/$(MISSIONPACK)/game/bg_misc.o \
+  $(B)/$(MISSIONPACK)/game/bg_public.o \
   $(B)/$(MISSIONPACK)/game/bg_pmove.o \
   $(B)/$(MISSIONPACK)/game/bg_slidemove.o \
   $(B)/$(MISSIONPACK)/game/bg_lib.o \
@@ -1329,8 +1329,8 @@ $(B)/$(MISSIONPACK)/vm/$(VM_PREFIX)game.qvm: $(MPGVMOBJ) $(GDIR)/bg_syscalls.asm
 
 # Extra dependencies to ensure the git version is incorporated
 #ifeq ($(USE_GIT),1)
-#  $(B)/$(BASEGAME)/bg_misc.o : .git/index
-#  $(B)/$(MISSIONPACK)/bg_misc.o : .git/index
+#  $(B)/$(BASEGAME)/bg_public.o : .git/index
+#  $(B)/$(MISSIONPACK)/bg_public.o : .git/index
 #endif
 
 

@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // These functions are how game communicates with the server system
 //
 
-// Additional shared traps in bg_misc.h
+// Additional shared traps in bg_public.h
 
 void	trap_LocateGameData( gentity_t *gEnts, int numGEntities, int sizeofGEntity_t, playerState_t *gameClients, int sizeofGameClient );
 void	trap_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,

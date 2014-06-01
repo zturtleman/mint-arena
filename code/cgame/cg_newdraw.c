@@ -1865,16 +1865,6 @@ void CG_KeyEvent(int key, qboolean down) {
 }
 #endif // MISSIONPACK_HUD
 
-int CG_PlayerNumFromName(const char *p) {
-  int i;
-  for (i = 0; i < cgs.maxplayers; i++) {
-    if (cgs.playerinfo[i].infoValid && Q_stricmp(cgs.playerinfo[i].name, p) == 0) {
-      return i;
-    }
-  }
-  return -1;
-}
-
 void CG_ShowResponseHead(void) {
 #ifdef MISSIONPACK_HUD
 	Init_Display(&cgDC);

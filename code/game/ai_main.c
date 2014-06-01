@@ -1005,7 +1005,10 @@ int BotAI(int client, float thinktime) {
 	}
 
 	//retrieve the current client state
-	BotAI_GetClientState( client, &bs->cur_ps );
+	if (!BotAI_GetClientState( client, &bs->cur_ps )) {
+		BotAI_Print(PRT_FATAL, "BotAI: failed to get player state for client %d\n", client);
+		return qfalse;
+	}
 
 	//retrieve any waiting server commands
 	while( trap_BotGetServerCommand(client, buf, sizeof(buf)) ) {

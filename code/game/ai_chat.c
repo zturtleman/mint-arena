@@ -114,8 +114,9 @@ int BotIsFirstInRankings(bot_state_t *bs) {
 		//skip spectators
 		if (atoi(Info_ValueForKey(buf, "t")) == TEAM_SPECTATOR) continue;
 		//
-		BotAI_GetClientState(i, &ps);
-		if (score < ps.persistant[PERS_SCORE]) return qfalse;
+		if (BotAI_GetClientState(i, &ps) && score < ps.persistant[PERS_SCORE]) {
+			return qfalse;
+		}
 	}
 	return qtrue;
 }
@@ -142,8 +143,9 @@ int BotIsLastInRankings(bot_state_t *bs) {
 		//skip spectators
 		if (atoi(Info_ValueForKey(buf, "t")) == TEAM_SPECTATOR) continue;
 		//
-		BotAI_GetClientState(i, &ps);
-		if (score > ps.persistant[PERS_SCORE]) return qfalse;
+		if (BotAI_GetClientState(i, &ps) && score > ps.persistant[PERS_SCORE]) {
+			return qfalse;
+		}
 	}
 	return qtrue;
 }
@@ -172,8 +174,7 @@ char *BotFirstClientInRankings(void) {
 		//skip spectators
 		if (atoi(Info_ValueForKey(buf, "t")) == TEAM_SPECTATOR) continue;
 		//
-		BotAI_GetClientState(i, &ps);
-		if (ps.persistant[PERS_SCORE] > bestscore) {
+		if (BotAI_GetClientState(i, &ps) && ps.persistant[PERS_SCORE] > bestscore) {
 			bestscore = ps.persistant[PERS_SCORE];
 			bestclient = i;
 		}
@@ -206,8 +207,7 @@ char *BotLastClientInRankings(void) {
 		//skip spectators
 		if (atoi(Info_ValueForKey(buf, "t")) == TEAM_SPECTATOR) continue;
 		//
-		BotAI_GetClientState(i, &ps);
-		if (ps.persistant[PERS_SCORE] < worstscore) {
+		if (BotAI_GetClientState(i, &ps) && ps.persistant[PERS_SCORE] < worstscore) {
 			worstscore = ps.persistant[PERS_SCORE];
 			bestclient = i;
 		}

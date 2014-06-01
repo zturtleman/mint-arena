@@ -508,7 +508,7 @@ static void CG_MapRestart( void ) {
 		CG_GlobalCenterPrint( "FIGHT!", SCREEN_HEIGHT/2, 2.0 );
 	}
 #ifdef MISSIONPACK
-	if (cg_singlePlayerActive.integer) {
+	if (cg_singlePlayer.integer) {
 		trap_Cvar_SetValue("ui_matchStartTime", cg.time);
 		if (cg_recordSPDemo.integer && cg_recordSPDemoName.string && *cg_recordSPDemoName.string) {
 			trap_Cmd_ExecuteText(EXEC_APPEND, va("set g_synchronousclients 1 ; record %s \n", cg_recordSPDemoName.string));

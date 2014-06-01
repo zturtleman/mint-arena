@@ -331,7 +331,7 @@ void Svcmd_BotTeamplayReport_f(void) {
 
 	if (gametype >= GT_TEAM) {
 		BotAI_Print(PRT_MESSAGE, S_COLOR_RED"RED\n");
-		for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+		for (i = 0; i < level.maxclients; i++) {
 			//
 			if ( !botstates[i] || !botstates[i]->inuse ) continue;
 			//
@@ -340,7 +340,7 @@ void Svcmd_BotTeamplayReport_f(void) {
 			}
 		}
 		BotAI_Print(PRT_MESSAGE, S_COLOR_BLUE"BLUE\n");
-		for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+		for (i = 0; i < level.maxclients; i++) {
 			//
 			if ( !botstates[i] || !botstates[i]->inuse ) continue;
 			//
@@ -350,7 +350,7 @@ void Svcmd_BotTeamplayReport_f(void) {
 		}
 	}
 	else {
-		for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+		for (i = 0; i < level.maxclients; i++) {
 			//
 			if ( !botstates[i] || !botstates[i]->inuse ) continue;
 			//
@@ -495,7 +495,7 @@ void BotUpdateInfoConfigStrings(void) {
 		return;
 	}
 
-	for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		//
 		if ( !botstates[i] || !botstates[i]->inuse )
 			continue;
@@ -1638,8 +1638,7 @@ int BotInitLibrary(void) {
 	char buf[144];
 
 	//set the maxclients and maxentities library variables before calling BotSetupLibrary
-	trap_Cvar_VariableStringBuffer("sv_maxclients", buf, sizeof(buf));
-	if (!strlen(buf)) strcpy(buf, "8");
+	Com_sprintf(buf, sizeof(buf), "%d", level.maxclients);
 	trap_BotLibVarSet("maxclients", buf);
 	Com_sprintf(buf, sizeof(buf), "%d", MAX_GENTITIES);
 	trap_BotLibVarSet("maxentities", buf);

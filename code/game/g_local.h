@@ -57,7 +57,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define FL_DROPPED_ITEM			0x00001000
 #define FL_NO_BOTS				0x00002000	// spawn point not for bot use
 #define FL_NO_HUMANS			0x00004000	// spawn point just for bots
-#define FL_FORCE_GESTURE		0x00008000	// force gesture on client
+#define FL_FORCE_GESTURE		0x00008000	// force gesture on player
 
 // movers are things like doors, plats, buttons, etc
 typedef enum {
@@ -143,7 +143,7 @@ struct gentity_s {
 	void		(*use)(gentity_t *self, gentity_t *other, gentity_t *activator);
 	void		(*pain)(gentity_t *self, gentity_t *attacker, int damage);
 	void		(*die)(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod);
-	qboolean	(*snapshotCallback)(gentity_t *self, gentity_t *client);
+	qboolean	(*snapshotCallback)(gentity_t *self, gentity_t *player);
 
 	int			pain_debounce_time;
 	int			fly_sound_debounce_time;	// wind tunnel
@@ -391,9 +391,9 @@ typedef struct {
 
 	qboolean	restarted;				// waiting for a map_restart to fire
 
-	int			numConnectedClients;
-	int			numNonSpectatorPlayers;	// includes connecting clients
-	int			numPlayingClients;		// connected, non-spectators
+	int			numConnectedPlayers;
+	int			numNonSpectatorPlayers;	// includes connecting players
+	int			numPlayingPlayers;		// connected, non-spectators
 	int			sortedPlayers[MAX_CLIENTS];		// sorted by score
 	int			follow1, follow2;		// clientNums for auto-follow spectators
 
@@ -409,14 +409,14 @@ typedef struct {
 	int			voteExecuteTime;		// time the vote is executed
 	int			voteYes;
 	int			voteNo;
-	int			numVotingClients;		// set by CalculateRanks
+	int			numVotingPlayers;		// set by CalculateRanks
 
 	// team voting state
 	char		teamVoteString[2][MAX_STRING_CHARS];
 	int			teamVoteTime[2];		// level.time vote was called
 	int			teamVoteYes[2];
 	int			teamVoteNo[2];
-	int			numteamVotingClients[2];// set by CalculateRanks
+	int			numTeamVotingPlayers[2];// set by CalculateRanks
 
 	// spawn variables
 	qboolean	spawning;				// the G_Spawn*() functions are valid
@@ -534,11 +534,11 @@ void G_Damage (gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 qboolean G_RadiusDamage (vec3_t origin, gentity_t *attacker, float damage, float radius, gentity_t *ignore, int mod);
 int G_InvulnerabilityEffect( gentity_t *targ, vec3_t dir, vec3_t point, vec3_t impactpoint, vec3_t bouncedir );
 void body_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath );
-void TossClientItems( gentity_t *self );
+void TossPlayerItems( gentity_t *self );
 #ifdef MISSIONPACK
-void TossClientPersistantPowerups( gentity_t *self );
+void TossPlayerPersistantPowerups( gentity_t *self );
 #endif
-void TossClientCubes( gentity_t *self );
+void TossPlayerCubes( gentity_t *self );
 
 // damage flags
 #define DAMAGE_RADIUS				0x00000001	// damage was indirect
@@ -604,7 +604,7 @@ void Weapon_HookThink (gentity_t *ent);
 int TeamCount( int ignorePlayerNum, team_t team );
 int TeamLeader( int team );
 team_t PickTeam( int ignorePlayerNum );
-void SetClientViewAngle( gentity_t *ent, vec3_t angle );
+void SetPlayerViewAngle( gentity_t *ent, vec3_t angle );
 gentity_t *SelectSpawnPoint (vec3_t avoidPoint, vec3_t origin, vec3_t angles, qboolean isbot);
 void CopyToBodyQue( gentity_t *ent );
 void PlayerRespawn(gentity_t *ent);

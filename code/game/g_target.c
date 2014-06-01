@@ -233,7 +233,7 @@ void SP_target_speaker( gentity_t *ent ) {
 		return;
 	}
 
-	// force all client relative sounds to be "activator" speakers that
+	// force all player relative sounds to be "activator" speakers that
 	// play on the entity that activates it
 	if ( s[0] == '*' ) {
 		ent->spawnflags |= 8;

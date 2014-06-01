@@ -94,9 +94,9 @@ void EA_SayTeam(int playerNum, char *str)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-void EA_Tell(int playerNum, int clientto, char *str)
+void EA_Tell(int playerNum, int playerto, char *str)
 {
-	trap_ClientCommand(playerNum, va("tell %d, %s", clientto, str));
+	trap_ClientCommand(playerNum, va("tell %d, %s", playerto, str));
 } //end of the function EA_SayTeam
 //===========================================================================
 //

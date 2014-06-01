@@ -1034,7 +1034,7 @@ void BotMatch_TaskPreference(bot_state_t *bs, bot_match_t *match) {
 	}
 	BotSetTeamMateTaskPreference(bs, teammate, preference);
 	//
-	EasyClientName(teammate, teammatename, sizeof(teammatename));
+	EasyPlayerName(teammate, teammatename, sizeof(teammatename));
 	BotAI_BotInitialChat(bs, "keepinmind", teammatename, NULL);
 	BotEnterChat(bs->cs, teammate, CHAT_TELL);
 	BotVoiceChatOnly(bs, teammate, VOICECHAT_YES);
@@ -1364,13 +1364,13 @@ void BotMatch_WhatAreYouDoing(bot_state_t *bs, bot_match_t *match) {
 	switch(bs->ltgtype) {
 		case LTG_TEAMHELP:
 		{
-			EasyClientName(bs->teammate, netname, sizeof(netname));
+			EasyPlayerName(bs->teammate, netname, sizeof(netname));
 			BotAI_BotInitialChat(bs, "helping", netname, NULL);
 			break;
 		}
 		case LTG_TEAMACCOMPANY:
 		{
-			EasyClientName(bs->teammate, netname, sizeof(netname));
+			EasyPlayerName(bs->teammate, netname, sizeof(netname));
 			BotAI_BotInitialChat(bs, "accompanying", netname, NULL);
 			break;
 		}

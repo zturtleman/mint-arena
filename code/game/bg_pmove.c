@@ -622,7 +622,7 @@ static void PM_AirMove( void ) {
 	cmd = pm->cmd;
 	scale = PM_CmdScale( &cmd );
 
-	// set the movementDir so clients can rotate the legs for strafing
+	// set the movementDir so players can rotate the legs for strafing
 	PM_SetMovementDir();
 
 	// project moves down to flat plane
@@ -732,7 +732,7 @@ static void PM_WalkMove( void ) {
 	cmd = pm->cmd;
 	scale = PM_CmdScale( &cmd );
 
-	// set the movementDir so clients can rotate the legs for strafing
+	// set the movementDir so players can rotate the legs for strafing
 	PM_SetMovementDir();
 
 	// project moves down to flat plane

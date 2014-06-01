@@ -140,10 +140,10 @@ int BotIsLastInRankings(bot_state_t *bs) {
 
 /*
 ==================
-BotFirstClientInRankings
+BotFirstPlayerInRankings
 ==================
 */
-char *BotFirstClientInRankings(void) {
+char *BotFirstPlayerInRankings(void) {
 	int i, bestscore, bestplayer;
 	char buf[MAX_INFO_STRING];
 	static char name[32];
@@ -163,16 +163,16 @@ char *BotFirstClientInRankings(void) {
 			bestplayer = i;
 		}
 	}
-	EasyClientName(bestplayer, name, 32);
+	EasyPlayerName(bestplayer, name, 32);
 	return name;
 }
 
 /*
 ==================
-BotLastClientInRankings
+BotLastPlayerInRankings
 ==================
 */
-char *BotLastClientInRankings(void) {
+char *BotLastPlayerInRankings(void) {
 	int i, worstscore, bestplayer;
 	char buf[MAX_INFO_STRING];
 	static char name[32];
@@ -193,7 +193,7 @@ char *BotLastClientInRankings(void) {
 			bestplayer = i;
 		}
 	}
-	EasyClientName(bestplayer, name, 32);
+	EasyPlayerName(bestplayer, name, 32);
 	return name;
 }
 
@@ -228,11 +228,11 @@ char *BotRandomOpponentName(bot_state_t *bs) {
 	for (i = 0; i < numopponents; i++) {
 		count--;
 		if (count <= 0) {
-			EasyClientName(opponents[i], name, sizeof(name));
+			EasyPlayerName(opponents[i], name, sizeof(name));
 			return name;
 		}
 	}
-	EasyClientName(opponents[0], name, sizeof(name));
+	EasyPlayerName(opponents[0], name, sizeof(name));
 	return name;
 }
 
@@ -450,7 +450,7 @@ int BotChat_EnterGame(bot_state_t *bs) {
 	if (BotNumActivePlayers() <= 1) return qfalse;
 	if (!BotValidChatPosition(bs)) return qfalse;
 	BotAI_BotInitialChat(bs, "game_enter",
-				EasyClientName(bs->playernum, name, 32),	// 0
+				EasyPlayerName(bs->playernum, name, 32),	// 0
 				BotRandomOpponentName(bs),				// 1
 				"[invalid var]",						// 2
 				"[invalid var]",						// 3
@@ -483,7 +483,7 @@ int BotChat_ExitGame(bot_state_t *bs) {
 	if (BotNumActivePlayers() <= 1) return qfalse;
 	//
 	BotAI_BotInitialChat(bs, "game_exit",
-				EasyClientName(bs->playernum, name, 32),	// 0
+				EasyPlayerName(bs->playernum, name, 32),	// 0
 				BotRandomOpponentName(bs),				// 1
 				"[invalid var]",						// 2
 				"[invalid var]",						// 3
@@ -521,7 +521,7 @@ int BotChat_StartLevel(bot_state_t *bs) {
 	}
 	if (BotNumActivePlayers() <= 1) return qfalse;
 	BotAI_BotInitialChat(bs, "level_start",
-				EasyClientName(bs->playernum, name, 32),	// 0
+				EasyPlayerName(bs->playernum, name, 32),	// 0
 				NULL);
 	bs->lastchat_time = FloatTime();
 	bs->chatto = CHAT_ALL;
@@ -560,28 +560,28 @@ int BotChat_EndLevel(bot_state_t *bs) {
 	//
 	if (BotIsFirstInRankings(bs)) {
 		BotAI_BotInitialChat(bs, "level_end_victory",
-				EasyClientName(bs->playernum, name, 32),	// 0
+				EasyPlayerName(bs->playernum, name, 32),	// 0
 				BotRandomOpponentName(bs),				// 1
 				"[invalid var]",						// 2
-				BotLastClientInRankings(),				// 3
+				BotLastPlayerInRankings(),				// 3
 				BotMapTitle(),							// 4
 				NULL);
 	}
 	else if (BotIsLastInRankings(bs)) {
 		BotAI_BotInitialChat(bs, "level_end_lose",
-				EasyClientName(bs->playernum, name, 32),	// 0
+				EasyPlayerName(bs->playernum, name, 32),	// 0
 				BotRandomOpponentName(bs),				// 1
-				BotFirstClientInRankings(),				// 2
+				BotFirstPlayerInRankings(),				// 2
 				"[invalid var]",						// 3
 				BotMapTitle(),							// 4
 				NULL);
 	}
 	else {
 		BotAI_BotInitialChat(bs, "level_end",
-				EasyClientName(bs->playernum, name, 32),	// 0
+				EasyPlayerName(bs->playernum, name, 32),	// 0
 				BotRandomOpponentName(bs),				// 1
-				BotFirstClientInRankings(),				// 2
-				BotLastClientInRankings(),				// 3
+				BotFirstPlayerInRankings(),				// 2
+				BotLastPlayerInRankings(),				// 3
 				BotMapTitle(),							// 4
 				NULL);
 	}
@@ -611,7 +611,7 @@ int BotChat_Death(bot_state_t *bs) {
 	if (BotNumActivePlayers() <= 1) return qfalse;
 	//
 	if (bs->lastkilledby >= 0 && bs->lastkilledby < MAX_CLIENTS)
-		EasyClientName(bs->lastkilledby, name, 32);
+		EasyPlayerName(bs->lastkilledby, name, 32);
 	else
 		strcpy(name, "[world]");
 	//
@@ -717,7 +717,7 @@ int BotChat_Kill(bot_state_t *bs) {
 	//
 	if (BotVisibleEnemies(bs)) return qfalse;
 	//
-	EasyClientName(bs->lastkilledplayer, name, 32);
+	EasyPlayerName(bs->lastkilledplayer, name, 32);
 	//
 	bs->chatto = CHAT_ALL;
 	if (TeamPlayIsOn() && BotSameTeam(bs, bs->lastkilledplayer)) {
@@ -785,7 +785,7 @@ int BotChat_EnemySuicide(bot_state_t *bs) {
 	//
 	if (BotVisibleEnemies(bs)) return qfalse;
 	//
-	if (bs->enemy >= 0) EasyClientName(bs->enemy, name, 32);
+	if (bs->enemy >= 0) EasyPlayerName(bs->enemy, name, 32);
 	else strcpy(name, "");
 	BotAI_BotInitialChat(bs, "enemy_suicide", name, NULL);
 	bs->lastchat_time = FloatTime();
@@ -950,7 +950,7 @@ int BotChat_Random(bot_state_t *bs) {
 		strcpy(name, BotRandomOpponentName(bs));
 	}
 	else {
-		EasyClientName(bs->lastkilledplayer, name, sizeof(name));
+		EasyPlayerName(bs->lastkilledplayer, name, sizeof(name));
 	}
 	if (TeamPlayIsOn()) {
 #ifdef MISSIONPACK
@@ -1012,7 +1012,7 @@ void BotChatTest(bot_state_t *bs) {
 	for (i = 0; i < num; i++)
 	{
 		BotAI_BotInitialChat(bs, "game_enter",
-					EasyClientName(bs->playernum, name, 32),	// 0
+					EasyPlayerName(bs->playernum, name, 32),	// 0
 					BotRandomOpponentName(bs),				// 1
 					"[invalid var]",						// 2
 					"[invalid var]",						// 3
@@ -1024,7 +1024,7 @@ void BotChatTest(bot_state_t *bs) {
 	for (i = 0; i < num; i++)
 	{
 		BotAI_BotInitialChat(bs, "game_exit",
-					EasyClientName(bs->playernum, name, 32),	// 0
+					EasyPlayerName(bs->playernum, name, 32),	// 0
 					BotRandomOpponentName(bs),				// 1
 					"[invalid var]",						// 2
 					"[invalid var]",						// 3
@@ -1036,7 +1036,7 @@ void BotChatTest(bot_state_t *bs) {
 	for (i = 0; i < num; i++)
 	{
 		BotAI_BotInitialChat(bs, "level_start",
-					EasyClientName(bs->playernum, name, 32),	// 0
+					EasyPlayerName(bs->playernum, name, 32),	// 0
 					NULL);
 		BotEnterChat(bs->cs, 0, CHAT_ALL);
 	}
@@ -1044,10 +1044,10 @@ void BotChatTest(bot_state_t *bs) {
 	for (i = 0; i < num; i++)
 	{
 		BotAI_BotInitialChat(bs, "level_end_victory",
-				EasyClientName(bs->playernum, name, 32),	// 0
+				EasyPlayerName(bs->playernum, name, 32),	// 0
 				BotRandomOpponentName(bs),				// 1
-				BotFirstClientInRankings(),				// 2
-				BotLastClientInRankings(),				// 3
+				BotFirstPlayerInRankings(),				// 2
+				BotLastPlayerInRankings(),				// 3
 				BotMapTitle(),							// 4
 				NULL);
 		BotEnterChat(bs->cs, 0, CHAT_ALL);
@@ -1056,10 +1056,10 @@ void BotChatTest(bot_state_t *bs) {
 	for (i = 0; i < num; i++)
 	{
 		BotAI_BotInitialChat(bs, "level_end_lose",
-				EasyClientName(bs->playernum, name, 32),	// 0
+				EasyPlayerName(bs->playernum, name, 32),	// 0
 				BotRandomOpponentName(bs),				// 1
-				BotFirstClientInRankings(),				// 2
-				BotLastClientInRankings(),				// 3
+				BotFirstPlayerInRankings(),				// 2
+				BotLastPlayerInRankings(),				// 3
 				BotMapTitle(),							// 4
 				NULL);
 		BotEnterChat(bs->cs, 0, CHAT_ALL);
@@ -1068,15 +1068,15 @@ void BotChatTest(bot_state_t *bs) {
 	for (i = 0; i < num; i++)
 	{
 		BotAI_BotInitialChat(bs, "level_end",
-				EasyClientName(bs->playernum, name, 32),	// 0
+				EasyPlayerName(bs->playernum, name, 32),	// 0
 				BotRandomOpponentName(bs),				// 1
-				BotFirstClientInRankings(),				// 2
-				BotLastClientInRankings(),				// 3
+				BotFirstPlayerInRankings(),				// 2
+				BotLastPlayerInRankings(),				// 3
 				BotMapTitle(),							// 4
 				NULL);
 		BotEnterChat(bs->cs, 0, CHAT_ALL);
 	}
-	EasyClientName(bs->lastkilledby, name, sizeof(name));
+	EasyPlayerName(bs->lastkilledby, name, sizeof(name));
 	num = BotNumInitialChats(bs->cs, "death_drown");
 	for (i = 0; i < num; i++)
 	{
@@ -1160,7 +1160,7 @@ void BotChatTest(bot_state_t *bs) {
 		BotEnterChat(bs->cs, 0, CHAT_ALL);
 	}
 	//
-	EasyClientName(bs->lastkilledplayer, name, 32);
+	EasyPlayerName(bs->lastkilledplayer, name, 32);
 	//
 	num = BotNumInitialChats(bs->cs, "kill_gauntlet");
 	for (i = 0; i < num; i++)
@@ -1224,7 +1224,7 @@ void BotChatTest(bot_state_t *bs) {
 		strcpy(name, BotRandomOpponentName(bs));
 	}
 	else {
-		EasyClientName(bs->lastkilledplayer, name, sizeof(name));
+		EasyPlayerName(bs->lastkilledplayer, name, sizeof(name));
 	}
 	//
 	num = BotNumInitialChats(bs->cs, "random_misc");

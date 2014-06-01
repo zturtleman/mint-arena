@@ -41,7 +41,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 void	trap_LocateGameData( gentity_t *gEnts, int numGEntities, int sizeofGEntity_t, playerState_t *gameClients, int sizeofGameClient );
 void	trap_SetNetFields( int entityStateSize, int entityNetworkSize, vmNetField_t *entityStateFields, int numEntityStateFields,
 						   int playerStateSize, int playerNetworkSize, vmNetField_t *playerStateFields, int numPlayerStateFields );
-void	trap_DropClient( int clientNum, const char *reason );
+void	trap_DropClient( int playerNum, const char *reason );
 void	trap_SendServerCommandEx( int connectionNum, int localPlayerNum, const char *text );
 void	trap_SetConfigstring( int num, const char *string );
 void	trap_GetConfigstring( int num, char *buffer, int bufferSize );
@@ -65,7 +65,7 @@ int		trap_EntitiesInBox( const vec3_t mins, const vec3_t maxs, int *entityList, 
 qboolean trap_EntityContact( const vec3_t mins, const vec3_t maxs, const gentity_t *ent );
 int		trap_BotAllocateClient( void );
 void	trap_BotFreeClient( int clientNum );
-void	trap_GetUsercmd( int clientNum, usercmd_t *cmd );
+void	trap_GetUsercmd( int playerNum, usercmd_t *cmd );
 qboolean	trap_GetEntityToken( char *buffer, int bufferSize );
 void	trap_ClientCommand(int playerNum, const char *command);
 
@@ -88,9 +88,9 @@ int		trap_BotLibLoadMap(const char *mapname);
 int		trap_BotLibUpdateEntity(int ent, void /* struct bot_updateentity_s */ *bue);
 int		trap_BotLibTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3);
 
-int		trap_BotGetSnapshotEntity( int clientNum, int sequence );
-int		trap_BotGetServerCommand(int clientNum, char *message, int size);
-void	trap_BotUserCommand(int client, usercmd_t *ucmd);
+int		trap_BotGetSnapshotEntity( int playerNum, int sequence );
+int		trap_BotGetServerCommand(int playerNum, char *message, int size);
+void	trap_BotUserCommand(int playerNum, usercmd_t *ucmd);
 
 int		trap_AAS_BBoxAreas(vec3_t absmins, vec3_t absmaxs, int *areas, int maxareas);
 int		trap_AAS_AreaInfo( int areanum, void /* struct aas_areainfo_s */ *info );

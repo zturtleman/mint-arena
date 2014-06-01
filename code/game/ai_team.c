@@ -67,7 +67,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // for the voice chats
 #include "../../ui/menudef.h"
 
-//ctf task preferences for a client
+//ctf task preferences for a player
 typedef struct bot_ctftaskpreference_s
 {
 	char		name[36];

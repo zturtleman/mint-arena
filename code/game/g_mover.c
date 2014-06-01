@@ -177,7 +177,7 @@ qboolean	G_TryPushingEntity( gentity_t *check, gentity_t *pusher, vec3_t move, v
 	if ( check->player ) {
 		VectorAdd (check->player->ps.origin, move, check->player->ps.origin);
 		VectorAdd (check->player->ps.origin, move2, check->player->ps.origin);
-		// make sure the client's view rotates when on a rotating mover
+		// make sure the player's view rotates when on a rotating mover
 		check->player->ps.delta_angles[YAW] += ANGLE2SHORT(amove[YAW]);
 	}
 

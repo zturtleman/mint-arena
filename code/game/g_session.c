@@ -43,12 +43,12 @@ and tournament restarts.
 
 /*
 ================
-G_WriteClientSessionData
+G_WritePlayerSessionData
 
 Called on game shutdown
 ================
 */
-void G_WriteClientSessionData( gplayer_t *player ) {
+void G_WritePlayerSessionData( gplayer_t *player ) {
 	const char	*s;
 	const char	*var;
 
@@ -158,7 +158,7 @@ void G_InitSessionData( gplayer_t *player, char *userinfo ) {
 
 	AddTournamentQueue(player);
 
-	G_WriteClientSessionData( player );
+	G_WritePlayerSessionData( player );
 }
 
 
@@ -176,7 +176,7 @@ void G_InitWorldSession( void ) {
 	gt = atoi( s );
 	
 	// if the gametype changed since the last session, don't use any
-	// client sessions
+	// player sessions
 	if ( g_gametype.integer != gt ) {
 		level.newSession = qtrue;
 		G_Printf( "Gametype changed, clearing session data.\n" );
@@ -196,7 +196,7 @@ void G_WriteSessionData( void ) {
 
 	for ( i = 0 ; i < level.maxplayers ; i++ ) {
 		if ( level.players[i].pers.connected == CON_CONNECTED ) {
-			G_WriteClientSessionData( &level.players[i] );
+			G_WritePlayerSessionData( &level.players[i] );
 		}
 	}
 }

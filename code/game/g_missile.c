@@ -277,7 +277,7 @@ G_MissileImpact
 */
 void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 	gentity_t		*other;
-	qboolean		hitClient = qfalse;
+	qboolean		hitPlayer = qfalse;
 #ifdef MISSIONPACK
 	vec3_t			forward, impactpoint, bouncedir;
 	int				eFlags;
@@ -320,7 +320,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 
 			if( LogAccuracyHit( other, &g_entities[ent->r.ownerNum] ) ) {
 				g_entities[ent->r.ownerNum].player->accuracy_hits++;
-				hitClient = qtrue;
+				hitPlayer = qtrue;
 			}
 			BG_EvaluateTrajectoryDelta( &ent->s.pos, level.time, velocity );
 			if ( VectorLength( velocity ) == 0 ) {
@@ -439,7 +439,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 	if ( ent->splashDamage ) {
 		if( G_RadiusDamage( trace->endpos, ent->parent, ent->splashDamage, ent->splashRadius, 
 			other, ent->splashMethodOfDeath ) ) {
-			if( !hitClient ) {
+			if( !hitPlayer ) {
 				g_entities[ent->r.ownerNum].player->accuracy_hits++;
 			}
 		}

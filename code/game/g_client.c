@@ -508,11 +508,11 @@ void CopyToBodyQue( gentity_t *ent ) {
 
 /*
 ==================
-SetClientViewAngle
+SetPlayerViewAngle
 
 ==================
 */
-void SetClientViewAngle( gentity_t *ent, vec3_t angle ) {
+void SetPlayerViewAngle( gentity_t *ent, vec3_t angle ) {
 	int			i;
 
 	// set the delta angle
@@ -614,10 +614,10 @@ team_t PickTeam( int ignorePlayerNum ) {
 
 /*
 ===========
-ClientCleanName
+PlayerCleanName
 ============
 */
-static void ClientCleanName(const char *in, char *out, int outSize)
+static void PlayerCleanName(const char *in, char *out, int outSize)
 {
 	int outpos = 0, colorlessLen = 0, spaces = 0;
 
@@ -698,7 +698,7 @@ float PlayerHandicap( gplayer_t *player ) {
 
 /*
 ===========
-ClientUserInfoChanged
+PlayerUserinfoChanged
 
 Called from PlayerConnect when the player first connects and
 directly by the server system when the player updates a userinfo variable.
@@ -727,7 +727,7 @@ void PlayerUserinfoChanged( int playerNum ) {
 	// check for malformed or illegal info strings
 	if ( !Info_Validate(userinfo) ) {
 		strcpy (userinfo, "\\name\\badinfo");
-		// don't keep those clients and userinfo
+		// don't keep those players and userinfo
 		trap_DropClient(playerNum, "Invalid userinfo");
 	}
 
@@ -742,7 +742,7 @@ void PlayerUserinfoChanged( int playerNum ) {
 	// set name
 	Q_strncpyz ( oldname, player->pers.netname, sizeof( oldname ) );
 	s = Info_ValueForKey (userinfo, "name");
-	ClientCleanName( s, player->pers.netname, sizeof(player->pers.netname) );
+	PlayerCleanName( s, player->pers.netname, sizeof(player->pers.netname) );
 
 	if ( player->sess.sessionTeam == TEAM_SPECTATOR ) {
 		if ( player->sess.spectatorState == SPECTATOR_SCOREBOARD ) {
@@ -959,7 +959,7 @@ char *PlayerConnect( int playerNum, qboolean firstTime, qboolean isBot, int conn
 		}
 	}
 
-	// count current clients and rank for scoreboard
+	// count current players and rank for scoreboard
 	CalculateRanks();
 
 	// for statistics
@@ -1020,7 +1020,7 @@ void PlayerBegin( int playerNum ) {
 	player->pers.initialSpawn = qfalse;
 	G_LogPrintf( "PlayerBegin: %i\n", playerNum );
 
-	// count current clients and rank for scoreboard
+	// count current players and rank for scoreboard
 	CalculateRanks();
 }
 
@@ -1172,7 +1172,7 @@ void PlayerSpawn(gentity_t *ent) {
 	player->ps.pm_flags |= PMF_RESPAWNED;
 
 	trap_GetUsercmd( player - level.players, &ent->player->pers.cmd );
-	SetClientViewAngle( ent, spawn_angles );
+	SetPlayerViewAngle( ent, spawn_angles );
 	// don't allow full run speed for a bit
 	player->ps.pm_flags |= PMF_TIME_KNOCKBACK;
 	player->ps.pm_time = 100;
@@ -1220,7 +1220,7 @@ void PlayerSpawn(gentity_t *ent) {
 	ent->player->pers.cmd.serverTime = level.time;
 	PlayerThink( ent-g_entities );
 	// run the presend to set anything else, follow spectators wait
-	// until all clients have been reconnected after map_restart
+	// until all players have been reconnected after map_restart
 	if ( ent->player->sess.spectatorState != SPECTATOR_FOLLOW ) {
 		PlayerEndFrame( ent );
 	}
@@ -1256,7 +1256,7 @@ void PlayerDisconnect( int playerNum ) {
 		return;
 	}
 
-	// stop any following clients
+	// stop any following players
 	for ( i = 0 ; i < level.maxplayers ; i++ ) {
 		if ( level.players[i].sess.sessionTeam == TEAM_SPECTATOR
 			&& level.players[i].sess.spectatorState == SPECTATOR_FOLLOW
@@ -1273,11 +1273,11 @@ void PlayerDisconnect( int playerNum ) {
 
 		// They don't get to take powerups with them!
 		// Especially important for stuff like CTF flags
-		TossClientItems( ent );
+		TossPlayerItems( ent );
 #ifdef MISSIONPACK
-		TossClientPersistantPowerups( ent );
+		TossPlayerPersistantPowerups( ent );
 		if( g_gametype.integer == GT_HARVESTER ) {
-			TossClientCubes( ent );
+			TossPlayerCubes( ent );
 		}
 #endif
 

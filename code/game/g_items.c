@@ -93,7 +93,7 @@ int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 		}
 
     // if same team in team game, no sound
-    // cannot use OnSameTeam as it expects to g_entities, not clients
+    // cannot use OnSameTeam as it expects to g_entities, not players
   	if ( g_gametype.integer >= GT_TEAM && other->player->sess.sessionTeam == player->sess.sessionTeam  ) {
       continue;
     }
@@ -350,7 +350,7 @@ void RespawnItem( gentity_t *ent ) {
 	trap_LinkEntity (ent);
 
 	if ( ent->item->giType == IT_POWERUP ) {
-		// play powerup spawn sound to all clients
+		// play powerup spawn sound to all players
 		gentity_t	*te;
 
 		// if the powerup respawn sound should Not be global
@@ -365,7 +365,7 @@ void RespawnItem( gentity_t *ent ) {
 	}
 
 	if ( ent->item->giType == IT_HOLDABLE && ent->item->giTag == HI_KAMIKAZE ) {
-		// play powerup spawn sound to all clients
+		// play powerup spawn sound to all players
 		gentity_t	*te;
 
 		// if the powerup respawn sound should Not be global
@@ -379,7 +379,7 @@ void RespawnItem( gentity_t *ent ) {
 		te->r.svFlags |= SVF_BROADCAST;
 	}
 
-	// play the normal respawn sound only to nearby clients
+	// play the normal respawn sound only to nearby players
 	G_AddEvent( ent, EV_ITEM_RESPAWN, 0 );
 
 	ent->nextthink = 0;

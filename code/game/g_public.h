@@ -180,12 +180,12 @@ typedef enum {
 	//=========== server specific functionality =============
 
 	G_LOCATE_GAME_DATA = 100,		// ( gentity_t *gEnts, int numGEntities, int sizeofGEntity_t,
-	//							playerState_t *clients, int sizeofGameClient );
+	//							playerState_t *players, int sizeofGamePlayer );
 	// the game needs to let the server system know where and how big the gentities
 	// are, so it can look at them directly without going through an interface
 
 	G_DROP_PLAYER,		// ( int playerNum, const char *reason );
-	// kick a client off the server with a message
+	// kick a player off the server with a message
 
 	G_SEND_SERVER_COMMAND,	// ( int clientNum, int localPlayerNum, const char *text );
 	// reliably sends a command string to be interpreted by the given
@@ -200,7 +200,7 @@ typedef enum {
 
 	G_GET_CONFIGSTRING,	// ( int num, char *buffer, int bufferSize );
 
-	G_SET_CONFIGSTRING_RESTRICTIONS, // ( int num, const clientList* clientList );
+	G_SET_CONFIGSTRING_RESTRICTIONS, // ( int num, const clientList_t *clientList );
 
 	G_GET_USERINFO,		// ( int num, char *buffer, int bufferSize );
 	// userinfo strings are maintained by the server system, so they
@@ -283,9 +283,9 @@ typedef enum {
 	BOTLIB_UPDATENTITY,
 	BOTLIB_TEST,
 
-	BOTLIB_GET_SNAPSHOT_ENTITY,		// ( int client, int ent );
-	BOTLIB_GET_CONSOLE_MESSAGE,		// ( int client, char *message, int size );
-	BOTLIB_USER_COMMAND,			// ( int client, usercmd_t *ucmd );
+	BOTLIB_GET_SNAPSHOT_ENTITY,		// ( int playerNum, int ent );
+	BOTLIB_GET_CONSOLE_MESSAGE,		// ( int playerNum, char *message, int size );
+	BOTLIB_USER_COMMAND,			// ( int playerNum, usercmd_t *ucmd );
 
 	BOTLIB_AAS_BBOX_AREAS = 301,
 	BOTLIB_AAS_AREA_INFO,
@@ -364,7 +364,7 @@ typedef enum {
 	GAME_SHUTDOWN,	// (void);
 
 	GAME_PLAYER_CONNECT,	// ( int playerNum, qboolean firstTime, qboolean isBot, int clientNum, int localPlayerNum );
-	// return NULL if the client is allowed to connect, otherwise return
+	// return NULL if the player is allowed to connect, otherwise return
 	// a text string with the reason for denial
 
 	GAME_PLAYER_BEGIN,				// ( int playerNum );

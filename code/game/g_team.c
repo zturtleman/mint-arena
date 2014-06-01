@@ -1078,7 +1078,7 @@ void TeamplayInfoMessage( gentity_t *ent ) {
 	if ( ! ent->player->pers.teamInfo )
 		return;
 
-	// send team info to spectator for team of followed client
+	// send team info to spectator for team of followed player
 	if (ent->player->sess.sessionTeam == TEAM_SPECTATOR) {
 		if ( ent->player->sess.spectatorState != SPECTATOR_FOLLOW
 			|| ent->player->sess.spectatorPlayer < 0 ) {
@@ -1093,9 +1093,9 @@ void TeamplayInfoMessage( gentity_t *ent ) {
 		return;
 	}
 
-	// figure out what client should be on the display
+	// figure out what player should be on the display
 	// we are limited to 8, but we want to use the top eight players
-	// but in client order (so they don't keep changing position on the overlay)
+	// but in player order (so they don't keep changing position on the overlay)
 	for (i = 0, cnt = 0; i < g_maxplayers.integer && cnt < TEAM_MAXOVERLAY; i++) {
 		player = g_entities + level.sortedPlayers[i];
 		if (player->inuse && player->player->sess.sessionTeam == team ) {
@@ -1478,7 +1478,7 @@ qboolean CheckObeliskAttack( gentity_t *obelisk, gentity_t *attacker ) {
 		return qfalse;
 	}
 
-	// if the attacker is a client
+	// if the attacker is a player
 	if( !attacker->player ) {
 		return qfalse;
 	}

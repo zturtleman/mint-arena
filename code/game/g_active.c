@@ -177,10 +177,10 @@ void P_WorldEffects( gentity_t *ent ) {
 
 /*
 ===============
-G_SetClientSound
+G_SetPlayerSound
 ===============
 */
-void G_SetClientSound( gentity_t *ent ) {
+void G_SetPlayerSound( gentity_t *ent ) {
 #ifdef MISSIONPACK
 	if( ent->s.eFlags & EF_TICKING ) {
 		ent->player->ps.loopSound = G_SoundIndex( "sound/weapons/proxmine/wstbtick.wav");
@@ -200,10 +200,10 @@ void G_SetClientSound( gentity_t *ent ) {
 
 /*
 ==============
-ClientImpacts
+PlayerImpacts
 ==============
 */
-void ClientImpacts( gentity_t *ent, pmove_t *pm ) {
+void PlayerImpacts( gentity_t *ent, pmove_t *pm ) {
 	int		i, j;
 	trace_t	trace;
 	gentity_t	*other;
@@ -253,7 +253,7 @@ void	G_TouchTriggers( gentity_t *ent ) {
 		return;
 	}
 
-	// dead clients don't activate triggers!
+	// dead players don't activate triggers!
 	if ( ent->player->ps.stats[STAT_HEALTH] <= 0 ) {
 		return;
 	}
@@ -368,7 +368,7 @@ void SpectatorThink( gentity_t *ent, usercmd_t *ucmd ) {
 =================
 PlayerInactivityTimer
 
-Returns qfalse if the client is dropped
+Returns qfalse if the player is dropped
 =================
 */
 qboolean PlayerInactivityTimer( gplayer_t *player ) {
@@ -398,12 +398,12 @@ qboolean PlayerInactivityTimer( gplayer_t *player ) {
 
 /*
 ==================
-ClientTimerActions
+PlayerTimerActions
 
 Actions that happen once a second
 ==================
 */
-void ClientTimerActions( gentity_t *ent, int msec ) {
+void PlayerTimerActions( gentity_t *ent, int msec ) {
 	gplayer_t	*player;
 #ifdef MISSIONPACK
 	int			maxHealth;
@@ -510,10 +510,10 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 
 /*
 ====================
-ClientIntermissionThink
+PlayerIntermissionThink
 ====================
 */
-void ClientIntermissionThink( gplayer_t *player ) {
+void PlayerIntermissionThink( gplayer_t *player ) {
 	player->ps.eFlags &= ~EF_TALK;
 	player->ps.eFlags &= ~EF_FIRING;
 
@@ -531,13 +531,13 @@ void ClientIntermissionThink( gplayer_t *player ) {
 
 /*
 ================
-ClientEvents
+PlayerEvents
 
 Events will be passed on to the clients for presentation,
 but any server game effects are handled here
 ================
 */
-void ClientEvents( gentity_t *ent, int oldEventSequence ) {
+void PlayerEvents( gentity_t *ent, int oldEventSequence ) {
 	int		i, j;
 	int		event;
 	gplayer_t *player;
@@ -666,10 +666,10 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 #ifdef MISSIONPACK
 /*
 ==============
-StuckInOtherClient
+StuckInOtherPlayer
 ==============
 */
-static int StuckInOtherClient(gentity_t *ent) {
+static int StuckInOtherPlayer(gentity_t *ent) {
 	int i;
 	gentity_t	*ent2;
 
@@ -813,7 +813,7 @@ void PlayerThink_real( gentity_t *ent ) {
 	// check for exiting intermission
 	//
 	if ( level.intermissiontime ) {
-		ClientIntermissionThink( player );
+		PlayerIntermissionThink( player );
 		return;
 	}
 
@@ -897,7 +897,7 @@ void PlayerThink_real( gentity_t *ent ) {
 			VectorCopy (maxs, ent->s.maxs);
 			trap_LinkEntity(ent);
 			// check if this would get anyone stuck in this player
-			if ( !StuckInOtherClient(ent) ) {
+			if ( !StuckInOtherPlayer(ent) ) {
 				// set flag so the expanded size will be set in PM_CheckDuck
 				player->ps.pm_flags |= PMF_INVULEXPAND;
 			}
@@ -976,8 +976,8 @@ void PlayerThink_real( gentity_t *ent ) {
 	ent->waterlevel = pm.waterlevel;
 	ent->watertype = pm.watertype;
 
-	// execute client events
-	ClientEvents( ent, oldEventSequence );
+	// execute player events
+	PlayerEvents( ent, oldEventSequence );
 
 	// link entity now, after any personal teleporters have been used
 	trap_LinkEntity (ent);
@@ -992,7 +992,7 @@ void PlayerThink_real( gentity_t *ent ) {
 	BotTestAAS(ent->r.currentOrigin);
 
 	// touch other objects
-	ClientImpacts( ent, &pm );
+	PlayerImpacts( ent, &pm );
 
 	// save results of triggers and player events
 	if (ent->player->ps.eventSequence != oldEventSequence) {
@@ -1024,7 +1024,7 @@ void PlayerThink_real( gentity_t *ent ) {
 	}
 
 	// perform once-a-second actions
-	ClientTimerActions( ent, msec );
+	PlayerTimerActions( ent, msec );
 }
 
 /*
@@ -1074,7 +1074,7 @@ void SpectatorPlayerEndFrame( gentity_t *ent ) {
 
 		playerNum = ent->player->sess.spectatorPlayer;
 
-		// team follow1 and team follow2 go to whatever clients are playing
+		// team follow1 and team follow2 go to whatever players are playing
 		if ( playerNum == -1 ) {
 			playerNum = level.follow1;
 		} else if ( playerNum == -2 ) {
@@ -1179,7 +1179,7 @@ void PlayerEndFrame( gentity_t *ent ) {
 
 	ent->player->ps.stats[STAT_HEALTH] = ent->health;	// FIXME: get rid of ent->health...
 
-	G_SetClientSound (ent);
+	G_SetPlayerSound (ent);
 
 	// set the latest infor
 	if (g_smoothClients.integer) {
@@ -1190,7 +1190,7 @@ void PlayerEndFrame( gentity_t *ent ) {
 	}
 	SendPendingPredictableEvents( &ent->player->ps );
 
-	// set the bit for the reachability area the client is currently in
+	// set the bit for the reachability area the player is currently in
 //	i = trap_AAS_PointReachabilityAreaIndex( ent->player->ps.origin );
 //	ent->player->areabits[i >> 3] |= 1 << (i & 7);
 }

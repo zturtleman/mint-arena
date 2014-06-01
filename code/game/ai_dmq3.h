@@ -80,8 +80,8 @@ void BotSetUserInfo(bot_state_t *bs, char *key, char *value);
 void BotSetTeamStatus(bot_state_t *bs);
 //returns the name of the player
 char *PlayerName(int client, char *name, int size);
-//returns a simplified client name
-char *EasyClientName(int client, char *name, int size);
+//returns a simplified player name
+char *EasyPlayerName(int playernum, char *name, int size);
 // returns the appropriate synonym context for the current game type and situation
 int BotSynonymContext(bot_state_t *bs);
 // set last ordered task
@@ -112,7 +112,7 @@ int BotSameTeam(bot_state_t *bs, int entnum);
 int TeamPlayIsOn(void);
 //returns true if the bot can camp
 qboolean BotCanCamp(bot_state_t *bs);
-// returns the client number of the team mate flag carrier (-1 if none)
+// returns the player number of the team mate flag carrier (-1 if none)
 int BotTeamFlagCarrier(bot_state_t *bs);
 //returns visible team mate flag carrier if available
 int BotTeamFlagCarrierVisible(bot_state_t *bs);

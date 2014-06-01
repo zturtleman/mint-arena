@@ -136,7 +136,7 @@ int G_SoundIndex( char *name ) {
 ================
 trap_SendServerCommand
 
-Broadcasts a command to only a specific client.
+Broadcasts a command to only a specific plsyer.
 
 ZTM: NOTE: Function name kept to reduce source code changes.
 ================
@@ -446,7 +446,7 @@ G_Spawn
 
 Either finds a free entity, or allocates a new one.
 
-  The slots from 0 to MAX_CLIENTS-1 are always reserved for clients, and will
+  The slots from 0 to MAX_CLIENTS-1 are always reserved for players, and will
 never be used by anything else.
 
 Try to avoid reusing an entity that was recently freed, because it
@@ -652,7 +652,7 @@ void G_AddEvent( gentity_t *ent, int event, int eventParm ) {
 		return;
 	}
 
-	// clients need to add the event in playerState_t instead of entityState_t
+	// players need to add the event in playerState_t instead of entityState_t
 	if ( ent->player ) {
 		bits = ent->player->ps.externalEvent & EV_EVENT_BITS;
 		bits = ( bits + EV_EVENT_BIT1 ) & EV_EVENT_BITS;

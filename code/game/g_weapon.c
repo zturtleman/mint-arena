@@ -337,7 +337,7 @@ void ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, gentity_t *ent ) {
 	float		r, u;
 	vec3_t		end;
 	vec3_t		forward, right, up;
-	qboolean	hitClient = qfalse;
+	qboolean	hitPlayer = qfalse;
 
 	// derive the right and up vectors from the forward vector, because
 	// the client won't have any other information
@@ -352,8 +352,8 @@ void ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, gentity_t *ent ) {
 		VectorMA( origin, 8192 * 16, forward, end);
 		VectorMA (end, r, right, end);
 		VectorMA (end, u, up, end);
-		if( ShotgunPellet( origin, end, ent ) && !hitClient ) {
-			hitClient = qtrue;
+		if( ShotgunPellet( origin, end, ent ) && !hitPlayer ) {
+			hitPlayer = qtrue;
 			ent->player->accuracy_hits++;
 		}
 	}

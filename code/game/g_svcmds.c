@@ -395,13 +395,13 @@ gplayer_t	*PlayerForString( const char *s ) {
 	if ( s[0] >= '0' && s[0] <= '9' ) {
 		idnum = atoi( s );
 		if ( idnum < 0 || idnum >= level.maxplayers ) {
-			Com_Printf( "Bad client slot: %i\n", idnum );
+			Com_Printf( "Bad player slot: %i\n", idnum );
 			return NULL;
 		}
 
 		player = &level.players[idnum];
 		if ( player->pers.connected == CON_DISCONNECTED ) {
-			G_Printf( "Client %i is not connected\n", idnum );
+			G_Printf( "Player %i is not connected\n", idnum );
 			return NULL;
 		}
 		return player;

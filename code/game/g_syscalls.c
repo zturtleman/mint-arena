@@ -160,8 +160,8 @@ void	trap_Cvar_CheckRange( const char *var_name, float min, float max, qboolean 
 
 
 void trap_LocateGameData( gentity_t *gEnts, int numGEntities, int sizeofGEntity_t,
-						 playerState_t *clients, int sizeofGClient ) {
-	syscall( G_LOCATE_GAME_DATA, gEnts, numGEntities, sizeofGEntity_t, clients, sizeofGClient );
+						 playerState_t *players, int sizeofGamePlayer ) {
+	syscall( G_LOCATE_GAME_DATA, gEnts, numGEntities, sizeofGEntity_t, players, sizeofGamePlayer );
 }
 
 void trap_SetNetFields( int entityStateSize, int entityNetworkSize, vmNetField_t *entityStateFields, int numEntityStateFields,
@@ -358,16 +358,16 @@ int trap_BotLibTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3) {
 	return syscall( BOTLIB_TEST, parm0, parm1, parm2, parm3 );
 }
 
-int trap_BotGetSnapshotEntity( int clientNum, int sequence ) {
-	return syscall( BOTLIB_GET_SNAPSHOT_ENTITY, clientNum, sequence );
+int trap_BotGetSnapshotEntity( int playerNum, int sequence ) {
+	return syscall( BOTLIB_GET_SNAPSHOT_ENTITY, playerNum, sequence );
 }
 
-int trap_BotGetServerCommand(int clientNum, char *message, int size) {
-	return syscall( BOTLIB_GET_CONSOLE_MESSAGE, clientNum, message, size );
+int trap_BotGetServerCommand(int playerNum, char *message, int size) {
+	return syscall( BOTLIB_GET_CONSOLE_MESSAGE, playerNum, message, size );
 }
 
-void trap_BotUserCommand(int clientNum, usercmd_t *ucmd) {
-	syscall( BOTLIB_USER_COMMAND, clientNum, ucmd );
+void trap_BotUserCommand(int playerNum, usercmd_t *ucmd) {
+	syscall( BOTLIB_USER_COMMAND, playerNum, ucmd );
 }
 
 int trap_AAS_Loaded(void) {

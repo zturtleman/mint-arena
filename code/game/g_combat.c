@@ -55,7 +55,7 @@ void ScorePlum( gentity_t *ent, vec3_t origin, int score ) {
 ============
 AddScore
 
-Adds score to both the client and his team
+Adds score to both the player and his team
 ============
 */
 void AddScore( gentity_t *ent, vec3_t origin, int score ) {
@@ -78,12 +78,12 @@ void AddScore( gentity_t *ent, vec3_t origin, int score ) {
 
 /*
 =================
-TossClientItems
+TossPlayerItems
 
 Toss the weapon and powerups for the killed player
 =================
 */
-void TossClientItems( gentity_t *self ) {
+void TossPlayerItems( gentity_t *self ) {
 	gitem_t		*item;
 	int			weapon;
 	float		angle;
@@ -94,7 +94,7 @@ void TossClientItems( gentity_t *self ) {
 	weapon = self->s.weapon;
 
 	// make a special check to see if they are changing to a new
-	// weapon that isn't the mg or gauntlet.  Without this, a client
+	// weapon that isn't the mg or gauntlet.  Without this, a player
 	// can pick up a weapon, be killed, and not drop the weapon because
 	// their weapon change hasn't completed yet and they are still holding the MG.
 	if ( weapon == WP_MACHINEGUN || weapon == WP_GRAPPLING_HOOK ) {
@@ -140,12 +140,12 @@ void TossClientItems( gentity_t *self ) {
 
 /*
 =================
-TossClientCubes
+TossPlayerCubes
 =================
 */
 extern gentity_t	*neutralObelisk;
 
-void TossClientCubes( gentity_t *self ) {
+void TossPlayerCubes( gentity_t *self ) {
 	gitem_t		*item;
 	gentity_t	*drop;
 	vec3_t		velocity;
@@ -192,10 +192,10 @@ void TossClientCubes( gentity_t *self ) {
 
 /*
 =================
-TossClientPersistantPowerups
+TossPlayerPersistantPowerups
 =================
 */
-void TossClientPersistantPowerups( gentity_t *ent ) {
+void TossPlayerPersistantPowerups( gentity_t *ent ) {
 	gentity_t	*powerup;
 
 	if( !ent->player ) {
@@ -490,7 +490,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		if ( attacker->player ) {
 			killerName = attacker->player->pers.netname;
 		} else {
-			killerName = "<non-client>";
+			killerName = "<non-player>";
 		}
 	} else {
 		killer = ENTITYNUM_WORLD;
@@ -585,11 +585,11 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		}
 	}
 
-	TossClientItems( self );
+	TossPlayerItems( self );
 #ifdef MISSIONPACK
-	TossClientPersistantPowerups( self );
+	TossPlayerPersistantPowerups( self );
 	if( g_gametype.integer == GT_HARVESTER ) {
-		TossClientCubes( self );
+		TossPlayerCubes( self );
 	}
 #endif
 
@@ -597,16 +597,16 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	// send updated scores to any clients that are following this one,
 	// or they would get stale scoreboards
 	for ( i = 0 ; i < level.maxplayers ; i++ ) {
-		gplayer_t	*client;
+		gplayer_t	*player;
 
-		client = &level.players[i];
-		if ( client->pers.connected != CON_CONNECTED ) {
+		player = &level.players[i];
+		if ( player->pers.connected != CON_CONNECTED ) {
 			continue;
 		}
-		if ( client->sess.sessionTeam != TEAM_SPECTATOR ) {
+		if ( player->sess.sessionTeam != TEAM_SPECTATOR ) {
 			continue;
 		}
-		if ( client->sess.spectatorPlayer == self->s.number ) {
+		if ( player->sess.spectatorPlayer == self->s.number ) {
 			Cmd_Score_f( g_entities + i );
 		}
 	}
@@ -691,23 +691,23 @@ CheckArmor
 */
 int CheckArmor (gentity_t *ent, int damage, int dflags)
 {
-	gplayer_t	*client;
+	gplayer_t	*player;
 	int			save;
 	int			count;
 
 	if (!damage)
 		return 0;
 
-	client = ent->player;
+	player = ent->player;
 
-	if (!client)
+	if (!player)
 		return 0;
 
 	if (dflags & DAMAGE_NO_ARMOR)
 		return 0;
 
 	// armor
-	count = client->ps.stats[STAT_ARMOR];
+	count = player->ps.stats[STAT_ARMOR];
 	save = ceil( damage * ARMOR_PROTECTION );
 	if (save >= count)
 		save = count;
@@ -715,7 +715,7 @@ int CheckArmor (gentity_t *ent, int damage, int dflags)
 	if (!save)
 		return 0;
 
-	client->ps.stats[STAT_ARMOR] -= save;
+	player->ps.stats[STAT_ARMOR] -= save;
 
 	return save;
 }
@@ -822,7 +822,7 @@ dflags		these flags are used to control how T_Damage works
 
 void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			   vec3_t dir, vec3_t point, int damage, int dflags, int mod ) {
-	gplayer_t	*client;
+	gplayer_t	*player;
 	int			take;
 	int			asave;
 	int			knockback;
@@ -881,10 +881,10 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		damage = damage * max / 100;
 	}
 
-	client = targ->player;
+	player = targ->player;
 
-	if ( client ) {
-		if ( client->noclip ) {
+	if ( player ) {
+		if ( player->noclip ) {
 			return;
 		}
 	}
@@ -916,7 +916,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		VectorScale (dir, g_knockback.value * (float)knockback / mass, kvel);
 		VectorAdd (targ->player->ps.velocity, kvel, targ->player->ps.velocity);
 
-		// set the timer so that the other client can't cancel
+		// set the timer so that the other player can't cancel
 		// out the movement immediately
 		if ( !targ->player->ps.pm_time ) {
 			int		t;
@@ -966,7 +966,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 
 	// battlesuit protects from all radius damage (but takes knockback)
 	// and protects 50% against all damage
-	if ( client && client->ps.powerups[PW_BATTLESUIT] ) {
+	if ( player && player->ps.powerups[PW_BATTLESUIT] ) {
 		G_AddEvent( targ, EV_POWERUP_BATTLESUIT, 0 );
 		if ( ( dflags & DAMAGE_RADIUS ) || ( mod == MOD_FALLING ) ) {
 			return;
@@ -975,7 +975,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	}
 
 	// add to the attacker's hit counter (if the target isn't a general entity like a prox mine)
-	if ( attacker->player && client
+	if ( attacker->player && player
 			&& targ != attacker && targ->health > 0
 			&& targ->s.eType != ET_MISSILE
 			&& targ->s.eType != ET_GENERAL) {
@@ -984,7 +984,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		} else {
 			attacker->player->ps.persistant[PERS_HITS]++;
 		}
-		attacker->player->ps.persistant[PERS_ATTACKEE_ARMOR] = (targ->health<<8)|(client->ps.stats[STAT_ARMOR]);
+		attacker->player->ps.persistant[PERS_ATTACKEE_ARMOR] = (targ->health<<8)|(player->ps.stats[STAT_ARMOR]);
 	}
 
 	// always give half damage if hurting self
@@ -1003,28 +1003,28 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	take -= asave;
 
 	if ( g_debugDamage.integer ) {
-		G_Printf( "%i: client:%i health:%i damage:%i armor:%i\n", level.time, targ->s.number,
+		G_Printf( "%i: player:%i health:%i damage:%i armor:%i\n", level.time, targ->s.number,
 			targ->health, take, asave );
 	}
 
 	// add to the damage inflicted on a player this frame
 	// the total will be turned into screen blends and view angle kicks
 	// at the end of the frame
-	if ( client ) {
+	if ( player ) {
 		if ( attacker ) {
-			client->ps.persistant[PERS_ATTACKER] = attacker->s.number;
+			player->ps.persistant[PERS_ATTACKER] = attacker->s.number;
 		} else {
-			client->ps.persistant[PERS_ATTACKER] = ENTITYNUM_WORLD;
+			player->ps.persistant[PERS_ATTACKER] = ENTITYNUM_WORLD;
 		}
-		client->damage_armor += asave;
-		client->damage_blood += take;
-		client->damage_knockback += knockback;
+		player->damage_armor += asave;
+		player->damage_blood += take;
+		player->damage_knockback += knockback;
 		if ( dir ) {
-			VectorCopy ( dir, client->damage_from );
-			client->damage_fromWorld = qfalse;
+			VectorCopy ( dir, player->damage_from );
+			player->damage_fromWorld = qfalse;
 		} else {
-			VectorCopy ( targ->r.currentOrigin, client->damage_from );
-			client->damage_fromWorld = qtrue;
+			VectorCopy ( targ->r.currentOrigin, player->damage_from );
+			player->damage_fromWorld = qtrue;
 		}
 	}
 
@@ -1038,7 +1038,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	}
 
 	if (targ->player) {
-		// set the last client who damaged the target
+		// set the last player who damaged the target
 		targ->player->lasthurt_player = attacker->s.number;
 		targ->player->lasthurt_mod = mod;
 	}
@@ -1051,7 +1051,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		}
 			
 		if ( targ->health <= 0 ) {
-			if ( client )
+			if ( player )
 				targ->flags |= FL_NO_KNOCKBACK;
 
 			if (targ->health < -999)
@@ -1187,7 +1187,7 @@ qboolean G_RadiusDamage ( vec3_t origin, gentity_t *attacker, float damage, floa
 	vec3_t		v;
 	vec3_t		dir;
 	int			i, e;
-	qboolean	hitClient = qfalse;
+	qboolean	hitPlayer = qfalse;
 
 	if ( radius < 1 ) {
 		radius = 1;
@@ -1228,7 +1228,7 @@ qboolean G_RadiusDamage ( vec3_t origin, gentity_t *attacker, float damage, floa
 
 		if( CanDamage (ent, origin) ) {
 			if( LogAccuracyHit( ent, attacker ) ) {
-				hitClient = qtrue;
+				hitPlayer = qtrue;
 			}
 			VectorSubtract (ent->r.currentOrigin, origin, dir);
 			// push the center of mass higher than the origin so players
@@ -1238,5 +1238,5 @@ qboolean G_RadiusDamage ( vec3_t origin, gentity_t *attacker, float damage, floa
 		}
 	}
 
-	return hitClient;
+	return hitPlayer;
 }

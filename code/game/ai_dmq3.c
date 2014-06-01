@@ -216,7 +216,7 @@ qboolean EntityIsDead(aas_entityinfo_t *entinfo) {
 	playerState_t ps;
 
 	if (entinfo->number >= 0 && entinfo->number < MAX_CLIENTS) {
-		//retrieve the current client state
+		//retrieve the current player state
 		if (!BotAI_GetPlayerState( entinfo->number, &ps )) {
 			return qfalse;
 		}
@@ -1411,14 +1411,14 @@ int BotPointAreaNum(vec3_t origin) {
 PlayerName
 ==================
 */
-char *PlayerName(int client, char *name, int size) {
+char *PlayerName(int playernum, char *name, int size) {
 	char buf[MAX_INFO_STRING];
 
-	if (client < 0 || client >= MAX_CLIENTS) {
-		BotAI_Print(PRT_ERROR, "PlayerName: client out of range\n");
-		return "[client out of range]";
+	if (playernum < 0 || playernum >= MAX_CLIENTS) {
+		BotAI_Print(PRT_ERROR, "PlayerName: playernum out of range\n");
+		return "[playernum out of range]";
 	}
-	trap_GetConfigstring(CS_PLAYERS+client, buf, sizeof(buf));
+	trap_GetConfigstring(CS_PLAYERS+playernum, buf, sizeof(buf));
 	strncpy(name, Info_ValueForKey(buf, "n"), size-1);
 	name[size-1] = '\0';
 	Q_CleanStr( name );
@@ -1481,15 +1481,15 @@ char *stristr(char *str, char *charset) {
 
 /*
 ==================
-EasyClientName
+EasyPlayerName
 ==================
 */
-char *EasyClientName(int client, char *buf, int size) {
+char *EasyPlayerName(int playernum, char *buf, int size) {
 	int i;
 	char *str1, *str2, *ptr, c;
 	char name[128];
 
-	PlayerName(client, name, sizeof(name));
+	PlayerName(playernum, name, sizeof(name));
 	
 	for (i = 0; name[i]; i++) name[i] &= 127;
 	//remove all spaces
@@ -3425,7 +3425,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 		return;
 	}
 	//
-	//BotAI_Print(PRT_MESSAGE, "client %d: aiming at client %d\n", bs->entitynum, bs->enemy);
+	//BotAI_Print(PRT_MESSAGE, "player %d: aiming at player %d\n", bs->playernum, bs->enemy);
 	//
 	aim_skill = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 	aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
@@ -3767,7 +3767,7 @@ void BotCheckAttack(bot_state_t *bs) {
 	//a little back to make sure not inside a very close enemy
 	VectorMA(start, -12, forward, start);
 	BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, MASK_SHOT);
-	//if the entity is a client
+	//if the entity is a player
 	if (trace.ent >= 0 && trace.ent < MAX_CLIENTS) {
 		if (trace.ent != attackentity) {
 			//if a teammate is hit
@@ -4599,7 +4599,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 #endif // OBSTACLEDEBUG
 	VectorSubtract(entinfo.origin, bs->origin, v2);
 	VectorNormalize(v2);
-	// if blocked by a client
+	// if blocked by a player
 	if (ent->player) {
 		VectorNormalize2(ent->player->ps.velocity, v1);
 		// if the blocking entity is moving away from us or if it is an enemy
@@ -4946,7 +4946,7 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 	}
 	//
 	switch(event) {
-		//client obituary event
+		//player obituary event
 		case EV_OBITUARY:
 		{
 			int target, attacker, mod;
@@ -4958,7 +4958,7 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 			mod = state->eventParm;
 
 			//does the bot want revenge?
-			if (level.numPlayingClients < 3) {
+			if (level.numPlayingPlayers < 3) {
 				getRevenge = qfalse;
 			} else {
 				vengefulness = Characteristic_BFloat(bs->character, CHARACTERISTIC_VENGEFULNESS, 0, 1);
@@ -4991,7 +4991,7 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 					}
 				}
 			}
-			//else if this client was killed by the bot
+			//else if this player was killed by the bot
 			else if (attacker == bs->playernum) {
 				bs->enemydeathtype = mod;
 				bs->lastkilledplayer = target;

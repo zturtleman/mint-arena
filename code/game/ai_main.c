@@ -399,13 +399,13 @@ void BotSetInfoConfigString(bot_state_t *bs) {
 	switch(bs->ltgtype) {
 		case LTG_TEAMHELP:
 		{
-			EasyClientName(bs->teammate, goalname, sizeof(goalname));
+			EasyPlayerName(bs->teammate, goalname, sizeof(goalname));
 			Com_sprintf(action, sizeof(action), "helping %s", goalname);
 			break;
 		}
 		case LTG_TEAMACCOMPANY:
 		{
-			EasyClientName(bs->teammate, goalname, sizeof(goalname));
+			EasyPlayerName(bs->teammate, goalname, sizeof(goalname));
 			Com_sprintf(action, sizeof(action), "accompanying %s", goalname);
 			break;
 		}
@@ -1005,7 +1005,7 @@ int BotAI(int playernum, float thinktime) {
 		return qfalse;
 	}
 
-	//retrieve the current client state
+	//retrieve the current player state
 	if (!BotAI_GetPlayerState( playernum, &bs->cur_ps )) {
 		BotAI_Print(PRT_FATAL, "BotAI: failed to get player state for player %d\n", playernum);
 		return qfalse;
@@ -1273,7 +1273,7 @@ int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean re
 	if (bot_interbreed) {
 		BotMutateGoalFuzzyLogic(bs->gs, 1);
 	}
-	// if we kept the bot client
+	// if we kept the bot state
 	if (restart) {
 		BotReadSessionData(bs);
 	}

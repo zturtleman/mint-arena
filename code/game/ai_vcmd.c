@@ -71,7 +71,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 typedef struct voiceCommand_s
 {
 	char *cmd;
-	void (*func)(bot_state_t *bs, int client, int mode);
+	void (*func)(bot_state_t *bs, int playernum, int mode);
 } voiceCommand_t;
 
 /*
@@ -79,7 +79,7 @@ typedef struct voiceCommand_s
 BotVoiceChat_GetFlag
 ==================
 */
-void BotVoiceChat_GetFlag(bot_state_t *bs, int client, int mode) {
+void BotVoiceChat_GetFlag(bot_state_t *bs, int playernum, int mode) {
 	//
 	if (gametype == GT_CTF) {
 		if (!ctf_redflag.areanum || !ctf_blueflag.areanum)
@@ -95,7 +95,7 @@ void BotVoiceChat_GetFlag(bot_state_t *bs, int client, int mode) {
 		return;
 	}
 	//
-	bs->decisionmaker = client;
+	bs->decisionmaker = playernum;
 	bs->ordered = qtrue;
 	bs->order_time = FloatTime();
 	//set the time to send a message to the team mates
@@ -121,19 +121,19 @@ void BotVoiceChat_GetFlag(bot_state_t *bs, int client, int mode) {
 BotVoiceChat_Offense
 ==================
 */
-void BotVoiceChat_Offense(bot_state_t *bs, int client, int mode) {
+void BotVoiceChat_Offense(bot_state_t *bs, int playernum, int mode) {
 	if ( gametype == GT_CTF
 #ifdef MISSIONPACK
 		|| gametype == GT_1FCTF
 #endif
 		) {
-		BotVoiceChat_GetFlag(bs, client, mode);
+		BotVoiceChat_GetFlag(bs, playernum, mode);
 		return;
 	}
 #ifdef MISSIONPACK
 	if (gametype == GT_HARVESTER) {
 		//
-		bs->decisionmaker = client;
+		bs->decisionmaker = playernum;
 		bs->ordered = qtrue;
 		bs->order_time = FloatTime();
 		//set the time to send a message to the team mates
@@ -152,7 +152,7 @@ void BotVoiceChat_Offense(bot_state_t *bs, int client, int mode) {
 #endif
 	{
 		//
-		bs->decisionmaker = client;
+		bs->decisionmaker = playernum;
 		bs->ordered = qtrue;
 		bs->order_time = FloatTime();
 		//set the time to send a message to the team mates
@@ -175,7 +175,7 @@ void BotVoiceChat_Offense(bot_state_t *bs, int client, int mode) {
 BotVoiceChat_Defend
 ==================
 */
-void BotVoiceChat_Defend(bot_state_t *bs, int client, int mode) {
+void BotVoiceChat_Defend(bot_state_t *bs, int playernum, int mode) {
 #ifdef MISSIONPACK
 	if ( gametype == GT_OBELISK || gametype == GT_HARVESTER) {
 		//
@@ -203,7 +203,7 @@ void BotVoiceChat_Defend(bot_state_t *bs, int client, int mode) {
 		return;
 	}
 	//
-	bs->decisionmaker = client;
+	bs->decisionmaker = playernum;
 	bs->ordered = qtrue;
 	bs->order_time = FloatTime();
 	//set the time to send a message to the team mates
@@ -226,8 +226,8 @@ void BotVoiceChat_Defend(bot_state_t *bs, int client, int mode) {
 BotVoiceChat_DefendFlag
 ==================
 */
-void BotVoiceChat_DefendFlag(bot_state_t *bs, int client, int mode) {
-	BotVoiceChat_Defend(bs, client, mode);
+void BotVoiceChat_DefendFlag(bot_state_t *bs, int playernum, int mode) {
+	BotVoiceChat_Defend(bs, playernum, mode);
 }
 
 /*
@@ -235,16 +235,16 @@ void BotVoiceChat_DefendFlag(bot_state_t *bs, int client, int mode) {
 BotVoiceChat_Patrol
 ==================
 */
-void BotVoiceChat_Patrol(bot_state_t *bs, int client, int mode) {
+void BotVoiceChat_Patrol(bot_state_t *bs, int playernum, int mode) {
 	//
-	bs->decisionmaker = client;
+	bs->decisionmaker = playernum;
 	//
 	bs->ltgtype = 0;
 	bs->lead_time = 0;
 	bs->lastgoal_ltgtype = 0;
 	//
 	BotAI_BotInitialChat(bs, "dismissed", NULL);
-	BotEnterChat(bs->cs, client, CHAT_TELL);
+	BotEnterChat(bs->cs, playernum, CHAT_TELL);
 	BotVoiceChatOnly(bs, -1, VOICECHAT_ONPATROL);
 	//
 	BotSetTeamStatus(bs);
@@ -256,21 +256,21 @@ void BotVoiceChat_Patrol(bot_state_t *bs, int client, int mode) {
 BotVoiceChat_Camp
 ==================
 */
-void BotVoiceChat_Camp(bot_state_t *bs, int client, int mode) {
+void BotVoiceChat_Camp(bot_state_t *bs, int playernum, int mode) {
 	int areanum;
 	aas_entityinfo_t entinfo;
 	char netname[MAX_NETNAME];
 
 	//
 	bs->teamgoal.entitynum = -1;
-	BotEntityInfo(client, &entinfo);
+	BotEntityInfo(playernum, &entinfo);
 	//if info is valid (in PVS)
 	if (entinfo.valid) {
 		areanum = BotPointAreaNum(entinfo.origin);
 		if (areanum) { // && trap_AAS_AreaReachability(areanum)) {
 			//NOTE: just assume the bot knows where the person is
-			//if (BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, client)) {
-				bs->teamgoal.entitynum = client;
+			//if (BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, playernum)) {
+				bs->teamgoal.entitynum = playernum;
 				bs->teamgoal.areanum = areanum;
 				VectorCopy(entinfo.origin, bs->teamgoal.origin);
 				VectorSet(bs->teamgoal.mins, -8, -8, -8);
@@ -280,12 +280,12 @@ void BotVoiceChat_Camp(bot_state_t *bs, int client, int mode) {
 	}
 	//if the other is not visible
 	if (bs->teamgoal.entitynum < 0) {
-		BotAI_BotInitialChat(bs, "whereareyou", EasyClientName(client, netname, sizeof(netname)), NULL);
-		BotEnterChat(bs->cs, client, CHAT_TELL);
+		BotAI_BotInitialChat(bs, "whereareyou", EasyPlayerName(playernum, netname, sizeof(netname)), NULL);
+		BotEnterChat(bs->cs, playernum, CHAT_TELL);
 		return;
 	}
 	//
-	bs->decisionmaker = client;
+	bs->decisionmaker = playernum;
 	bs->ordered = qtrue;
 	bs->order_time = FloatTime();
 	//set the time to send a message to the team mates
@@ -295,7 +295,7 @@ void BotVoiceChat_Camp(bot_state_t *bs, int client, int mode) {
 	//get the team goal time
 	bs->teamgoal_time = FloatTime() + TEAM_CAMP_TIME;
 	//the teammate that requested the camping
-	bs->teammate = client;
+	bs->teammate = playernum;
 	//not arrived yet
 	bs->arrive_time = 0;
 	//
@@ -310,18 +310,18 @@ void BotVoiceChat_Camp(bot_state_t *bs, int client, int mode) {
 BotVoiceChat_FollowMe
 ==================
 */
-void BotVoiceChat_FollowMe(bot_state_t *bs, int client, int mode) {
+void BotVoiceChat_FollowMe(bot_state_t *bs, int playernum, int mode) {
 	int areanum;
 	aas_entityinfo_t entinfo;
 	char netname[MAX_NETNAME];
 
 	bs->teamgoal.entitynum = -1;
-	BotEntityInfo(client, &entinfo);
+	BotEntityInfo(playernum, &entinfo);
 	//if info is valid (in PVS)
 	if (entinfo.valid) {
 		areanum = BotPointAreaNum(entinfo.origin);
 		if (areanum) { // && trap_AAS_AreaReachability(areanum)) {
-			bs->teamgoal.entitynum = client;
+			bs->teamgoal.entitynum = playernum;
 			bs->teamgoal.areanum = areanum;
 			VectorCopy(entinfo.origin, bs->teamgoal.origin);
 			VectorSet(bs->teamgoal.mins, -8, -8, -8);
@@ -330,16 +330,16 @@ void BotVoiceChat_FollowMe(bot_state_t *bs, int client, int mode) {
 	}
 	//if the other is not visible
 	if (bs->teamgoal.entitynum < 0) {
-		BotAI_BotInitialChat(bs, "whereareyou", EasyClientName(client, netname, sizeof(netname)), NULL);
-		BotEnterChat(bs->cs, client, CHAT_TELL);
+		BotAI_BotInitialChat(bs, "whereareyou", EasyPlayerName(playernum, netname, sizeof(netname)), NULL);
+		BotEnterChat(bs->cs, playernum, CHAT_TELL);
 		return;
 	}
 	//
-	bs->decisionmaker = client;
+	bs->decisionmaker = playernum;
 	bs->ordered = qtrue;
 	bs->order_time = FloatTime();
 	//the team mate
-	bs->teammate = client;
+	bs->teammate = playernum;
 	//last time the team mate was assumed visible
 	bs->teammatevisible_time = FloatTime();
 	//set the time to send a message to the team mates
@@ -362,7 +362,7 @@ void BotVoiceChat_FollowMe(bot_state_t *bs, int client, int mode) {
 BotVoiceChat_FollowFlagCarrier
 ==================
 */
-void BotVoiceChat_FollowFlagCarrier(bot_state_t *bs, int client, int mode) {
+void BotVoiceChat_FollowFlagCarrier(bot_state_t *bs, int playernum, int mode) {
 	int carrier;
 
 	carrier = BotTeamFlagCarrier(bs);
@@ -376,7 +376,7 @@ void BotVoiceChat_FollowFlagCarrier(bot_state_t *bs, int client, int mode) {
 BotVoiceChat_ReturnFlag
 ==================
 */
-void BotVoiceChat_ReturnFlag(bot_state_t *bs, int client, int mode) {
+void BotVoiceChat_ReturnFlag(bot_state_t *bs, int playernum, int mode) {
 	//if not in CTF mode
 	if (
 		gametype != GT_CTF
@@ -387,7 +387,7 @@ void BotVoiceChat_ReturnFlag(bot_state_t *bs, int client, int mode) {
 		return;
 	}
 	//
-	bs->decisionmaker = client;
+	bs->decisionmaker = playernum;
 	bs->ordered = qtrue;
 	bs->order_time = FloatTime();
 	//set the time to send a message to the team mates
@@ -406,8 +406,8 @@ void BotVoiceChat_ReturnFlag(bot_state_t *bs, int client, int mode) {
 BotVoiceChat_StartLeader
 ==================
 */
-void BotVoiceChat_StartLeader(bot_state_t *bs, int client, int mode) {
-	PlayerName(client, bs->teamleader, sizeof(bs->teamleader));
+void BotVoiceChat_StartLeader(bot_state_t *bs, int playernum, int mode) {
+	PlayerName(playernum, bs->teamleader, sizeof(bs->teamleader));
 }
 
 /*
@@ -415,12 +415,12 @@ void BotVoiceChat_StartLeader(bot_state_t *bs, int client, int mode) {
 BotVoiceChat_StopLeader
 ==================
 */
-void BotVoiceChat_StopLeader(bot_state_t *bs, int client, int mode) {
+void BotVoiceChat_StopLeader(bot_state_t *bs, int playernum, int mode) {
 	char netname[MAX_MESSAGE_SIZE];
 
-	if (!Q_stricmp(bs->teamleader, PlayerName(client, netname, sizeof(netname)))) {
+	if (!Q_stricmp(bs->teamleader, PlayerName(playernum, netname, sizeof(netname)))) {
 		bs->teamleader[0] = '\0';
-		notleader[client] = qtrue;
+		notleader[playernum] = qtrue;
 	}
 }
 
@@ -429,7 +429,7 @@ void BotVoiceChat_StopLeader(bot_state_t *bs, int client, int mode) {
 BotVoiceChat_WhoIsLeader
 ==================
 */
-void BotVoiceChat_WhoIsLeader(bot_state_t *bs, int client, int mode) {
+void BotVoiceChat_WhoIsLeader(bot_state_t *bs, int playernum, int mode) {
 	char netname[MAX_MESSAGE_SIZE];
 
 	if (!TeamPlayIsOn()) return;
@@ -448,19 +448,19 @@ void BotVoiceChat_WhoIsLeader(bot_state_t *bs, int client, int mode) {
 BotVoiceChat_WantOnDefense
 ==================
 */
-void BotVoiceChat_WantOnDefense(bot_state_t *bs, int client, int mode) {
+void BotVoiceChat_WantOnDefense(bot_state_t *bs, int playernum, int mode) {
 	char netname[MAX_NETNAME];
 	int preference;
 
-	preference = BotGetTeamMateTaskPreference(bs, client);
+	preference = BotGetTeamMateTaskPreference(bs, playernum);
 	preference &= ~TEAMTP_ATTACKER;
 	preference |= TEAMTP_DEFENDER;
-	BotSetTeamMateTaskPreference(bs, client, preference);
+	BotSetTeamMateTaskPreference(bs, playernum, preference);
 	//
-	EasyClientName(client, netname, sizeof(netname));
+	EasyPlayerName(playernum, netname, sizeof(netname));
 	BotAI_BotInitialChat(bs, "keepinmind", netname, NULL);
-	BotEnterChat(bs->cs, client, CHAT_TELL);
-	BotVoiceChatOnly(bs, client, VOICECHAT_YES);
+	BotEnterChat(bs->cs, playernum, CHAT_TELL);
+	BotVoiceChatOnly(bs, playernum, VOICECHAT_YES);
 	EA_Action(bs->playernum, ACTION_AFFIRMATIVE);
 }
 
@@ -469,23 +469,23 @@ void BotVoiceChat_WantOnDefense(bot_state_t *bs, int client, int mode) {
 BotVoiceChat_WantOnOffense
 ==================
 */
-void BotVoiceChat_WantOnOffense(bot_state_t *bs, int client, int mode) {
+void BotVoiceChat_WantOnOffense(bot_state_t *bs, int playernum, int mode) {
 	char netname[MAX_NETNAME];
 	int preference;
 
-	preference = BotGetTeamMateTaskPreference(bs, client);
+	preference = BotGetTeamMateTaskPreference(bs, playernum);
 	preference &= ~TEAMTP_DEFENDER;
 	preference |= TEAMTP_ATTACKER;
-	BotSetTeamMateTaskPreference(bs, client, preference);
+	BotSetTeamMateTaskPreference(bs, playernum, preference);
 	//
-	EasyClientName(client, netname, sizeof(netname));
+	EasyPlayerName(playernum, netname, sizeof(netname));
 	BotAI_BotInitialChat(bs, "keepinmind", netname, NULL);
-	BotEnterChat(bs->cs, client, CHAT_TELL);
-	BotVoiceChatOnly(bs, client, VOICECHAT_YES);
+	BotEnterChat(bs->cs, playernum, CHAT_TELL);
+	BotVoiceChatOnly(bs, playernum, VOICECHAT_YES);
 	EA_Action(bs->playernum, ACTION_AFFIRMATIVE);
 }
 
-void BotVoiceChat_Dummy(bot_state_t *bs, int client, int mode) {
+void BotVoiceChat_Dummy(bot_state_t *bs, int playernum, int mode) {
 }
 
 voiceCommand_t voiceCommands[] = {

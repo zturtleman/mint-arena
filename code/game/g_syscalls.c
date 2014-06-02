@@ -164,9 +164,10 @@ void trap_LocateGameData( gentity_t *gEnts, int numGEntities, int sizeofGEntity_
 	syscall( G_LOCATE_GAME_DATA, gEnts, numGEntities, sizeofGEntity_t, clients, sizeofGClient );
 }
 
-void trap_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
-						int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields ) {
-	syscall( G_SET_NET_FIELDS, entityStateSize, entityStateFields, numEntityStateFields, playerStateSize, playerStateFields, numPlayerStateFields );
+void trap_SetNetFields( int entityStateSize, int entityNetworkSize, vmNetField_t *entityStateFields, int numEntityStateFields,
+						int playerStateSize, int playerNetworkSize, vmNetField_t *playerStateFields, int numPlayerStateFields ) {
+	syscall( G_SET_NET_FIELDS,  entityStateSize, entityNetworkSize, entityStateFields, numEntityStateFields,
+								playerStateSize, playerNetworkSize, playerStateFields, numPlayerStateFields );
 }
 
 void trap_DropClient( int clientNum, const char *reason ) {

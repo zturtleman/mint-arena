@@ -87,8 +87,8 @@ qboolean	trap_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localClientNum );
 void		trap_SendClientCommand( const char *s );
 
 //
-void		trap_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
-						int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields );
+void		trap_SetNetFields( int entityStateSize, int entityNetworkSize, vmNetField_t *entityStateFields, int numEntityStateFields,
+						int playerStateSize, int playerNetworkSize, vmNetField_t *playerStateFields, int numPlayerStateFields );
 
 int			trap_GetDemoState( void );
 int			trap_GetDemoPos( void );

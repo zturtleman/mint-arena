@@ -2567,8 +2567,8 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	cgs.levelStartTime = atoi( s );
 
 	trap_SetMapTitle( CG_ConfigString( CS_MESSAGE ) );
-	trap_SetNetFields( sizeof (entityState_t), bg_entityStateFields, bg_numEntityStateFields,
-					   sizeof (playerState_t), bg_playerStateFields, bg_numPlayerStateFields );
+	trap_SetNetFields( sizeof (entityState_t), sizeof (entityState_t) - sizeof (int), bg_entityStateFields, bg_numEntityStateFields,
+					   sizeof (playerState_t), 0, bg_playerStateFields, bg_numPlayerStateFields );
 
 
 	CG_ParseServerinfo();

@@ -355,6 +355,36 @@ char	*vtos( const vec3_t v ) {
 
 
 /*
+================
+G_SetBrushModel
+================
+*/
+void G_SetBrushModel( gentity_t *ent, const char *name ) {
+	vec3_t			mins, maxs;
+
+	if (!name) {
+		G_Error( "G_SetBrushModel: NULL" );
+	}
+
+	if (name[0] != '*') {
+		G_Error( "G_SetBrushModel: %s isn't a brush model", name );
+	}
+
+
+	ent->s.modelindex = atoi( name + 1 );
+
+	trap_GetBrushBounds( ent->s.modelindex, mins, maxs );
+	VectorCopy (mins, ent->s.mins);
+	VectorCopy (maxs, ent->s.maxs);
+	ent->s.collisionType = CT_SUBMODEL;
+
+	ent->s.contents = -1;		// we don't know exactly what is in the brushes
+
+	trap_LinkEntity( ent );		// FIXME: remove
+}
+
+
+/*
 ===============
 G_SetMovedir
 

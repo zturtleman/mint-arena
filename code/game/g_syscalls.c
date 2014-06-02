@@ -202,8 +202,8 @@ void trap_GetServerinfo( char *buffer, int bufferSize ) {
 	syscall( G_GET_SERVERINFO, buffer, bufferSize );
 }
 
-void trap_SetBrushModel( gentity_t *ent, const char *name ) {
-	syscall( G_SET_BRUSH_MODEL, ent, name );
+void trap_GetBrushBounds( int modelindex, vec3_t mins, vec3_t maxs ) {
+	syscall( G_GET_BRUSH_BOUNDS, modelindex, mins, maxs );
 }
 
 void trap_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask ) {

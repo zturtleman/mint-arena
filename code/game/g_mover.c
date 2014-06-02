@@ -990,7 +990,7 @@ void SP_func_door (gentity_t *ent) {
 	VectorCopy( ent->s.origin, ent->pos1 );
 
 	// calculate second position
-	trap_SetBrushModel( ent, ent->model );
+	G_SetBrushModel( ent, ent->model );
 	G_SetMovedir (ent->s.angles, ent->movedir);
 	abs_movedir[0] = fabs(ent->movedir[0]);
 	abs_movedir[1] = fabs(ent->movedir[1]);
@@ -1146,7 +1146,7 @@ void SP_func_plat (gentity_t *ent) {
 	ent->wait = 1000;
 
 	// create second position
-	trap_SetBrushModel( ent, ent->model );
+	G_SetBrushModel( ent, ent->model );
 
 	if ( !G_SpawnFloat( "height", "0", &height ) ) {
 		height = (ent->s.maxs[2] - ent->s.mins[2]) - lip;
@@ -1233,7 +1233,7 @@ void SP_func_button( gentity_t *ent ) {
 	VectorCopy( ent->s.origin, ent->pos1 );
 
 	// calculate second position
-	trap_SetBrushModel( ent, ent->model );
+	G_SetBrushModel( ent, ent->model );
 
 	G_SpawnFloat( "lip", "4", &lip );
 
@@ -1460,7 +1460,7 @@ void SP_func_train (gentity_t *self) {
 		return;
 	}
 
-	trap_SetBrushModel( self, self->model );
+	G_SetBrushModel( self, self->model );
 	InitMover( self );
 
 	self->reached = Reached_Train;
@@ -1487,7 +1487,7 @@ A bmodel that just sits there, doing nothing.  Can be used for conditional walls
 "light"		constantLight radius
 */
 void SP_func_static( gentity_t *ent ) {
-	trap_SetBrushModel( ent, ent->model );
+	G_SetBrushModel( ent, ent->model );
 	InitMover( ent );
 	VectorCopy( ent->s.origin, ent->s.pos.trBase );
 	VectorCopy( ent->s.origin, ent->r.currentOrigin );
@@ -1533,7 +1533,7 @@ void SP_func_rotating (gentity_t *ent) {
 		ent->damage = 2;
 	}
 
-	trap_SetBrushModel( ent, ent->model );
+	G_SetBrushModel( ent, ent->model );
 	InitMover( ent );
 
 	VectorCopy( ent->s.origin, ent->s.pos.trBase );
@@ -1572,7 +1572,7 @@ void SP_func_bobbing (gentity_t *ent) {
 	G_SpawnInt( "dmg", "2", &ent->damage );
 	G_SpawnFloat( "phase", "0", &phase );
 
-	trap_SetBrushModel( ent, ent->model );
+	G_SetBrushModel( ent, ent->model );
 	InitMover( ent );
 
 	VectorCopy( ent->s.origin, ent->s.pos.trBase );
@@ -1622,7 +1622,7 @@ void SP_func_pendulum(gentity_t *ent) {
 	G_SpawnInt( "dmg", "2", &ent->damage );
 	G_SpawnFloat( "phase", "0", &phase );
 
-	trap_SetBrushModel( ent, ent->model );
+	G_SetBrushModel( ent, ent->model );
 
 	// find pendulum length
 	length = fabs( ent->s.mins[2] );

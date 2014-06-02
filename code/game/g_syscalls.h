@@ -49,7 +49,7 @@ void	trap_SetConfigstringRestrictions( int num, const clientList_t *clientList )
 void	trap_GetUserinfo( int num, char *buffer, int bufferSize );
 void	trap_SetUserinfo( int num, const char *buffer );
 void	trap_GetServerinfo( char *buffer, int bufferSize );
-void	trap_SetBrushModel( gentity_t *ent, const char *name );
+void	trap_GetBrushBounds( int modelindex, vec3_t mins, vec3_t maxs );
 void	trap_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
 void	trap_TraceCapsule( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
 void	trap_ClipToEntities( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );

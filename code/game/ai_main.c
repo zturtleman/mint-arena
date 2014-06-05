@@ -1262,7 +1262,8 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	bs->revenge_enemy = -1;
 	numbots++;
 
-	if (trap_Cvar_VariableIntegerValue("bot_testichat")) {
+	trap_Cvar_Update( &bot_testichat );
+	if (bot_testichat.integer) {
 		trap_BotLibVarSet("bot_testichat", "1");
 		BotChatTest(bs);
 	}

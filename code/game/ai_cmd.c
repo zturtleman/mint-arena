@@ -1497,6 +1497,7 @@ BotMatch_WhereAreYou
 void BotMatch_WhereAreYou(bot_state_t *bs, bot_match_t *match) {
 	float dist, bestdist;
 	int i, redtt, bluett, client;
+	char *teamlocation;
 	char *bestitemname;
 	bot_goal_t goal;
 	gitem_t *it;
@@ -1554,35 +1555,39 @@ void BotMatch_WhereAreYou(bot_state_t *bs, bot_match_t *match) {
 		if (gametype == GT_CTF
 #ifdef MISSIONPACK
 			|| gametype == GT_1FCTF
+			|| gametype == GT_OBELISK
+			|| gametype == GT_HARVESTER
 #endif
 			) {
-			redtt = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, ctf_redflag.areanum, TFL_DEFAULT);
-			bluett = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, ctf_blueflag.areanum, TFL_DEFAULT);
-			if (redtt < (redtt + bluett) * 0.4) {
-				BotAI_BotInitialChat(bs, "teamlocation", bestitemname, "red", NULL);
-			}
-			else if (bluett < (redtt + bluett) * 0.4) {
-				BotAI_BotInitialChat(bs, "teamlocation", bestitemname, "blue", NULL);
-			}
-			else {
-				BotAI_BotInitialChat(bs, "location", bestitemname, NULL);
-			}
-		}
 #ifdef MISSIONPACK
-		else if (gametype == GT_OBELISK || gametype == GT_HARVESTER) {
-			redtt = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, redobelisk.areanum, TFL_DEFAULT);
-			bluett = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, blueobelisk.areanum, TFL_DEFAULT);
+			if (gametype == GT_OBELISK || gametype == GT_HARVESTER) {
+				redtt = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, redobelisk.areanum, TFL_DEFAULT);
+				bluett = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, blueobelisk.areanum, TFL_DEFAULT);
+			}
+			else
+#endif
+			{
+				redtt = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, ctf_redflag.areanum, TFL_DEFAULT);
+				bluett = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, ctf_blueflag.areanum, TFL_DEFAULT);
+			}
+
+			// unpatched q3 used 'ctflocation', some games still use it
+			if ( trap_BotNumInitialChats( bs->cs, "teamlocation" ) ) {
+				teamlocation = "teamlocation";
+			} else {
+				teamlocation = "ctflocation";
+			}
+
 			if (redtt < (redtt + bluett) * 0.4) {
-				BotAI_BotInitialChat(bs, "teamlocation", bestitemname, "red", NULL);
+				BotAI_BotInitialChat(bs, teamlocation, bestitemname, "red", NULL);
 			}
 			else if (bluett < (redtt + bluett) * 0.4) {
-				BotAI_BotInitialChat(bs, "teamlocation", bestitemname, "blue", NULL);
+				BotAI_BotInitialChat(bs, teamlocation, bestitemname, "blue", NULL);
 			}
 			else {
 				BotAI_BotInitialChat(bs, "location", bestitemname, NULL);
 			}
 		}
-#endif
 		else {
 			BotAI_BotInitialChat(bs, "location", bestitemname, NULL);
 		}

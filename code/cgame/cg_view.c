@@ -684,6 +684,10 @@ static void CG_DamageBlendBlob( void ) {
 		return;
 	}
 
+	if ( !cgs.media.viewBloodShader ) {
+		return;
+	}
+
 	if ( !cg.cur_lc->damageValue ) {
 		return;
 	}

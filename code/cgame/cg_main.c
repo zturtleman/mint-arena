@@ -2216,7 +2216,7 @@ static const char *CG_FeederItemText(float feederID, int index, int column, qhan
 				}
 		  break;
 			case 2:
-				if ( cg.snap->pss[0].stats[ STAT_CLIENTS_READY ] & ( 1 << sp->client ) ) {
+				if ( Com_ClientListContains( &cg.readyPlayers, sp->client ) ) {
 					return "Ready";
 				}
 				if (team == -1) {

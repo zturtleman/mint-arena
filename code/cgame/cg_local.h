@@ -760,6 +760,7 @@ typedef struct {
 	int			selectedScore;
 	int			teamScores[2];
 	score_t		scores[MAX_CLIENTS];
+	clientList_t	readyPlayers;
 #ifdef MISSIONPACK
 	char			spectatorList[MAX_STRING_CHARS];		// list of names
 	int				spectatorTime;							// last time offset

@@ -449,7 +449,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				//check if the bot wants to crouch
 				//don't crouch if crouched less than 5 seconds ago
 				if (bs->attackcrouch_time < FloatTime() - 5) {
-					croucher = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_CROUCHER, 0, 1);
+					croucher = Characteristic_BFloat(bs->character, CHARACTERISTIC_CROUCHER, 0, 1);
 					if (random() < bs->thinktime * croucher) {
 						bs->attackcrouch_time = FloatTime() + 5 + croucher * 15;
 					}
@@ -678,7 +678,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			//check if the bot wants to crouch
 			//don't crouch if crouched less than 5 seconds ago
 			if (bs->attackcrouch_time < FloatTime() - 5) {
-				croucher = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_CROUCHER, 0, 1);
+				croucher = Characteristic_BFloat(bs->character, CHARACTERISTIC_CROUCHER, 0, 1);
 				if (random() < bs->thinktime * croucher) {
 					bs->attackcrouch_time = FloatTime() + 5 + croucher * 15;
 				}
@@ -2456,7 +2456,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	}
 	else if (!(moveresult.flags & MOVERESULT_MOVEMENTVIEWSET)
 				&& !(bs->flags & BFL_IDEALVIEWSET) ) {
-		attack_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ATTACK_SKILL, 0, 1);
+		attack_skill = Characteristic_BFloat(bs->character, CHARACTERISTIC_ATTACK_SKILL, 0, 1);
 		//if the bot is skilled enough
 		if (attack_skill > 0.3) {
 			BotAimAtEnemy(bs);
@@ -2602,7 +2602,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	}
 	else if (!(moveresult.flags & MOVERESULT_MOVEMENTVIEWSET)
 				&& !(bs->flags & BFL_IDEALVIEWSET)) {
-		attack_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ATTACK_SKILL, 0, 1);
+		attack_skill = Characteristic_BFloat(bs->character, CHARACTERISTIC_ATTACK_SKILL, 0, 1);
 		//if the bot is skilled enough and the enemy is visible
 		if (attack_skill > 0.3) {
 			//&& BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, bs->enemy)

@@ -783,8 +783,8 @@ void BotChangeViewAngles(bot_state_t *bs, float thinktime) {
 	if (bs->ideal_viewangles[PITCH] > 180) bs->ideal_viewangles[PITCH] -= 360;
 	//
 	if (bs->enemy >= 0) {
-		factor = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_FACTOR, 0.01f, 1);
-		maxchange = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_MAXCHANGE, 1, 1800);
+		factor = Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_FACTOR, 0.01f, 1);
+		maxchange = Characteristic_BFloat(bs->character, CHARACTERISTIC_VIEW_MAXCHANGE, 1, 1800);
 	}
 	else {
 		factor = 0.05f;
@@ -1204,7 +1204,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	}
 
 	//load the bot character
-	bs->character = trap_BotLoadCharacter(settings->characterfile, settings->skill);
+	bs->character = BotLoadCharacter(settings->characterfile, settings->skill);
 	if (!bs->character) {
 		BotAI_Print(PRT_FATAL, "couldn't load skill %f from %s\n", settings->skill, settings->characterfile);
 		return qfalse;
@@ -1214,7 +1214,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	//allocate a goal state
 	bs->gs = BotAllocGoalState(client);
 	//load the item weights
-	trap_Characteristic_String(bs->character, CHARACTERISTIC_ITEMWEIGHTS, filename, MAX_PATH);
+	Characteristic_String(bs->character, CHARACTERISTIC_ITEMWEIGHTS, filename, MAX_PATH);
 	errnum = BotLoadItemWeights(bs->gs, filename);
 	if (errnum != BLERR_NOERROR) {
 		BotFreeGoalState(bs->gs);
@@ -1224,7 +1224,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	//allocate a weapon state
 	bs->ws = BotAllocWeaponState(client);
 	//load the weapon weights
-	trap_Characteristic_String(bs->character, CHARACTERISTIC_WEAPONWEIGHTS, filename, MAX_PATH);
+	Characteristic_String(bs->character, CHARACTERISTIC_WEAPONWEIGHTS, filename, MAX_PATH);
 	errnum = BotLoadWeaponWeights(bs->ws, filename);
 	if (errnum != BLERR_NOERROR) {
 		BotFreeGoalState(bs->gs);
@@ -1235,8 +1235,8 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	//allocate a chat state
 	bs->cs = BotAllocChatState();
 	//load the chat file
-	trap_Characteristic_String(bs->character, CHARACTERISTIC_CHAT_FILE, filename, MAX_PATH);
-	trap_Characteristic_String(bs->character, CHARACTERISTIC_CHAT_NAME, name, MAX_PATH);
+	Characteristic_String(bs->character, CHARACTERISTIC_CHAT_FILE, filename, MAX_PATH);
+	Characteristic_String(bs->character, CHARACTERISTIC_CHAT_NAME, name, MAX_PATH);
 	errnum = BotLoadChatFile(bs->cs, filename, name);
 	if (errnum != BLERR_NOERROR) {
 		BotFreeChatState(bs->cs);
@@ -1246,7 +1246,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 		return qfalse;
 	}
 	//get the gender characteristic
-	trap_Characteristic_String(bs->character, CHARACTERISTIC_GENDER, gender, MAX_PATH);
+	Characteristic_String(bs->character, CHARACTERISTIC_GENDER, gender, MAX_PATH);
 	//set the chat gender
 	if (*gender == 'f' || *gender == 'F') BotSetChatGender(bs->cs, CHAT_GENDERFEMALE);
 	else if (*gender == 'm' || *gender == 'M') BotSetChatGender(bs->cs, CHAT_GENDERMALE);
@@ -1258,7 +1258,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	bs->setupcount = 4;
 	bs->entergame_time = FloatTime();
 	bs->ms = BotAllocMoveState(client);
-	bs->walker = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_WALKER, 0, 1);
+	bs->walker = Characteristic_BFloat(bs->character, CHARACTERISTIC_WALKER, 0, 1);
 	bs->revenge_enemy = -1;
 	numbots++;
 
@@ -1313,7 +1313,7 @@ int BotAIShutdownClient(int client, qboolean restart) {
 	//free the weapon weights
 	BotFreeWeaponState(bs->ws);
 	//free the bot character
-	trap_BotFreeCharacter(bs->character);
+	BotFreeCharacter(bs->character);
 	//
 	BotFreeWaypoints(bs->checkpoints);
 	BotFreeWaypoints(bs->patrolpoints);

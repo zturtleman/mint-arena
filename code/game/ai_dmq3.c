@@ -2488,7 +2488,7 @@ int BotCanAndWantsToRocketJump(bot_state_t *bs) {
 		//if the bot has insufficient armor
 		if (bs->inventory[INVENTORY_ARMOR] < 40) return qfalse;
 	}
-	rocketjumper = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_WEAPONJUMPING, 0, 1);
+	rocketjumper = Characteristic_BFloat(bs->character, CHARACTERISTIC_WEAPONJUMPING, 0, 1);
 	if (rocketjumper < 0.5) return qfalse;
 	return qtrue;
 }
@@ -2558,7 +2558,7 @@ void BotGoCamp(bot_state_t *bs, bot_goal_t *goal) {
 	//set the team goal
 	memcpy(&bs->teamgoal, goal, sizeof(bot_goal_t));
 	//get the team goal time
-	camper = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_CAMPER, 0, 1);
+	camper = Characteristic_BFloat(bs->character, CHARACTERISTIC_CAMPER, 0, 1);
 	if (camper > 0.99) bs->teamgoal_time = FloatTime() + 99999;
 	else bs->teamgoal_time = FloatTime() + 120 + 180 * camper + random() * 15;
 	//set the last time the bot started camping
@@ -2579,7 +2579,7 @@ int BotWantsToCamp(bot_state_t *bs) {
 	int cs, traveltime, besttraveltime;
 	bot_goal_t goal, bestgoal;
 
-	camper = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_CAMPER, 0, 1);
+	camper = Characteristic_BFloat(bs->character, CHARACTERISTIC_CAMPER, 0, 1);
 	if (camper < 0.1) return qfalse;
 	//if the bot has a team goal
 	if (bs->ltgtype == LTG_TEAMHELP ||
@@ -2742,9 +2742,9 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 	//
 	memset(&moveresult, 0, sizeof(bot_moveresult_t));
 	//
-	attack_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ATTACK_SKILL, 0, 1);
-	jumper = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_JUMPER, 0, 1);
-	croucher = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_CROUCHER, 0, 1);
+	attack_skill = Characteristic_BFloat(bs->character, CHARACTERISTIC_ATTACK_SKILL, 0, 1);
+	jumper = Characteristic_BFloat(bs->character, CHARACTERISTIC_JUMPER, 0, 1);
+	croucher = Characteristic_BFloat(bs->character, CHARACTERISTIC_CROUCHER, 0, 1);
 	//if the bot is really stupid
 	if (attack_skill < 0.2) return moveresult;
 	//initialize the movement state
@@ -3032,8 +3032,8 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 	aas_entityinfo_t entinfo, curenemyinfo, curbotinfo;
 	vec3_t dir, angles;
 
-	alertness = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ALERTNESS, 0, 1);
-	easyfragger = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_EASY_FRAGGER, 0, 1);
+	alertness = Characteristic_BFloat(bs->character, CHARACTERISTIC_ALERTNESS, 0, 1);
+	easyfragger = Characteristic_BFloat(bs->character, CHARACTERISTIC_EASY_FRAGGER, 0, 1);
 	//check if the health decreased
 	healthdecrease = bs->lasthealth > bs->inventory[INVENTORY_HEALTH];
 	//remember the current health value
@@ -3427,12 +3427,12 @@ void BotAimAtEnemy(bot_state_t *bs) {
 	//
 	//BotAI_Print(PRT_MESSAGE, "client %d: aiming at client %d\n", bs->entitynum, bs->enemy);
 	//
-	aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
-	aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
+	aim_skill = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
+	aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
 	//
 	if (aim_skill > 0.95) {
 		//don't aim too early
-		reactiontime = 0.5 * trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 1);
+		reactiontime = 0.5 * Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 1);
 		if (bs->enemysight_time > FloatTime() - reactiontime) return;
 		if (bs->teleport_time > FloatTime() - reactiontime) return;
 	}
@@ -3441,32 +3441,32 @@ void BotAimAtEnemy(bot_state_t *bs) {
 	BotGetWeaponInfo(bs->ws, bs->weaponnum, &wi);
 	//get the weapon specific aim accuracy and or aim skill
 	if (wi.number == WP_MACHINEGUN) {
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_MACHINEGUN, 0, 1);
+		aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_MACHINEGUN, 0, 1);
 	}
 	else if (wi.number == WP_SHOTGUN) {
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_SHOTGUN, 0, 1);
+		aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_SHOTGUN, 0, 1);
 	}
 	else if (wi.number == WP_GRENADE_LAUNCHER) {
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_GRENADELAUNCHER, 0, 1);
-		aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_GRENADELAUNCHER, 0, 1);
+		aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_GRENADELAUNCHER, 0, 1);
+		aim_skill = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_GRENADELAUNCHER, 0, 1);
 	}
 	else if (wi.number == WP_ROCKET_LAUNCHER) {
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_ROCKETLAUNCHER, 0, 1);
-		aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_ROCKETLAUNCHER, 0, 1);
+		aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_ROCKETLAUNCHER, 0, 1);
+		aim_skill = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_ROCKETLAUNCHER, 0, 1);
 	}
 	else if (wi.number == WP_LIGHTNING) {
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_LIGHTNING, 0, 1);
+		aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_LIGHTNING, 0, 1);
 	}
 	else if (wi.number == WP_RAILGUN) {
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_RAILGUN, 0, 1);
+		aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_RAILGUN, 0, 1);
 	}
 	else if (wi.number == WP_PLASMAGUN) {
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_PLASMAGUN, 0, 1);
-		aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_PLASMAGUN, 0, 1);
+		aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_PLASMAGUN, 0, 1);
+		aim_skill = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_PLASMAGUN, 0, 1);
 	}
 	else if (wi.number == WP_BFG) {
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BFG10K, 0, 1);
-		aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_BFG10K, 0, 1);
+		aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BFG10K, 0, 1);
+		aim_skill = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_BFG10K, 0, 1);
 	}
 	//
 	if (aim_accuracy <= 0) aim_accuracy = 0.0001f;
@@ -3714,14 +3714,14 @@ void BotCheckAttack(bot_state_t *bs) {
 #endif
 	}
 	//
-	reactiontime = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 1);
+	reactiontime = Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 1);
 	if (bs->enemysight_time > FloatTime() - reactiontime) return;
 	if (bs->teleport_time > FloatTime() - reactiontime) return;
 	//if changing weapons
 	if (bs->weaponchange_time > FloatTime() - 0.1) return;
 	//check fire throttle characteristic
 	if (bs->firethrottlewait_time > FloatTime()) return;
-	firethrottle = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_FIRETHROTTLE, 0, 1);
+	firethrottle = Characteristic_BFloat(bs->character, CHARACTERISTIC_FIRETHROTTLE, 0, 1);
 	if (bs->firethrottleshoot_time < FloatTime()) {
 		if (random() > firethrottle) {
 			bs->firethrottlewait_time = FloatTime() + firethrottle;
@@ -3862,7 +3862,7 @@ void BotMapScripts(bot_state_t *bs) {
 			bs->flags |= BFL_IDEALVIEWSET;
 			VectorSubtract(buttonorg, bs->eye, dir);
 			vectoangles(dir, bs->ideal_viewangles);
-			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
+			aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
 			bs->ideal_viewangles[PITCH] += 8 * crandom() * (1 - aim_accuracy);
 			bs->ideal_viewangles[PITCH] = AngleMod(bs->ideal_viewangles[PITCH]);
 			bs->ideal_viewangles[YAW] += 8 * crandom() * (1 - aim_accuracy);
@@ -4839,7 +4839,7 @@ void BotCheckConsoleMessages(bot_state_t *bs) {
 				}
 				//if at a valid chat position and not chatting already and not in teamplay
 				else if (bs->ainode != AINode_Stand && BotValidChatPosition(bs) && !TeamPlayIsOn()) {
-					chat_reply = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_CHAT_REPLY, 0, 1);
+					chat_reply = Characteristic_BFloat(bs->character, CHARACTERISTIC_CHAT_REPLY, 0, 1);
 					if (random() < 1.5 / (NumBots()+1) && random() < chat_reply) {
 						//if bot replies with a chat message
 						if (BotReplyChat(bs->cs, message, context, CONTEXT_REPLY,
@@ -4963,7 +4963,7 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 			if (level.numPlayingClients < 3) {
 				getRevenge = qfalse;
 			} else {
-				vengefulness = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VENGEFULNESS, 0, 1);
+				vengefulness = Characteristic_BFloat(bs->character, CHARACTERISTIC_VENGEFULNESS, 0, 1);
 				getRevenge = (random() < vengefulness);
 			}
 
@@ -5437,7 +5437,7 @@ void BotDeathmatchAI(bot_state_t *bs, float thinktime) {
 		bs->setupcount--;
 		if (bs->setupcount > 0) return;
 		//get the gender characteristic
-		trap_Characteristic_String(bs->character, CHARACTERISTIC_GENDER, gender, sizeof(gender));
+		Characteristic_String(bs->character, CHARACTERISTIC_GENDER, gender, sizeof(gender));
 		//set the chat gender
 		if (gender[0] == 'm') BotSetChatGender(bs->cs, CHAT_GENDERMALE);
 		else if (gender[0] == 'f')  BotSetChatGender(bs->cs, CHAT_GENDERFEMALE);

@@ -54,13 +54,3 @@ int Characteristic_BInteger(int character, int index, int min, int max);
 void Characteristic_String(int character, int index, char *buf, int size);
 //free cached bot characters
 void BotShutdownCharacters(void);
-
-// Temporary trap defines
-#define trap_BotLoadCharacter BotLoadCharacter
-#define trap_BotFreeCharacter BotFreeCharacter
-#define trap_Characteristic_Float Characteristic_Float
-#define trap_Characteristic_BFloat Characteristic_BFloat
-#define trap_Characteristic_Integer Characteristic_Integer
-#define trap_Characteristic_BInteger Characteristic_BInteger
-#define trap_Characteristic_String Characteristic_String
-

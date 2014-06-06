@@ -29,11 +29,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 //
 /*****************************************************************************
- * name:		be_ai_chat.h
+ * name:		ai_chat_sys.h
  *
  * desc:		char AI
  *
- * $Archive: /source/code/botlib/be_ai_chat.h $
+ * $Archive: /source/code/game/ai_chat_sys.h $
  *
  *****************************************************************************/
 
@@ -99,7 +99,7 @@ int BotReplyChat(int chatstate, char *message, int mcontext, int vcontext, char 
 //returns the length of the currently selected chat message
 int BotChatLength(int chatstate);
 //enters the selected chat message
-void BotEnterChat(int chatstate, int clientto, int sendto);
+void BotEnterChat(int chatstate, int playerto, int sendto);
 //get the chat message ready to be output
 void BotGetChatMessage(int chatstate, char *buf, int size);
 //checks if the first string contains the second one, returns index into first string or -1 if not found
@@ -117,5 +117,26 @@ int BotLoadChatFile(int chatstate, char *chatfile, char *chatname);
 //store the gender of the bot in the chat state
 void BotSetChatGender(int chatstate, int gender);
 //store the bot name in the chat state
-void BotSetChatName(int chatstate, char *name, int client);
+void BotSetChatName(int chatstate, char *name, int playernum);
+
+#define trap_BotAllocChatState					BotAllocChatState
+#define trap_BotFreeChatState					BotFreeChatState
+#define trap_BotQueueConsoleMessage				BotQueueConsoleMessage
+#define trap_BotRemoveConsoleMessage			BotRemoveConsoleMessage
+#define trap_BotNextConsoleMessage				BotNextConsoleMessage
+#define trap_BotNumConsoleMessages				BotNumConsoleMessages
+#define trap_BotInitialChat						BotInitialChat
+#define trap_BotNumInitialChats					BotNumInitialChats
+#define trap_BotReplyChat						BotReplyChat
+#define trap_BotChatLength						BotChatLength
+#define trap_BotEnterChat						BotEnterChat
+#define trap_BotGetChatMessage					BotGetChatMessage
+#define trap_StringContains						StringContains
+#define trap_BotFindMatch						BotFindMatch
+#define trap_BotMatchVariable					BotMatchVariable
+#define trap_UnifyWhiteSpaces					UnifyWhiteSpaces
+#define trap_BotReplaceSynonyms					BotReplaceSynonyms
+#define trap_BotLoadChatFile					BotLoadChatFile
+#define trap_BotSetChatGender					BotSetChatGender
+#define trap_BotSetChatName						BotSetChatName
 

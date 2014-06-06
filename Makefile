@@ -1218,6 +1218,7 @@ Q3GOBJ = \
   $(B)/$(BASEGAME)/game/g_main.o \
   $(B)/$(BASEGAME)/game/ai_char.o \
   $(B)/$(BASEGAME)/game/ai_chat.o \
+  $(B)/$(BASEGAME)/game/ai_chat_sys.o \
   $(B)/$(BASEGAME)/game/ai_cmd.o \
   $(B)/$(BASEGAME)/game/ai_dmnet.o \
   $(B)/$(BASEGAME)/game/ai_dmq3.o \
@@ -1276,6 +1277,7 @@ MPGOBJ = \
   $(B)/$(MISSIONPACK)/game/g_main.o \
   $(B)/$(MISSIONPACK)/game/ai_char.o \
   $(B)/$(MISSIONPACK)/game/ai_chat.o \
+  $(B)/$(MISSIONPACK)/game/ai_chat_sys.o \
   $(B)/$(MISSIONPACK)/game/ai_cmd.o \
   $(B)/$(MISSIONPACK)/game/ai_dmnet.o \
   $(B)/$(MISSIONPACK)/game/ai_dmq3.o \

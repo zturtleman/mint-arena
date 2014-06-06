@@ -42,9 +42,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "g_local.h"
 #include "../botlib/botlib.h"
 #include "../botlib/be_aas.h"
-#include "../botlib/be_ai_chat.h"
 //
 #include "ai_char.h"
+#include "ai_chat_sys.h"
 #include "ai_ea.h"
 #include "ai_gen.h"
 #include "ai_goal.h"
@@ -1728,6 +1728,8 @@ int BotAISetup( int restart ) {
 	if (errnum != BLERR_NOERROR) return qfalse;
 	errnum = BotSetupMoveAI();		//ai_move.c
 	if (errnum != BLERR_NOERROR) return qfalse;
+	errnum = BotSetupChatAI();		//ai_chat_sys.c
+	if (errnum != BLERR_NOERROR) return errnum;
 	return qtrue;
 }
 
@@ -1760,6 +1762,7 @@ int BotAIShutdown( int restart ) {
 	BotShutdownGoalAI();		//ai_goal.c
 	BotShutdownWeaponAI();		//ai_weap.c
 	BotShutdownWeights();		//ai_weight.c
+	BotShutdownChatAI();		//ai_chat_sys.c
 	//shut down bot elemantary actions
 	EA_Shutdown();
 

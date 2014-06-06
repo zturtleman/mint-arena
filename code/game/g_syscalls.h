@@ -152,26 +152,5 @@ int		trap_AAS_AgainstLadder(vec3_t origin);
 int		trap_AAS_HorizontalVelocityForJump(float zvel, vec3_t start, vec3_t end, float *velocity);
 int		trap_AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs, int passent, int contentmask);
 
-int		trap_BotAllocChatState(void);
-void	trap_BotFreeChatState(int handle);
-void	trap_BotQueueConsoleMessage(int chatstate, int type, char *message);
-void	trap_BotRemoveConsoleMessage(int chatstate, int handle);
-int		trap_BotNextConsoleMessage(int chatstate, void /* struct bot_consolemessage_s */ *cm);
-int		trap_BotNumConsoleMessages(int chatstate);
-void	trap_BotInitialChat(int chatstate, char *type, int mcontext, char *var0, char *var1, char *var2, char *var3, char *var4, char *var5, char *var6, char *var7 );
-int		trap_BotNumInitialChats(int chatstate, char *type);
-int		trap_BotReplyChat(int chatstate, char *message, int mcontext, int vcontext, char *var0, char *var1, char *var2, char *var3, char *var4, char *var5, char *var6, char *var7 );
-int		trap_BotChatLength(int chatstate);
-void	trap_BotEnterChat(int chatstate, int client, int sendto);
-void	trap_BotGetChatMessage(int chatstate, char *buf, int size);
-int		trap_StringContains(char *str1, char *str2, int casesensitive);
-int		trap_BotFindMatch(char *str, void /* struct bot_match_s */ *match, unsigned long int context);
-void	trap_BotMatchVariable(void /* struct bot_match_s */ *match, int variable, char *buf, int size);
-void	trap_UnifyWhiteSpaces(char *string);
-void	trap_BotReplaceSynonyms(char *string, unsigned long int context);
-int		trap_BotLoadChatFile(int chatstate, char *chatfile, char *chatname);
-void	trap_BotSetChatGender(int chatstate, int gender);
-void	trap_BotSetChatName(int chatstate, char *name, int client);
-
 #endif
 

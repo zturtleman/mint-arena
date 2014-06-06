@@ -255,7 +255,7 @@ void QDECL BotAI_BotInitialChat( bot_state_t *bs, char *type, ... ) {
 
 	mcontext = BotSynonymContext(bs);
 
-	trap_BotInitialChat( bs->cs, type, mcontext, vars[0], vars[1], vars[2], vars[3], vars[4], vars[5], vars[6], vars[7] );
+	BotInitialChat( bs->cs, type, mcontext, vars[0], vars[1], vars[2], vars[3], vars[4], vars[5], vars[6], vars[7] );
 }
 
 
@@ -1028,19 +1028,19 @@ int BotAI(int client, float thinktime) {
 			//remove first and last quote from the chat message
 			memmove(args, args+1, strlen(args));
 			args[strlen(args)-1] = '\0';
-			trap_BotQueueConsoleMessage(bs->cs, CMS_NORMAL, args);
+			BotQueueConsoleMessage(bs->cs, CMS_NORMAL, args);
 		}
 		else if (!Q_stricmp(buf, "chat") || !Q_stricmp(buf, "tell")) {
 			//remove first and last quote from the chat message
 			memmove(args, args+1, strlen(args));
 			args[strlen(args)-1] = '\0';
-			trap_BotQueueConsoleMessage(bs->cs, CMS_CHAT, args);
+			BotQueueConsoleMessage(bs->cs, CMS_CHAT, args);
 		}
 		else if (!Q_stricmp(buf, "tchat")) {
 			//remove first and last quote from the chat message
 			memmove(args, args+1, strlen(args));
 			args[strlen(args)-1] = '\0';
-			trap_BotQueueConsoleMessage(bs->cs, CMS_CHAT, args);
+			BotQueueConsoleMessage(bs->cs, CMS_CHAT, args);
 		}
 #ifdef MISSIONPACK
 		else if (!Q_stricmp(buf, "vchat")) {
@@ -1233,24 +1233,24 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 		return qfalse;
 	}
 	//allocate a chat state
-	bs->cs = trap_BotAllocChatState();
+	bs->cs = BotAllocChatState();
 	//load the chat file
 	trap_Characteristic_String(bs->character, CHARACTERISTIC_CHAT_FILE, filename, MAX_PATH);
 	trap_Characteristic_String(bs->character, CHARACTERISTIC_CHAT_NAME, name, MAX_PATH);
-	errnum = trap_BotLoadChatFile(bs->cs, filename, name);
+	errnum = BotLoadChatFile(bs->cs, filename, name);
 	if (errnum != BLERR_NOERROR) {
-		trap_BotFreeChatState(bs->cs);
+		BotFreeChatState(bs->cs);
 		BotFreeGoalState(bs->gs);
 		BotFreeWeaponState(bs->ws);
-		BotAI_Print(PRT_FATAL, "trap_BotLoadChatFile failed\n");
+		BotAI_Print(PRT_FATAL, "BotLoadChatFile failed\n");
 		return qfalse;
 	}
 	//get the gender characteristic
 	trap_Characteristic_String(bs->character, CHARACTERISTIC_GENDER, gender, MAX_PATH);
 	//set the chat gender
-	if (*gender == 'f' || *gender == 'F') trap_BotSetChatGender(bs->cs, CHAT_GENDERFEMALE);
-	else if (*gender == 'm' || *gender == 'M') trap_BotSetChatGender(bs->cs, CHAT_GENDERMALE);
-	else trap_BotSetChatGender(bs->cs, CHAT_GENDERLESS);
+	if (*gender == 'f' || *gender == 'F') BotSetChatGender(bs->cs, CHAT_GENDERFEMALE);
+	else if (*gender == 'm' || *gender == 'M') BotSetChatGender(bs->cs, CHAT_GENDERMALE);
+	else BotSetChatGender(bs->cs, CHAT_GENDERLESS);
 
 	bs->inuse = qtrue;
 	bs->client = client;
@@ -1300,7 +1300,7 @@ int BotAIShutdownClient(int client, qboolean restart) {
 	}
 
 	if (BotChat_ExitGame(bs)) {
-		trap_BotEnterChat(bs->cs, bs->client, CHAT_ALL);
+		BotEnterChat(bs->cs, bs->client, CHAT_ALL);
 	}
 
 	trap_SetConfigstring(CS_BOTINFO + bs->client, "");
@@ -1309,7 +1309,7 @@ int BotAIShutdownClient(int client, qboolean restart) {
 	//free the goal state
 	BotFreeGoalState(bs->gs);
 	//free the chat file
-	trap_BotFreeChatState(bs->cs);
+	BotFreeChatState(bs->cs);
 	//free the weapon weights
 	BotFreeWeaponState(bs->ws);
 	//free the bot character

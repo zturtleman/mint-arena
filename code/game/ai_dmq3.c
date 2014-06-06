@@ -1708,7 +1708,7 @@ void BotCheckItemPickup(bot_state_t *bs, int *oldinventory) {
 					// tell the leader we want to be on offence
 					BotVoiceChat(bs, leader, VOICECHAT_WANTONOFFENSE);
 					//BotAI_BotInitialChat(bs, "wantoffence", NULL);
-					//trap_BotEnterChat(bs->cs, leader, CHAT_TELL);
+					//BotEnterChat(bs->cs, leader, CHAT_TELL);
 				}
 				else if (g_spSkill.integer <= 3) {
 					if ( bs->ltgtype != LTG_GETFLAG &&
@@ -1720,7 +1720,7 @@ void BotCheckItemPickup(bot_state_t *bs, int *oldinventory) {
 							// tell the leader we want to be on offence
 							BotVoiceChat(bs, leader, VOICECHAT_WANTONOFFENSE);
 							//BotAI_BotInitialChat(bs, "wantoffence", NULL);
-							//trap_BotEnterChat(bs->cs, leader, CHAT_TELL);
+							//BotEnterChat(bs->cs, leader, CHAT_TELL);
 						}
 					}
 				}
@@ -1735,7 +1735,7 @@ void BotCheckItemPickup(bot_state_t *bs, int *oldinventory) {
 					// tell the leader we want to be on defense
 					BotVoiceChat(bs, -1, VOICECHAT_WANTONDEFENSE);
 					//BotAI_BotInitialChat(bs, "wantdefence", NULL);
-					//trap_BotEnterChat(bs->cs, leader, CHAT_TELL);
+					//BotEnterChat(bs->cs, leader, CHAT_TELL);
 				}
 				else if (g_spSkill.integer <= 3) {
 					if ( bs->ltgtype != LTG_DEFENDKEYAREA ) {
@@ -1745,7 +1745,7 @@ void BotCheckItemPickup(bot_state_t *bs, int *oldinventory) {
 							// tell the leader we want to be on defense
 							BotVoiceChat(bs, -1, VOICECHAT_WANTONDEFENSE);
 							//BotAI_BotInitialChat(bs, "wantdefence", NULL);
-							//trap_BotEnterChat(bs->cs, leader, CHAT_TELL);
+							//BotEnterChat(bs->cs, leader, CHAT_TELL);
 						}
 					}
 				}
@@ -4775,9 +4775,9 @@ void BotCheckConsoleMessages(bot_state_t *bs) {
 	//the name of this bot
 	ClientName(bs->client, botname, sizeof(botname));
 	//
-	while((handle = trap_BotNextConsoleMessage(bs->cs, &m)) != 0) {
+	while((handle = BotNextConsoleMessage(bs->cs, &m)) != 0) {
 		//if the chat state is flooded with messages the bot will read them quickly
-		if (trap_BotNumConsoleMessages(bs->cs) < 10) {
+		if (BotNumConsoleMessages(bs->cs) < 10) {
 			//if it is a chat message the bot needs some time to read it
 			if (m.type == CMS_CHAT && m.time > FloatTime() - (1 + random())) break;
 		}
@@ -4787,46 +4787,46 @@ void BotCheckConsoleMessages(bot_state_t *bs) {
 		//replace synonyms in the netname
 		if (m.type == CMS_CHAT) {
 			//
-			if (trap_BotFindMatch(m.message, &match, MTCONTEXT_REPLYCHAT)) {
+			if (BotFindMatch(m.message, &match, MTCONTEXT_REPLYCHAT)) {
 				ptr = m.message + match.variables[MESSAGE].offset;
 			}
 		}
 		//unify the white spaces in the message
-		trap_UnifyWhiteSpaces(ptr);
+		UnifyWhiteSpaces(ptr);
 		//replace synonyms in the right context
 		context = BotSynonymContext(bs);
-		trap_BotReplaceSynonyms(ptr, context);
+		BotReplaceSynonyms(ptr, context);
 		//if there's no match
 		if (!BotMatchMessage(bs, m.message)) {
 			//if it is a chat message
 			if (m.type == CMS_CHAT && !bot_nochat.integer) {
 				//
-				if (!trap_BotFindMatch(m.message, &match, MTCONTEXT_REPLYCHAT)) {
-					trap_BotRemoveConsoleMessage(bs->cs, handle);
+				if (!BotFindMatch(m.message, &match, MTCONTEXT_REPLYCHAT)) {
+					BotRemoveConsoleMessage(bs->cs, handle);
 					continue;
 				}
 				//don't use eliza chats with team messages
 				if (match.subtype & ST_TEAM) {
-					trap_BotRemoveConsoleMessage(bs->cs, handle);
+					BotRemoveConsoleMessage(bs->cs, handle);
 					continue;
 				}
 				//
-				trap_BotMatchVariable(&match, NETNAME, netname, sizeof(netname));
-				trap_BotMatchVariable(&match, MESSAGE, message, sizeof(message));
+				BotMatchVariable(&match, NETNAME, netname, sizeof(netname));
+				BotMatchVariable(&match, MESSAGE, message, sizeof(message));
 				//if this is a message from the bot self
 				if (bs->client == ClientFromName(netname)) {
-					trap_BotRemoveConsoleMessage(bs->cs, handle);
+					BotRemoveConsoleMessage(bs->cs, handle);
 					continue;
 				}
 				//unify the message
-				trap_UnifyWhiteSpaces(message);
+				UnifyWhiteSpaces(message);
 				//
 				trap_Cvar_Update(&bot_testrchat);
 				if (bot_testrchat.integer) {
 					//
 					trap_BotLibVarSet("bot_testrchat", "1");
 					//if bot replies with a chat message
-					if (trap_BotReplyChat(bs->cs, message, context, CONTEXT_REPLY,
+					if (BotReplyChat(bs->cs, message, context, CONTEXT_REPLY,
 															NULL, NULL,
 															NULL, NULL,
 															NULL, NULL,
@@ -4842,13 +4842,13 @@ void BotCheckConsoleMessages(bot_state_t *bs) {
 					chat_reply = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_CHAT_REPLY, 0, 1);
 					if (random() < 1.5 / (NumBots()+1) && random() < chat_reply) {
 						//if bot replies with a chat message
-						if (trap_BotReplyChat(bs->cs, message, context, CONTEXT_REPLY,
+						if (BotReplyChat(bs->cs, message, context, CONTEXT_REPLY,
 																NULL, NULL,
 																NULL, NULL,
 																NULL, NULL,
 																botname, netname)) {
 							//remove the console message
-							trap_BotRemoveConsoleMessage(bs->cs, handle);
+							BotRemoveConsoleMessage(bs->cs, handle);
 							bs->stand_time = FloatTime() + BotChatTime(bs);
 							AIEnter_Stand(bs, "BotCheckConsoleMessages: reply chat");
 							//EA_Say(bs->client, bs->cs.chatmessage);
@@ -4859,7 +4859,7 @@ void BotCheckConsoleMessages(bot_state_t *bs) {
 			}
 		}
 		//remove the console message
-		trap_BotRemoveConsoleMessage(bs->cs, handle);
+		BotRemoveConsoleMessage(bs->cs, handle);
 	}
 }
 
@@ -5439,12 +5439,12 @@ void BotDeathmatchAI(bot_state_t *bs, float thinktime) {
 		//get the gender characteristic
 		trap_Characteristic_String(bs->character, CHARACTERISTIC_GENDER, gender, sizeof(gender));
 		//set the chat gender
-		if (gender[0] == 'm') trap_BotSetChatGender(bs->cs, CHAT_GENDERMALE);
-		else if (gender[0] == 'f')  trap_BotSetChatGender(bs->cs, CHAT_GENDERFEMALE);
-		else  trap_BotSetChatGender(bs->cs, CHAT_GENDERLESS);
+		if (gender[0] == 'm') BotSetChatGender(bs->cs, CHAT_GENDERMALE);
+		else if (gender[0] == 'f')  BotSetChatGender(bs->cs, CHAT_GENDERFEMALE);
+		else  BotSetChatGender(bs->cs, CHAT_GENDERLESS);
 		//set the chat name
 		ClientName(bs->client, name, sizeof(name));
-		trap_BotSetChatName(bs->cs, name, bs->client);
+		BotSetChatName(bs->cs, name, bs->client);
 		//
 		bs->lastframe_health = bs->inventory[INVENTORY_HEALTH];
 		bs->lasthitcount = bs->cur_ps.persistant[PERS_HITS];

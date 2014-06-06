@@ -271,13 +271,13 @@ void BotSayTeamOrderAlways(bot_state_t *bs, int toclient) {
 	//if the bot is talking to itself
 	if (bs->client == toclient) {
 		//don't show the message just put it in the console message queue
-		trap_BotGetChatMessage(bs->cs, buf, sizeof(buf));
+		BotGetChatMessage(bs->cs, buf, sizeof(buf));
 		ClientName(bs->client, name, sizeof(name));
 		Com_sprintf(teamchat, sizeof(teamchat), EC"(%s"EC")"EC": %s", name, buf);
-		trap_BotQueueConsoleMessage(bs->cs, CMS_CHAT, teamchat);
+		BotQueueConsoleMessage(bs->cs, CMS_CHAT, teamchat);
 	}
 	else {
-		trap_BotEnterChat(bs->cs, toclient, CHAT_TELL);
+		BotEnterChat(bs->cs, toclient, CHAT_TELL);
 	}
 }
 
@@ -291,7 +291,7 @@ void BotSayTeamOrder(bot_state_t *bs, int toclient) {
 	// voice chats only
 	char buf[MAX_MESSAGE_SIZE];
 
-	trap_BotGetChatMessage(bs->cs, buf, sizeof(buf));
+	BotGetChatMessage(bs->cs, buf, sizeof(buf));
 #else
 	BotSayTeamOrderAlways(bs, toclient);
 #endif
@@ -1983,13 +1983,13 @@ void BotTeamAI(bot_state_t *bs) {
 			if (bs->askteamleader_time && bs->askteamleader_time < FloatTime()) {
 				// if asked for a team leader and no response
 				BotAI_BotInitialChat(bs, "whoisteamleader", NULL);
-				trap_BotEnterChat(bs->cs, 0, CHAT_TEAM);
+				BotEnterChat(bs->cs, 0, CHAT_TEAM);
 				bs->askteamleader_time = 0;
 				bs->becometeamleader_time = FloatTime() + 8 + random() * 10;
 			}
 			if (bs->becometeamleader_time && bs->becometeamleader_time < FloatTime()) {
 				BotAI_BotInitialChat(bs, "iamteamleader", NULL);
-				trap_BotEnterChat(bs->cs, 0, CHAT_TEAM);
+				BotEnterChat(bs->cs, 0, CHAT_TEAM);
 				BotSayVoiceTeamOrder(bs, -1, VOICECHAT_STARTLEADER);
 				ClientName(bs->client, netname, sizeof(netname));
 				strncpy(bs->teamleader, netname, sizeof(bs->teamleader));

@@ -118,25 +118,3 @@ int BotLoadChatFile(int chatstate, char *chatfile, char *chatname);
 void BotSetChatGender(int chatstate, int gender);
 //store the bot name in the chat state
 void BotSetChatName(int chatstate, char *name, int playernum);
-
-#define trap_BotAllocChatState					BotAllocChatState
-#define trap_BotFreeChatState					BotFreeChatState
-#define trap_BotQueueConsoleMessage				BotQueueConsoleMessage
-#define trap_BotRemoveConsoleMessage			BotRemoveConsoleMessage
-#define trap_BotNextConsoleMessage				BotNextConsoleMessage
-#define trap_BotNumConsoleMessages				BotNumConsoleMessages
-#define trap_BotInitialChat						BotInitialChat
-#define trap_BotNumInitialChats					BotNumInitialChats
-#define trap_BotReplyChat						BotReplyChat
-#define trap_BotChatLength						BotChatLength
-#define trap_BotEnterChat						BotEnterChat
-#define trap_BotGetChatMessage					BotGetChatMessage
-#define trap_StringContains						StringContains
-#define trap_BotFindMatch						BotFindMatch
-#define trap_BotMatchVariable					BotMatchVariable
-#define trap_UnifyWhiteSpaces					UnifyWhiteSpaces
-#define trap_BotReplaceSynonyms					BotReplaceSynonyms
-#define trap_BotLoadChatFile					BotLoadChatFile
-#define trap_BotSetChatGender					BotSetChatGender
-#define trap_BotSetChatName						BotSetChatName
-

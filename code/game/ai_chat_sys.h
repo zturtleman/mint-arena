@@ -49,6 +49,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define CHAT_TEAM					1
 #define CHAT_TELL					2
 
+//console message types
+#define CMS_NORMAL				0
+#define CMS_CHAT				1
+
 //a console message
 typedef struct bot_consolemessage_s
 {

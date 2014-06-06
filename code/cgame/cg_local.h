@@ -41,6 +41,23 @@ Suite 120, Rockville, Maryland 20850 USA.
 // If you absolutely need something stored, it can either be kept
 // by the server in the server stored userinfos, or stashed in a cvar.
 
+// all drawing is done to a 640*480 virtual screen size
+// and will be automatically scaled to the real resolution
+#define	SCREEN_WIDTH		640
+#define	SCREEN_HEIGHT		480
+
+#define TINYCHAR_WIDTH		(SMALLCHAR_WIDTH)
+#define TINYCHAR_HEIGHT		(SMALLCHAR_HEIGHT/2)
+
+#define SMALLCHAR_WIDTH		8
+#define SMALLCHAR_HEIGHT	16
+
+#define BIGCHAR_WIDTH		16
+#define BIGCHAR_HEIGHT		16
+
+#define	GIANTCHAR_WIDTH		32
+#define	GIANTCHAR_HEIGHT	48
+
 #ifdef MISSIONPACK
 #define CG_FONT_THRESHOLD 0.1
 #endif

@@ -65,8 +65,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define GetClearedHunkMemory( _s ) trap_Alloc( _s, NULL )
 #define GetClearedMemory( _s ) trap_Alloc( _s, NULL )
 #define FreeMemory( x )
-#define LibVarString( name, value ) value
-#define LibVarValue( name, value ) atof( value )
 
 
 //escape character
@@ -2263,7 +2261,7 @@ int BotLoadChatFile(int chatstate, char *chatfile, char *chatname)
 	if (!cs) return BLERR_CANNOTLOADICHAT;
 	BotFreeChatFile(chatstate);
 
-	if (!BotLibVarGetValue("bot_reloadcharacters"))
+	if (!bot_reloadcharacters.integer)
 	{
 		avail = -1;
 		for( n = 0; n < MAX_CLIENTS; n++ ) {
@@ -2296,7 +2294,7 @@ int BotLoadChatFile(int chatstate, char *chatfile, char *chatname)
 		BotAI_Print(PRT_FATAL, "couldn't load chat %s from %s\n", chatname, chatfile);
 		return BLERR_CANNOTLOADICHAT;
 	} //end if
-	if (!BotLibVarGetValue("bot_reloadcharacters"))
+	if (!bot_reloadcharacters.integer)
 	{
 		ichatdata[avail] = GetClearedMemory( sizeof(bot_ichatdata_t) );
 		ichatdata[avail]->chat = cs->chat;
@@ -2533,7 +2531,7 @@ int BotNumInitialChats(int chatstate, char *type)
 	{
 		if (!Q_stricmp(t->name, type))
 		{
-			if (BotLibVarGetValue("bot_testichat")) {
+			if (bot_testichat.integer) {
 				BotAI_Print(PRT_MESSAGE, "%s has %d chat lines\n", type, t->numchatmessages);
 				BotAI_Print(PRT_MESSAGE, "-------------------\n");
 			}
@@ -2801,7 +2799,7 @@ int BotReplyChat(int chatstate, char *message, int mcontext, int vcontext, char 
 			bestmatch.variables[7].offset = index;
 			bestmatch.variables[7].length = strlen(var7);
 		}
-		if (BotLibVarGetValue("bot_testrchat"))
+		if (bot_testrchat.integer)
 		{
 			for (m = bestrchat->firstchatmessage; m; m = m->next)
 			{
@@ -2849,7 +2847,7 @@ void BotEnterChat(int chatstate, int playerto, int sendto)
 	if (strlen(cs->chatmessage))
 	{
 		BotRemoveTildes(cs->chatmessage);
-		if (BotLibVarGetValue("bot_testichat")) {
+		if (bot_testichat.integer) {
 			BotAI_Print(PRT_MESSAGE, "%s\n", cs->chatmessage);
 		}
 		else {
@@ -2984,7 +2982,7 @@ void BotFreeChatState(int handle)
 		BotAI_Print(PRT_FATAL, "invalid chat state %d\n", handle);
 		return;
 	} //end if
-	if (BotLibVarGetValue("bot_reloadcharacters"))
+	if (bot_reloadcharacters.integer)
 	{
 		BotFreeChatFile(handle);
 	} //end if
@@ -3005,23 +3003,17 @@ void BotFreeChatState(int handle)
 //===========================================================================
 int BotSetupChatAI(void)
 {
-	char *file;
-
 #ifdef DEBUG
 	int starttime = Sys_MilliSeconds();
 #endif //DEBUG
 
-	file = LibVarString("synfile", "syn.c");
-	synonyms = BotLoadSynonyms(file);
-	file = LibVarString("rndfile", "rnd.c");
-	randomstrings = BotLoadRandomStrings(file);
-	file = LibVarString("matchfile", "match.c");
-	matchtemplates = BotLoadMatchTemplates(file);
+	synonyms = BotLoadSynonyms("syn.c");
+	randomstrings = BotLoadRandomStrings("rnd.c");
+	matchtemplates = BotLoadMatchTemplates("match.c");
 	//
-	if (!LibVarValue("nochat", "0"))
+	if (!bot_nochat.integer)
 	{
-		file = LibVarString("rchatfile", "rchat.c");
-		replychats = BotLoadReplyChat(file);
+		replychats = BotLoadReplyChat("rchat.c");
 	} //end if
 
 	InitConsoleMessageHeap();

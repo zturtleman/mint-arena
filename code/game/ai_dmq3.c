@@ -4823,8 +4823,6 @@ void BotCheckConsoleMessages(bot_state_t *bs) {
 				//
 				trap_Cvar_Update(&bot_testrchat);
 				if (bot_testrchat.integer) {
-					//
-					trap_BotLibVarSet("bot_testrchat", "1");
 					//if bot replies with a chat message
 					if (BotReplyChat(bs->cs, message, context, CONTEXT_REPLY,
 															NULL, NULL,

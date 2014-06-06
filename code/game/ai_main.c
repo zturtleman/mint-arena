@@ -96,6 +96,7 @@ vmCvar_t bot_interbreedchar;
 vmCvar_t bot_interbreedbots;
 vmCvar_t bot_interbreedcycle;
 vmCvar_t bot_interbreedwrite;
+vmCvar_t bot_reloadcharacters;
 
 
 void ExitLevel( void );
@@ -623,7 +624,7 @@ void BotInterbreeding(void) {
 		}
 	}
 	//make sure all item weight configs are reloaded and Not shared
-	trap_BotLibVarSet("bot_reloadcharacters", "1");
+	trap_Cvar_SetValue("bot_reloadcharacters", 1);
 	//add a number of bots using the desired bot character
 	for (i = 0; i < bot_interbreedbots.integer; i++) {
 		trap_Cmd_ExecuteText( EXEC_INSERT, va("addbot %s 4 free %i %s%d\n",
@@ -1264,7 +1265,6 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 
 	trap_Cvar_Update( &bot_testichat );
 	if (bot_testichat.integer) {
-		trap_BotLibVarSet("bot_testichat", "1");
 		BotChatTest(bs);
 	}
 	//NOTE: reschedule the bot thinking
@@ -1448,6 +1448,7 @@ int BotAIStartFrame(int time) {
 	trap_Cvar_Update(&bot_offhandgrapple);
 	trap_Cvar_Update(&bot_shownodechanges);
 	trap_Cvar_Update(&bot_showteamgoals);
+	trap_Cvar_Update(&bot_reloadcharacters);
 
 	BotUpdateInfoConfigStrings();
 
@@ -1653,9 +1654,6 @@ int BotInitLibrary(void) {
 	trap_BotLibVarSet("bot_developer", bot_developer.string);
 	trap_Cvar_VariableStringBuffer("logfile", buf, sizeof(buf));
 	trap_BotLibVarSet("log", buf);
-	//no chatting
-	trap_Cvar_VariableStringBuffer("bot_nochat", buf, sizeof(buf));
-	if (strlen(buf)) trap_BotLibVarSet("nochat", buf);
 	//visualize jump pads
 	trap_Cvar_VariableStringBuffer("bot_visualizejumppads", buf, sizeof(buf));
 	if (strlen(buf)) trap_BotLibVarSet("bot_visualizejumppads", buf);
@@ -1674,10 +1672,6 @@ int BotInitLibrary(void) {
 	//
 	trap_Cvar_VariableStringBuffer("bot_saveroutingcache", buf, sizeof(buf));
 	if (strlen(buf)) trap_BotLibVarSet("saveroutingcache", buf);
-	//reload instead of cache bot character files
-	trap_Cvar_VariableStringBuffer("bot_reloadcharacters", buf, sizeof(buf));
-	if (!strlen(buf)) strcpy(buf, "0");
-	trap_BotLibVarSet("bot_reloadcharacters", buf);
 	//
 #ifdef MISSIONPACK
 	trap_PC_AddGlobalDefine("MISSIONPACK");
@@ -1704,6 +1698,7 @@ int BotAISetup( int restart ) {
 	trap_Cvar_Register(&bot_developer, "bot_developer", "0", CVAR_CHEAT);
 	trap_Cvar_Register(&bot_shownodechanges, "bot_shownodechanges", "0", CVAR_CHEAT);
 	trap_Cvar_Register(&bot_showteamgoals, "bot_showteamgoals", "0", CVAR_CHEAT);
+	trap_Cvar_Register(&bot_reloadcharacters, "bot_reloadcharacters", "0", 0);
 	trap_Cvar_Register(&bot_interbreedchar, "bot_interbreedchar", "", 0);
 	trap_Cvar_Register(&bot_interbreedbots, "bot_interbreedbots", "10", 0);
 	trap_Cvar_Register(&bot_interbreedcycle, "bot_interbreedcycle", "20", 0);

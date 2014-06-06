@@ -188,7 +188,7 @@ void BotFreeCharacter2(int handle)
 //========================================================================
 void BotFreeCharacter(int handle)
 {
-	if (!BotLibVarGetValue("bot_reloadcharacters")) return;
+	if (!bot_reloadcharacters.integer) return;
 	BotFreeCharacter2(handle);
 } //end of the function BotFreeCharacter
 //===========================================================================
@@ -493,7 +493,7 @@ int BotLoadCharacterSkill(char *charfile, float skill)
 	int ch, defaultch;
 
 	defaultch = BotLoadCachedCharacter(DEFAULT_CHARACTER, skill, qfalse);
-	ch = BotLoadCachedCharacter(charfile, skill, BotLibVarGetValue("bot_reloadcharacters"));
+	ch = BotLoadCachedCharacter(charfile, skill, bot_reloadcharacters.integer);
 
 	if (defaultch && ch)
 	{

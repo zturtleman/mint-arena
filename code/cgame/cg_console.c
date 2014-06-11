@@ -738,6 +738,10 @@ void CG_ConsoleInit( void ) {
 
 	g_console_field_width = con.screenFakeWidth / SMALLCHAR_WIDTH - 2;
 
+	if ( g_console_field_width > MAX_EDIT_LINE ) {
+		g_console_field_width = MAX_EDIT_LINE;
+	}
+
 	MField_Clear( &g_consoleField );
 	g_consoleField.widthInChars = g_console_field_width;
 

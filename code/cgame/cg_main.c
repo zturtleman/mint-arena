@@ -51,7 +51,7 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 static char *CG_VoIPString( int localClientNum );
 static int CG_MousePosition( int localClientNum );
 static void CG_SetMousePosition( int localClientNum, int x, int y );
-static void CG_UpdateGlconfig( void );
+static void CG_UpdateGlconfig( qboolean initial );
 
 
 /*
@@ -120,7 +120,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_CREATE_USER_CMD:
 		return (intptr_t)CG_CreateUserCmd(arg0, arg1, arg2, IntAsFloat(arg3), IntAsFloat(arg4), arg5);
 	case CG_UPDATE_GLCONFIG:
-		CG_UpdateGlconfig();
+		CG_UpdateGlconfig( qfalse );
 		return 0;
 	default:
 		CG_Error( "cgame vmMain: unknown command %i", command );
@@ -2481,7 +2481,7 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 	cgs.media.nodrawShader		= trap_R_RegisterShaderEx( "nodraw", LIGHTMAP_NONE, qtrue );
 
 	// get the rendering configuration from the client system
-	CG_UpdateGlconfig();
+	CG_UpdateGlconfig( qtrue );
 
 	CG_ConsoleInit();
 
@@ -3137,10 +3137,10 @@ static char *CG_VoIPString( int localClientNum ) {
 CG_UpdateGlconfig
 ================
 */
-static void CG_UpdateGlconfig( void ) {
+static void CG_UpdateGlconfig( qboolean initial ) {
 	trap_GetGlconfig( &cgs.glconfig );
 
-	if ( cg.connState != CA_ACTIVE ) {
+	if ( initial || cg.connState != CA_ACTIVE ) {
 		// Viewport scale and offset
 		cg.viewport = 0;
 		cg.numViewports = 1;

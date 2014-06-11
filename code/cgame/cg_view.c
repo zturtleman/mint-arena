@@ -661,6 +661,10 @@ void CG_DrawSkyBoxPortal( void ) {
 
 	cg.refdef.time = cg.time;
 
+	if ( cg_skybox.integer == 2 ) {
+		cg.refdef.rdflags |= RDF_ONLYSKY;
+	}
+
 	// draw the skybox
 	trap_R_RenderScene( &cg.refdef );
 

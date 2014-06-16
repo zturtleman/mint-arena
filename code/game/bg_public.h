@@ -43,6 +43,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define	GAME_VERSION		MODDIR "-4"
 
+// used for switching fs_game
+#define BASEQ3				"baseq3"
+#define BASETA				"missionpack"
+
 #define	DEFAULT_GRAVITY		800
 #define	GIB_HEALTH			-40
 #define	ARMOR_PROTECTION	0.66
@@ -912,6 +916,7 @@ typedef struct animation_s {
 
 #define DEFAULT_REDTEAM_NAME		"Pagans"
 #define DEFAULT_BLUETEAM_NAME		"Stroggs"
+#define MAX_TEAMNAME		32
 
 typedef enum {
 	TEAM_FREE,

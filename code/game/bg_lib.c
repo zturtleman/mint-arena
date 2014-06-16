@@ -2168,6 +2168,9 @@ int sscanf( const char *buffer, const char *fmt, ... ) {
 			*s++ = '\0';
 			break;
 			}
+		default:
+			Com_Printf( "WARNING: bg_lib.c's sscanf doesn't support format %%%c\n", cmd );
+			break;
 		}
 	}
 

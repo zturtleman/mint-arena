@@ -1757,6 +1757,7 @@ void BotMatch_CTF(bot_state_t *bs, bot_match_t *match) {
 void BotMatch_EnterGame(bot_state_t *bs, bot_match_t *match) {
 	int playernum;
 	char netname[MAX_NETNAME];
+	//char buf[MAX_SAY_TEXT];
 
 	BotMatchVariable(match, NETNAME, netname, sizeof(netname));
 	playernum = FindPlayerByName(netname);
@@ -1764,8 +1765,10 @@ void BotMatch_EnterGame(bot_state_t *bs, bot_match_t *match) {
 		notleader[playernum] = qfalse;
 	}
 	//NOTE: eliza chats will catch this
-	//Com_sprintf(buf, sizeof(buf), "heya %s", netname);
-	//EA_Say(bs->playernum, buf);
+	//if (playernum != bs->playernum) {
+	//	Com_sprintf(buf, sizeof(buf), "heya %s", netname);
+	//	EA_Say(bs->playernum, buf);
+	//}
 }
 
 void BotMatch_NewLeader(bot_state_t *bs, bot_match_t *match) {

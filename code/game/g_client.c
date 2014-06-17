@@ -975,6 +975,7 @@ void PlayerBegin( int playerNum ) {
 	gentity_t	*ent;
 	gplayer_t	*player;
 	int			flags;
+	int			i;
 
 	ent = g_entities + playerNum;
 
@@ -1004,8 +1005,23 @@ void PlayerBegin( int playerNum ) {
 	// locate ent at a spawn point
 	PlayerSpawn( ent );
 
-	if ( player->pers.initialSpawn && !g_singlePlayer.integer ) {
-		if ( g_gametype.integer != GT_TOURNAMENT ) {
+	if ( player->pers.initialSpawn && g_gametype.integer != GT_TOURNAMENT ) {
+		// This is only sent to bots because for humans the "joining the battle" etc
+		// make it clear that the player is now finished connecting. Bots on the other
+		// hand have "entered the game" hard coded in botfiles/match.c so continue to
+		// send it to them.
+		for ( i = 0; i < level.maxplayers; i++ ) {
+			if ( level.players[i].pers.connected == CON_DISCONNECTED ) {
+				continue;
+			}
+			if ( !(g_entities[i].r.svFlags & SVF_BOT) ) {
+				continue;
+			}
+
+			trap_SendServerCommand( i, va("print \"%s" S_COLOR_WHITE " entered the game\n\"", player->pers.netname) );
+		}
+
+		if ( !g_singlePlayer.integer ) {
 			BroadcastTeamChange( player, -1 );
 		}
 	}

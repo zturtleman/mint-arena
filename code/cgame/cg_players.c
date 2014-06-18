@@ -2489,7 +2489,7 @@ void CG_Player( centity_t *cent ) {
 	CG_PlayerAnimation( cent, &legs.oldframe, &legs.frame, &legs.backlerp,
 		 &torso.oldframe, &torso.frame, &torso.backlerp );
 
-	if ( cent->currentState.number != clientNum ) {
+	if ( cent->currentState.number != clientNum && ( cent->currentState.contents & CONTENTS_CORPSE ) ) {
 		CG_Corpse( cent, clientNum, &bodySinkOffset, &shadowAlpha );
 	} else {
 		bodySinkOffset = 0;

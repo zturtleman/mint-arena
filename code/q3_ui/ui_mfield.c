@@ -224,22 +224,10 @@ sfxHandle_t MenuField_Key( menufield_s* m, int* key )
 	{
 		case K_KP_ENTER:
 		case K_ENTER:
-		case K_JOY1:
-		case K_JOY2:
-		case K_JOY3:
-		case K_JOY4:
-		case K_2JOY1:
-		case K_2JOY2:
-		case K_2JOY3:
-		case K_2JOY4:
-		case K_3JOY1:
-		case K_3JOY2:
-		case K_3JOY3:
-		case K_3JOY4:
-		case K_4JOY1:
-		case K_4JOY2:
-		case K_4JOY3:
-		case K_4JOY4:
+		case K_JOY_A:
+		case K_2JOY_A:
+		case K_3JOY_A:
+		case K_4JOY_A:
 			// have enter go to next cursor point
 			*key = K_TAB;
 			break;

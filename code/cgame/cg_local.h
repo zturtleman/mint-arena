@@ -557,8 +557,11 @@ typedef struct {
 	float		landChange;				// for landing hard
 	int			landTime;
 
+	// set by joystick events
+	int			joystickAxis[MAX_JOYSTICK_AXIS];
+	byte		joystickHats[MAX_JOYSTICK_AXIS];
+
 	// used for input state sent to server
-	int			joystickAxis[MAX_JOYSTICK_AXIS];	// set by joystick events
 	int			weaponSelect;
 
 	// the client maintains its own idea of view angles, which are
@@ -1447,10 +1450,12 @@ void CG_UpdateCvars( void );
 int CG_CrosshairPlayer( int localClientNum );
 int CG_LastAttacker( int localClientNum );
 void CG_LoadMenus(const char *menuFile);
-void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state );
+void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state, int axisNum );
 void CG_KeyEvent(int key, qboolean down);
 void CG_MouseEvent(int localClientNum, int x, int y);
-void CG_JoystickEvent( int localClientNum, int axis, int value );
+void CG_JoystickAxisEvent( int localClientNum, int axis, int value, unsigned time, connstate_t state, int negKey, int posKey );
+void CG_JoystickButtonEvent( int localClientNum, int button, qboolean down, unsigned time, connstate_t state, int key );
+void CG_JoystickHatEvent( int localClientNum, int hat, int value, unsigned time, connstate_t state, int upKey, int rightKey, int downKey, int leftKey );
 void CG_EventHandling(int type);
 void CG_RankRunFrame( void );
 void CG_SetScoreSelection(void *menu);

@@ -73,6 +73,7 @@ typedef struct
 #define C_LOOKING		1
 #define C_WEAPONS		2
 #define C_MISC			3
+#define	C_JOYSTICK		4
 
 #define ID_MOVEMENT		100
 #define ID_LOOKING		101
@@ -82,6 +83,7 @@ typedef struct
 #define ID_BACK			105
 #define ID_SAVEANDEXIT	106
 #define ID_EXIT			107
+#define ID_JOYSTICK		108
 
 enum {
 	// bindable actions
@@ -133,6 +135,7 @@ enum {
 	ID_AUTOSWITCH,
 	ID_MOUSESPEED,
 	ID_SELECTJOY,
+	ID_JOYANALOG,
 	ID_JOYTHRESHOLD,
 	ID_SMOOTHMOUSE
 };
@@ -184,6 +187,7 @@ typedef struct
 	menutext_s			looking;
 	menutext_s			weapons;
 	menutext_s			misc;
+	menutext_s			joystick;
 
 	menuaction_s		walkforward;
 	menuaction_s		backpedal;
@@ -235,6 +239,7 @@ typedef struct
 	menuaction_s		togglemenu;
 
 	menutext_s			selectjoy;
+	menuradiobutton_s	joyanalog;
 	menuslider_s		joythreshold;
 	int					section;
 	char				playerModel[MAX_QPATH];
@@ -457,6 +462,10 @@ static configcvar_t g_configcvars[] =
 	{"3cg_autoswitch",	0,					0},
 	{"4cg_autoswitch",	0,					0},
 	{"sensitivity",		0,					0},
+	{"in_joystickUseAnalog",	0,			0},
+	{"2in_joystickUseAnalog",	0,			0},
+	{"3in_joystickUseAnalog",	0,			0},
+	{"4in_joystickUseAnalog",	0,			0},
 	{"in_joystickThreshold",	0,			0},
 	{"2in_joystickThreshold",	0,			0},
 	{"3in_joystickThreshold",	0,			0},
@@ -514,8 +523,6 @@ static menucommon_s *g_looking_controls[] = {
 	(menucommon_s *)&s_controls.freelook,
 	(menucommon_s *)&s_controls.centerview,
 	(menucommon_s *)&s_controls.zoomview,
-	(menucommon_s *)&s_controls.selectjoy,
-	(menucommon_s *)&s_controls.joythreshold,
 	NULL,
 };
 
@@ -531,11 +538,19 @@ static menucommon_s *g_misc_controls[] = {
 	NULL,
 };
 
+static menucommon_s *g_joystick_controls[] = {
+	(menucommon_s *)&s_controls.selectjoy,
+	(menucommon_s *)&s_controls.joythreshold,
+	(menucommon_s *)&s_controls.joyanalog,
+	NULL,
+};
+
 static menucommon_s **g_controls[] = {
 	g_movement_controls,
 	g_looking_controls,
 	g_weapons_controls,
 	g_misc_controls,
+	g_joystick_controls,
 	NULL
 };
 
@@ -544,8 +559,6 @@ static menucommon_s *g_looking_mini_controls[] = {
 	(menucommon_s *)&s_controls.lookdown,
 	(menucommon_s *)&s_controls.centerview,
 	(menucommon_s *)&s_controls.zoomview,
-	(menucommon_s *)&s_controls.selectjoy,
-	(menucommon_s *)&s_controls.joythreshold,
 	NULL,
 };
 
@@ -577,6 +590,7 @@ static menucommon_s **g_mini_controls[] = {
 	g_looking_mini_controls,
 	g_weapons_controls,
 	g_misc_mini_controls,
+	g_joystick_controls,
 	g_unused_controls, // dummy controls that are not used but are disabled so they are not seen.
 	NULL
 };
@@ -1108,6 +1122,7 @@ static void Controls_GetConfig( void )
 
 	s_controls.alwaysrun.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ) ) );
 	s_controls.autoswitch.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ) ) );
+	s_controls.joyanalog.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickUseAnalog" ) ) );
 	s_controls.joythreshold.curvalue = Com_Clamp( 0.05f, 0.75f, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ) ) );
 }
 
@@ -1145,6 +1160,7 @@ static void Controls_SetConfig( void )
 	if (s_controls.localClient != 0) {
 		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ), s_controls.alwaysrun.curvalue );
 		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ), s_controls.autoswitch.curvalue );
+		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickUseAnalog" ), s_controls.joyanalog.curvalue );
 		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ), s_controls.joythreshold.curvalue );
 		return;
 	}
@@ -1158,6 +1174,7 @@ static void Controls_SetConfig( void )
 	trap_Cvar_SetValue( "cl_run", s_controls.alwaysrun.curvalue );
 	trap_Cvar_SetValue( "cg_autoswitch", s_controls.autoswitch.curvalue );
 	trap_Cvar_SetValue( "sensitivity", s_controls.sensitivity.curvalue );
+	trap_Cvar_SetValue( "in_joystickUseAnalog", s_controls.joyanalog.curvalue );
 	trap_Cvar_SetValue( "in_joystickThreshold", s_controls.joythreshold.curvalue );
 	trap_Cvar_SetValue( "cl_freelook", s_controls.freelook.curvalue );
 }
@@ -1190,6 +1207,7 @@ static void Controls_SetDefaults( void )
 		s_controls.autoswitch.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ) );
 		trap_Cvar_SetValue(Com_LocalClientCvarName(s_controls.localClient, "in_joystick"), 0);
 		trap_Cvar_SetValue(Com_LocalClientCvarName(s_controls.localClient, "in_joystickNo"), 0);
+		s_controls.joyanalog.curvalue    = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "in_joystickUseAnalog" ) );
 		s_controls.joythreshold.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ) );
 		return;
 	}
@@ -1201,6 +1219,7 @@ static void Controls_SetDefaults( void )
 	s_controls.sensitivity.curvalue  = Controls_GetCvarDefault( "sensitivity" );
 	trap_Cvar_SetValue("in_joystick", 0);
 	trap_Cvar_SetValue("in_joystickNo", 0);
+	s_controls.joyanalog.curvalue    = Controls_GetCvarDefault( "in_joystickUseAnalog" );
 	s_controls.joythreshold.curvalue = Controls_GetCvarDefault( "in_joystickThreshold" );
 	s_controls.freelook.curvalue     = Controls_GetCvarDefault( "cl_freelook" );
 }
@@ -1399,6 +1418,14 @@ static void Controls_MenuEvent( void* ptr, int event )
 			}
 			break;
 
+		case ID_JOYSTICK:
+			if (event == QM_ACTIVATED)
+			{
+				s_controls.section = C_JOYSTICK; 
+				Controls_Update();
+			}
+			break;
+
 		case ID_DEFAULTS:
 			if (event == QM_ACTIVATED)
 			{
@@ -1436,6 +1463,7 @@ static void Controls_MenuEvent( void* ptr, int event )
 		case ID_SMOOTHMOUSE:
 		case ID_ALWAYSRUN:
 		case ID_AUTOSWITCH:
+		case ID_JOYANALOG:
 		case ID_JOYTHRESHOLD:
 			if (event == QM_ACTIVATED)
 			{
@@ -1615,6 +1643,17 @@ static void Controls_MenuInit( int localClient )
 	s_controls.misc.string			= "MISC";
 	s_controls.misc.style			= UI_RIGHT;
 	s_controls.misc.color			= text_big_color;
+
+	y += PROP_HEIGHT;
+	s_controls.joystick.generic.type	 = MTYPE_PTEXT;
+	s_controls.joystick.generic.flags    = QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
+	s_controls.joystick.generic.id	     = ID_JOYSTICK;
+	s_controls.joystick.generic.callback = Controls_MenuEvent;
+	s_controls.joystick.generic.x		 = 152;
+	s_controls.joystick.generic.y		 = y;
+	s_controls.joystick.string			= "JOY";
+	s_controls.joystick.style			= UI_RIGHT;
+	s_controls.joystick.color			= text_big_color;
 
 	s_controls.back.generic.type	 = MTYPE_BITMAP;
 	s_controls.back.generic.name     = ART_BACK0;
@@ -1925,6 +1964,14 @@ static void Controls_MenuInit( int localClient )
 	s_controls.selectjoy.color				= text_color_normal;
 	s_controls.selectjoy.style				= UI_RIGHT|UI_SMALLFONT;
 
+	s_controls.joyanalog.generic.type      = MTYPE_RADIOBUTTON;
+	s_controls.joyanalog.generic.flags	   = QMF_SMALLFONT;
+	s_controls.joyanalog.generic.x	       = SCREEN_WIDTH/2;
+	s_controls.joyanalog.generic.name	   = "analog input";
+	s_controls.joyanalog.generic.id        = ID_JOYANALOG;
+	s_controls.joyanalog.generic.callback  = Controls_MenuEvent;
+	s_controls.joyanalog.generic.statusbar = Controls_StatusBar;
+
 	s_controls.joythreshold.generic.type	  = MTYPE_SLIDER;
 	s_controls.joythreshold.generic.x		  = SCREEN_WIDTH/2;
 	s_controls.joythreshold.generic.flags	  = QMF_SMALLFONT;
@@ -1953,6 +2000,7 @@ static void Controls_MenuInit( int localClient )
 	Menu_AddItem( &s_controls.menu, &s_controls.movement );
 	Menu_AddItem( &s_controls.menu, &s_controls.weapons );
 	Menu_AddItem( &s_controls.menu, &s_controls.misc );
+	Menu_AddItem( &s_controls.menu, &s_controls.joystick );
 
 	Menu_AddItem( &s_controls.menu, &s_controls.sensitivity );
 	Menu_AddItem( &s_controls.menu, &s_controls.smoothmouse );
@@ -1964,6 +2012,7 @@ static void Controls_MenuInit( int localClient )
 	Menu_AddItem( &s_controls.menu, &s_controls.centerview );
 	Menu_AddItem( &s_controls.menu, &s_controls.zoomview );
 	Menu_AddItem( &s_controls.menu, &s_controls.selectjoy );
+	Menu_AddItem( &s_controls.menu, &s_controls.joyanalog );
 	Menu_AddItem( &s_controls.menu, &s_controls.joythreshold );
 
 	Menu_AddItem( &s_controls.menu, &s_controls.alwaysrun );

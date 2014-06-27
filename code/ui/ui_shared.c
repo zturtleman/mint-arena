@@ -2609,11 +2609,23 @@ void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 				DC->executeText(EXEC_APPEND, "screenshot\n");
 			}
 			break;
+		case K_JOY_DPAD_UP:
+		case K_JOY_LEFTSTICK_UP:
+		case K_2JOY_DPAD_UP:
+		case K_2JOY_LEFTSTICK_UP:
+		case K_3JOY_DPAD_UP:
+		case K_3JOY_LEFTSTICK_UP:
+		case K_4JOY_DPAD_UP:
+		case K_4JOY_LEFTSTICK_UP:
 		case K_KP_UPARROW:
 		case K_UPARROW:
 			Menu_SetPrevCursorItem(menu);
 			break;
 
+		case K_JOY_B:
+		case K_2JOY_B:
+		case K_3JOY_B:
+		case K_4JOY_B:
 		case K_ESCAPE:
 			if (!g_waitingForKey && menu->onESC) {
 				itemDef_t it;
@@ -2622,6 +2634,14 @@ void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 			}
 			break;
 		case K_TAB:
+		case K_JOY_DPAD_DOWN:
+		case K_JOY_LEFTSTICK_DOWN:
+		case K_2JOY_DPAD_DOWN:
+		case K_2JOY_LEFTSTICK_DOWN:
+		case K_3JOY_DPAD_DOWN:
+		case K_3JOY_LEFTSTICK_DOWN:
+		case K_4JOY_DPAD_DOWN:
+		case K_4JOY_LEFTSTICK_DOWN:
 		case K_KP_DOWNARROW:
 		case K_DOWNARROW:
 			Menu_SetNextCursorItem(menu);
@@ -2648,22 +2668,10 @@ void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 			}
 			break;
 
-		case K_JOY1:
-		case K_JOY2:
-		case K_JOY3:
-		case K_JOY4:
-		case K_2JOY1:
-		case K_2JOY2:
-		case K_2JOY3:
-		case K_2JOY4:
-		case K_3JOY1:
-		case K_3JOY2:
-		case K_3JOY3:
-		case K_3JOY4:
-		case K_4JOY1:
-		case K_4JOY2:
-		case K_4JOY3:
-		case K_4JOY4:
+		case K_JOY_A:
+		case K_2JOY_A:
+		case K_3JOY_A:
+		case K_4JOY_A:
 		case K_AUX1:
 		case K_AUX2:
 		case K_AUX3:

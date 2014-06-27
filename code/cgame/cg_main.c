@@ -91,7 +91,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_VOIP_STRING:
 		return (intptr_t)CG_VoIPString(arg0);
 	case CG_KEY_EVENT:
-		CG_DistributeKeyEvent(arg0, arg1, arg2, arg3);
+		CG_DistributeKeyEvent(arg0, arg1, arg2, arg3, 0);
 		return 0;
 	case CG_MOUSE_EVENT:
 		if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
@@ -108,8 +108,14 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_SET_ACTIVE_MENU:
 		UI_SetActiveMenu( arg0 );
 		return 0;
-	case CG_JOYSTICK_EVENT:
-		CG_JoystickEvent(arg0, arg1, arg2);
+	case CG_JOYSTICK_AXIS_EVENT:
+		CG_JoystickAxisEvent(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+		return 0;
+	case CG_JOYSTICK_BUTTON_EVENT:
+		CG_JoystickButtonEvent(arg0, arg1, arg2, arg3, arg4, arg5);
+		return 0;
+	case CG_JOYSTICK_HAT_EVENT:
+		CG_JoystickHatEvent(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 		return 0;
 	case CG_CONSOLE_TEXT:
 		CG_AddNotifyText(arg0, arg1);
@@ -2747,7 +2753,7 @@ an action started before a mode switch.
 
 ===================
 */
-void CG_ParseBinding( int key, qboolean down, unsigned time, connstate_t state, int keyCatcher )
+void CG_ParseBinding( int key, qboolean down, unsigned time, connstate_t state, int keyCatcher, int axisNum )
 {
 	char buf[ MAX_STRING_CHARS ], *p = buf, *end;
 	qboolean allCommands, allowUpCmds;
@@ -2780,8 +2786,8 @@ void CG_ParseBinding( int key, qboolean down, unsigned time, connstate_t state, 
 			// subframe corrected
 			if ( allCommands || ( allowUpCmds && !down ) ) {
 				char cmd[1024];
-				Com_sprintf( cmd, sizeof( cmd ), "%c%s %d %d\n",
-					( down ) ? '+' : '-', p + 1, key, time );
+				Com_sprintf( cmd, sizeof( cmd ), "%c%s %d %d %d\n",
+					( down ) ? '+' : '-', p + 1, key, time, axisNum );
 				trap_Cmd_ExecuteText( EXEC_APPEND, cmd );
 			}
 		}
@@ -2845,7 +2851,7 @@ void Message_Key( int key, qboolean down ) {
 CG_DistributeKeyEvent
 ================
 */
-void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state ) {
+void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state, int axisNum ) {
 	int keyCatcher;
 	qboolean onlybinds = qfalse;
 
@@ -2888,7 +2894,8 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 	keyCatcher = trap_Key_GetCatcher( );
 
 	// keys can still be used for bound actions
-	if ( ( key < 128 || key == K_MOUSE1 ) &&
+	if ( ( key < 128 || key == K_MOUSE1
+		|| key == K_JOY_A || key == K_2JOY_A || key == K_3JOY_A || key == K_4JOY_A ) &&
 		( trap_GetDemoState() == DS_PLAYBACK || state == CA_CINEMATIC ) && keyCatcher == 0 ) {
 
 		if ( cg_cameraMode.integer == 0 ) {
@@ -2915,7 +2922,7 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 		keyCatcher &= ~KEYCATCH_CONSOLE;
 	} else {
 		// send the bound action
-		CG_ParseBinding( key, down, time, state, keyCatcher );
+		CG_ParseBinding( key, down, time, state, keyCatcher, axisNum );
 	}
 
 	// distribute the key down event to the apropriate handler
@@ -3063,12 +3070,14 @@ static void CG_SetMousePosition( int localClientNum, int x, int y )
 
 /*
 =================
-CG_JoystickEvent
+CG_JoystickAxisEvent
 
 Joystick values stay set until changed
 =================
 */
-void CG_JoystickEvent( int localClientNum, int axis, int value ) {
+void CG_JoystickAxisEvent( int localClientNum, int axis, int value, unsigned time, connstate_t state, int negKey, int posKey ) {
+	int oldvalue;
+
 	if ( localClientNum < 0 || localClientNum >= MAX_SPLITVIEW) {
 		return;
 	}
@@ -3076,7 +3085,102 @@ void CG_JoystickEvent( int localClientNum, int axis, int value ) {
 		CG_Error( "CG_JoystickEvent: bad axis %i", axis );
 	}
 
+	oldvalue = cg.localClients[localClientNum].joystickAxis[axis];
 	cg.localClients[localClientNum].joystickAxis[axis] = value;
+
+	// stick released or switched pos/neg
+	if ( value == 0 || !!( value < 0 ) != !!( oldvalue < 0 ) ) {
+		if ( oldvalue < 0 ) {
+			if ( negKey ) {
+				CG_DistributeKeyEvent( negKey, qfalse, time, state, -(axis+1) );
+			}
+		} else if ( oldvalue > 0 ) {
+			if ( posKey ) {
+				CG_DistributeKeyEvent( posKey, qfalse, time, state, axis+1 );
+			}
+		}
+	}
+
+	// move in new pos or neg direction
+	if ( value < 0 && oldvalue >= 0 ) {
+		if ( negKey ) {
+			CG_DistributeKeyEvent( negKey, qtrue, time, state, -(axis+1) );
+		}
+	} else if ( value > 0 && oldvalue <= 0 ) {
+		if ( posKey ) {
+			CG_DistributeKeyEvent( posKey, qtrue, time, state, axis+1 );
+		}
+	}
+}
+
+/*
+=================
+CG_JoystickButtonEvent
+=================
+*/
+void CG_JoystickButtonEvent( int localClientNum, int button, qboolean down, unsigned time, connstate_t state, int key ) {
+	if ( localClientNum < 0 || localClientNum >= MAX_SPLITVIEW) {
+		return;
+	}
+	if ( button < 0 || button >= MAX_JOYSTICK_BUTTONS ) {
+		CG_Error( "CG_JoystickButtonEvent: bad button %i", button );
+	}
+
+	if ( key ) {
+		CG_DistributeKeyEvent( key, down, time, state, 0 );
+	}
+}
+
+/*
+=================
+CG_JoystickHatEvent
+=================
+*/
+void CG_JoystickHatEvent( int localClientNum, int hat, int value, unsigned time, connstate_t state, int upKey, int rightKey, int downKey, int leftKey ) {
+	int i;
+	int oldvalue;
+	int hatKeys[4];
+
+	hatKeys[0] = upKey;
+	hatKeys[1] = rightKey;
+	hatKeys[2] = downKey;
+	hatKeys[3] = leftKey;
+
+	if ( localClientNum < 0 || localClientNum >= MAX_SPLITVIEW) {
+		return;
+	}
+	if ( hat < 0 || hat >= MAX_JOYSTICK_HATS ) {
+		CG_Error( "CG_JoystickHatEvent: bad hat %i", hat );
+	}
+
+	oldvalue = cg.localClients[localClientNum].joystickHats[hat];
+	cg.localClients[localClientNum].joystickHats[hat] = value;
+
+	// released
+	for ( i = 0; i < 4; i++ ) {
+		if ( ( oldvalue & (1<<i) ) && !( value & (1<<i) ) ) {
+			CG_DistributeKeyEvent( hatKeys[i], qfalse, time, state, 0 );
+		}
+	}
+
+	switch ( value ) {
+		case HAT_RIGHTUP:
+		case HAT_RIGHTDOWN:
+		case HAT_LEFTUP:
+		case HAT_LEFTDOWN:
+			if ( UI_WantsBindKeys() ) {
+				return;
+			}
+		default:
+			break;
+	}
+
+	// pressed
+	for ( i = 0; i < 4; i++ ) {
+		if ( !( oldvalue & (1<<i) ) && ( value & (1<<i) ) ) {
+			CG_DistributeKeyEvent( hatKeys[i], qtrue, time, state, 0 );
+		}
+	}
 }
 
 /*

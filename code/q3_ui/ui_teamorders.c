@@ -229,6 +229,14 @@ sfxHandle_t UI_TeamOrdersMenu_Key( int key ) {
 			}
 			return menu_null_sound;
 
+		case K_JOY_DPAD_UP:
+		case K_JOY_LEFTSTICK_UP:
+		case K_2JOY_DPAD_UP:
+		case K_2JOY_LEFTSTICK_UP:
+		case K_3JOY_DPAD_UP:
+		case K_3JOY_LEFTSTICK_UP:
+		case K_4JOY_DPAD_UP:
+		case K_4JOY_LEFTSTICK_UP:
 		case K_KP_UPARROW:
 		case K_UPARROW:
 			l->oldvalue = l->curvalue;
@@ -241,6 +249,14 @@ sfxHandle_t UI_TeamOrdersMenu_Key( int key ) {
 			}
 			return menu_move_sound;
 
+		case K_JOY_DPAD_DOWN:
+		case K_JOY_LEFTSTICK_DOWN:
+		case K_2JOY_DPAD_DOWN:
+		case K_2JOY_LEFTSTICK_DOWN:
+		case K_3JOY_DPAD_DOWN:
+		case K_3JOY_LEFTSTICK_DOWN:
+		case K_4JOY_DPAD_DOWN:
+		case K_4JOY_LEFTSTICK_DOWN:
 		case K_KP_DOWNARROW:
 		case K_DOWNARROW:
 			l->oldvalue = l->curvalue;

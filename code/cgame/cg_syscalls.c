@@ -637,7 +637,7 @@ int trap_GetJoyEventForKey( int localPlayerNum, int keynum, int startIndex, joye
 }
 
 void trap_JoyEventToString( const joyevent_t *joyevent, char *buf, int size ) {
-	syscall( CG_GET_JOY_EVENT_FOR_KEY, joyevent, buf, size );
+	syscall( CG_JOY_EVENT_TO_STRING, joyevent, buf, size );
 }
 
 int trap_LAN_GetPingQueueCount( void ) {

@@ -258,6 +258,7 @@ vmCvar_t	cg_drawScores;
 vmCvar_t	cg_oldBubbles;
 vmCvar_t	cg_smoothBodySink;
 vmCvar_t	cg_introPlayed;
+vmCvar_t	cg_joystickDebug;
 vmCvar_t	ui_stretch;
 
 #ifdef MISSIONPACK
@@ -446,6 +447,7 @@ static cvarTable_t cgameCvarTable[] = {
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
 
 	{ &cg_introPlayed, "com_introPlayed", "0", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_joystickDebug, "in_joystickDebug", "0", CVAR_TEMP, RANGE_BOOL },
 	{ &ui_stretch, "ui_stretch", "0", CVAR_ARCHIVE, RANGE_BOOL },
 };
 
@@ -3070,6 +3072,22 @@ static void CG_SetMousePosition( int localClientNum, int x, int y )
 
 /*
 =================
+CG_JoystickEvent
+
+Internal function for general joystick event handling (not called for up events).
+=================
+*/
+void CG_JoystickEvent( int localClientNum, const joyevent_t *joyevent ) {
+	if ( cg_joystickDebug.integer ) {
+		char str[32];
+
+		trap_JoyEventToString( joyevent, str, sizeof ( str ) );
+		CG_Printf("Player %d pressed %s\n", localClientNum+1, str );
+	}
+}
+
+/*
+=================
 CG_JoystickAxisEvent
 
 Joystick values stay set until changed
@@ -3103,11 +3121,11 @@ void CG_JoystickAxisEvent( int localClientNum, int axis, int value, unsigned tim
 	// stick released or switched pos/neg
 	if ( value == 0 || !!( value < 0 ) != !!( oldvalue < 0 ) ) {
 		if ( oldvalue < 0 ) {
-			if ( negKey ) {
+			if ( negKey != -1 ) {
 				CG_DistributeKeyEvent( negKey, qfalse, time, state, -(axis+1) );
 			}
 		} else if ( oldvalue > 0 ) {
-			if ( posKey ) {
+			if ( posKey != -1 ) {
 				CG_DistributeKeyEvent( posKey, qfalse, time, state, axis+1 );
 			}
 		}
@@ -3115,11 +3133,13 @@ void CG_JoystickAxisEvent( int localClientNum, int axis, int value, unsigned tim
 
 	// move in new pos or neg direction
 	if ( value < 0 && oldvalue >= 0 ) {
-		if ( negKey ) {
+		CG_JoystickEvent( localClientNum, &negEvent );
+		if ( negKey != -1 ) {
 			CG_DistributeKeyEvent( negKey, qtrue, time, state, -(axis+1) );
 		}
 	} else if ( value > 0 && oldvalue <= 0 ) {
-		if ( posKey ) {
+		CG_JoystickEvent( localClientNum, &posEvent );
+		if ( posKey != -1 ) {
 			CG_DistributeKeyEvent( posKey, qtrue, time, state, axis+1 );
 		}
 	}
@@ -3145,7 +3165,11 @@ void CG_JoystickButtonEvent( int localClientNum, int button, qboolean down, unsi
 	joyevent.value.button = button;
 	key = trap_GetKeyForJoyEvent( localClientNum, &joyevent );
 
-	if ( key ) {
+	if ( down ) {
+		CG_JoystickEvent( localClientNum, &joyevent );
+	}
+
+	if ( key != -1 ) {
 		CG_DistributeKeyEvent( key, down, time, state, 0 );
 	}
 }
@@ -3194,7 +3218,9 @@ void CG_JoystickHatEvent( int localClientNum, int hat, int value, unsigned time,
 	// released
 	for ( i = 0; i < 4; i++ ) {
 		if ( ( oldvalue & (1<<i) ) && !( value & (1<<i) ) ) {
-			CG_DistributeKeyEvent( hatKeys[i], qfalse, time, state, 0 );
+			if ( hatKeys[i] != -1 ) {
+				CG_DistributeKeyEvent( hatKeys[i], qfalse, time, state, 0 );
+			}
 		}
 	}
 
@@ -3213,7 +3239,10 @@ void CG_JoystickHatEvent( int localClientNum, int hat, int value, unsigned time,
 	// pressed
 	for ( i = 0; i < 4; i++ ) {
 		if ( !( oldvalue & (1<<i) ) && ( value & (1<<i) ) ) {
-			CG_DistributeKeyEvent( hatKeys[i], qtrue, time, state, 0 );
+			CG_JoystickEvent( localClientNum, &hatEvent[i] );
+			if ( hatKeys[i] != -1 ) {
+				CG_DistributeKeyEvent( hatKeys[i], qtrue, time, state, 0 );
+			}
 		}
 	}
 }

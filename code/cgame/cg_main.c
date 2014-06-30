@@ -109,13 +109,13 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		UI_SetActiveMenu( arg0 );
 		return 0;
 	case CG_JOYSTICK_AXIS_EVENT:
-		CG_JoystickAxisEvent(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+		CG_JoystickAxisEvent(arg0, arg1, arg2, arg3, arg4);
 		return 0;
 	case CG_JOYSTICK_BUTTON_EVENT:
-		CG_JoystickButtonEvent(arg0, arg1, arg2, arg3, arg4, arg5);
+		CG_JoystickButtonEvent(arg0, arg1, arg2, arg3, arg4);
 		return 0;
 	case CG_JOYSTICK_HAT_EVENT:
-		CG_JoystickHatEvent(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+		CG_JoystickHatEvent(arg0, arg1, arg2, arg3, arg4);
 		return 0;
 	case CG_CONSOLE_TEXT:
 		CG_AddNotifyText(arg0, arg1);
@@ -3075,7 +3075,9 @@ CG_JoystickAxisEvent
 Joystick values stay set until changed
 =================
 */
-void CG_JoystickAxisEvent( int localClientNum, int axis, int value, unsigned time, connstate_t state, int negKey, int posKey ) {
+void CG_JoystickAxisEvent( int localClientNum, int axis, int value, unsigned time, connstate_t state ) {
+	joyevent_t joyevent;
+	int negKey, posKey;
 	int oldvalue;
 
 	if ( localClientNum < 0 || localClientNum >= MAX_SPLITVIEW) {
@@ -3084,6 +3086,15 @@ void CG_JoystickAxisEvent( int localClientNum, int axis, int value, unsigned tim
 	if ( axis < 0 || axis >= MAX_JOYSTICK_AXIS ) {
 		CG_Error( "CG_JoystickEvent: bad axis %i", axis );
 	}
+
+	joyevent.type = JOYEVENT_AXIS;
+	joyevent.value.axis.num = axis;
+
+	joyevent.value.axis.sign = -1;
+	negKey = trap_GetKeyForJoyEvent( localClientNum, &joyevent );
+
+	joyevent.value.axis.sign = 1;
+	posKey = trap_GetKeyForJoyEvent( localClientNum, &joyevent );
 
 	oldvalue = cg.localClients[localClientNum].joystickAxis[axis];
 	cg.localClients[localClientNum].joystickAxis[axis] = value;
@@ -3118,13 +3129,20 @@ void CG_JoystickAxisEvent( int localClientNum, int axis, int value, unsigned tim
 CG_JoystickButtonEvent
 =================
 */
-void CG_JoystickButtonEvent( int localClientNum, int button, qboolean down, unsigned time, connstate_t state, int key ) {
+void CG_JoystickButtonEvent( int localClientNum, int button, qboolean down, unsigned time, connstate_t state ) {
+	joyevent_t joyevent;
+	int key;
+
 	if ( localClientNum < 0 || localClientNum >= MAX_SPLITVIEW) {
 		return;
 	}
 	if ( button < 0 || button >= MAX_JOYSTICK_BUTTONS ) {
 		CG_Error( "CG_JoystickButtonEvent: bad button %i", button );
 	}
+
+	joyevent.type = JOYEVENT_BUTTON;
+	joyevent.value.button = button;
+	key = trap_GetKeyForJoyEvent( localClientNum, &joyevent );
 
 	if ( key ) {
 		CG_DistributeKeyEvent( key, down, time, state, 0 );
@@ -3136,10 +3154,27 @@ void CG_JoystickButtonEvent( int localClientNum, int button, qboolean down, unsi
 CG_JoystickHatEvent
 =================
 */
-void CG_JoystickHatEvent( int localClientNum, int hat, int value, unsigned time, connstate_t state, int upKey, int rightKey, int downKey, int leftKey ) {
+void CG_JoystickHatEvent( int localClientNum, int hat, int value, unsigned time, connstate_t state ) {
 	int i;
 	int oldvalue;
 	int hatKeys[4];
+	int upKey, rightKey, downKey, leftKey;
+	joyevent_t joyevent;
+
+	joyevent.type = JOYEVENT_HAT;
+	joyevent.value.hat.num = hat;
+
+	joyevent.value.hat.mask = HAT_UP;
+	upKey = trap_GetKeyForJoyEvent( localClientNum, &joyevent );
+
+	joyevent.value.hat.mask = HAT_RIGHT;
+	rightKey = trap_GetKeyForJoyEvent( localClientNum, &joyevent );
+
+	joyevent.value.hat.mask = HAT_DOWN;
+	downKey = trap_GetKeyForJoyEvent( localClientNum, &joyevent );
+
+	joyevent.value.hat.mask = HAT_LEFT;
+	leftKey = trap_GetKeyForJoyEvent( localClientNum, &joyevent );
 
 	hatKeys[0] = upKey;
 	hatKeys[1] = rightKey;

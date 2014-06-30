@@ -3076,7 +3076,7 @@ Joystick values stay set until changed
 =================
 */
 void CG_JoystickAxisEvent( int localClientNum, int axis, int value, unsigned time, connstate_t state ) {
-	joyevent_t joyevent;
+	joyevent_t negEvent, posEvent;
 	int negKey, posKey;
 	int oldvalue;
 
@@ -3087,14 +3087,15 @@ void CG_JoystickAxisEvent( int localClientNum, int axis, int value, unsigned tim
 		CG_Error( "CG_JoystickEvent: bad axis %i", axis );
 	}
 
-	joyevent.type = JOYEVENT_AXIS;
-	joyevent.value.axis.num = axis;
+	negEvent.type = JOYEVENT_AXIS;
+	negEvent.value.axis.num = axis;
+	negEvent.value.axis.sign = -1;
+	negKey = trap_GetKeyForJoyEvent( localClientNum, &negEvent );
 
-	joyevent.value.axis.sign = -1;
-	negKey = trap_GetKeyForJoyEvent( localClientNum, &joyevent );
-
-	joyevent.value.axis.sign = 1;
-	posKey = trap_GetKeyForJoyEvent( localClientNum, &joyevent );
+	posEvent.type = JOYEVENT_AXIS;
+	posEvent.value.axis.num = axis;
+	posEvent.value.axis.sign = 1;
+	posKey = trap_GetKeyForJoyEvent( localClientNum, &posEvent );
 
 	oldvalue = cg.localClients[localClientNum].joystickAxis[axis];
 	cg.localClients[localClientNum].joystickAxis[axis] = value;
@@ -3155,31 +3156,10 @@ CG_JoystickHatEvent
 =================
 */
 void CG_JoystickHatEvent( int localClientNum, int hat, int value, unsigned time, connstate_t state ) {
-	int i;
-	int oldvalue;
+	joyevent_t hatEvent[4];
 	int hatKeys[4];
-	int upKey, rightKey, downKey, leftKey;
-	joyevent_t joyevent;
-
-	joyevent.type = JOYEVENT_HAT;
-	joyevent.value.hat.num = hat;
-
-	joyevent.value.hat.mask = HAT_UP;
-	upKey = trap_GetKeyForJoyEvent( localClientNum, &joyevent );
-
-	joyevent.value.hat.mask = HAT_RIGHT;
-	rightKey = trap_GetKeyForJoyEvent( localClientNum, &joyevent );
-
-	joyevent.value.hat.mask = HAT_DOWN;
-	downKey = trap_GetKeyForJoyEvent( localClientNum, &joyevent );
-
-	joyevent.value.hat.mask = HAT_LEFT;
-	leftKey = trap_GetKeyForJoyEvent( localClientNum, &joyevent );
-
-	hatKeys[0] = upKey;
-	hatKeys[1] = rightKey;
-	hatKeys[2] = downKey;
-	hatKeys[3] = leftKey;
+	int oldvalue;
+	int i;
 
 	if ( localClientNum < 0 || localClientNum >= MAX_SPLITVIEW) {
 		return;
@@ -3187,6 +3167,26 @@ void CG_JoystickHatEvent( int localClientNum, int hat, int value, unsigned time,
 	if ( hat < 0 || hat >= MAX_JOYSTICK_HATS ) {
 		CG_Error( "CG_JoystickHatEvent: bad hat %i", hat );
 	}
+
+	hatEvent[0].type = JOYEVENT_HAT;
+	hatEvent[0].value.hat.num = hat;
+	hatEvent[0].value.hat.mask = HAT_UP;
+	hatKeys[0] = trap_GetKeyForJoyEvent( localClientNum, &hatEvent[0] );
+
+	hatEvent[1].type = JOYEVENT_HAT;
+	hatEvent[1].value.hat.num = hat;
+	hatEvent[1].value.hat.mask = HAT_RIGHT;
+	hatKeys[1] = trap_GetKeyForJoyEvent( localClientNum, &hatEvent[1] );
+
+	hatEvent[2].type = JOYEVENT_HAT;
+	hatEvent[2].value.hat.num = hat;
+	hatEvent[2].value.hat.mask = HAT_DOWN;
+	hatKeys[2] = trap_GetKeyForJoyEvent( localClientNum, &hatEvent[2] );
+
+	hatEvent[3].type = JOYEVENT_HAT;
+	hatEvent[3].value.hat.num = hat;
+	hatEvent[3].value.hat.mask = HAT_LEFT;
+	hatKeys[3] = trap_GetKeyForJoyEvent( localClientNum, &hatEvent[3] );
 
 	oldvalue = cg.localClients[localClientNum].joystickHats[hat];
 	cg.localClients[localClientNum].joystickHats[hat] = value;

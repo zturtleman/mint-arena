@@ -954,6 +954,11 @@ void UI_SetCursorPos( int localClientNum, int x, int y )
 		return;
 	}
 
+	if ( uis.cursorx == x && uis.cursory == y ) {
+		// ignore duplicate events
+		return;
+	}
+
 	uis.cursorx = x;
 	uis.cursory = y;
 	UI_MouseEvent( localClientNum, 0, 0 );

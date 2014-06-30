@@ -5075,6 +5075,11 @@ void UI_SetCursorPos( int localClientNum, int x, int y )
 		return;
 	}
 
+	if ( uiInfo.uiDC.cursorx == x && uiInfo.uiDC.cursory == y ) {
+		// ignore duplicate events
+		return;
+	}
+
 	uiInfo.uiDC.cursorx = x;
 	uiInfo.uiDC.cursory = y;
 

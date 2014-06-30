@@ -228,6 +228,11 @@ void			trap_Key_SetRepeat( qboolean repeat );
 int				trap_Mouse_GetState( int localClientNum );
 void			trap_Mouse_SetState( int localClientNum, int state );
 
+int				trap_SetKeyForJoyEvent( int localPlayerNum, const joyevent_t *joyevent, int keynum );
+int				trap_GetKeyForJoyEvent( int localPlayerNum, const joyevent_t *joyevent );
+int				trap_GetJoyEventForKey( int localPlayerNum, int keynum, int startIndex, joyevent_t *joyevent );
+void			trap_JoyEventToString( const joyevent_t *joyevent, char *buf, int size );
+
 int				trap_LAN_GetPingQueueCount( void );
 void			trap_LAN_ClearPing( int n );
 void			trap_LAN_GetPing( int n, char *buf, int buflen, int *pingtime );

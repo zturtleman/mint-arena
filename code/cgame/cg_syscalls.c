@@ -624,6 +624,22 @@ void trap_Mouse_SetState( int localClientNum, int state ) {
 	syscall( CG_MOUSE_SETSTATE, localClientNum, state );
 }
 
+int trap_SetKeyForJoyEvent( int localPlayerNum, const joyevent_t *joyevent, int keynum ) {
+	return syscall( CG_SET_KEY_FOR_JOY_EVENT, localPlayerNum, joyevent, keynum );
+}
+
+int trap_GetKeyForJoyEvent( int localPlayerNum, const joyevent_t *joyevent ) {
+	return syscall( CG_GET_KEY_FOR_JOY_EVENT, localPlayerNum, joyevent );
+}
+
+int trap_GetJoyEventForKey( int localPlayerNum, int keynum, int startIndex, joyevent_t *joyevent ) {
+	return syscall( CG_GET_JOY_EVENT_FOR_KEY, localPlayerNum, keynum, startIndex, joyevent );
+}
+
+void trap_JoyEventToString( const joyevent_t *joyevent, char *buf, int size ) {
+	syscall( CG_GET_JOY_EVENT_FOR_KEY, joyevent, buf, size );
+}
+
 int trap_LAN_GetPingQueueCount( void ) {
 	return syscall( CG_LAN_GETPINGQUEUECOUNT );
 }

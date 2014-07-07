@@ -985,7 +985,7 @@ void PlayerThink_real( gentity_t *ent ) {
 		G_TouchTriggers( ent );
 	}
 
-	// NOTE: now copy the exact origin over otherwise clients can be snapped into solid
+	// NOTE: now copy the exact origin over otherwise players can be snapped into solid
 	VectorCopy( ent->player->ps.origin, ent->r.currentOrigin );
 
 	//test for solid areas in the AAS file

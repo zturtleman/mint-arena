@@ -395,7 +395,7 @@ typedef struct {
 	int			numNonSpectatorPlayers;	// includes connecting players
 	int			numPlayingPlayers;		// connected, non-spectators
 	int			sortedPlayers[MAX_CLIENTS];		// sorted by score
-	int			follow1, follow2;		// clientNums for auto-follow spectators
+	int			follow1, follow2;		// playerNums for auto-follow spectators
 
 	int			snd_fry;				// sound index for standing in lava
 

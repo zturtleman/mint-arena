@@ -807,7 +807,7 @@ void Cmd_FollowCycle_f( gentity_t *ent, int dir ) {
 		G_Error( "Cmd_FollowCycle_f: bad dir %i", dir );
 	}
 
-	// if dedicated follow player, just switch between the two auto clients
+	// if dedicated follow player, just switch between the two auto players
 	if (ent->player->sess.spectatorPlayer < 0) {
 		if (ent->player->sess.spectatorPlayer == -1) {
 			ent->player->sess.spectatorPlayer = -2;

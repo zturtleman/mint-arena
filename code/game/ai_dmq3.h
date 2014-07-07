@@ -79,7 +79,7 @@ void BotSetUserInfo(bot_state_t *bs, char *key, char *value);
 // set the team status (offense, defense etc.)
 void BotSetTeamStatus(bot_state_t *bs);
 //returns the name of the player
-char *PlayerName(int client, char *name, int size);
+char *PlayerName(int playernum, char *name, int size);
 //returns a simplified player name
 char *EasyPlayerName(int playernum, char *name, int size);
 // returns the appropriate synonym context for the current game type and situation

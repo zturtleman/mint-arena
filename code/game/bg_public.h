@@ -860,7 +860,7 @@ typedef struct animation_s {
 #define DEFAULT_PLAYER_COLOR1	4
 #define DEFAULT_PLAYER_COLOR2	5
 
-// Default player model names for the splitscreen clients
+// Default player model names for the splitscreen players
 #define DEFAULT_MODEL			"sarge"
 #define DEFAULT_HEAD			"sarge"
 

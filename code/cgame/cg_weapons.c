@@ -1942,7 +1942,7 @@ void CG_MissileHitWall( int weapon, int playerNum, vec3_t origin, vec3_t dir, im
 		le->light = light;
 		VectorCopy( lightColor, le->lightColor );
 
-		// colorize with client color
+		// colorize with player color
 		VectorCopy( cgs.playerinfo[playerNum].color1, le->color );
 		le->refEntity.shaderRGBA[0] = le->color[0] * 0xff;
 		le->refEntity.shaderRGBA[1] = le->color[1] * 0xff;

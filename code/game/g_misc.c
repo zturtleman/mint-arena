@@ -713,18 +713,7 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
 //		return;
 //	}
 
-	if ( other->player->ps.powerups[PW_NEUTRALFLAG] ) {		// only happens in One Flag CTF
-		Drop_Item( other, BG_FindItemForPowerup( PW_NEUTRALFLAG ), 0 );
-		other->player->ps.powerups[PW_NEUTRALFLAG] = 0;
-	}
-	else if ( other->player->ps.powerups[PW_REDFLAG] ) {		// only happens in standard CTF
-		Drop_Item( other, BG_FindItemForPowerup( PW_REDFLAG ), 0 );
-		other->player->ps.powerups[PW_REDFLAG] = 0;
-	}
-	else if ( other->player->ps.powerups[PW_BLUEFLAG] ) {	// only happens in standard CTF
-		Drop_Item( other, BG_FindItemForPowerup( PW_BLUEFLAG ), 0 );
-		other->player->ps.powerups[PW_BLUEFLAG] = 0;
-	}
+	TossPlayerGametypeItems( other );
 
 	// find the destination
 	destination = NULL;

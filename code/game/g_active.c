@@ -543,7 +543,6 @@ void PlayerEvents( gentity_t *ent, int oldEventSequence ) {
 	gplayer_t *player;
 	int		damage;
 	vec3_t	origin, angles;
-//	qboolean	fired;
 
 	player = ent->player;
 
@@ -575,37 +574,64 @@ void PlayerEvents( gentity_t *ent, int oldEventSequence ) {
 			FireWeapon( ent );
 			break;
 
-		case EV_USE_ITEM1:		// teleporter
-			TossPlayerGametypeItems( ent );
-			SelectSpawnPoint( ent->player->ps.origin, origin, angles, qfalse );
-			TeleportPlayer( ent, origin, angles );
-			break;
+		case EV_USE_ITEM0:
+		case EV_USE_ITEM1:
+		case EV_USE_ITEM2:
+		case EV_USE_ITEM3:
+		case EV_USE_ITEM4:
+		case EV_USE_ITEM5:
+		case EV_USE_ITEM6:
+		case EV_USE_ITEM7:
+		case EV_USE_ITEM8:
+		case EV_USE_ITEM9:
+		case EV_USE_ITEM10:
+		case EV_USE_ITEM11:
+		case EV_USE_ITEM12:
+		case EV_USE_ITEM13:
+		case EV_USE_ITEM14:
+		case EV_USE_ITEM15:
+		{
+			int itemNum = (event & ~EV_EVENT_BITS) - EV_USE_ITEM0;
 
-		case EV_USE_ITEM2:		// medkit
-			ent->health = ent->player->ps.stats[STAT_MAX_HEALTH] + 25;
+			switch ( itemNum ) {
+			default:
+			case HI_NONE:
+				break;
 
-			break;
+			case HI_TELEPORTER:
+				TossPlayerGametypeItems( ent );
+				SelectSpawnPoint( ent->player->ps.origin, origin, angles, qfalse );
+				TeleportPlayer( ent, origin, angles );
+				break;
+
+			case HI_MEDKIT:
+				ent->health = ent->player->ps.stats[STAT_MAX_HEALTH] + 25;
+				break;
 
 #ifdef MISSIONPACK
-		case EV_USE_ITEM3:		// kamikaze
-			// make sure the invulnerability is off
-			ent->player->invulnerabilityTime = 0;
-			// start the kamikze
-			G_StartKamikaze( ent );
-			break;
+			case HI_KAMIKAZE:
+				// make sure the invulnerability is off
+				ent->player->invulnerabilityTime = 0;
+				// start the kamikze
+				G_StartKamikaze( ent );
+				break;
 
-		case EV_USE_ITEM4:		// portal
-			if( ent->player->portalID ) {
-				DropPortalSource( ent );
-			}
-			else {
-				DropPortalDestination( ent );
+			case HI_PORTAL:
+				if ( ent->player->portalID ) {
+					DropPortalSource( ent );
+				}
+				else {
+					DropPortalDestination( ent );
+				}
+				break;
+
+			case HI_INVULNERABILITY:
+				ent->player->invulnerabilityTime = level.time + 10000;
+				break;
+#endif // MISSIONPACK
 			}
 			break;
-		case EV_USE_ITEM5:		// invulnerability
-			ent->player->invulnerabilityTime = level.time + 10000;
-			break;
-#endif
+		}
 
 		default:
 			break;

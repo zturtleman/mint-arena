@@ -538,14 +538,12 @@ but any server game effects are handled here
 ================
 */
 void PlayerEvents( gentity_t *ent, int oldEventSequence ) {
-	int		i, j;
+	int		i;
 	int		event;
 	gplayer_t *player;
 	int		damage;
 	vec3_t	origin, angles;
 //	qboolean	fired;
-	gitem_t *item;
-	gentity_t *drop;
 
 	player = ent->player;
 
@@ -578,54 +576,7 @@ void PlayerEvents( gentity_t *ent, int oldEventSequence ) {
 			break;
 
 		case EV_USE_ITEM1:		// teleporter
-			// drop flags in CTF
-			item = NULL;
-			j = 0;
-
-			if ( ent->player->ps.powerups[ PW_REDFLAG ] ) {
-				item = BG_FindItemForPowerup( PW_REDFLAG );
-				j = PW_REDFLAG;
-			} else if ( ent->player->ps.powerups[ PW_BLUEFLAG ] ) {
-				item = BG_FindItemForPowerup( PW_BLUEFLAG );
-				j = PW_BLUEFLAG;
-			} else if ( ent->player->ps.powerups[ PW_NEUTRALFLAG ] ) {
-				item = BG_FindItemForPowerup( PW_NEUTRALFLAG );
-				j = PW_NEUTRALFLAG;
-			}
-
-			if ( item ) {
-				drop = Drop_Item( ent, item, 0 );
-				// decide how many seconds it has left
-				drop->count = ( ent->player->ps.powerups[ j ] - level.time ) / 1000;
-				if ( drop->count < 1 ) {
-					drop->count = 1;
-				}
-
-				ent->player->ps.powerups[ j ] = 0;
-			}
-
-#ifdef MISSIONPACK
-			if ( g_gametype.integer == GT_HARVESTER ) {
-				if ( ent->player->ps.tokens > 0 ) {
-					if ( ent->player->sess.sessionTeam == TEAM_RED ) {
-						item = BG_FindItem( "Blue Cube" );
-					} else {
-						item = BG_FindItem( "Red Cube" );
-					}
-					if ( item ) {
-						for ( j = 0; j < ent->player->ps.tokens; j++ ) {
-							drop = Drop_Item( ent, item, 0 );
-							if ( ent->player->sess.sessionTeam == TEAM_RED ) {
-								drop->s.team = TEAM_BLUE;
-							} else {
-								drop->s.team = TEAM_RED;
-							}
-						}
-					}
-					ent->player->ps.tokens = 0;
-				}
-			}
-#endif
+			TossPlayerGametypeItems( ent );
 			SelectSpawnPoint( ent->player->ps.origin, origin, angles, qfalse );
 			TeleportPlayer( ent, origin, angles );
 			break;

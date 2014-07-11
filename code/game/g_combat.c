@@ -166,6 +166,7 @@ void TossPlayerGametypeItems(gentity_t *ent) {
 
 	if ( item ) {
 		drop = Drop_Item( ent, item, angle );
+		angle += 45;
 		// decide how many seconds it has left
 		drop->count = ( ent->player->ps.powerups[ j ] - level.time ) / 1000;
 		if ( drop->count < 1 ) {
@@ -190,6 +191,7 @@ void TossPlayerGametypeItems(gentity_t *ent) {
 					} else {
 						drop->s.team = TEAM_RED;
 					}
+					angle += 45;
 				}
 			}
 			ent->player->ps.tokens = 0;

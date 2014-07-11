@@ -163,8 +163,8 @@ void SP_misc_model( gentity_t *ent ) {
 
 #if 0
 	ent->s.modelindex = G_ModelIndex( ent->model );
-	VectorSet (ent->mins, -16, -16, -16);
-	VectorSet (ent->maxs, 16, 16, 16);
+	VectorSet (ent->s.mins, -16, -16, -16);
+	VectorSet (ent->s.maxs, 16, 16, 16);
 	trap_LinkEntity (ent);
 
 	G_SetOrigin( ent, ent->s.origin );

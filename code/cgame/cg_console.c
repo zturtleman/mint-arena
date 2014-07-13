@@ -292,7 +292,7 @@ void Con_DrawSolidConsole( connstate_t state, float frac ) {
 	CG_SetScreenPlacement( PLACE_LEFT, PLACE_TOP );
 
 	// draw the text
-	rows = (lines-SMALLCHAR_HEIGHT*2)/SMALLCHAR_HEIGHT;		// rows of text to draw
+	rows = (lines-SMALLCHAR_HEIGHT)/SMALLCHAR_HEIGHT;		// rows of text to draw
 
 	y = lines - (SMALLCHAR_HEIGHT*3);
 

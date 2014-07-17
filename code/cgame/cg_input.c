@@ -45,6 +45,9 @@ vmCvar_t	m_side;
 vmCvar_t	cg_yawspeed[MAX_SPLITVIEW];
 vmCvar_t	cg_pitchspeed[MAX_SPLITVIEW];
 
+vmCvar_t	cg_yawspeedanalog[MAX_SPLITVIEW];
+vmCvar_t	cg_pitchspeedanalog[MAX_SPLITVIEW];
+
 vmCvar_t	cg_anglespeedkey[MAX_SPLITVIEW];
 
 vmCvar_t	cg_run[MAX_SPLITVIEW];
@@ -403,6 +406,7 @@ Moves the local angle positions
 */
 void CG_AdjustAngles( localPlayer_t *player, clientInput_t *ci ) {
 	float	speed;
+	float	digital, analog;
 	int		localPlayerNum = player - cg.localPlayers;
 	
 	if ( ci->in_speed.active ) {
@@ -412,12 +416,22 @@ void CG_AdjustAngles( localPlayer_t *player, clientInput_t *ci ) {
 	}
 
 	if ( !ci->in_strafe.active ) {
-		player->viewangles[YAW] -= speed*cg_yawspeed[localPlayerNum].value*CL_KeyState (player, &ci->in_right);
-		player->viewangles[YAW] += speed*cg_yawspeed[localPlayerNum].value*CL_KeyState (player, &ci->in_left);
+		CL_KeyStateSeparate (player, &ci->in_right, &digital, &analog);
+		player->viewangles[YAW] -= speed*cg_yawspeed[localPlayerNum].value * digital;
+		player->viewangles[YAW] -= speed*cg_yawspeedanalog[localPlayerNum].value * analog;
+
+		CL_KeyStateSeparate (player, &ci->in_left, &digital, &analog);
+		player->viewangles[YAW] += speed*cg_yawspeed[localPlayerNum].value * digital;
+		player->viewangles[YAW] += speed*cg_yawspeedanalog[localPlayerNum].value * analog;
 	}
 
-	player->viewangles[PITCH] -= speed*cg_pitchspeed[localPlayerNum].value * CL_KeyState (player, &ci->in_lookup);
-	player->viewangles[PITCH] += speed*cg_pitchspeed[localPlayerNum].value * CL_KeyState (player, &ci->in_lookdown);
+	CL_KeyStateSeparate (player, &ci->in_lookup, &digital, &analog);
+	player->viewangles[PITCH] -= speed*cg_pitchspeed[localPlayerNum].value * digital;
+	player->viewangles[PITCH] -= speed*cg_pitchspeedanalog[localPlayerNum].value * analog;
+
+	CL_KeyStateSeparate (player, &ci->in_lookdown, &digital, &analog);
+	player->viewangles[PITCH] += speed*cg_pitchspeed[localPlayerNum].value * digital;
+	player->viewangles[PITCH] += speed*cg_pitchspeedanalog[localPlayerNum].value * analog;
 }
 
 /*
@@ -601,6 +615,8 @@ void CG_RegisterInputCvars( void ) {
 	for (i = 0; i < CG_MaxSplitView(); i++) {
 		trap_Cvar_Register( &cg_yawspeed[i], Com_LocalPlayerCvarName(i, "cg_yawspeed"), "140", CVAR_ARCHIVE );
 		trap_Cvar_Register( &cg_pitchspeed[i], Com_LocalPlayerCvarName(i, "cg_pitchspeed"), "140", CVAR_ARCHIVE );
+		trap_Cvar_Register( &cg_yawspeedanalog[i], Com_LocalPlayerCvarName(i, "cg_yawspeedanalog"), "200", CVAR_ARCHIVE );
+		trap_Cvar_Register( &cg_pitchspeedanalog[i], Com_LocalPlayerCvarName(i, "cg_pitchspeedanalog"), "200", CVAR_ARCHIVE );
 		trap_Cvar_Register( &cg_anglespeedkey[i], Com_LocalPlayerCvarName(i, "cg_anglespeedkey"), "1.5", 0 );
 		trap_Cvar_Register( &cg_run[i], Com_LocalPlayerCvarName(i, "cl_run"), "1", CVAR_ARCHIVE ); // ZTM: NOTE: changing name breaks team arena menu scripts
 		trap_Cvar_Register( &cg_joystickUseAnalog[i], Com_LocalPlayerCvarName(i, "in_joystickUseAnalog"), "1", CVAR_ARCHIVE );
@@ -625,6 +641,8 @@ void CG_UpdateInputCvars( void ) {
 	for (i = 0; i < CG_MaxSplitView(); i++) {
 		trap_Cvar_Update( &cg_yawspeed[i] );
 		trap_Cvar_Update( &cg_pitchspeed[i] );
+		trap_Cvar_Update( &cg_yawspeedanalog[i] );
+		trap_Cvar_Update( &cg_pitchspeedanalog[i] );
 		trap_Cvar_Update( &cg_anglespeedkey[i] );
 		trap_Cvar_Update( &cg_run[i] );
 		trap_Cvar_Update( &cg_joystickUseAnalog[i] );

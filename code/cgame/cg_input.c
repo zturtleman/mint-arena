@@ -53,6 +53,7 @@ vmCvar_t	cg_anglespeedkey[MAX_SPLITVIEW];
 vmCvar_t	cg_run[MAX_SPLITVIEW];
 
 vmCvar_t	cg_joystickUseAnalog[MAX_SPLITVIEW];
+vmCvar_t	cg_joystickThreshold[MAX_SPLITVIEW];
 
 /*
 ===============================================================================
@@ -229,7 +230,9 @@ float CL_AxisFraction( localPlayer_t *player, int axisNum ) {
 		fraction = 0;
 		CG_Printf("WARNING: Axis (%d) fraction 0, but still input system think it's pressed\n", axisNum);
 	} else {
-		fraction = ( (float)abs( player->joystickAxis[ axis ] ) ) / 32767.0f;
+		float threshold = 32767.0f * cg_joystickThreshold[localPlayerNum].value;
+
+		fraction = ( (float)abs( player->joystickAxis[ axis ] ) - threshold ) / ( 32767.0f - threshold );
 	}
 
 	return fraction;
@@ -620,6 +623,7 @@ void CG_RegisterInputCvars( void ) {
 		trap_Cvar_Register( &cg_anglespeedkey[i], Com_LocalPlayerCvarName(i, "cg_anglespeedkey"), "1.5", 0 );
 		trap_Cvar_Register( &cg_run[i], Com_LocalPlayerCvarName(i, "cl_run"), "1", CVAR_ARCHIVE ); // ZTM: NOTE: changing name breaks team arena menu scripts
 		trap_Cvar_Register( &cg_joystickUseAnalog[i], Com_LocalPlayerCvarName(i, "in_joystickUseAnalog"), "1", CVAR_ARCHIVE );
+		trap_Cvar_Register( &cg_joystickThreshold[i], Com_LocalPlayerCvarName(i, "in_joystickThreshold"), "0.15", CVAR_ARCHIVE );
 	}
 }
 
@@ -646,6 +650,7 @@ void CG_UpdateInputCvars( void ) {
 		trap_Cvar_Update( &cg_anglespeedkey[i] );
 		trap_Cvar_Update( &cg_run[i] );
 		trap_Cvar_Update( &cg_joystickUseAnalog[i] );
+		trap_Cvar_Update( &cg_joystickThreshold[i] );
 	}
 }
 

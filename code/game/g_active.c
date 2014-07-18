@@ -385,7 +385,7 @@ qboolean PlayerInactivityTimer( gplayer_t *player ) {
 		player->inactivityWarning = qfalse;
 	} else if ( !player->pers.localClient ) {
 		if ( level.time > player->inactivityTime ) {
-			trap_DropClient( player - level.players, "Dropped due to inactivity" );
+			trap_DropPlayer( player - level.players, "Dropped due to inactivity" );
 			return qfalse;
 		}
 		if ( level.time > player->inactivityTime - 10000 && !player->inactivityWarning ) {

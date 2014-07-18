@@ -604,7 +604,7 @@ qboolean G_BotConnect( int playerNum, qboolean restart ) {
 	settings.skill = atof( Info_ValueForKey( userinfo, "skill" ) );
 
 	if (!BotAISetupPlayer( playerNum, &settings, restart )) {
-		trap_DropClient( playerNum, "BotAISetupPlayer failed" );
+		trap_DropPlayer( playerNum, "BotAISetupPlayer failed" );
 		return qfalse;
 	}
 

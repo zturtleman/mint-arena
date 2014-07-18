@@ -170,7 +170,7 @@ void trap_SetNetFields( int entityStateSize, int entityNetworkSize, vmNetField_t
 								playerStateSize, playerNetworkSize, playerStateFields, numPlayerStateFields );
 }
 
-void trap_DropClient( int playerNum, const char *reason ) {
+void trap_DropPlayer( int playerNum, const char *reason ) {
 	syscall( G_DROP_PLAYER, playerNum, reason );
 }
 

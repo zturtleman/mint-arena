@@ -41,7 +41,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 void	trap_LocateGameData( gentity_t *gEnts, int numGEntities, int sizeofGEntity_t, playerState_t *gameClients, int sizeofGameClient );
 void	trap_SetNetFields( int entityStateSize, int entityNetworkSize, vmNetField_t *entityStateFields, int numEntityStateFields,
 						   int playerStateSize, int playerNetworkSize, vmNetField_t *playerStateFields, int numPlayerStateFields );
-void	trap_DropClient( int playerNum, const char *reason );
+void	trap_DropPlayer( int playerNum, const char *reason );
 void	trap_SendServerCommandEx( int connectionNum, int localPlayerNum, const char *text );
 void	trap_SetConfigstring( int num, const char *string );
 void	trap_GetConfigstring( int num, char *buffer, int bufferSize );

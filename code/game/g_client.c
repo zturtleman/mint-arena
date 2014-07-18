@@ -728,7 +728,7 @@ void PlayerUserinfoChanged( int playerNum ) {
 	if ( !Info_Validate(userinfo) ) {
 		strcpy (userinfo, "\\name\\badinfo");
 		// don't keep those players and userinfo
-		trap_DropClient(playerNum, "Invalid userinfo");
+		trap_DropPlayer(playerNum, "Invalid userinfo");
 	}
 
 	// check the item prediction
@@ -1238,7 +1238,7 @@ Called when a player drops from the server.
 Will not be called between levels.
 
 This should NOT be called directly by any game logic,
-call trap_DropClient(), which will call this and do
+call trap_DropPlayer(), which will call this and do
 server system housekeeping.
 ============
 */

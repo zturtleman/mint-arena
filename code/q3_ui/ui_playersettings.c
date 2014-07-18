@@ -408,6 +408,10 @@ PlayerSettings_StatusBar
 */
 static void PlayerSettings_StatusBar( void *ptr ) {
 	switch( ((menucommon_s*)ptr)->id ) {
+	case ID_HANDICAP:
+		UI_DrawString( 320, 400, "Lower handicap makes you weaker", UI_CENTER|UI_SMALLFONT, colorWhite );
+		UI_DrawString( 320, 420, "giving you more of a challenge", UI_CENTER|UI_SMALLFONT, colorWhite );
+		break;
 	case ID_EFFECTS:
 		UI_DrawString( 320, 410, "Color of railgun core", UI_CENTER|UI_SMALLFONT, colorWhite );
 		break;
@@ -491,6 +495,7 @@ static void PlayerSettings_MenuInit( int localPlayerNum )
 	s_playersettings.handicap.generic.flags		= QMF_NODEFAULTINIT;
 	s_playersettings.handicap.generic.id		= ID_HANDICAP;
 	s_playersettings.handicap.generic.ownerdraw	= PlayerSettings_DrawHandicap;
+	s_playersettings.handicap.generic.statusbar = PlayerSettings_StatusBar;
 	s_playersettings.handicap.generic.x			= 192;
 	s_playersettings.handicap.generic.y			= y;
 	s_playersettings.handicap.generic.left		= 192 - 8;

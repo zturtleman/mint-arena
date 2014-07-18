@@ -276,6 +276,7 @@ typedef struct {
 	menuslider_s	tq;
 	menulist_s  	fs;
 	menulist_s  	lighting;
+	menulist_s  	flares;
 	menulist_s  	allow_extensions;
 	menulist_s  	texturebits;
 	menulist_s  	geometry;
@@ -296,6 +297,7 @@ typedef struct
 	int geometry;
 	int filter;
 	qboolean extensions;
+	qboolean flares;
 } InitialVideoOptions_s;
 
 static InitialVideoOptions_s	s_ivo;
@@ -304,22 +306,22 @@ static graphicsoptions_t		s_graphicsoptions;
 static InitialVideoOptions_s s_ivo_templates[] =
 {
 	{
-		6, qtrue, 3, 0, 2, 2, 1, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
+		6, qtrue, 3, 0, 2, 2, 1, qtrue, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
 	},
 	{
-		4, qtrue, 2, 0, 2, 1, 1, qtrue	// JDC: this was tq 3
+		4, qtrue, 2, 0, 2, 1, 1, qtrue, qtrue	// JDC: this was tq 3
 	},
 	{
-		3, qtrue, 2, 0, 0, 1, 0, qtrue
+		3, qtrue, 2, 0, 0, 1, 0, qtrue, qfalse
 	},
 	{
-		2, qtrue, 1, 0, 0, 0, 0, qtrue
+		2, qtrue, 1, 0, 0, 0, 0, qtrue, qfalse
 	},
 	{
-		2, qtrue, 1, 1, 0, 0, 0, qtrue
+		2, qtrue, 1, 1, 0, 0, 0, qtrue, qfalse
 	},
 	{
-		3, qtrue, 1, 0, 0, 1, 0, qtrue
+		3, qtrue, 1, 0, 0, 1, 0, qtrue, qfalse
 	}
 };
 
@@ -492,6 +494,7 @@ static void GraphicsOptions_GetInitialVideo( void )
 	s_ivo.extensions  = s_graphicsoptions.allow_extensions.curvalue;
 	s_ivo.tq          = s_graphicsoptions.tq.curvalue;
 	s_ivo.lighting    = s_graphicsoptions.lighting.curvalue;
+	s_ivo.flares      = s_graphicsoptions.flares.curvalue;
 	s_ivo.geometry    = s_graphicsoptions.geometry.curvalue;
 	s_ivo.filter      = s_graphicsoptions.filter.curvalue;
 	s_ivo.texturebits = s_graphicsoptions.texturebits.curvalue;
@@ -554,6 +557,8 @@ static void GraphicsOptions_CheckConfig( void )
 			continue;
 		if ( s_ivo_templates[i].lighting != s_graphicsoptions.lighting.curvalue )
 			continue;
+		if ( s_ivo_templates[i].flares != s_graphicsoptions.flares.curvalue )
+			continue;
 		if ( s_ivo_templates[i].geometry != s_graphicsoptions.geometry.curvalue )
 			continue;
 		if ( s_ivo_templates[i].filter != s_graphicsoptions.filter.curvalue )
@@ -602,6 +607,10 @@ static void GraphicsOptions_UpdateMenuItems( void )
 		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
 	}
 	if ( s_ivo.lighting != s_graphicsoptions.lighting.curvalue )
+	{
+		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
+	}
+	if ( s_ivo.flares != s_graphicsoptions.flares.curvalue )
 	{
 		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
 	}
@@ -678,6 +687,7 @@ static void GraphicsOptions_ApplyChanges( void *unused, int notification )
 	trap_Cvar_Reset("r_stencilbits");
 
 	trap_Cvar_SetValue( "r_vertexLight", s_graphicsoptions.lighting.curvalue );
+	trap_Cvar_SetValue( "r_flares", s_graphicsoptions.flares.curvalue );
 
 	if ( s_graphicsoptions.geometry.curvalue == 2 )
 	{
@@ -738,6 +748,7 @@ static void GraphicsOptions_Event( void* ptr, int event ) {
 			resToRatio[ s_graphicsoptions.mode.curvalue ];
 		s_graphicsoptions.tq.curvalue          = ivo->tq;
 		s_graphicsoptions.lighting.curvalue    = ivo->lighting;
+		s_graphicsoptions.flares.curvalue      = ivo->flares;
 		s_graphicsoptions.texturebits.curvalue = ivo->texturebits;
 		s_graphicsoptions.geometry.curvalue    = ivo->geometry;
 		s_graphicsoptions.filter.curvalue      = ivo->filter;
@@ -851,6 +862,8 @@ static void GraphicsOptions_SetMenuItems( void )
 	}
 
 	s_graphicsoptions.lighting.curvalue = trap_Cvar_VariableValue( "r_vertexLight" ) != 0;
+	s_graphicsoptions.flares.curvalue = trap_Cvar_VariableValue( "r_flares" ) != 0;
+
 	switch ( ( int ) trap_Cvar_VariableValue( "r_texturebits" ) )
 	{
 	default:
@@ -1080,6 +1093,15 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.lighting.itemnames     = lighting_names;
 	y += BIGCHAR_HEIGHT+2;
 
+	// references/modifies "r_flares"
+	s_graphicsoptions.flares.generic.type    = MTYPE_SPINCONTROL;
+	s_graphicsoptions.flares.generic.name    = "Flares:";
+	s_graphicsoptions.flares.generic.flags   = QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	s_graphicsoptions.flares.generic.x       = 400;
+	s_graphicsoptions.flares.generic.y       = y;
+	s_graphicsoptions.flares.itemnames       = enabled_names;
+	y += BIGCHAR_HEIGHT+2;
+
 	// references/modifies "r_lodBias" & "subdivisions"
 	s_graphicsoptions.geometry.generic.type  = MTYPE_SPINCONTROL;
 	s_graphicsoptions.geometry.generic.name	 = "Geometric Detail:";
@@ -1165,6 +1187,7 @@ void GraphicsOptions_MenuInit( void )
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.mode );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.fs );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.lighting );
+	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.flares );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.geometry );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.tq );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.texturebits );

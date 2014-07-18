@@ -52,6 +52,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define ID_EFFECTS		12
 #define ID_BACK			13
 #define ID_MODEL		14
+#define ID_EFFECTS2		15
 
 #define MAX_NAMELENGTH	20
 
@@ -67,6 +68,7 @@ typedef struct {
 	menufield_s			name;
 	menulist_s			handicap;
 	menulist_s			effects;
+	menulist_s			effects2;
 
 	menubitmap_s		back;
 	menubitmap_s		model;
@@ -218,26 +220,46 @@ PlayerSettings_DrawEffects
 static void PlayerSettings_DrawEffects( void *self ) {
 	menulist_s		*item;
 	qboolean		focus;
+	int				focusedID;
 	int				style;
 	float			*color;
 	float			xOffset;
 
 	item = (menulist_s *)self;
 	focus = (item->generic.parent->cursor == item->generic.menuPosition);
+	focusedID = ((menulist_s *)item->generic.parent->items[item->generic.parent->cursor])->generic.id;
 
 	style = UI_LEFT|UI_SMALLFONT;
 	color = text_color_normal;
-	if( focus ) {
+	// header pulses if either color bar is in forcus
+	if( item->generic.id == ID_EFFECTS && ( focusedID == ID_EFFECTS || focusedID == ID_EFFECTS2 ) ) {
 		style |= UI_PULSE;
 		color = text_color_highlight;
 	}
 
-	UI_DrawProportionalString( item->generic.x, item->generic.y, "Effects", style, color );
+	if ( item->generic.id == ID_EFFECTS ) {
+		UI_DrawProportionalString( item->generic.x, item->generic.y, "Effects", style, color );
+	}
 
 	xOffset = 128.0f / (NUM_COLOR_EFFECTS + 1);
 
 	CG_DrawPic( item->generic.x + 64, item->generic.y + PROP_HEIGHT + 8, 128, 8, s_playersettings.fxBasePic );
 	CG_DrawPic( item->generic.x + 64 + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y + PROP_HEIGHT + 6, 16, 12, s_playersettings.fxPic[item->curvalue] );
+
+	if ( focus ) {
+		float color[4];
+
+		if ( item->curvalue == 1 ) {
+			// don't draw yellow on yellow
+			color[0] = color[1] = color[2] = 1.0f; // white
+		} else {
+			VectorCopy(text_color_highlight, color); // yellow
+		}
+
+		color[3] = 0.5 + 0.5 * sin( uis.realtime / PULSE_DIVISOR );
+
+		CG_DrawRect( item->generic.x + 64 + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y + PROP_HEIGHT + 6, 16, 12, 2, color );
+	}
 }
 
 
@@ -285,6 +307,8 @@ static void PlayerSettings_SaveChanges( void ) {
 	// effects color
 	trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "color1"),
 			uitogamecode[s_playersettings.effects.curvalue] );
+	trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "color2"),
+			uitogamecode[s_playersettings.effects2.curvalue] );
 }
 
 
@@ -322,6 +346,12 @@ static void PlayerSettings_SetMenuItems( void ) {
 		c = NUM_COLOR_EFFECTS-1;
 	}
 	s_playersettings.effects.curvalue = gamecodetoui[c];
+
+	c = trap_Cvar_VariableValue( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "color2") ) - 1;
+	if( c < 0 || c > NUM_COLOR_EFFECTS-1 ) {
+		c = NUM_COLOR_EFFECTS-1;
+	}
+	s_playersettings.effects2.curvalue = gamecodetoui[c];
 
 	// model/skin
 	memset( &s_playersettings.playerinfo, 0, sizeof(uiPlayerInfo_t) );
@@ -366,6 +396,25 @@ static void PlayerSettings_MenuEvent( void* ptr, int event ) {
 	case ID_BACK:
 		PlayerSettings_SaveChanges();
 		UI_PopMenu();
+		break;
+	}
+}
+
+
+/*
+=================
+PlayerSettings_StatusBar
+=================
+*/
+static void PlayerSettings_StatusBar( void *ptr ) {
+	switch( ((menucommon_s*)ptr)->id ) {
+	case ID_EFFECTS:
+		UI_DrawString( 320, 410, "Color of railgun core", UI_CENTER|UI_SMALLFONT, colorWhite );
+		break;
+	case ID_EFFECTS2:
+		UI_DrawString( 320, 410, "Color of railgun disks", UI_CENTER|UI_SMALLFONT, colorWhite );
+		break;
+	default:
 		break;
 	}
 }
@@ -455,6 +504,7 @@ static void PlayerSettings_MenuInit( int localPlayerNum )
 	s_playersettings.effects.generic.flags		= QMF_NODEFAULTINIT;
 	s_playersettings.effects.generic.id			= ID_EFFECTS;
 	s_playersettings.effects.generic.ownerdraw	= PlayerSettings_DrawEffects;
+	s_playersettings.effects.generic.statusbar  = PlayerSettings_StatusBar;
 	s_playersettings.effects.generic.x			= 192;
 	s_playersettings.effects.generic.y			= y;
 	s_playersettings.effects.generic.left		= 192 - 8;
@@ -462,6 +512,20 @@ static void PlayerSettings_MenuInit( int localPlayerNum )
 	s_playersettings.effects.generic.right		= 192 + 200;
 	s_playersettings.effects.generic.bottom		= y + 2* PROP_HEIGHT;
 	s_playersettings.effects.numitems			= NUM_COLOR_EFFECTS;
+
+	y += 1 * PROP_HEIGHT;
+	s_playersettings.effects2.generic.type		= MTYPE_SPINCONTROL;
+	s_playersettings.effects2.generic.flags		= QMF_NODEFAULTINIT;
+	s_playersettings.effects2.generic.id		= ID_EFFECTS2;
+	s_playersettings.effects2.generic.ownerdraw	= PlayerSettings_DrawEffects;
+	s_playersettings.effects2.generic.statusbar  = PlayerSettings_StatusBar;
+	s_playersettings.effects2.generic.x			= 192;
+	s_playersettings.effects2.generic.y			= y;
+	s_playersettings.effects2.generic.left		= 192 - 8;
+	s_playersettings.effects2.generic.top		= y - 8;
+	s_playersettings.effects2.generic.right		= 192 + 200;
+	s_playersettings.effects2.generic.bottom	= y + 2* PROP_HEIGHT;
+	s_playersettings.effects2.numitems			= NUM_COLOR_EFFECTS;
 
 	s_playersettings.model.generic.type			= MTYPE_BITMAP;
 	s_playersettings.model.generic.name			= ART_MODEL0;
@@ -507,6 +571,7 @@ static void PlayerSettings_MenuInit( int localPlayerNum )
 	Menu_AddItem( &s_playersettings.menu, &s_playersettings.name );
 	Menu_AddItem( &s_playersettings.menu, &s_playersettings.handicap );
 	Menu_AddItem( &s_playersettings.menu, &s_playersettings.effects );
+	Menu_AddItem( &s_playersettings.menu, &s_playersettings.effects2 );
 	Menu_AddItem( &s_playersettings.menu, &s_playersettings.model );
 	Menu_AddItem( &s_playersettings.menu, &s_playersettings.back );
 

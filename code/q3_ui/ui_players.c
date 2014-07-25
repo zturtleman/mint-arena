@@ -1270,30 +1270,10 @@ UI_PlayerInfo_SetInfo
 void UI_PlayerInfo_SetInfo( uiPlayerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNumber, qboolean chat ) {
 	int			currentAnim;
 	weapon_t	weaponNum;
-	int			c;
 
 	pi->chat = chat;
 
-	c = (int)trap_Cvar_VariableValue( "color1" );
- 
-	VectorClear( pi->color1 );
-
-	if( c < 1 || c > 7 ) {
-		VectorSet( pi->color1, 1, 1, 1 );
-	}
-	else {
-		if( c & 1 ) {
-			pi->color1[2] = 1.0f;
-		}
-
-		if( c & 2 ) {
-			pi->color1[1] = 1.0f;
-		}
-
-		if( c & 4 ) {
-			pi->color1[0] = 1.0f;
-		}
-	}
+	CG_PlayerColorFromIndex( trap_Cvar_VariableIntegerValue( "color1" ), pi->color1 );
 
 	pi->c1RGBA[0] = 255 * pi->color1[0];
 	pi->c1RGBA[1] = 255 * pi->color1[1];

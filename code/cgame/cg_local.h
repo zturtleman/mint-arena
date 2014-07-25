@@ -1616,6 +1616,7 @@ qhandle_t CG_AddSkinToFrame( const cgSkin_t *skin );
 qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append );
 void CG_NewPlayerInfo( int playerNum );
 sfxHandle_t	CG_CustomSound( int playerNum, const char *soundName );
+void CG_PlayerColorFromIndex( int val, vec3_t color );
 
 //
 // cg_predict.c

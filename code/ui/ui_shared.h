@@ -92,8 +92,14 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define ART_FX_TEAL			"menu/art/fx_teal"
 #define ART_FX_WHITE		"menu/art/fx_white"
 #define ART_FX_YELLOW		"menu/art/fx_yel"
+#define ART_FX_ORANGE		"menu/art/fx_orange"
+#define ART_FX_LIME			"menu/art/fx_lime"
+#define ART_FX_VIVIDGREEN	"menu/art/fx_vividgreen"
+#define ART_FX_LIGHTBLUE	"menu/art/fx_lightblue"
+#define ART_FX_PURPLE		"menu/art/fx_purple"
+#define ART_FX_PINK			"menu/art/fx_pink"
 
-#define NUM_COLOR_EFFECTS 7
+#define NUM_COLOR_EFFECTS 13
 
 #define ASSET_GRADIENTBAR "ui/assets/gradientbar2.tga"
 #define ASSET_SCROLLBAR             "ui/assets/scrollbar.tga"

@@ -614,6 +614,28 @@ qboolean G_BotConnect( int playerNum, qboolean restart ) {
 
 /*
 ===============
+G_DefaultColorForName
+===============
+*/
+static int G_DefaultColorForName( const char *name ) {
+	int val;
+	const char *p;
+
+	p = name;
+
+	val = 0;
+	while ( *p ) {
+		val += *p;
+		p++;
+	}
+
+	// choose value in range 1-13
+	return val % 13 + 1;
+}
+
+
+/*
+===============
 G_AddBot
 ===============
 */
@@ -734,14 +756,14 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	key = "color1";
 	s = Info_ValueForKey( botinfo, key );
 	if ( !*s ) {
-		s = va("%d", DEFAULT_PLAYER_COLOR1);
+		s = va("%d", G_DefaultColorForName( botname ) );
 	}
 	Info_SetValueForKey( userinfo, key, s );
 
 	key = "color2";
 	s = Info_ValueForKey( botinfo, key );
 	if ( !*s ) {
-		s = va("%d", DEFAULT_PLAYER_COLOR2);
+		s = va("%d", G_DefaultColorForName( botname + strlen( botname ) / 2 ) );
 	}
 	Info_SetValueForKey( userinfo, key, s );
 

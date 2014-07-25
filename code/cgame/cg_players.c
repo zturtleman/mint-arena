@@ -2624,6 +2624,8 @@ void CG_Player( centity_t *cent ) {
 	legs.renderfx = renderfx;
 	VectorCopy (legs.origin, legs.oldorigin);	// don't positionally lerp at all
 
+	Byte4Copy( pi->c1RGBA, legs.shaderRGBA );
+
 	CG_AddRefEntityWithPowerups( &legs, &cent->currentState );
 
 	// if the model failed, allow the default nullmodel to be displayed
@@ -2647,6 +2649,8 @@ void CG_Player( centity_t *cent ) {
 
 	torso.shadowPlane = shadowPlane;
 	torso.renderfx = renderfx;
+
+	Byte4Copy( pi->c1RGBA, torso.shaderRGBA );
 
 	CG_AddRefEntityWithPowerups( &torso, &cent->currentState );
 
@@ -2872,6 +2876,8 @@ void CG_Player( centity_t *cent ) {
 
 	head.shadowPlane = shadowPlane;
 	head.renderfx = renderfx;
+
+	Byte4Copy( pi->c1RGBA, head.shaderRGBA );
 
 	CG_AddRefEntityWithPowerups( &head, &cent->currentState );
 

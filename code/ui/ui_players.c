@@ -808,6 +808,8 @@ void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int 
 	legs.renderfx = renderfx;
 	VectorCopy (legs.origin, legs.oldorigin);
 
+	Byte4Copy( pi->c1RGBA, legs.shaderRGBA );
+
 	CG_AddRefEntityWithMinLight( &legs );
 
 	if (!legs.hModel) {
@@ -830,6 +832,8 @@ void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int 
 
 	torso.renderfx = renderfx;
 
+	Byte4Copy( pi->c1RGBA, torso.shaderRGBA );
+
 	CG_AddRefEntityWithMinLight( &torso );
 
 	//
@@ -846,6 +850,8 @@ void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int 
 	UI_PositionRotatedEntityOnTag( &head, &torso, pi->torsoModel, "tag_head");
 
 	head.renderfx = renderfx;
+
+	Byte4Copy( pi->c1RGBA, head.shaderRGBA );
 
 	CG_AddRefEntityWithMinLight( &head );
 

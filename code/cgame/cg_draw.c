@@ -98,11 +98,11 @@ static void CG_DrawField (int x, int y, int width, int value, float *color) {
 
 /*
 ================
-CG_Draw3DModel
+CG_Draw3DModelEx
 
 ================
 */
-void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, cgSkin_t *skin, vec3_t origin, vec3_t angles ) {
+void CG_Draw3DModelEx( float x, float y, float w, float h, qhandle_t model, cgSkin_t *skin, vec3_t origin, vec3_t angles, const byte *rgba ) {
 	refdef_t		refdef;
 	refEntity_t		ent;
 
@@ -121,6 +121,10 @@ void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, cgSkin
 	ent.customSkin = CG_AddSkinToFrame( skin );
 	ent.renderfx = RF_NOSHADOW;		// no stencil shadows
 
+	if ( rgba ) {
+		Byte4Copy( rgba, ent.shaderRGBA );
+	}
+
 	refdef.rdflags = RDF_NOWORLDMODEL;
 
 	AxisClear( refdef.viewaxis );
@@ -138,6 +142,16 @@ void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, cgSkin
 	trap_R_ClearScene();
 	CG_AddRefEntityWithMinLight( &ent );
 	trap_R_RenderScene( &refdef );
+}
+
+/*
+================
+CG_Draw3DModel
+
+================
+*/
+void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, cgSkin_t *skin, vec3_t origin, vec3_t angles ) {
+	CG_Draw3DModelEx( x, y, w, h, model, skin, origin, angles, NULL );
 }
 
 /*
@@ -176,7 +190,7 @@ void CG_DrawHead( float x, float y, float w, float h, int playerNum, vec3_t head
 		// allow per-model tweaking
 		VectorAdd( origin, pi->headOffset, origin );
 
-		CG_Draw3DModel( x, y, w, h, pi->headModel, &pi->modelSkin, origin, headAngles );
+		CG_Draw3DModelEx( x, y, w, h, pi->headModel, &pi->modelSkin, origin, headAngles, pi->c1RGBA );
 	} else if ( cg_drawIcons.integer ) {
 		CG_DrawPic( x, y, w, h, pi->modelIcon );
 	}

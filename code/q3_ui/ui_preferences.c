@@ -47,20 +47,26 @@ GAME OPTIONS MENU
 
 #define PREFERENCES_X_POS		360
 
-#define ID_CROSSHAIR			127
-#define ID_SIMPLEITEMS			128
-#define ID_HIGHQUALITYSKY		129
-#define ID_EJECTINGBRASS		130
-#define ID_WALLMARKS			131
-#define ID_DYNAMICLIGHTS		132
-#define ID_IDENTIFYTARGET		133
-#define ID_SYNCEVERYFRAME		134
-#define ID_FORCEMODEL			135
-#define ID_DRAWTEAMOVERLAY		136
-#define ID_ALLOWDOWNLOAD			137
-#define ID_SPLITVERTICAL		138
-#define ID_ATMEFFECTS			139
-#define ID_BACK					140
+enum {
+	ID_CROSSHAIR,
+	ID_VIEWBOB,
+	ID_SIMPLEITEMS,
+	ID_HIGHQUALITYSKY,
+	ID_EJECTINGBRASS,
+	ID_WALLMARKS,
+	ID_DYNAMICLIGHTS,
+	ID_IDENTIFYTARGET,
+	ID_SYNCEVERYFRAME,
+	ID_FORCEMODEL,
+	ID_DRAWTEAMOVERLAY,
+	ID_ALLOWDOWNLOAD,
+	ID_SPLITVERTICAL,
+	ID_ATMEFFECTS,
+
+	ID_NUM_ITEMS,
+
+	ID_BACK
+};
 
 #define	NUM_CROSSHAIRS			10
 
@@ -73,6 +79,7 @@ typedef struct {
 	menubitmap_s		framer;
 
 	menulist_s			crosshair;
+	menuradiobutton_s	viewbob;
 	menuradiobutton_s	simpleitems;
 	menuradiobutton_s	brass;
 	menuradiobutton_s	wallmarks;
@@ -118,6 +125,7 @@ static const char *atmeffects_names[] =
 
 static void Preferences_SetMenuItems( void ) {
 	s_preferences.crosshair.curvalue		= (int)trap_Cvar_VariableValue( "cg_drawCrosshair" ) % NUM_CROSSHAIRS;
+	s_preferences.viewbob.curvalue			= trap_Cvar_VariableValue( "cg_viewbob" ) != 0;
 	s_preferences.simpleitems.curvalue		= trap_Cvar_VariableValue( "cg_simpleItems" ) != 0;
 	s_preferences.brass.curvalue			= trap_Cvar_VariableValue( "cg_brassTime" ) != 0;
 	s_preferences.wallmarks.curvalue		= trap_Cvar_VariableValue( "cg_marks" ) != 0;
@@ -146,6 +154,10 @@ static void Preferences_Event( void* ptr, int notification ) {
 	switch( ((menucommon_s*)ptr)->id ) {
 	case ID_CROSSHAIR:
 		trap_Cvar_SetValue( "cg_drawCrosshair", s_preferences.crosshair.curvalue );
+		break;
+
+	case ID_VIEWBOB:
+		trap_Cvar_SetValue( "cg_viewbob", s_preferences.viewbob.curvalue );
 		break;
 
 	case ID_SIMPLEITEMS:
@@ -289,7 +301,7 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.framer.width  	   = 256;
 	s_preferences.framer.height  	   = 334;
 
-	y = 144;
+	y = ( SCREEN_HEIGHT - ID_NUM_ITEMS*BIGCHAR_HEIGHT - (2+4) ) / 2;
 	s_preferences.crosshair.generic.type		= MTYPE_SPINCONTROL;
 	s_preferences.crosshair.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT|QMF_NODEFAULTINIT|QMF_OWNERDRAW;
 	s_preferences.crosshair.generic.x			= PREFERENCES_X_POS;
@@ -305,6 +317,15 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.crosshair.numitems			= NUM_CROSSHAIRS;
 
 	y += BIGCHAR_HEIGHT+2+4;
+	s_preferences.viewbob.generic.type            = MTYPE_RADIOBUTTON;
+	s_preferences.viewbob.generic.name	          = "View Bobbing:";
+	s_preferences.viewbob.generic.flags	          = QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	s_preferences.viewbob.generic.callback        = Preferences_Event;
+	s_preferences.viewbob.generic.id              = ID_VIEWBOB;
+	s_preferences.viewbob.generic.x	              = PREFERENCES_X_POS;
+	s_preferences.viewbob.generic.y	              = y;
+
+	y += BIGCHAR_HEIGHT;
 	s_preferences.simpleitems.generic.type        = MTYPE_RADIOBUTTON;
 	s_preferences.simpleitems.generic.name	      = "Simple Items:";
 	s_preferences.simpleitems.generic.flags	      = QMF_PULSEIFFOCUS|QMF_SMALLFONT;
@@ -432,6 +453,7 @@ static void Preferences_MenuInit( void ) {
 	Menu_AddItem( &s_preferences.menu, &s_preferences.framer );
 
 	Menu_AddItem( &s_preferences.menu, &s_preferences.crosshair );
+	Menu_AddItem( &s_preferences.menu, &s_preferences.viewbob );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.simpleitems );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.wallmarks );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.brass );

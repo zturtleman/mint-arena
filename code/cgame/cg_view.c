@@ -442,30 +442,40 @@ static void CG_OffsetFirstPersonView( void ) {
 	angles[PITCH] += ratio * cg.fall_value;
 #endif
 
-	// add angles based on velocity
-	VectorCopy( cg.cur_lc->predictedPlayerState.velocity, predictedVelocity );
+	if ( !cg.cur_lc->renderingThirdPerson && cg_viewbob.integer ) {
+		// add angles based on velocity
+		VectorCopy( cg.cur_lc->predictedPlayerState.velocity, predictedVelocity );
 
-	delta = DotProduct ( predictedVelocity, cg.refdef.viewaxis[0]);
-	angles[PITCH] += delta * cg_runpitch.value;
+		delta = DotProduct ( predictedVelocity, cg.refdef.viewaxis[0]);
+		angles[PITCH] += delta * cg_runpitch.value;
 	
-	delta = DotProduct ( predictedVelocity, cg.refdef.viewaxis[1]);
-	angles[ROLL] -= delta * cg_runroll.value;
+		delta = DotProduct ( predictedVelocity, cg.refdef.viewaxis[1]);
+		angles[ROLL] -= delta * cg_runroll.value;
 
-	// add angles based on bob
+		// add angles based on bob
 
-	// make sure the bob is visible even at low speeds
-	speed = cg.xyspeed > 200 ? cg.xyspeed : 200;
+		// make sure the bob is visible even at low speeds
+		speed = cg.xyspeed > 200 ? cg.xyspeed : 200;
 
-	delta = cg.bobfracsin * cg_bobpitch.value * speed;
-	if (cg.cur_lc->predictedPlayerState.pm_flags & PMF_DUCKED)
-		delta *= 3;		// crouching
-	angles[PITCH] += delta;
-	delta = cg.bobfracsin * cg_bobroll.value * speed;
-	if (cg.cur_lc->predictedPlayerState.pm_flags & PMF_DUCKED)
-		delta *= 3;		// crouching accentuates roll
-	if (cg.bobcycle & 1)
-		delta = -delta;
-	angles[ROLL] += delta;
+		delta = cg.bobfracsin * cg_bobpitch.value * speed;
+		if (cg.cur_lc->predictedPlayerState.pm_flags & PMF_DUCKED)
+			delta *= 3;		// crouching
+		angles[PITCH] += delta;
+		delta = cg.bobfracsin * cg_bobroll.value * speed;
+		if (cg.cur_lc->predictedPlayerState.pm_flags & PMF_DUCKED)
+			delta *= 3;		// crouching accentuates roll
+		if (cg.bobcycle & 1)
+			delta = -delta;
+		angles[ROLL] += delta;
+
+		// add bob height
+		bob = cg.bobfracsin * cg.xyspeed * cg_bobup.value;
+		if (bob > 6) {
+			bob = 6;
+		}
+
+		origin[2] += bob;
+	}
 
 //===================================
 
@@ -478,14 +488,6 @@ static void CG_OffsetFirstPersonView( void ) {
 		origin[2] -= cg.cur_lc->duckChange 
 			* (DUCK_TIME - timeDelta) / DUCK_TIME;
 	}
-
-	// add bob height
-	bob = cg.bobfracsin * cg.xyspeed * cg_bobup.value;
-	if (bob > 6) {
-		bob = 6;
-	}
-
-	origin[2] += bob;
 
 
 	// add fall height

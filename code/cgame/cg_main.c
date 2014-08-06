@@ -150,6 +150,7 @@ vmCvar_t	cg_dedicated;
 
 vmCvar_t	cg_railTrailTime;
 vmCvar_t	cg_centertime;
+vmCvar_t	cg_viewbob;
 vmCvar_t	cg_runpitch;
 vmCvar_t	cg_runroll;
 vmCvar_t	cg_bobup;
@@ -350,6 +351,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_gun_y, "cg_gunY", "0", CVAR_CHEAT, RANGE_ALL },
 	{ &cg_gun_z, "cg_gunZ", "0", CVAR_CHEAT, RANGE_ALL },
 	{ &cg_centertime, "cg_centertime", "3", CVAR_CHEAT, RANGE_ALL },
+	{ &cg_viewbob, "cg_viewbob", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_runpitch, "cg_runpitch", "0.002", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_runroll, "cg_runroll", "0.005", CVAR_ARCHIVE, RANGE_ALL  },
 	{ &cg_bobup , "cg_bobup", "0.005", CVAR_CHEAT, RANGE_ALL },

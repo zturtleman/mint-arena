@@ -5084,7 +5084,7 @@ static void Item_ApplyHacks( itemDef_t *item ) {
 
 		// enough to hold an IPv6 address plus null
 		if ( editField->maxChars < 48 ) {
-			Com_Printf( "Extended create favorite address edit field length to hold an IPv6 address\n" );
+			Com_DPrintf( "Extended create favorite address edit field length to hold an IPv6 address\n" );
 			editField->maxChars = 48;
 		}
 	}
@@ -5098,7 +5098,7 @@ static void Item_ApplyHacks( itemDef_t *item ) {
 				editField->maxPaintChars = editField->maxChars;
 			}
 
-			Com_Printf( "Extended player name field using cvar %s to %d characters\n", item->cvar, MAX_NAME_LENGTH );
+			Com_DPrintf( "Extended player name field using cvar %s to %d characters\n", item->cvar, MAX_NAME_LENGTH );
 			editField->maxChars = MAX_NAME_LENGTH;
 		}
 	}

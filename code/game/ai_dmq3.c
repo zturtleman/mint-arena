@@ -1487,7 +1487,7 @@ EasyPlayerName
 char *EasyPlayerName(int playernum, char *buf, int size) {
 	int i;
 	char *str1, *str2, *ptr, c;
-	char name[128];
+	char name[128] = {0};
 
 	PlayerName(playernum, name, sizeof(name));
 	

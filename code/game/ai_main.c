@@ -1194,6 +1194,10 @@ int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean re
 	if (!botstates[playernum]) botstates[playernum] = trap_Alloc(sizeof(bot_state_t), NULL);
 	bs = botstates[playernum];
 
+	if (!bs) {
+		return qfalse;
+	}
+
 	if (bs && bs->inuse) {
 		BotAI_Print(PRT_FATAL, "BotAISetupPlayer: player %d already setup\n", playernum);
 		return qfalse;

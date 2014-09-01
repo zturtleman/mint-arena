@@ -436,7 +436,6 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.atmeffects.generic.y			= y;
 	s_preferences.atmeffects.itemnames			= atmeffects_names;
 
-	y += BIGCHAR_HEIGHT+2;
 	s_preferences.back.generic.type	    = MTYPE_BITMAP;
 	s_preferences.back.generic.name     = ART_BACK0;
 	s_preferences.back.generic.flags    = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS;

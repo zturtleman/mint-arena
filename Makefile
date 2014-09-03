@@ -1043,6 +1043,9 @@ Q3CGOBJ = \
   \
   $(B)/$(BASEGAME)/ui/ui_main.o \
   $(B)/$(BASEGAME)/ui/ui_commands.o \
+  $(B)/$(BASEGAME)/ui/ui_draw.o \
+  $(B)/$(BASEGAME)/ui/ui_logic.o \
+  $(B)/$(BASEGAME)/ui/ui_menus.o \
   \
   $(B)/$(BASEGAME)/qcommon/q_math.o \
   $(B)/$(BASEGAME)/qcommon/q_shared.o
@@ -1100,6 +1103,9 @@ MPCGOBJ = \
   \
   $(B)/$(MISSIONPACK)/ui/ui_main.o \
   $(B)/$(MISSIONPACK)/ui/ui_commands.o \
+  $(B)/$(MISSIONPACK)/ui/ui_draw.o \
+  $(B)/$(MISSIONPACK)/ui/ui_logic.o \
+  $(B)/$(MISSIONPACK)/ui/ui_menus.o \
   \
   $(B)/$(MISSIONPACK)/qcommon/q_math.o \
   $(B)/$(MISSIONPACK)/qcommon/q_shared.o

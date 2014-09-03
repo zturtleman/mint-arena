@@ -31,6 +31,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "ui_local.h"
 
 uiStatic_t uis;
+currentMenu_t currentMenu;
+
+extern menudef_t mainmenu;
 
 void	UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	int i;
@@ -40,6 +43,14 @@ void	UI_Init( qboolean inGameLoad, int maxSplitView ) {
 
 	Com_Memset( &uis, 0, sizeof ( uis ) );
 
+#ifndef MISSIONPACK
+	uis.bannerModel = trap_R_RegisterModel( MAIN_BANNER_MODEL );
+#endif
+
+	uis.itemActionSound = trap_S_RegisterSound( ITEM_ACTION_SOUND, qfalse );
+	uis.itemFocusSound = trap_S_RegisterSound( ITEM_FOCUS_SOUND, qfalse );
+	uis.menuPopSound = trap_S_RegisterSound( MENU_POP_SOUND, qfalse );
+
 	uis.cursorShader = trap_R_RegisterShaderNoMip( CURSOR_SHADER );
 	for ( i = 0; i < MAX_SPLITVIEW; i++ ) {
 		uis.cursors[i].shader = uis.cursorShader;
@@ -47,6 +58,9 @@ void	UI_Init( qboolean inGameLoad, int maxSplitView ) {
 
 	// show player 1's cursor by default
 	uis.cursors[0].show = qtrue;
+
+	Com_Memset( &currentMenu, 0, sizeof ( currentMenu ) );
+	UI_SetMenu( &currentMenu, &mainmenu );
 }
 
 void	UI_Shutdown( void ) {
@@ -58,6 +72,8 @@ void	UI_SetActiveMenu( uiMenuCommand_t menu ) {
 		trap_Mouse_SetState( 0, MOUSE_CGAME );
 		trap_Key_SetCatcher( KEYCATCH_UI );
 		trap_Cvar_SetValue( "cl_paused", 1 );
+
+		UI_SetMenu( &currentMenu, &mainmenu );
 	}
 }
 
@@ -68,10 +84,68 @@ void	UI_KeyEvent( int key, qboolean down ) {
 	if ( key & K_CHAR_FLAG )
 		return;
 
-	if ( key == K_ESCAPE && cg.connected ) {
-		trap_Mouse_SetState( 0, MOUSE_CLIENT );
-		trap_Key_SetCatcher( 0 );
-		trap_Cvar_SetValue( "cl_paused", 0 );
+	if ( !currentMenu.menu )
+		return;
+
+	switch ( key ) {
+		case K_ESCAPE:
+			UI_PopMenu( &currentMenu );
+			break;
+
+		case K_JOY_DPAD_UP:
+		case K_JOY_LEFTSTICK_UP:
+		case K_2JOY_DPAD_UP:
+		case K_2JOY_LEFTSTICK_UP:
+		case K_3JOY_DPAD_UP:
+		case K_3JOY_LEFTSTICK_UP:
+		case K_4JOY_DPAD_UP:
+		case K_4JOY_LEFTSTICK_UP:
+		case K_KP_UPARROW:
+		case K_UPARROW:
+			UI_MenuAdjustCursor( &currentMenu, -1 );
+			break;
+
+		case K_TAB:
+		case K_JOY_DPAD_DOWN:
+		case K_JOY_LEFTSTICK_DOWN:
+		case K_2JOY_DPAD_DOWN:
+		case K_2JOY_LEFTSTICK_DOWN:
+		case K_3JOY_DPAD_DOWN:
+		case K_3JOY_LEFTSTICK_DOWN:
+		case K_4JOY_DPAD_DOWN:
+		case K_4JOY_LEFTSTICK_DOWN:
+		case K_KP_DOWNARROW:
+		case K_DOWNARROW:
+			UI_MenuAdjustCursor( &currentMenu, 1 );
+			break;
+
+		case K_JOY_A:
+		case K_2JOY_A:
+		case K_3JOY_A:
+		case K_4JOY_A:
+		case K_AUX1:
+		case K_AUX2:
+		case K_AUX3:
+		case K_AUX4:
+		case K_AUX5:
+		case K_AUX6:
+		case K_AUX7:
+		case K_AUX8:
+		case K_AUX9:
+		case K_AUX10:
+		case K_AUX11:
+		case K_AUX12:
+		case K_AUX13:
+		case K_AUX14:
+		case K_AUX15:
+		case K_AUX16:
+		case K_KP_ENTER:
+		case K_ENTER:
+			UI_MenuAction( &currentMenu, currentMenu.selectedItem );
+			break;
+
+		default:
+			break;
 	}
 }
 
@@ -109,7 +183,7 @@ void	UI_SetCursorPos( int localClientNum, int x, int y ) {
 }
 
 qboolean UI_IsFullscreen( void ) {
-	return ( trap_Key_GetCatcher() &  KEYCATCH_UI );
+	return ( trap_Key_GetCatcher() &  KEYCATCH_UI ) && !cg.connected;
 }
 
 void	UI_Refresh( int time ) {
@@ -119,9 +193,19 @@ void	UI_Refresh( int time ) {
 		return;
 	}
 
+	#ifdef MAIN_MUSIC
+	if ( !cg.connected && !uis.startedMusic ) {
+		trap_S_StopBackgroundTrack();
+		trap_S_StartBackgroundTrack( MAIN_MUSIC, MAIN_MUSIC, 1.0f, 1.0f );
+		uis.startedMusic = qtrue;
+	}
+	#endif
+
 	if ( UI_IsFullscreen() ) {
 		CG_ClearViewport();
 	}
+
+	UI_DrawCurrentMenu( &currentMenu );
 
 	// Draw cursors
 	for ( i = 0; i < MAX_SPLITVIEW; i++ ) {
@@ -145,6 +229,9 @@ void	UI_DrawConnectScreen( qboolean overlay ) {
 
 // used by cg_info.c
 void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color ) {
+	// center it
+	x = ( SCREEN_WIDTH - CG_DrawStrlen( str ) * BIGCHAR_WIDTH ) / 2;
+
 	CG_DrawBigStringColor( x, y, str, color );
 }
 

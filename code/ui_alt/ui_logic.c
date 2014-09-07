@@ -31,12 +31,50 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "ui_local.h"
 
+// clear stack, change to menu
 void UI_SetMenu( currentMenu_t *current, menudef_t *menu ) {
 	current->numStacked = 0;
 	current->menu = menu;
 	current->selectedItem = 0;
+	current->mouseItem = -1;
+
+	if ( !menu ) {
+		if ( cg.connected ) {
+			trap_Mouse_SetState( 0, MOUSE_CLIENT );
+			trap_Key_SetCatcher( 0 );
+			trap_Cvar_SetValue( "cl_paused", 0 );
+		}
+
+		return;
+	}
+
+	UI_BuildCurrentMenu( current );
+
+	if ( !( current->items[ current->selectedItem ].flags & MIF_SELECTABLE ) ) {
+		UI_MenuAdjustCursor( current, 1 );
+	}
 }
 
+// change current menu, without changing stack
+void UI_SwapMenu( currentMenu_t *current, menudef_t *menu ) {
+	if ( current->menu == menu )
+		return;
+
+	current->menu = menu;
+	current->selectedItem = 0;
+	current->mouseItem = -1;
+
+	if ( !menu )
+		return;
+
+	UI_BuildCurrentMenu( current );
+
+	if ( !( current->items[ current->selectedItem ].flags & MIF_SELECTABLE ) ) {
+		UI_MenuAdjustCursor( current, 1 );
+	}
+}
+
+// add current menu to stask, then change to new menu
 void UI_PushMenu( currentMenu_t *current, menudef_t *menu ) {
 	if ( current->menu == menu )
 		return;
@@ -50,16 +88,20 @@ void UI_PushMenu( currentMenu_t *current, menudef_t *menu ) {
 
 	current->menu = menu;
 	current->selectedItem = 0;
+	current->mouseItem = -1;
+
+	UI_BuildCurrentMenu( current );
+
+	if ( !( current->items[ current->selectedItem ].flags & MIF_SELECTABLE ) ) {
+		UI_MenuAdjustCursor( current, 1 );
+	}
 }
 
+// return to previous menu
 void UI_PopMenu( currentMenu_t *current ) {
 	if ( current->numStacked == 0 ) {
 		if ( cg.connected ) {
-			trap_Mouse_SetState( 0, MOUSE_CLIENT );
-			trap_Key_SetCatcher( 0 );
-			trap_Cvar_SetValue( "cl_paused", 0 );
-
-			current->menu = NULL;
+			UI_SetMenu( current, NULL );
 		}
 		return;
 	}
@@ -68,24 +110,64 @@ void UI_PopMenu( currentMenu_t *current ) {
 	current->numStacked--;
 	current->menu = current->stack[current->numStacked].menu;
 	current->selectedItem = current->stack[current->numStacked].selectedItem;
+	current->mouseItem = -1;
 
 	trap_S_StartLocalSound( uis.menuPopSound, CHAN_LOCAL_SOUND );
+
+	UI_BuildCurrentMenu( current );
 }
 
 // dir -1 = up, 1 = down
 void UI_MenuAdjustCursor( currentMenu_t *current, int dir ) {
-	trap_S_StartLocalSound( uis.itemFocusSound, CHAN_LOCAL_SOUND );
+	int origial = current->selectedItem;
 
-	current->selectedItem += dir;
+	do {
+		current->selectedItem += dir;
 
-	if ( current->selectedItem >= current->menu->numItems )
-		current->selectedItem = 0;
-	else if ( current->selectedItem < 0 )
-		current->selectedItem = current->menu->numItems - 1;
+		if ( current->selectedItem >= current->numItems )
+			current->selectedItem = 0;
+		else if ( current->selectedItem < 0 )
+			current->selectedItem = current->numItems - 1;
+
+		// nothing was selectable...
+		if ( current->selectedItem == origial )
+			break;
+
+	} while ( !( current->items[ current->selectedItem ].flags & MIF_SELECTABLE ) );
+
+	if ( current->selectedItem != origial ) {
+		trap_S_StartLocalSound( uis.itemFocusSound, CHAN_LOCAL_SOUND );
+	}
+}
+
+void UI_MenuCursorPoint( currentMenu_t *current, int x, int y ) {
+	int origial = current->selectedItem;
+	int i;
+
+	current->mouseItem = -1;
+
+	for ( i = 0; i < current->numItems; i++ ) {
+		if ( !( current->items[i].flags & MIF_SELECTABLE ) ) {
+			continue;
+		}
+
+		if ( x >= current->items[i].x && x <= current->items[i].x + current->items[i].width
+			&& y >= current->items[i].y && y <= current->items[i].y + current->items[i].height ) {
+			// inside item bbox
+			current->selectedItem = i;
+			current->mouseItem = i;
+			break;
+		}
+	}
+
+	if ( current->selectedItem != origial ) {
+		trap_S_StartLocalSound( uis.itemFocusSound, CHAN_LOCAL_SOUND );
+	}
 }
 
 void UI_MenuAction( currentMenu_t *current, int itemNum ) {
-	menuitem_t *item = &current->menu->items[itemNum];
+	currentMenuItem_t *item = &current->items[itemNum];
+	qboolean popMenu = ( item->flags & MIF_POPMENU );
 
 	if ( item->flags & MIF_CALL ) {
 		void    (*function)( int item );
@@ -93,14 +175,20 @@ void UI_MenuAction( currentMenu_t *current, int itemNum ) {
 		function = item->data;
 
 		function( itemNum );
+	} else if ( item->flags & MIF_SWAPMENU ) {
+		UI_SwapMenu( current, item->data );
+		// warning, push menu replaces the current->items
 	} else if ( item->flags & MIF_SUBMENU ) {
 		UI_PushMenu( current, item->data );
-	} else {
-		// no sound
-		return;
+		// warning, push menu replaces the current->items
+	}
+
+	// can use call and popmenu on the same item
+	if ( popMenu ) {
+		UI_PopMenu( current );
+		return; // popmenu plays a sound
 	}
 
 	trap_S_StartLocalSound( uis.itemActionSound, CHAN_LOCAL_SOUND );
 }
-
 

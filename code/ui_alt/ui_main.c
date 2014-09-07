@@ -43,8 +43,12 @@ void	UI_Init( qboolean inGameLoad, int maxSplitView ) {
 
 	Com_Memset( &uis, 0, sizeof ( uis ) );
 
-#ifndef MISSIONPACK
-	uis.bannerModel = trap_R_RegisterModel( MAIN_BANNER_MODEL );
+	UI_LoadAssets();
+
+#ifdef Q3UIFONTS
+	uis.charsetProp		= trap_R_RegisterShaderNoMip( "menu/art/font1_prop.tga" );
+	uis.charsetPropGlow	= trap_R_RegisterShaderNoMip( "menu/art/font1_prop_glo.tga" );
+	uis.charsetPropB	= trap_R_RegisterShaderNoMip( "menu/art/font2_prop.tga" );
 #endif
 
 	uis.itemActionSound = trap_S_RegisterSound( ITEM_ACTION_SOUND, qfalse );
@@ -60,7 +64,6 @@ void	UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	uis.cursors[0].show = qtrue;
 
 	Com_Memset( &currentMenu, 0, sizeof ( currentMenu ) );
-	UI_SetMenu( &currentMenu, &mainmenu );
 }
 
 void	UI_Shutdown( void ) {
@@ -68,12 +71,20 @@ void	UI_Shutdown( void ) {
 }
 
 void	UI_SetActiveMenu( uiMenuCommand_t menu ) {
-	if ( menu != UIMENU_NONE ) {
+	if ( menu == UIMENU_NONE ) {
+		UI_SetMenu( &currentMenu, NULL );
+	}
+	else if ( menu == UIMENU_MAIN || menu == UIMENU_INGAME ) {
 		trap_Mouse_SetState( 0, MOUSE_CGAME );
 		trap_Key_SetCatcher( KEYCATCH_UI );
 		trap_Cvar_SetValue( "cl_paused", 1 );
 
-		UI_SetMenu( &currentMenu, &mainmenu );
+		if ( menu == UIMENU_MAIN ) {
+			UI_SetMenu( &currentMenu, &mainmenu );
+		} else if ( menu == UIMENU_INGAME ) {
+			// TODO: separate ingame menu
+			UI_SetMenu( &currentMenu, &mainmenu );
+		}
 	}
 }
 
@@ -88,6 +99,7 @@ void	UI_KeyEvent( int key, qboolean down ) {
 		return;
 
 	switch ( key ) {
+		case K_MOUSE2:
 		case K_ESCAPE:
 			UI_PopMenu( &currentMenu );
 			break;
@@ -144,6 +156,13 @@ void	UI_KeyEvent( int key, qboolean down ) {
 			UI_MenuAction( &currentMenu, currentMenu.selectedItem );
 			break;
 
+		case K_MOUSE1:
+			UI_MenuCursorPoint( &currentMenu, uis.cursors[0].x, uis.cursors[0].y );
+			if ( currentMenu.mouseItem != -1 ) {
+				UI_MenuAction( &currentMenu, currentMenu.mouseItem );
+			}
+			break;
+
 		default:
 			break;
 	}
@@ -168,6 +187,8 @@ void	UI_MouseEvent( int localClientNum, int dx, int dy ) {
 	uis.cursors[localClientNum].y = Com_Clamp( -ybias, SCREEN_HEIGHT+ybias, uis.cursors[localClientNum].y + dy );
 
 	uis.cursors[localClientNum].show = qtrue;
+
+	UI_MenuCursorPoint( &currentMenu, uis.cursors[localClientNum].x, uis.cursors[localClientNum].y );
 }
 
 void	UI_GetCursorPos( int localClientNum, int *x, int *y ) {
@@ -176,6 +197,11 @@ void	UI_GetCursorPos( int localClientNum, int *x, int *y ) {
 }
 
 void	UI_SetCursorPos( int localClientNum, int x, int y ) {
+	if ( uis.cursors[localClientNum].x == x && uis.cursors[localClientNum].y == y ) {
+		// ignore duplicate events
+		return;
+	}
+
 	uis.cursors[localClientNum].x = x;
 	uis.cursors[localClientNum].y = y;
 
@@ -227,6 +253,7 @@ void	UI_DrawConnectScreen( qboolean overlay ) {
 	}
 }
 
+#ifndef Q3UIFONTS
 // used by cg_info.c
 void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color ) {
 	// center it
@@ -234,6 +261,7 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 
 	CG_DrawBigStringColor( x, y, str, color );
 }
+#endif
 
 #if defined MISSIONPACK && defined MISSIONPACK_HUD
 // missionpack hud requires this

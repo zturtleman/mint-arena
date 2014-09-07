@@ -45,7 +45,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 //#define CURSOR_SIZE_SHADER "ui/assets/sizecursor"
 //#define CURSOR_SELECT_SHADER "ui/assets/selectcursor"
 
-//#define MAIN_BANNER_MODEL				"models/mapobjects/banner/banner5.md3"
 #define MAIN_MUSIC		"music/sonic1.wav"
 #define ITEM_ACTION_SOUND	"sound/misc/kcaction.wav"
 #define ITEM_FOCUS_SOUND	"sound/misc/menu2.wav" // TA .menu: itemFocusSound
@@ -53,13 +52,14 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define MENU_COPYRIGHT "Quake III: Team Arena Copyright 2000 Id Software, Inc. All rights reserved"
 
+//#define Q3UIFONTS // luls
+
 #else
 
 #define CURSOR_SHADER "menu/art/3_cursor2"
 //#define CURSOR_SIZE_SHADER CURSOR_SHADER
 //#define CURSOR_SELECT_SHADER CURSOR_SHADER
 
-#define MAIN_BANNER_MODEL				"models/mapobjects/banner/banner5.md3"
 //#define MAIN_MUSIC		"music/sonic2.wav" // NOTE: Q3 doesn't actually have menu music
 #define ITEM_ACTION_SOUND	"sound/misc/menu1.wav" // q3_ui: menu_in_sound
 #define ITEM_FOCUS_SOUND	"sound/misc/menu2.wav" // q3_ui: menu_move_sound
@@ -72,6 +72,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define MENU_COPYRIGHT "Quake III Arena(c) 1999-2000, Id Software, Inc.  All Rights Reserved"
 
+//#define Q3UIFONTS // use banner and proportional fonts
+
 #endif
 
 
@@ -81,19 +83,26 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 */
 
-#define	MIF_SUBMENU		0x01	// data is menudef_t
+#define	MIF_SUBMENU		0x01	// data is menudef_t // on action, change to new menu (adds previous menu to stack)
 //#define	MIF_CVAR		0x02	// data is a cvar name.
 #define	MIF_CALL		0x04	// data is functionu8_t.
 //#define	MIF_CONTROL		0x08	// y is PC_* (PlayerControl Index)
 #define	MIF_SPACE		0x10	// Skip line, no action. But still draw text.
 
-#define	MIF_HIDE		0x20	// Hide MenuItem.
-#define	MIF_CENTER		0x40	// Center x of MenuItem on the screen.
+//#define	MIF_HIDE		0x20	// Hide MenuItem.
+//#define	MIF_CENTER		0x40	// Center x of MenuItem on the screen.
 //#define	MIF_YELLOW		0x80	// Text is always yellow.
 
 // "Fake" flags.
-#define	MIF_SETY		(MIF_HIDE|MIF_SPACE)
+//#define	MIF_SETY		(MIF_HIDE|MIF_SPACE)
 //#define	MIF_YELLOWSKIP	(MIF_SPACE|MIF_YELLOW)
+
+#define		MIF_POPMENU		0x100	// on action, return to previous menu
+#define		MIF_SWAPMENU	0x200	// on action, change to new menu without adding calling menu to stack
+#define		MIF_NEXTBUTTON	0x400	// this should have 'next' button graphic and placement. should be last in menudef_t item list.
+#define		MIF_HEADER		0x800	// A Team Arena main menu header
+
+#define		MIF_SELECTABLE (MIF_SUBMENU|MIF_CALL|MIF_POPMENU|MIF_SWAPMENU)
 
 typedef struct {
 	int flags;
@@ -103,11 +112,18 @@ typedef struct {
 
 } menuitem_t;
 
-#define MENUTYPE_GENERIC	0
-#define MENUTYPE_MAIN		1	// main menu is treated special
+typedef enum {
+	MENUTYPE_GENERIC,
+	MENUTYPE_DIALOG,	// yes/no dialog
+	MENUTYPE_MAINMENU,	// special main menu handling
+	MENUTYPE_DEMOS,
+	MENUTYPE_CINEMATICS,
+	MENUTYPE_MODS,
+
+} menuType_t;
 
 typedef struct {
-	int			menuType;
+	menuType_t	menuType;
 	const char	*header;
 	menuitem_t	*items;
 	int			numItems;
@@ -121,7 +137,16 @@ typedef struct {
 
 */
 
+typedef struct {
+	int flags;
+	const char *caption;
+	float x, y, width, height;
+	void *data;
+
+} currentMenuItem_t;
+
 #define MAX_MENU_DEPTH	20
+#define MAX_MENU_ITEMS	64
 typedef struct {
 	struct {
 		menudef_t	*menu;
@@ -132,6 +157,12 @@ typedef struct {
 
 	menudef_t	*menu;
 	int			selectedItem;
+	int			mouseItem; // item mouse points to. -1 if none.
+
+	// info generated from menudef
+	currentMenuItem_t	header;
+	currentMenuItem_t	items[MAX_MENU_ITEMS];
+	int numItems;
 
 } currentMenu_t;
 
@@ -143,13 +174,14 @@ typedef struct {
 } cursor_t;
 
 typedef struct {
+#ifdef Q3UIFONTS
+	qhandle_t charsetProp;
+	qhandle_t charsetPropGlow;
+	qhandle_t charsetPropB;
+#endif
 
 	qhandle_t cursorShader;
 	cursor_t cursors[MAX_SPLITVIEW];
-
-#ifndef MISSIONPACK
-	qhandle_t bannerModel;
-#endif
 
 	qhandle_t itemActionSound;
 	qhandle_t itemFocusSound;
@@ -162,9 +194,11 @@ typedef struct {
 extern uiStatic_t uis;
 
 // ui_menus.c
-void UI_InitMenus( void );
+extern menudef_t mainmenu;
 
 // ui_draw.c
+void UI_LoadAssets( void );
+void UI_BuildCurrentMenu( currentMenu_t *current );
 void UI_DrawCurrentMenu( currentMenu_t *current );
 
 // ui_logic.c
@@ -172,7 +206,16 @@ void UI_SetMenu( currentMenu_t *current, menudef_t *menu );
 void UI_PushMenu( currentMenu_t *current, menudef_t *menu );
 void UI_PopMenu( currentMenu_t *current );
 void UI_MenuAdjustCursor( currentMenu_t *current, int dir );
+void UI_MenuCursorPoint( currentMenu_t *current, int x, int y );
 void UI_MenuAction( currentMenu_t *current, int itemNum );
 
 
+// ui_fonts.c
+#ifdef Q3UIFONTS
+int UI_BannerStringWidth( const char* str );
+void UI_DrawBannerString( int x, int y, const char* str, vec4_t color );
+int UI_ProportionalStringWidth( const char* str );
+float UI_ProportionalSizeScale( int style );
+void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color );
+#endif
 

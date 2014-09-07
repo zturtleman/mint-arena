@@ -31,65 +31,82 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "ui_local.h"
 
 vec4_t color_header           = {1.00f, 1.00f, 1.00f, 1.00f};
+vec4_t color_copyright        = {1.00f, 0.00f, 0.00f, 1.00f};
+#ifdef MISSIONPACK
+vec4_t color_bigtext          = {1.00f, 1.00f, 1.00f, 1.00f};
+vec4_t color_selected         = {1.00f, 0.75f, 0.00f, 1.00f};
+#else
+// FIXME: I just guessed the colors
 vec4_t color_bigtext          = {0.80f, 0.00f, 0.00f, 1.00f};
 vec4_t color_selected         = {1.00f, 0.00f, 0.00f, 1.00f};
+#endif
 
-#define MAIN_MENU_VERTICAL_SPACING		34
-void UI_DrawMainMenuBackground( int *headerBottom );
+typedef struct {
+	qhandle_t menuBackground;
+	qhandle_t menuBackgroundNoLogo;
 
-void UI_DrawCurrentMenu( currentMenu_t *current ) {
-	int i, x, y, lineHeight;
-	int headerBottom = 10 + BIGCHAR_HEIGHT;
-	menuitem_t *item;
+#ifdef MISSIONPACK
+	qhandle_t menuBackgroundB;
+	qhandle_t menuBackgroundC;
+	qhandle_t menuBackgroundD;
+	qhandle_t menuBackgroundE;
+	qhandle_t levelShotDetail;
+#else
+	qhandle_t bannerModel;
 
-	if ( !current->menu ) {
-		return;
-	}
+	qhandle_t frameLeft;
+	qhandle_t frameLeftFilled; // player model select menu
+	qhandle_t frameRight;
+#endif
 
-	// TODO: draw background
-	if ( !cg.connected ) {
-		if ( current->menu->menuType == MENUTYPE_MAIN ) {
-			UI_DrawMainMenuBackground( &headerBottom );
-		} else {
-			// draw menubacknologo
-		}
-	}
+	qhandle_t dialogSmallBackground;
+	qhandle_t dialogLargeBackground;
 
-	if ( current->menu->menuType != MENUTYPE_MAIN ) {
-		CG_DrawBigStringColor( ( SCREEN_WIDTH - CG_DrawStrlen( current->menu->header ) * BIGCHAR_WIDTH ) / 2, 10, current->menu->header, color_header );
-	}
+} uiAssets_t;
 
-	if ( 0 && current->menu->menuType == MENUTYPE_MAIN ) {
-		// Q3 main menu spacing. Does it need to be different?
-		lineHeight = MAIN_MENU_VERTICAL_SPACING;
-	} else {
-		lineHeight = BIGCHAR_HEIGHT * 2;
-	}
+uiAssets_t uiAssets;
 
-	for ( i = 0, item = current->menu->items; i < current->menu->numItems; i++, item++ ) {
-		if ( i == 0 && item->y == 0 )
-			y = headerBottom + (SCREEN_HEIGHT - headerBottom - current->menu->numItems * lineHeight) / 2;
-		else if ( item->y != 0 )
-			y = item->y;
-		else
-			y += lineHeight;
+void UI_LoadAssets( void ) {
+	Com_Memset( &uiAssets, 0, sizeof ( uiAssets ) );
 
-		if ( item->caption == NULL )
-			continue;
+#ifdef MISSIONPACK
+	uiAssets.menuBackground = trap_R_RegisterShaderNoMip( "menuback_a" );
+	uiAssets.menuBackgroundB = trap_R_RegisterShaderNoMip( "menuback_b" );
+	uiAssets.menuBackgroundC = trap_R_RegisterShaderNoMip( "menuback_c" );
+	uiAssets.menuBackgroundD = trap_R_RegisterShaderNoMip( "menuback_d" );
+	uiAssets.menuBackgroundE = trap_R_RegisterShaderNoMip( "menuback_e" );
+	uiAssets.levelShotDetail = trap_R_RegisterShaderNoMip( "levelshotdetail" );
+	uiAssets.menuBackgroundNoLogo = uiAssets.menuBackground;
+#else
+	uiAssets.bannerModel = trap_R_RegisterModel( "models/mapobjects/banner/banner5.md3" );
+	uiAssets.menuBackground = trap_R_RegisterShaderNoMip( "menuback" );
+	uiAssets.menuBackgroundNoLogo = trap_R_RegisterShaderNoMip( "menubacknologo" );
 
-		if ( item->flags & MIF_CENTER )
-			x = (SCREEN_WIDTH - CG_DrawStrlen( item->caption ) * BIGCHAR_WIDTH) / 2;
-		else
-			x = 50;
+	uiAssets.frameLeft = trap_R_RegisterShaderNoMip( "menu/art/frame2_l" );
+	uiAssets.frameLeftFilled = trap_R_RegisterShaderNoMip( "menu/art/frame1_l" );
+	uiAssets.frameRight = trap_R_RegisterShaderNoMip( "menu/art/frame1_r" );
+#endif
 
-		CG_DrawBigStringColor( x, y, item->caption, current->selectedItem == i ? color_selected : color_bigtext );
-	}
-
+	uiAssets.dialogSmallBackground = trap_R_RegisterShaderNoMip( "menu/art/cut_frame" );
+	uiAssets.dialogLargeBackground = trap_R_RegisterShaderNoMip( "menu/art/addbotframe" );
 }
 
-void UI_DrawMainMenuBackground( int *headerBottom ) {
+void UI_DrawMainMenuBackground( void ) {
 #ifdef MISSIONPACK
-	*headerBottom = 0;
+	CG_DrawPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, uiAssets.menuBackground );
+
+	CG_DrawPic( 0, 163, SCREEN_WIDTH, 153, uiAssets.menuBackgroundE ); // light flash
+	CG_DrawPic( 0, 163, SCREEN_WIDTH, 153, uiAssets.menuBackgroundB ); // blue
+		// FIXME?: menuback_b has bordercolor 0.5 0.5 0.5 .7
+
+	// FIXME: rect 390 163 250 155 cinematic "mpintro.roq" backcolor 1 1 1 .25
+
+	CG_DrawPic( 0, 163, 255, 155, uiAssets.menuBackgroundD ); // flashing team arena text
+
+	CG_DrawPic( 0, 0, SCREEN_WIDTH, 240, uiAssets.levelShotDetail );
+	CG_DrawPic( 0, 240, SCREEN_WIDTH, 240, uiAssets.levelShotDetail );
+
+	CG_DrawPic( 205, 123, 235, 235, uiAssets.menuBackgroundC ); // center
 #else
 	refdef_t		refdef;
 	refEntity_t		ent;
@@ -99,6 +116,7 @@ void UI_DrawMainMenuBackground( int *headerBottom ) {
 	float			x, y, w, h;
 
 	// draw menuback
+	CG_DrawPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, uiAssets.menuBackground );
 
 	// setup the refdef
 
@@ -117,8 +135,6 @@ void UI_DrawMainMenuBackground( int *headerBottom ) {
 	refdef.y = y;
 	refdef.width = w;
 	refdef.height = h;
-
-	*headerBottom = 120;
 
 	adjust = 0; // JDC: Kenneth asked me to stop this 1.0 * sin( (float)uis.realtime / 1000 );
 	refdef.fov_x = 60 + adjust;
@@ -139,7 +155,7 @@ void UI_DrawMainMenuBackground( int *headerBottom ) {
 	adjust = 5.0 * sin( (float)cg.realTime / 5000 );
 	VectorSet( angles, 0, 180 + adjust, 0 );
 	AnglesToAxis( angles, ent.axis );
-	ent.hModel = uis.bannerModel;
+	ent.hModel = uiAssets.bannerModel;
 	VectorCopy( origin, ent.origin );
 	VectorCopy( origin, ent.lightingOrigin );
 	ent.renderfx = RF_LIGHTING_ORIGIN | RF_NOSHADOW;
@@ -150,8 +166,281 @@ void UI_DrawMainMenuBackground( int *headerBottom ) {
 	trap_R_RenderScene( &refdef );
 #endif
 
-	CG_DrawSmallStringColor( ( SCREEN_WIDTH - CG_DrawStrlen( MENU_COPYRIGHT ) * SMALLCHAR_WIDTH ) / 2, SCREEN_HEIGHT - SMALLCHAR_HEIGHT - 2, MENU_COPYRIGHT, color_bigtext );
+	CG_DrawSmallStringColor( ( SCREEN_WIDTH - CG_DrawStrlen( MENU_COPYRIGHT ) * SMALLCHAR_WIDTH ) / 2, SCREEN_HEIGHT - SMALLCHAR_HEIGHT*2, MENU_COPYRIGHT, color_copyright );
 }
 
+// from q3_ui/ui_atoms.c
+void UI_LerpColor(vec4_t a, vec4_t b, vec4_t c, float t)
+{
+	int i;
 
+	// lerp and clamp each component
+	for (i=0; i<4; i++)
+	{
+		c[i] = a[i] + t*(b[i]-a[i]);
+		if (c[i] < 0)
+			c[i] = 0;
+		else if (c[i] > 1.0)
+			c[i] = 1.0;
+	}
+}
+
+void UI_DrawCurrentMenu( currentMenu_t *current ) {
+	int i;
+	qboolean drawFramePics = qtrue;
+	vec4_t drawcolor;
+
+	if ( !current->menu ) {
+		return;
+	}
+
+	if ( cg.connected ) {
+		drawFramePics = qfalse;
+
+		if ( current->menu->menuType != MENUTYPE_DIALOG ) {
+			CG_DrawPic( 320-233, 240-166, 466, 332, uiAssets.dialogLargeBackground );
+		}
+	} else {
+		if ( current->menu->menuType == MENUTYPE_MAINMENU ) {
+			UI_DrawMainMenuBackground();
+			drawFramePics = qfalse;
+		} else {
+			CG_DrawPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, uiAssets.menuBackgroundNoLogo );
+		}
+	}
+
+	if ( current->menu->menuType == MENUTYPE_DIALOG ) {
+		CG_DrawPic( 142, 118, 359, 256, uiAssets.dialogSmallBackground );
+	}
+	else if ( drawFramePics ) {
+#ifndef MISSIONPACK
+		CG_DrawPic( 0, 78, 256, 329, uiAssets.frameLeft );
+		// CG_DrawPic( 0, 78, 256, 329, uiAssets.frameLeftFilled ); // for player model select menu
+		CG_DrawPic( 376, 76, 256, 334, uiAssets.frameRight );
+#endif
+	}
+
+	// doesn't have a special header handling, use generic
+	if ( current->menu->header ) {
+#ifdef Q3UIFONTS
+		UI_DrawBannerString( current->header.x, current->header.y, current->menu->header, color_header );
+#else
+		CG_DrawBigStringColor( current->header.x, current->header.y, current->menu->header, color_header );
+#endif
+	}
+
+	for ( i = 0; i < current->numItems; i++ ) {
+		if ( !( current->items[i].flags & MIF_SELECTABLE ) ) {
+			Vector4Copy( color_bigtext, drawcolor );
+
+			VectorScale( drawcolor, 0.7f, drawcolor );
+		} else if ( current->selectedItem == i ) {
+#ifdef Q3UIFONTS
+			Vector4Copy( color_selected, drawcolor );
+#else
+			vec4_t lowlight;
+
+			Vector4Scale( color_selected, 0.8, lowlight );
+
+			UI_LerpColor(color_selected, lowlight, drawcolor, 0.5+0.5*sin(cg.realTime/PULSE_DIVISOR));
+#endif
+		} else {
+			Vector4Copy( color_bigtext, drawcolor );
+		}
+
+#ifdef Q3UIFONTS
+		UI_DrawProportionalString( current->items[i].x, current->items[i].y, current->items[i].caption, current->selectedItem == i ? UI_PULSE : 0, drawcolor );
+#else
+		CG_DrawBigStringColor( current->items[i].x, current->items[i].y, current->items[i].caption, drawcolor );
+#endif
+	}
+}
+
+// TODO: Fix font heights in UI_BuildCurrentMenu with Q3UIFONTS defined
+#define MAX_MENU_HEADERS	8
+// this is used for drawing and logic. it's closely related to UI_DrawCurrentMenu.
+void UI_BuildCurrentMenu( currentMenu_t *current ) {
+	int i, x, y = 0, lineHeight, horizontalGap = BIGCHAR_WIDTH;
+	int	numHeaders, totalWidth[MAX_MENU_HEADERS] = {0};
+	int headerBottom = -1;
+	menuitem_t *item;
+	qboolean horizontalMenu = qfalse;
+
+	if ( current->menu->header ) {
+#ifdef Q3UIFONTS // ug, dialogs need to use prop font
+		current->header.width = UI_BannerStringWidth( current->menu->header );
+#else
+		current->header.width = CG_DrawStrlen( current->menu->header ) * BIGCHAR_WIDTH;
+#endif
+		current->header.x = ( SCREEN_WIDTH - current->header.width ) / 2;
+		current->header.y = 10;
+		current->header.height = BIGCHAR_HEIGHT;
+
+		headerBottom = current->header.y + current->header.height;
+	} else {
+		Com_Memset( &current->header, 0, sizeof ( current->header ) );
+		headerBottom = 0;
+	}
+
+#ifndef MISSIONPACK
+	if ( !cg.connected && current->menu->menuType == MENUTYPE_MAINMENU ) {
+		// Q3 banner model
+		headerBottom = 120;
+	}
+#endif
+
+	if ( current->menu->menuType == MENUTYPE_DIALOG ) {
+		current->header.y = 204;
+		headerBottom = 265;
+		horizontalMenu = qtrue;
+	}
+
+	lineHeight = BIGCHAR_HEIGHT * 2;
+
+	numHeaders = 0;
+	for ( i = 0, item = current->menu->items; i < current->menu->numItems; i++, item++ ) {
+#ifdef Q3UIFONTS
+		current->items[i].width = UI_ProportionalStringWidth( item->caption );
+#else
+		current->items[i].width = CG_DrawStrlen( item->caption ) * BIGCHAR_WIDTH;
+#endif
+		current->items[i].height = BIGCHAR_HEIGHT;
+
+		if ( item->flags & MIF_HEADER ) {
+			numHeaders++;
+
+			if ( !( item->flags & MIF_SELECTABLE ) ) {
+				continue;
+			}
+		}
+
+		totalWidth[numHeaders] += current->items[i].width;
+		if ( i != current->menu->numItems - 1 && !(current->menu->items[i+1].flags & MIF_HEADER) ) {
+			totalWidth[numHeaders] += horizontalGap;
+		}
+	}
+
+	numHeaders = 0;
+	for ( i = 0, item = current->menu->items; i < current->menu->numItems; i++, item++ ) {
+
+		if ( item->flags & MIF_NEXTBUTTON ) {
+			// Fixed place in lower right
+			current->items[i].flags = item->flags;
+			current->items[i].data = item->data;
+			current->items[i].caption = item->caption;
+			current->items[i].y = SCREEN_HEIGHT - BIGCHAR_HEIGHT - 10;
+			current->items[i].x = SCREEN_WIDTH - current->items[i].width - 10;
+			continue;
+		}
+
+		if ( item->flags & MIF_HEADER ) {
+			numHeaders++;
+			x = (SCREEN_WIDTH - totalWidth[numHeaders]) / 2;
+
+			if ( item->y != 0 ) {
+				y = item->y;
+			} else if ( i == 0 ) {
+				y = headerBottom;
+			} else {
+				y += lineHeight;
+			}
+
+			current->items[i].flags = item->flags;
+			current->items[i].data = item->data;
+			current->items[i].caption = item->caption;
+			current->items[i].y = y;
+			current->items[i].x = (SCREEN_WIDTH - current->items[i].width) / 2;
+
+			// put items below header
+			y += lineHeight;
+
+			continue;
+		} else if ( numHeaders ) {
+			if ( i > 0 && !( current->items[i-1].flags & MIF_HEADER ) )
+				x += current->items[i-1].width + horizontalGap;
+
+			if ( item->y != 0 ) {
+				y = item->y;
+			}
+
+			current->items[i].flags = item->flags;
+			current->items[i].data = item->data;
+			current->items[i].caption = item->caption;
+			current->items[i].y = y;
+			current->items[i].x = x;
+			continue;
+		}
+
+		if ( horizontalMenu ) {
+			if ( i == 0 ) {
+				// center x
+				x = (SCREEN_WIDTH - totalWidth[numHeaders]) / 2;
+
+				//if ( current->menu->menuType == MENUTYPE_DIALOG ) {
+					y = headerBottom;
+				/*} else if ( item->y != 0 ) {
+					y = item->y;
+				} else {
+					// center y
+					y = headerBottom + (SCREEN_HEIGHT - headerBottom - lineHeight) / 2;
+				}*/
+			} else {
+				x += current->items[i-1].width + horizontalGap;
+				if ( item->y != 0 ) {
+					y = item->y;
+				}
+			}
+		} else {
+			if ( item->y != 0 ) {
+				y = item->y;
+			} else if ( i == 0 ) {
+				// center Y
+				y = headerBottom + (SCREEN_HEIGHT - headerBottom - current->menu->numItems * lineHeight) / 2;
+			} else {
+				y += lineHeight;
+			}
+
+			//if ( item->flags & MIF_CENTER )
+				x = (SCREEN_WIDTH - current->items[i].width) / 2;
+			//else
+			//	x = 50;
+		}
+
+		current->items[i].flags = item->flags;
+		current->items[i].data = item->data;
+		current->items[i].caption = item->caption;
+		current->items[i].y = y;
+		current->items[i].x = x;
+	}
+
+	current->numItems = i;
+
+	// add back button
+	if ( current->numStacked && current->menu->menuType != MENUTYPE_DIALOG ) {
+		y += lineHeight;
+		current->items[i].flags = MIF_POPMENU;
+		current->items[i].data = NULL;
+
+#ifdef MISSIONPACK
+		if ( current->numStacked == 1 )
+			current->items[i].caption = "Exit to Main Menu";
+		else
+#endif
+		current->items[i].caption = "Back";
+
+#if 1 // Fixed place in lower left
+		current->items[i].y = SCREEN_HEIGHT - BIGCHAR_HEIGHT - 10;
+		current->items[i].width = CG_DrawStrlen( current->items[i].caption ) * BIGCHAR_WIDTH;
+		current->items[i].x = 10;
+#else // fake next of menu item (though it's not vertically centered by the above numItems code)
+		current->items[i].y = y;
+		current->items[i].width = CG_DrawStrlen( current->items[i].caption ) * BIGCHAR_WIDTH;
+		current->items[i].x = (SCREEN_WIDTH - current->items[i].width) / 2;
+#endif
+		current->items[i].height = BIGCHAR_HEIGHT;
+		i++;
+		current->numItems++;
+	}
+
+}
 

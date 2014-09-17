@@ -33,7 +33,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define MAX_PB_BUFFERS  128
 
 polyBuffer_t cg_polyBuffers[MAX_PB_BUFFERS];
-qboolean cg_polyBuffersInuse[MAX_PB_BUFFERS];
+int cg_polyBuffersInuse[MAX_PB_BUFFERS];
 
 polyBuffer_t* CG_PB_FindFreePolyBuffer( qhandle_t shader, int numVerts, int numIndicies ) {
 	int i;
@@ -45,6 +45,10 @@ polyBuffer_t* CG_PB_FindFreePolyBuffer( qhandle_t shader, int numVerts, int numI
 			if ( firstFree == -1 ) {
 				firstFree = i;
 			}
+			continue;
+		}
+
+		if ( cg_polyBuffersInuse[i] != 1+cg.cur_localPlayerNum ) {
 			continue;
 		}
 
@@ -65,7 +69,7 @@ polyBuffer_t* CG_PB_FindFreePolyBuffer( qhandle_t shader, int numVerts, int numI
 
 	// return new poly buffer
 	if ( firstFree != -1 ) {
-		cg_polyBuffersInuse[firstFree] =        qtrue;
+		cg_polyBuffersInuse[firstFree] =        1+cg.cur_localPlayerNum;
 		cg_polyBuffers[firstFree].shader =      shader;
 		cg_polyBuffers[firstFree].numIndicies = 0;
 		cg_polyBuffers[firstFree].numVerts =    0;
@@ -85,7 +89,7 @@ void CG_PB_RenderPolyBuffers( void ) {
 	int i;
 
 	for ( i = 0; i < MAX_PB_BUFFERS; i++ ) {
-		if ( cg_polyBuffersInuse[i] ) {
+		if ( cg_polyBuffersInuse[i] == 1+cg.cur_localPlayerNum ) {
 			trap_R_AddPolyBufferToScene( &cg_polyBuffers[i] );
 		}
 	}

@@ -616,6 +616,14 @@ qboolean trap_Key_GetOverstrikeMode( void ) {
   return syscall( CG_KEY_GETOVERSTRIKEMODE );
 }
 
+qboolean trap_Key_GetCapsLockMode( void ) {
+	return syscall( CG_KEY_GETCAPSLOCKMODE );
+}
+
+qboolean trap_Key_GetNumLockMode( void ) {
+	return syscall( CG_KEY_GETNUMLOCKMODE );
+}
+
 int trap_Mouse_GetState( int localPlayerNum ) {
 	return syscall( CG_MOUSE_GETSTATE, localPlayerNum );
 }

@@ -2863,7 +2863,6 @@ CG_DistributeKeyEvent
 */
 void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state, int axisNum ) {
 	int keyCatcher;
-	qboolean onlybinds = qfalse;
 
 	cg.connState = state;
 
@@ -2880,16 +2879,12 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 		case K_KP_INS:
 		case K_KP_DEL:
 		case K_KP_HOME:
-			if ( trap_Key_IsDown( K_KP_NUMLOCK ) ) {
-				onlybinds = qtrue;
+			if ( !UI_WantsBindKeys() && trap_Key_GetNumLockMode() ) {
+				return;
 			}
 			break;
 		default:
 			break;
-	}
-
-	if ( onlybinds && !UI_WantsBindKeys() ) {
-		return;
 	}
 
 	// console key is hardcoded, so the user can never unbind it

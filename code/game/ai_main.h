@@ -65,8 +65,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define LTG_KILL					11	//kill someone
 #define LTG_HARVEST					12	//harvest skulls
 #define LTG_ATTACKENEMYBASE			13	//attack the enemy base
-#define LTG_MAKELOVE_UNDER			14
-#define LTG_MAKELOVE_ONTOP			15
 //some goal dedication times
 #define TEAM_HELP_TIME				60	//1 minute teamplay help time
 #define TEAM_ACCOMPANY_TIME			600	//10 minutes teamplay accompany time

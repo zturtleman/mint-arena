@@ -2856,7 +2856,6 @@ A player just came into view or teleported, so reset all animation info
 */
 void CG_ResetPlayerEntity( centity_t *cent ) {
 	cent->errorTime = -99999;		// guarantee no error decay added
-	cent->extrapolated = qfalse;	
 
 	CG_ClearLerpFrame( &cgs.playerinfo[ cent->currentState.playerNum ], &cent->pe.legs, cent->currentState.legsAnim );
 	CG_ClearLerpFrame( &cgs.playerinfo[ cent->currentState.playerNum ], &cent->pe.torso, cent->currentState.torsoAnim );

@@ -727,9 +727,7 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 			bs->ltgtype == LTG_RETURNFLAG ||
 			bs->ltgtype == LTG_CAMPORDER ||
 			bs->ltgtype == LTG_PATROL ||
-			bs->ltgtype == LTG_GETITEM ||
-			bs->ltgtype == LTG_MAKELOVE_UNDER ||
-			bs->ltgtype == LTG_MAKELOVE_ONTOP) {
+			bs->ltgtype == LTG_GETITEM) {
 		return;
 	}
 	//
@@ -893,9 +891,7 @@ void Bot1FCTFSeekGoals(bot_state_t *bs) {
 					bs->ltgtype == LTG_CAMPORDER ||
 					bs->ltgtype == LTG_PATROL ||
 					bs->ltgtype == LTG_ATTACKENEMYBASE ||
-					bs->ltgtype == LTG_GETITEM ||
-					bs->ltgtype == LTG_MAKELOVE_UNDER ||
-					bs->ltgtype == LTG_MAKELOVE_ONTOP) {
+					bs->ltgtype == LTG_GETITEM) {
 				return;
 			}
 			//if not already attacking the enemy base
@@ -972,9 +968,7 @@ void Bot1FCTFSeekGoals(bot_state_t *bs) {
 			bs->ltgtype == LTG_CAMPORDER ||
 			bs->ltgtype == LTG_PATROL ||
 			bs->ltgtype == LTG_ATTACKENEMYBASE ||
-			bs->ltgtype == LTG_GETITEM ||
-			bs->ltgtype == LTG_MAKELOVE_UNDER ||
-			bs->ltgtype == LTG_MAKELOVE_ONTOP) {
+			bs->ltgtype == LTG_GETITEM) {
 		return;
 	}
 	//
@@ -1087,9 +1081,7 @@ void BotObeliskSeekGoals(bot_state_t *bs) {
 			bs->ltgtype == LTG_CAMPORDER ||
 			bs->ltgtype == LTG_PATROL ||
 			bs->ltgtype == LTG_ATTACKENEMYBASE ||
-			bs->ltgtype == LTG_GETITEM ||
-			bs->ltgtype == LTG_MAKELOVE_UNDER ||
-			bs->ltgtype == LTG_MAKELOVE_ONTOP) {
+			bs->ltgtype == LTG_GETITEM) {
 		return;
 	}
 	//
@@ -1232,9 +1224,7 @@ void BotHarvesterSeekGoals(bot_state_t *bs) {
 			bs->ltgtype == LTG_PATROL ||
 			bs->ltgtype == LTG_ATTACKENEMYBASE ||
 			bs->ltgtype == LTG_HARVEST ||
-			bs->ltgtype == LTG_GETITEM ||
-			bs->ltgtype == LTG_MAKELOVE_UNDER ||
-			bs->ltgtype == LTG_MAKELOVE_ONTOP) {
+			bs->ltgtype == LTG_GETITEM) {
 		return;
 	}
 	//

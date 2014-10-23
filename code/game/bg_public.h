@@ -351,7 +351,6 @@ typedef struct playerState_s {
 
 	int			externalEvent;	// events set on player from another source
 	int			externalEventParm;
-	int			externalEventTime;
 
 	//int			playerNum;		// ranges from 0 to MAX_CLIENTS-1
 	int			weapon;			// copied to entityState_t->weapon
@@ -1023,7 +1022,6 @@ typedef struct gitem_s {
 
 	int			giTag;
 
-	char		*precaches;		// string of all models and images this item will use
 	char		*sounds;		// string of all sounds this item will use
 } gitem_t;
 

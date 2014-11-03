@@ -2214,7 +2214,7 @@ static qboolean CG_PlayerShadow( centity_t *cent, vec3_t start, float alphaMult,
 	VectorCopy( start, end );
 	end[2] -= SHADOW_DISTANCE;
 
-	trap_CM_BoxTrace( &trace, start, end, mins, maxs, 0, MASK_PLAYERSOLID );
+	CG_Trace( &trace, start, mins, maxs, end, cent->currentState.number, MASK_SOLID );
 
 	// no shadow if too high
 	if ( trace.fraction == 1.0 || trace.startsolid || trace.allsolid ) {

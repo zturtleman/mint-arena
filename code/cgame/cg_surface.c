@@ -173,7 +173,7 @@ static void CG_DoRailDiscs( qhandle_t hShader, byte color[4], int numSegs, const
 			VectorAdd( pos[j], dir, pos[j] );
 		}
 
-		trap_R_AddPolysToScene( hShader, 4, verts, 1 );
+		trap_R_AddPolysToScene( hShader, 4, verts, 1, 0 );
 	}
 }
 
@@ -402,6 +402,6 @@ void CG_SurfaceBeam( const refEntity_t *originEnt )
 
 	// for acting like Q3A create a custom shader with
 	// cull none and blendfunc GL_ONE GL_ONE
-	trap_R_AddPolysToScene( re.customShader, 4, verts, NUM_BEAM_SEGS );
+	trap_R_AddPolysToScene( re.customShader, 4, verts, NUM_BEAM_SEGS, 0 );
 }
 

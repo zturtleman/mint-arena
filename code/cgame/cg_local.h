@@ -261,6 +261,7 @@ typedef struct markPoly_s {
 	float		color[4];
 	int			numVerts;
 	polyVert_t	verts[MAX_VERTS_ON_POLY];
+	int			bmodelNum;
 } markPoly_t;
 
 

@@ -163,8 +163,8 @@ void		trap_R_AddRefEntityToScene( const refEntity_t *re );
 // polys are intended for simple wall marks, not really for doing
 // significant construction
 void		trap_R_AddPolyRefEntityToScene( const refEntity_t *re, int numVerts, const polyVert_t *verts, int numPolys );
-void		trap_R_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts );
-void		trap_R_AddPolysToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int numPolys );
+void		trap_R_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int bmodelNum );
+void		trap_R_AddPolysToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum );
 void        trap_R_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
 void		trap_R_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
 void		trap_R_AddAdditiveLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );

@@ -2326,7 +2326,7 @@ static void CG_PlayerSplash( centity_t *cent ) {
 	verts[3].modulate[2] = 255;
 	verts[3].modulate[3] = 255;
 
-	trap_R_AddPolyToScene( cgs.media.wakeMarkShader, 4, verts );
+	trap_R_AddPolyToScene( cgs.media.wakeMarkShader, 4, verts, 0 );
 }
 
 

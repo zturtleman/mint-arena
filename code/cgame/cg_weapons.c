@@ -2182,7 +2182,7 @@ void CG_Tracer( vec3_t source, vec3_t dest ) {
 	verts[3].modulate[2] = 255;
 	verts[3].modulate[3] = 255;
 
-	trap_R_AddPolyToScene( cgs.media.tracerShader, 4, verts );
+	trap_R_AddPolyToScene( cgs.media.tracerShader, 4, verts, 0 );
 
 	midpoint[0] = ( start[0] + finish[0] ) * 0.5;
 	midpoint[1] = ( start[1] + finish[1] ) * 0.5;

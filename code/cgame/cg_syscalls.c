@@ -362,12 +362,12 @@ void	trap_R_AddRefEntityToScene( const refEntity_t *re ) {
 	syscall( CG_R_ADDREFENTITYTOSCENE, re, sizeof ( refEntity_t ) );
 }
 
-void	trap_R_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts ) {
-	syscall( CG_R_ADDPOLYTOSCENE, hShader, numVerts, verts );
+void	trap_R_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int bmodelNum ) {
+	syscall( CG_R_ADDPOLYTOSCENE, hShader, numVerts, verts, bmodelNum );
 }
 
-void	trap_R_AddPolysToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num ) {
-	syscall( CG_R_ADDPOLYSTOSCENE, hShader, numVerts, verts, num );
+void	trap_R_AddPolysToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum ) {
+	syscall( CG_R_ADDPOLYSTOSCENE, hShader, numVerts, verts, numPolys, bmodelNum );
 }
 
 void    trap_R_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer ) {

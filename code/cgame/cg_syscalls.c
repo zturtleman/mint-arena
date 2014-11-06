@@ -454,12 +454,12 @@ void		trap_R_SetSurfaceShader( int surfaceNum, const char *name ) {
 	syscall( CG_R_SET_SURFACE_SHADER, surfaceNum, name );
 }
 
-qhandle_t	trap_R_GetSurfaceShader( int surfaceNum, int withlightmap ) {
-	return syscall( CG_R_GET_SURFACE_SHADER, surfaceNum, withlightmap );
+qhandle_t	trap_R_GetSurfaceShader( int surfaceNum, int lightmapIndex ) {
+	return syscall( CG_R_GET_SURFACE_SHADER, surfaceNum, lightmapIndex );
 }
 
-qhandle_t	trap_R_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap ) {
-	return syscall( CG_R_GET_SHADER_FROM_MODEL, hModel, surfnum, withlightmap );
+qhandle_t	trap_R_GetShaderFromModel( qhandle_t hModel, int surfnum, int lightmapIndex ) {
+	return syscall( CG_R_GET_SHADER_FROM_MODEL, hModel, surfnum, lightmapIndex );
 }
 
 void		trap_R_GetShaderName( qhandle_t hShader, char *buffer, int bufferSize ) {

@@ -190,8 +190,8 @@ void		trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque,
 void		trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater );
 
 void		trap_R_SetSurfaceShader( int surfaceNum, const char *name );
-qhandle_t	trap_R_GetSurfaceShader( int surfaceNum, int withlightmap );
-qhandle_t	trap_R_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap );
+qhandle_t	trap_R_GetSurfaceShader( int surfaceNum, int lightmapIndex );
+qhandle_t	trap_R_GetShaderFromModel( qhandle_t hModel, int surfnum, int lightmapIndex );
 void		trap_R_GetShaderName( qhandle_t hShader, char *buffer, int bufferSize );
 
 // normal sounds will have their volume dynamically changed as their entity

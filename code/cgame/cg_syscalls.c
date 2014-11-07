@@ -310,6 +310,26 @@ void	trap_S_StopBackgroundTrack( void ) {
 	syscall( CG_S_STOPBACKGROUNDTRACK );
 }
 
+void trap_S_StartStreamingSound( int stream, int entityNum, const char *filename, float volume ) {
+	syscall( CG_S_STARTSTREAMINGSOUND, stream, entityNum, filename, PASSFLOAT( volume ) );
+}
+
+void trap_S_StopStreamingSound( int stream ) {
+	syscall( CG_S_STOPSTREAMINGSOUND, stream );
+}
+
+void trap_S_QueueStreamingSound( int stream, const char *filename, float volume ) {
+	syscall( CG_S_QUEUESTREAMINGSOUND, stream, filename, PASSFLOAT( volume ) );
+}
+
+int trap_S_GetStreamPlayCount( int stream ) {
+	return syscall( CG_S_GETSTREAMPLAYCOUNT, stream );
+}
+
+void trap_S_SetStreamVolume( int stream, float volume ) {
+	syscall( CG_S_SETSTREAMVOLUME, stream, PASSFLOAT( volume ) );
+}
+
 void	trap_R_LoadWorldMap( const char *mapname ) {
 	syscall( CG_R_LOADWORLDMAP, mapname );
 }

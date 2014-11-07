@@ -215,6 +215,12 @@ int			trap_S_SoundDuration( sfxHandle_t handle );
 void		trap_S_StartBackgroundTrack( const char *intro, const char *loop, float volume, float loopVolume );	// empty name stops music
 void		trap_S_StopBackgroundTrack( void );
 
+void		trap_S_StartStreamingSound( int stream, int entityNum, const char *filename, float volume );
+void		trap_S_StopStreamingSound( int stream );
+void		trap_S_QueueStreamingSound( int stream, const char *filename, float volume );
+int			trap_S_GetStreamPlayCount( int stream );
+void		trap_S_SetStreamVolume( int stream, float volume );
+
 void			trap_Key_KeynumToStringBuf( int keynum, char *buf, int buflen );
 void			trap_Key_GetBindingBuf( int keynum, char *buf, int buflen );
 void			trap_Key_SetBinding( int keynum, const char *binding );

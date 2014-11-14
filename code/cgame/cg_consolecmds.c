@@ -682,6 +682,7 @@ void CG_Play_f( void ) {
 S_Music_f
 =================
 */
+void CG_StopMusicPlaylist( void ); // cg_main.c
 void CG_Music_f( void ) {
 	int		c;
 	char	intro[MAX_QPATH];
@@ -709,6 +710,9 @@ void CG_Music_f( void ) {
 	}
 
 	trap_S_StartBackgroundTrack( intro, loop, volume, loopVolume );
+
+	// disable track playlist
+	CG_StopMusicPlaylist();
 }
 
 /*

@@ -1769,16 +1769,79 @@ CG_StartMusic
 
 ======================
 */
+int backgroundTrack;
+int backgroundPlayCount = -1;
+
+char *cg_musicList[] = {
+	"music/sonic1.wav",
+	"music/sonic2.wav",
+	"music/sonic3.wav",
+	"music/sonic4.wav",
+	"music/sonic5.wav",
+	"music/sonic6.wav",
+	NULL
+};
+
 void CG_StartMusic( void ) {
-	char	*s;
-	char	parm1[MAX_QPATH], parm2[MAX_QPATH];
+	//char	*s;
+	//char	parm1[MAX_QPATH], parm2[MAX_QPATH];
 
 	// start the background music
-	s = (char *)CG_ConfigString( CS_MUSIC );
-	Q_strncpyz( parm1, COM_Parse( &s ), sizeof( parm1 ) );
-	Q_strncpyz( parm2, COM_Parse( &s ), sizeof( parm2 ) );
+	//s = (char *)CG_ConfigString( CS_MUSIC );
+	//Q_strncpyz( parm1, COM_Parse( &s ), sizeof( parm1 ) );
+	//Q_strncpyz( parm2, COM_Parse( &s ), sizeof( parm2 ) );
 
-	trap_S_StartBackgroundTrack( parm1, parm2, 1.0f, 1.0f );
+	//trap_S_StartBackgroundTrack( parm1, parm2, 1.0f, 1.0f );
+
+	// start the music
+	backgroundPlayCount = 0; // start streaming sound sets the play count to 0
+	backgroundTrack = 0; // queued track
+	trap_S_StartStreamingSound( 0, -1, cg_musicList[backgroundTrack], 1.0f );
+	trap_S_QueueStreamingSound( 0, cg_musicList[backgroundTrack+1], 1.0f );
+	CG_Printf( "* Music: Now %s, next %s\n", cg_musicList[backgroundTrack], cg_musicList[backgroundTrack+1] );
+}
+
+void CG_StopMusicPlaylist( void ) {
+	backgroundPlayCount = -1;
+}
+
+void CG_UpdateMusic( void ) {
+	int currentPlayCount;
+	int nextTrack;
+
+	// music not started
+	if ( backgroundPlayCount < 0 ) {
+		return;
+	}
+
+	currentPlayCount = trap_S_GetStreamPlayCount( 0 );
+
+	// engine hasn't started queued track yet
+	if ( currentPlayCount == backgroundPlayCount ) {
+		return;
+	}
+
+	// engine changed to the queued track, set a new one
+	backgroundPlayCount = currentPlayCount;
+
+	// move index to current playing track
+	backgroundTrack++;
+
+	// check if end of list
+	if ( cg_musicList[backgroundTrack] == NULL ) {
+		backgroundTrack = 0;
+	}
+
+	// get next track to play
+	nextTrack = backgroundTrack+1;
+
+	// check if end of list
+	if ( cg_musicList[nextTrack] == NULL ) {
+		nextTrack = 0;
+	}
+
+	trap_S_QueueStreamingSound( 0, cg_musicList[nextTrack], 1.0f );
+	CG_Printf( "* Music: Now %s, next %s\n", cg_musicList[backgroundTrack], cg_musicList[nextTrack] );
 }
 #ifdef MISSIONPACK_HUD
 char *CG_GetMenuBuffer(const char *filename) {
@@ -2693,6 +2756,9 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 
 	// update cvars
 	CG_UpdateCvars();
+
+	// update music
+	CG_UpdateMusic();
 
 	if ( state == CA_CINEMATIC && cg.cinematicHandle >= 0 ) {
 		CG_ClearViewport();

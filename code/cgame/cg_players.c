@@ -2571,6 +2571,55 @@ void CG_Player( centity_t *cent ) {
 	legs.hModel = pi->legsModel;
 	legs.customSkin = CG_AddSkinToFrame( &pi->modelSkin );
 
+	// get ground shader
+	{
+		trace_t tr;
+		vec3_t end;
+		static qboolean warningShown = qfalse;
+
+		if ( !warningShown && !trap_Cvar_VariableIntegerValue( "cm_betterSurfaceNums" ) ) {
+			warningShown = qtrue;
+
+			CG_Printf(S_COLOR_YELLOW "WARNING: You probably need to set 'cm_betterSurfaceNums' to 1 for camo pants to work!\n");
+		}
+
+		VectorCopy( cent->currentState.pos.trBase, end );
+		end[2] -= 64;
+		CG_Trace( &tr, cent->currentState.pos.trBase, NULL, NULL, end, cent->currentState.number, MASK_OPAQUE );
+
+		// check fraction != 1 so that shader is kept when not near ground
+		// check surfaceNum > 0 because 0 means it's not a textured world surface (clip brush, entity, ...)
+		if ( tr.fraction != 1.0f && tr.surfaceNum > 0 && cent->lastSurfaceNum != tr.surfaceNum ) {
+			qhandle_t hShader;
+
+			hShader = trap_R_GetSurfaceShader( tr.surfaceNum, LIGHTMAP_NONE );
+
+			if ( hShader != cent->lastSurfaceShader ) {
+#if 0 // display shader name
+				char name[MAX_QPATH];
+
+				trap_R_GetShaderName( hShader, name, sizeof (name) );
+				CG_Printf("* Entity %d: ground shader %s\n", cent->currentState.number, name);
+#endif
+
+				cent->lastSurfaceShader = hShader;
+			}
+
+#if 0 // steal the texture
+			// restore original shader
+			trap_R_SetSurfaceShader( cent->lastSurfaceNum, NULL );
+
+			// set new surface to white shader
+			trap_R_SetSurfaceShader( tr.surfaceNum, "white" );
+#endif
+
+			cent->lastSurfaceNum = tr.surfaceNum;
+		}
+	}
+
+	// Camo legs
+	legs.customShader = cent->lastSurfaceShader;
+
 	VectorCopy( cent->lerpOrigin, legs.origin );
 
 	VectorCopy( cent->lerpOrigin, legs.lightingOrigin );
@@ -2594,6 +2643,10 @@ void CG_Player( centity_t *cent ) {
 	}
 
 	torso.customSkin = legs.customSkin;
+
+#if 0 // Camo torso
+	torso.customShader = legs.customShader;
+#endif
 
 	VectorCopy( cent->lerpOrigin, torso.lightingOrigin );
 
@@ -2819,6 +2872,10 @@ void CG_Player( centity_t *cent ) {
 		return;
 	}
 	head.customSkin = legs.customSkin;
+
+#if 0 // Camo head
+	head.customShader = legs.customShader;
+#endif
 
 	VectorCopy( cent->lerpOrigin, head.lightingOrigin );
 

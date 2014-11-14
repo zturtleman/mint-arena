@@ -245,6 +245,10 @@ typedef struct centity_s {
 	int				dl_sound;
 	int				dl_atten;
 
+	// player / corpse ground info for legs shader
+	int lastSurfaceNum;
+	qhandle_t lastSurfaceShader;
+
 } centity_t;
 
 

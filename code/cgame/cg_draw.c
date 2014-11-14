@@ -2475,7 +2475,7 @@ static void CG_DrawShaderInfo( void ) {
 		return;
 
 	// scan the known entities to see if the crosshair is sighted on one
-	hShader = trap_R_GetSurfaceShader( trace.surfaceNum, -1 );
+	hShader = trap_R_GetSurfaceShader( trace.surfaceNum, LIGHTMAP_2D );
 
 	trap_R_GetShaderName( hShader, name, sizeof ( name ) );
 

@@ -902,6 +902,8 @@ typedef struct {
 	qhandle_t	balloonShader;
 	qhandle_t	connectionShader;
 
+	qhandle_t	coronaShader;
+
 	qhandle_t	selectShader;
 	qhandle_t	viewBloodShader;
 	qhandle_t	tracerShader;

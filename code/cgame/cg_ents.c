@@ -1128,7 +1128,8 @@ static void CG_Corona( centity_t *cent ) {
 		}
 	}
 
-	trap_R_AddCoronaToScene( cent->lerpOrigin, (float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f, (float)cent->currentState.density / 255.0f, cent->currentState.number, visible );
+	trap_R_AddCoronaToScene( cent->lerpOrigin, (float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f,
+			(float)cent->currentState.density / 255.0f, cent->currentState.number, visible, cgs.media.coronaShader );
 }
 
 /*

@@ -1533,6 +1533,8 @@ static void CG_RegisterGraphics( void ) {
 
 	cgs.media.balloonShader = trap_R_RegisterShader( "sprites/balloon3" );
 
+	cgs.media.coronaShader = trap_R_RegisterShader( "flareShader" );
+
 	cgs.media.bloodExplosionShader = trap_R_RegisterShader( "bloodExplosion" );
 
 	cgs.media.bulletFlashModel = trap_R_RegisterModel("models/weaphits/bullet.md3");

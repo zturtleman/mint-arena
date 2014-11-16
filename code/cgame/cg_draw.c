@@ -2454,9 +2454,8 @@ static void CG_DrawShaderInfo( void ) {
 	float		x, y, width, height;
 	vec4_t		color = { 1, 1, 1, 1 };
 	qhandle_t	hShader;
-	trace_t		trace;
+	trace_t		trace, trace2;
 	vec3_t		start, end;
-	qboolean	everything = qtrue;
 
 	if ( !cg_drawShaderInfo.integer ) {
 		return;
@@ -2468,14 +2467,23 @@ static void CG_DrawShaderInfo( void ) {
 	VectorCopy( cg.refdef.vieworg, start );
 	VectorMA( start, 131072, cg.refdef.viewaxis[0], end );
 
-	CG_Trace( &trace, start, vec3_origin, vec3_origin, end,
-		cg.cur_ps->playerNum, everything ? ~0 : CONTENTS_SOLID );
+	// Get shader behind clip volume:
+	// Do a trace that hits all surfaces (including solid and non-solid),
+	// and a trace that only hits solid. Use which ever is closer and use
+	// solid if 'any contents' trace didn't get a textured surface (such as clip)
+	CG_Trace( &trace, start, vec3_origin, vec3_origin, end, cg.cur_ps->playerNum, ~0 );
+	CG_Trace( &trace2, start, vec3_origin, vec3_origin, end, cg.cur_ps->playerNum, CONTENTS_SOLID );
 
-	if ( trace.surfaceNum <= 0 )
+	// trace2 is valid and closer or trace is invalid
+	if ( trace2.surfaceNum > 0 && ( trace2.fraction < trace.fraction || trace.surfaceNum <= 0 ) ) {
+		Com_Memcpy( &trace, &trace2, sizeof ( trace_t ) );
+	}
+
+	if ( trace.surfaceNum <= 0 ) {
 		return;
+	}
 
-	// scan the known entities to see if the crosshair is sighted on one
-	hShader = trap_R_GetSurfaceShader( trace.surfaceNum, -1 );
+	hShader = trap_R_GetSurfaceShader( trace.surfaceNum, LIGHTMAP_2D );
 
 	trap_R_GetShaderName( hShader, name, sizeof ( name ) );
 

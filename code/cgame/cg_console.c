@@ -166,7 +166,7 @@ void CG_ConsolePrint( const char *p ) {
 			continue;
 		}
 
-		lineDrawLen = CG_DrawStrlen( con.lines[con.current % CON_MAXLINES] ) * SMALLCHAR_WIDTH;
+		lineDrawLen = CG_DrawStrlen( con.lines[con.current % CON_MAXLINES], UI_SMALLFONT );
 		wordDrawLen = charDrawLen = 0;
 
 		for ( i = 0; i < CON_LINELENGTH; i++ ) {
@@ -183,7 +183,7 @@ void CG_ConsolePrint( const char *p ) {
 				break;
 			}
 
-			charDrawLen = CG_DrawStrlenEx( &p[i], 1 ) * SMALLCHAR_WIDTH;
+			charDrawLen = CG_DrawStrlenEx( &p[i], UI_SMALLFONT, 1 );
 
 			// make sure the word will fit on screen, even if it needs a whole line to do so.
 			if ( wordDrawLen + charDrawLen > con.screenFakeWidth - ( con.sideMargin * 2 ) ) {
@@ -240,7 +240,7 @@ void Con_DrawInput ( connstate_t state, int lines ) {
 
 	CG_DrawSmallStringColor( con.sideMargin, y, "]", g_color_table[ColorIndex(COLOR_WHITE)] );
 
-	MField_Draw( &g_consoleField, 2 * SMALLCHAR_WIDTH, y, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, g_color_table[ColorIndex(COLOR_WHITE)] );
+	MField_Draw( &g_consoleField, con.sideMargin + CG_DrawStrlen( "]", UI_SMALLFONT ), y, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, g_color_table[ColorIndex(COLOR_WHITE)] );
 }
 
 /*
@@ -286,8 +286,7 @@ void Con_DrawSolidConsole( connstate_t state, float frac ) {
 	CG_SetScreenPlacement( PLACE_RIGHT, PLACE_TOP );
 
 	// draw the version number
-	CG_DrawSmallStringColor( SCREEN_WIDTH - CG_DrawStrlen( con.version ) * SMALLCHAR_WIDTH,
-			lines - SMALLCHAR_HEIGHT, con.version, color );
+	CG_DrawString( SCREEN_WIDTH, lines - SMALLCHAR_HEIGHT, con.version, UI_RIGHT|UI_SMALLFONT, color );
 
 	CG_SetScreenPlacement( PLACE_LEFT, PLACE_TOP );
 

@@ -29,6 +29,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 //
 #include "cg_local.h"
+#include "../../ui/menudef.h"
 
 /*
 ===================
@@ -44,6 +45,9 @@ void MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, v
 	int		prestep;
 	int		cursorChar;
 	char	str[MAX_STRING_CHARS];
+	fontInfo_t	*font;
+	int		decent;
+	int		textStyle;
 
 	drawLen = edit->widthInChars;
 	len     = strlen( edit->buffer ) + 1;
@@ -72,10 +76,12 @@ void MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, v
 	memcpy( str, edit->buffer + prestep, drawLen );
 	str[ drawLen ] = 0;
 
-	CG_DrawStringExt( x, y, str, color, 2, qtrue, charWidth, charHeight, 0 );
-
-	if ( (int)( cg.realTime >> 8 ) & 1 ) {
-		return;		// off blink
+	if ( charHeight > SMALLCHAR_HEIGHT ) {
+		font = &cgs.media.textFont;
+		textStyle = ITEM_TEXTSTYLE_SHADOWEDMORE;
+	} else {
+		font = &cgs.media.smallFont;
+		textStyle = 0;
 	}
 
 	if ( trap_Key_GetOverstrikeMode() ) {
@@ -84,9 +90,10 @@ void MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, v
 		cursorChar = 10;
 	}
 
-	str[0] = cursorChar;
-	str[1] = 0;
-	CG_DrawStringExt( x + ( edit->cursor - prestep) * charWidth, y, str, color, qfalse, qtrue, charWidth, charHeight, 0 );
+	// This function expects that y is top of line, text_paint expects at baseline
+	decent = -font->glyphs[(int)'g'].top + font->glyphs[(int)'g'].height;
+	y = y + charHeight - decent * charHeight / 48.0f * font->glyphScale;
+	Text_PaintWithCursor( x, y, font, charHeight / 48.0f, color, str, ( edit->cursor - prestep ), cursorChar, 0, textStyle );
 }
 
 /*

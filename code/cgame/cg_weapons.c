@@ -1451,7 +1451,7 @@ void CG_DrawWeaponSelect( void ) {
 	int		i;
 	int		bits;
 	int		count;
-	int		x, y, w;
+	int		x, y;
 	char	*name;
 	float	*color;
 
@@ -1510,9 +1510,7 @@ void CG_DrawWeaponSelect( void ) {
 	if ( cg_weapons[ cg.cur_lc->weaponSelect ].item ) {
 		name = cg_weapons[ cg.cur_lc->weaponSelect ].item->pickup_name;
 		if ( name ) {
-			w = CG_DrawStrlen( name ) * BIGCHAR_WIDTH;
-			x = ( SCREEN_WIDTH - w ) / 2;
-			CG_DrawBigStringColor(x, y - 22, name, color);
+			CG_DrawString( SCREEN_WIDTH / 2, y - BIGCHAR_HEIGHT - 6, name, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color );
 		}
 	}
 

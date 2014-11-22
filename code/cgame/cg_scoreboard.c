@@ -178,17 +178,6 @@ static void CG_DrawPlayerScore( int y, score_t *score, float *color, float fade,
 		}
 	}
 #endif
-	// draw the score line
-	if ( score->ping == -1 ) {
-		Com_sprintf(string, sizeof(string),
-			" connecting    %s", pi->name);
-	} else if ( pi->team == TEAM_SPECTATOR ) {
-		Com_sprintf(string, sizeof(string),
-			" SPECT %3i %4i %s", score->ping, score->time, pi->name);
-	} else {
-		Com_sprintf(string, sizeof(string),
-			"%5i %4i %4i %s", score->score, score->ping, score->time, pi->name);
-	}
 
 	if (cg.cur_ps) {
 		if (score->playerNum == cg.cur_ps->playerNum) {
@@ -235,11 +224,29 @@ static void CG_DrawPlayerScore( int y, score_t *score, float *color, float fade,
 			640 - SB_SCORELINE_X - BIGCHAR_WIDTH - (SB_RATING_WIDTH / 2), BIGCHAR_HEIGHT+1, hcolor );
 	}
 
-	CG_DrawBigString( SB_SCORELINE_X + (SB_RATING_WIDTH / 2), y, string, fade );
+	// draw the score line
+	if ( score->ping == -1 ) {
+		Com_sprintf(string, sizeof(string), "connecting");
+	} else if ( pi->team == TEAM_SPECTATOR ) {
+		Com_sprintf(string, sizeof(string), "SPECT");
+	} else {
+		Com_sprintf(string, sizeof(string), "%5i", score->score);
+	}
+	CG_DrawString( SB_SCORE_X + (SB_RATING_WIDTH / 2) + 4*BIGCHAR_WIDTH, y, string, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, color );
+
+	if ( score->ping != -1 ) {
+		Com_sprintf(string, sizeof(string), "%4i", score->ping);
+		CG_DrawString( SB_PING_X - (SB_RATING_WIDTH / 2) + 4*BIGCHAR_WIDTH, y, string, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, color );
+
+		Com_sprintf(string, sizeof(string), "%4i", score->time);
+		CG_DrawString( SB_TIME_X - (SB_RATING_WIDTH / 2) + 4*BIGCHAR_WIDTH, y, string, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, color );
+	}
+
+	CG_DrawString( SB_NAME_X - (SB_RATING_WIDTH / 2), y, pi->name, UI_LEFT|UI_DROPSHADOW|UI_BIGFONT, color );
 
 	// add the "ready" marker for intermission exiting
 	if ( Com_ClientListContains( &cg.readyPlayers, score->playerNum ) ) {
-		CG_DrawBigStringColor( iconx, y, "READY", color );
+		CG_DrawString( iconx, y, "READY", UI_LEFT|UI_DROPSHADOW|UI_BIGFONT, color );
 	}
 }
 
@@ -283,7 +290,7 @@ Draw the normal in-game scoreboard
 =================
 */
 qboolean CG_DrawOldScoreboard( void ) {
-	int		x, y, w, i, n1, n2;
+	int		y, i, n1, n2;
 	float	fade;
 	float	*fadeColor;
 	char	*s;
@@ -319,6 +326,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 			cg.cur_lc->killerName[0] = 0;
 			return qfalse;
 		}
+		// ZTM: FIXME?: to actually fade, should be fade=fadeColor[3] and later CG_DrawString should use fadeColor
 		fade = *fadeColor;
 	}
 
@@ -326,10 +334,8 @@ qboolean CG_DrawOldScoreboard( void ) {
 	// fragged by ... line
 	if ( cg.cur_lc && cg.cur_lc->killerName[0] ) {
 		s = va("Fragged by %s", cg.cur_lc->killerName );
-		w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
-		x = ( SCREEN_WIDTH - w ) / 2;
 		y = 40;
-		CG_DrawBigString( x, y, s, fade );
+		CG_DrawString( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 	}
 
 	// current rank
@@ -338,10 +344,8 @@ qboolean CG_DrawOldScoreboard( void ) {
 			s = va("%s place with %i",
 				CG_PlaceString( cg.cur_ps->persistant[PERS_RANK] + 1 ),
 				cg.cur_ps->persistant[PERS_SCORE] );
-			w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
-			x = ( SCREEN_WIDTH - w ) / 2;
 			y = 60;
-			CG_DrawBigString( x, y, s, fade );
+			CG_DrawString( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 		}
 	} else {
 		if ( cg.teamScores[0] == cg.teamScores[1] ) {
@@ -352,10 +356,8 @@ qboolean CG_DrawOldScoreboard( void ) {
 			s = va("Blue leads %i to %i",cg.teamScores[1], cg.teamScores[0] );
 		}
 
-		w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
-		x = ( SCREEN_WIDTH - w ) / 2;
 		y = 60;
-		CG_DrawBigString( x, y, s, fade );
+		CG_DrawString( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 	}
 
 	// scoreboard
@@ -436,23 +438,8 @@ qboolean CG_DrawOldScoreboard( void ) {
 
 //================================================================================
 
-/*
-================
-CG_CenterGiantLine
-================
-*/
 static void CG_CenterGiantLine( float y, const char *string ) {
-	float		x;
-	vec4_t		color;
-
-	color[0] = 1;
-	color[1] = 1;
-	color[2] = 1;
-	color[3] = 1;
-
-	x = 0.5 * ( 640 - GIANT_WIDTH * CG_DrawStrlen( string ) );
-
-	CG_DrawStringExt( x, y, string, color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
+	CG_DrawString( 320, y, string, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 }
 
 /*
@@ -485,11 +472,6 @@ void CG_DrawOldTourneyScoreboard( void ) {
 	CG_FillRect( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, color );
 	CG_PopScreenPlacement();
 
-	color[0] = 1;
-	color[1] = 1;
-	color[2] = 1;
-	color[3] = 1;
-
 	// print the mesage of the day
 	s = CG_ConfigString( CS_MOTD );
 	if ( !s[0] ) {
@@ -517,15 +499,15 @@ void CG_DrawOldTourneyScoreboard( void ) {
 		//
 		// teamplay scoreboard
 		//
-		CG_DrawStringExt( 8, y, "Red Team", color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
+		CG_DrawString( 8, y, "Red Team", UI_LEFT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 		s = va("%i", cg.teamScores[0] );
-		CG_DrawStringExt( 632 - GIANT_WIDTH * strlen(s), y, s, color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
+		CG_DrawString( 632, y, s, UI_RIGHT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 		
 		y += 64;
 
-		CG_DrawStringExt( 8, y, "Blue Team", color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
+		CG_DrawString( 8, y, "Blue Team", UI_LEFT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 		s = va("%i", cg.teamScores[1] );
-		CG_DrawStringExt( 632 - GIANT_WIDTH * strlen(s), y, s, color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
+		CG_DrawString( 632, y, s, UI_RIGHT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 	} else {
 		//
 		// free for all scoreboard
@@ -539,9 +521,9 @@ void CG_DrawOldTourneyScoreboard( void ) {
 				continue;
 			}
 
-			CG_DrawStringExt( 8, y, pi->name, color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
+			CG_DrawString( 8, y, pi->name, UI_LEFT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 			s = va("%i", pi->score );
-			CG_DrawStringExt( 632 - GIANT_WIDTH * strlen(s), y, s, color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
+			CG_DrawString( 632, y, s, UI_RIGHT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 			y += 64;
 		}
 	}

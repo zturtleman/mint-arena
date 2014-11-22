@@ -30,6 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 // cg_drawtools.c -- helper functions called by cg_draw, cg_scoreboard, cg_info, etc
 #include "cg_local.h"
+#include "../../ui/menudef.h"
 
 static screenPlacement_e cg_horizontalPlacement = PLACE_CENTER;
 static screenPlacement_e cg_verticalPlacement = PLACE_CENTER;
@@ -373,10 +374,9 @@ void CG_DrawChar( int x, int y, int width, int height, int ch ) {
 					   cgs.media.charsetShader );
 }
 
-
 /*
 ==================
-CG_DrawStringExt
+CG_DrawString
 
 Draws a multi-colored string with a drop shadow, optionally forcing
 to a fixed color.
@@ -384,59 +384,88 @@ to a fixed color.
 Coordinates are at 640 by 480 virtual resolution
 ==================
 */
-void CG_DrawStringExt( int x, int y, const char *string, const float *setColor, 
-		int forceColor, qboolean shadow, int charWidth, int charHeight, int maxChars ) {
-	vec4_t		color;
-	const char	*s;
-	int			xx;
-	int			cnt;
+void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color ) {
+	CG_DrawStringExt( x, y, str, style, color, 0, 0 );
+}
+void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars ) {
+	int		charh;
+	//vec4_t	newcolor;
+	//vec4_t	lowlight;
+	const float	*drawcolor;
+	const fontInfo_t *font;
+	int			decent;
 
-	if (maxChars <= 0)
-		maxChars = 32767; // do them all!
-
-	// draw the drop shadow
-	if (shadow) {
-		color[0] = color[1] = color[2] = 0;
-		color[3] = setColor[3];
-		trap_R_SetColor( color );
-		s = string;
-		xx = x;
-		cnt = 0;
-		while ( *s && cnt < maxChars) {
-			if ( Q_IsColorString( s ) && forceColor != 2 ) {
-				s += 2;
-				continue;
-			}
-			CG_DrawChar( xx + 2, y + 2, charWidth, charHeight, *s );
-			cnt++;
-			xx += charWidth;
-			s++;
-		}
+	if( !str ) {
+		return;
 	}
 
-	// draw the colored text
-	s = string;
-	xx = x;
-	cnt = 0;
-	trap_R_SetColor( setColor );
-	while ( *s && cnt < maxChars) {
-		if ( Q_IsColorString( s ) ) {
-			if ( forceColor != 1 ) {
-				memcpy( color, g_color_table[ColorIndex(*(s+1))], sizeof( color ) );
-				color[3] = setColor[3];
-				trap_R_SetColor( color );
-			}
-			if ( forceColor != 2 ) {
-				s += 2;
-				continue;
-			}
-		}
-		CG_DrawChar( xx, y, charWidth, charHeight, *s );
-		xx += charWidth;
-		cnt++;
-		s++;
+	if ( !color ) {
+		color = colorWhite;
 	}
-	trap_R_SetColor( NULL );
+
+	if ((style & UI_BLINK) && ((cg.realTime/BLINK_DIVISOR) & 1))
+		return;
+
+	if (style & UI_TINYFONT)
+	{
+		font = &cgs.media.tinyFont;
+		charh =	TINYCHAR_HEIGHT;
+	}
+	else if (style & UI_SMALLFONT)
+	{
+		font = &cgs.media.smallFont;
+		charh =	SMALLCHAR_HEIGHT;
+	}
+	else if (style & UI_GIANTFONT)
+	{
+		font = &cgs.media.bigFont;
+		charh =	GIANTCHAR_HEIGHT;
+	}
+	else
+	{
+		font = &cgs.media.textFont;
+		charh =	BIGCHAR_HEIGHT;
+	}
+
+	if ( scale <= 0 ) {
+		scale = charh / 48.0f;
+	}
+
+#if 0
+	if (style & UI_PULSE)
+	{
+		lowlight[0] = 0.8*color[0];
+		lowlight[1] = 0.8*color[1];
+		lowlight[2] = 0.8*color[2];
+		lowlight[3] = 0.8*color[3];
+		UI_LerpColor(color,lowlight,newcolor,0.5+0.5*sin(cg.realTime/PULSE_DIVISOR));
+		drawcolor = newcolor;
+	}
+	else
+#endif
+		drawcolor = color;
+
+	switch (style & UI_FORMATMASK)
+	{
+		case UI_CENTER:
+			// center justify at x
+			x = x - Text_Width( str, font, scale, 0 ) / 2;
+			break;
+
+		case UI_RIGHT:
+			// right justify at x
+			x = x - Text_Width( str, font, scale, 0 );
+			break;
+
+		default:
+			// left justify at x
+			break;
+	}
+
+	// This function expects that y is top of line, text_paint expects at baseline
+	decent = -font->glyphs[(int)'g'].top + font->glyphs[(int)'g'].height;
+	y = y + charh - decent * scale * font->glyphScale;
+	Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, ( style & UI_DROPSHADOW ) ? ITEM_TEXTSTYLE_SHADOWEDMORE : 0 );
 }
 
 void CG_DrawBigString( int x, int y, const char *s, float alpha ) {
@@ -444,11 +473,12 @@ void CG_DrawBigString( int x, int y, const char *s, float alpha ) {
 
 	color[0] = color[1] = color[2] = 1.0;
 	color[3] = alpha;
-	CG_DrawStringExt( x, y, s, color, qfalse, qtrue, BIGCHAR_WIDTH, BIGCHAR_HEIGHT, 0 );
+	CG_DrawString( x, y, s, UI_DROPSHADOW|UI_BIGFONT, color );
 }
 
 void CG_DrawBigStringColor( int x, int y, const char *s, vec4_t color ) {
-	CG_DrawStringExt( x, y, s, color, qtrue, qtrue, BIGCHAR_WIDTH, BIGCHAR_HEIGHT, 0 );
+	// FIXME: force color
+	CG_DrawString( x, y, s, UI_DROPSHADOW|UI_BIGFONT, color );
 }
 
 void CG_DrawSmallString( int x, int y, const char *s, float alpha ) {
@@ -456,49 +486,82 @@ void CG_DrawSmallString( int x, int y, const char *s, float alpha ) {
 
 	color[0] = color[1] = color[2] = 1.0;
 	color[3] = alpha;
-	CG_DrawStringExt( x, y, s, color, qfalse, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 0 );
+	CG_DrawString( x, y, s, UI_SMALLFONT, color );
 }
 
 void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color ) {
-	CG_DrawStringExt( x, y, s, color, qtrue, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 0 );
+	// FIXME: force color
+	CG_DrawString( x, y, s, UI_SMALLFONT, color );
 }
 
 /*
 =================
 CG_DrawStrlenEx
 
-Returns character count, skiping color escape codes
+Returns draw width, skiping color escape codes
 =================
 */
-int CG_DrawStrlenEx( const char *str, int maxchars ) {
-	const char *s = str;
-	int count = 0;
+int CG_DrawStrlenEx( const char *str, int style, int maxchars ) {
+	const fontInfo_t *font;
+	int charh;
 
-	while ( *s ) {
-		if ( Q_IsColorString( s ) ) {
-			s += 2;
-		} else {
-			count++;
-			s++;
-		}
-
-		if ( maxchars > 0 && s - str >= maxchars ) {
-			break;
-		}
+	if (style & UI_TINYFONT)
+	{
+		font = &cgs.media.tinyFont;
+		charh =	TINYCHAR_HEIGHT;
+	}
+	else if (style & UI_SMALLFONT)
+	{
+		font = &cgs.media.smallFont;
+		charh =	SMALLCHAR_HEIGHT;
+	}
+	else if (style & UI_GIANTFONT)
+	{
+		font = &cgs.media.bigFont;
+		charh =	GIANTCHAR_HEIGHT;
+	}
+	else
+	{
+		font = &cgs.media.textFont;
+		charh =	BIGCHAR_HEIGHT;
 	}
 
-	return count;
+	return Text_Width( str, font, charh / 48.0f, maxchars );
 }
 
 /*
 =================
 CG_DrawStrlen
 
-Returns character count, skiping color escape codes
+Returns draw width, skiping color escape codes
 =================
 */
-int CG_DrawStrlen( const char *str ) {
-	return CG_DrawStrlenEx( str, 0 );
+int CG_DrawStrlen( const char *str, int style ) {
+	const fontInfo_t *font;
+	int charh;
+
+	if (style & UI_TINYFONT)
+	{
+		font = &cgs.media.tinyFont;
+		charh =	TINYCHAR_HEIGHT;
+	}
+	else if (style & UI_SMALLFONT)
+	{
+		font = &cgs.media.smallFont;
+		charh =	SMALLCHAR_HEIGHT;
+	}
+	else if (style & UI_GIANTFONT)
+	{
+		font = &cgs.media.bigFont;
+		charh =	GIANTCHAR_HEIGHT;
+	}
+	else
+	{
+		font = &cgs.media.textFont;
+		charh =	BIGCHAR_HEIGHT;
+	}
+
+	return Text_Width( str, font, charh / 48.0f, 0 );
 }
 
 /*

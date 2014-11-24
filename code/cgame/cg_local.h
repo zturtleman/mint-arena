@@ -1527,6 +1527,7 @@ void CG_DrawPic( float x, float y, float width, float height, qhandle_t hShader 
 void CG_DrawNamedPic( float x, float y, float width, float height, const char *picname );
 void CG_SetClipRegion( float x, float y, float w, float h );
 void CG_ClearClipRegion( void );
+void CG_LerpColor( const vec4_t a, const vec4_t b, vec4_t c, float t );
 
 void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color );
 void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset );

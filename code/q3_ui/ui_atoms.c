@@ -136,26 +136,6 @@ void UI_ForceMenuOff (void)
 
 /*
 =================
-UI_LerpColor
-=================
-*/
-void UI_LerpColor(vec4_t a, vec4_t b, vec4_t c, float t)
-{
-	int i;
-
-	// lerp and clamp each component
-	for (i=0; i<4; i++)
-	{
-		c[i] = a[i] + t*(b[i]-a[i]);
-		if (c[i] < 0)
-			c[i] = 0;
-		else if (c[i] > 1.0)
-			c[i] = 1.0;
-	}
-}
-
-/*
-=================
 UI_DrawProportionalString2
 =================
 */
@@ -621,143 +601,12 @@ void UI_DrawProportionalString_AutoWrapped( int x, int y, int xmax, int ystep, c
 
 /*
 =================
-UI_DrawString2
-=================
-*/
-static void UI_DrawString2( int x, int y, const char* str, vec4_t color, int charw, int charh )
-{
-	const char* s;
-	char	ch;
-	int forceColor = qfalse; //APSFIXME;
-	vec4_t	tempcolor;
-	float	ax;
-	float	ay;
-	float	aw;
-	float	ah;
-	float	frow;
-	float	fcol;
-
-	if (y < -charh)
-		// offscreen
-		return;
-
-	// draw the colored text
-	trap_R_SetColor( color );
-	
-	ax = x;
-	ay = y;
-	aw = charw;
-	ah = charh;
-
-	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
-
-	s = str;
-	while ( *s )
-	{
-		if ( Q_IsColorString( s ) )
-		{
-			if ( !forceColor )
-			{
-				memcpy( tempcolor, g_color_table[ColorIndex(s[1])], sizeof( tempcolor ) );
-				tempcolor[3] = color[3];
-				trap_R_SetColor( tempcolor );
-			}
-			s += 2;
-			continue;
-		}
-
-		ch = *s & 255;
-		if (ch != ' ')
-		{
-			frow = (ch>>4)*0.0625;
-			fcol = (ch&15)*0.0625;
-			trap_R_DrawStretchPic( ax, ay, aw, ah, fcol, frow, fcol + 0.0625, frow + 0.0625, uis.charset );
-		}
-
-		ax += aw;
-		s++;
-	}
-
-	trap_R_SetColor( NULL );
-}
-
-/*
-=================
 UI_DrawString
 =================
 */
 void UI_DrawString( int x, int y, const char* str, int style, vec4_t color )
 {
-	int		len;
-	int		charw;
-	int		charh;
-	vec4_t	newcolor;
-	vec4_t	lowlight;
-	float	*drawcolor;
-	vec4_t	dropcolor;
-
-	if( !str ) {
-		return;
-	}
-
-	if ((style & UI_BLINK) && ((uis.realtime/BLINK_DIVISOR) & 1))
-		return;
-
-	if (style & UI_SMALLFONT)
-	{
-		charw =	SMALLCHAR_WIDTH;
-		charh =	SMALLCHAR_HEIGHT;
-	}
-	else if (style & UI_GIANTFONT)
-	{
-		charw =	GIANTCHAR_WIDTH;
-		charh =	GIANTCHAR_HEIGHT;
-	}
-	else
-	{
-		charw =	BIGCHAR_WIDTH;
-		charh =	BIGCHAR_HEIGHT;
-	}
-
-	if (style & UI_PULSE)
-	{
-		lowlight[0] = 0.8*color[0]; 
-		lowlight[1] = 0.8*color[1];
-		lowlight[2] = 0.8*color[2];
-		lowlight[3] = 0.8*color[3];
-		UI_LerpColor(color,lowlight,newcolor,0.5+0.5*sin(uis.realtime/PULSE_DIVISOR));
-		drawcolor = newcolor;
-	}	
-	else
-		drawcolor = color;
-
-	switch (style & UI_FORMATMASK)
-	{
-		case UI_CENTER:
-			// center justify at x
-			len = strlen(str);
-			x   = x - len*charw/2;
-			break;
-
-		case UI_RIGHT:
-			// right justify at x
-			len = strlen(str);
-			x   = x - len*charw;
-			break;
-
-		default:
-			// left justify at x
-			break;
-	}
-
-	if ( style & UI_DROPSHADOW )
-	{
-		dropcolor[0] = dropcolor[1] = dropcolor[2] = 0;
-		dropcolor[3] = drawcolor[3];
-		UI_DrawString2(x+2,y+2,str,dropcolor,charw,charh);
-	}
-
-	UI_DrawString2(x,y,str,drawcolor,charw,charh);
+	CG_DrawString( x, y, str, style, color );
 }
 
 /*

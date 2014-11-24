@@ -334,6 +334,26 @@ void CG_ClearClipRegion( void ) {
 	trap_R_SetClipRegion( NULL );
 }
 
+/*
+=================
+CG_LerpColor
+=================
+*/
+void CG_LerpColor( const vec4_t a, const vec4_t b, vec4_t c, float t )
+{
+	int i;
+
+	// lerp and clamp each component
+	for (i=0; i<4; i++)
+	{
+		c[i] = a[i] + t*(b[i]-a[i]);
+		if (c[i] < 0)
+			c[i] = 0;
+		else if (c[i] > 1.0)
+			c[i] = 1.0;
+	}
+}
+
 
 /*
 ==================
@@ -350,8 +370,8 @@ void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color
 }
 void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset ) {
 	int		charh;
-	//vec4_t	newcolor;
-	//vec4_t	lowlight;
+	vec4_t	newcolor;
+	vec4_t	lowlight;
 	const float	*drawcolor;
 	const fontInfo_t *font;
 	int			decent;
@@ -394,18 +414,16 @@ void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t co
 		charh = 48 * scale;
 	}
 
-#if 0
 	if (style & UI_PULSE)
 	{
 		lowlight[0] = 0.8*color[0];
 		lowlight[1] = 0.8*color[1];
 		lowlight[2] = 0.8*color[2];
 		lowlight[3] = 0.8*color[3];
-		UI_LerpColor(color,lowlight,newcolor,0.5+0.5*sin(cg.realTime/PULSE_DIVISOR));
+		CG_LerpColor(color,lowlight,newcolor,0.5+0.5*sin(cg.realTime/PULSE_DIVISOR));
 		drawcolor = newcolor;
 	}
 	else
-#endif
 		drawcolor = color;
 
 	switch (style & UI_FORMATMASK)

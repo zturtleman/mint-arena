@@ -3088,7 +3088,7 @@ void CG_DrawMessageMode( void ) {
 	CG_DrawBigString( 8, 232, cg.messagePrompt, 1.0f );
 
 	MField_Draw( &cg.messageField, 8 + CG_DrawStrlen( cg.messagePrompt, UI_BIGFONT ), 232,
-			BIGCHAR_WIDTH, BIGCHAR_HEIGHT, g_color_table[ColorIndex(COLOR_WHITE)] );
+			UI_DROPSHADOW|UI_BIGFONT, NULL, qtrue );
 }
 
 /*

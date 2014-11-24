@@ -59,7 +59,7 @@ void CG_Text_PaintWithCursor(float x, float y, float scale, const vec4_t color, 
 		shadowOffset = 0;
 	}
 
-	Text_PaintWithCursor( x, y, CG_FontForScale( scale ), scale, color, text, cursorPos, cursor, limit, shadowOffset );
+	Text_PaintWithCursor( x, y, CG_FontForScale( scale ), scale, color, text, cursorPos, cursor, 0, limit, shadowOffset, qfalse );
 }
 
 int CG_Text_Width(const char *text, float scale, int limit) {

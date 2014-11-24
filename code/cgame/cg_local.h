@@ -150,7 +150,7 @@ typedef struct {
 void	MField_Clear( mfield_t *edit );
 void	MField_KeyDownEvent( mfield_t *edit, int key );
 void	MField_CharEvent( mfield_t *edit, int ch );
-void	MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, vec4_t color );
+void	MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor );
 
 //=================================================
 
@@ -1530,7 +1530,9 @@ void CG_ClearClipRegion( void );
 void CG_LerpColor( const vec4_t a, const vec4_t b, vec4_t c, float t );
 
 void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color );
+void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const vec4_t color, int cursorPos, int cursorChar );
 void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset );
+void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, int cursorPos, int cursorChar );
 void CG_DrawBigString( int x, int y, const char *s, float alpha );
 void CG_DrawBigStringColor( int x, int y, const char *s, vec4_t color );
 void CG_DrawSmallString( int x, int y, const char *s, float alpha );
@@ -1608,7 +1610,7 @@ fontInfo_t *CG_FontForScale( float scale );
 
 void Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader);
 void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, qboolean forceColor);
-void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, float shadowOffset);
+void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, qboolean forceColor);
 void Text_Paint_Limit(float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit);
 int Text_Width(const char *text, const fontInfo_t *font, float scale, int limit);
 int Text_Height(const char *text, const fontInfo_t *font, float scale, int limit);

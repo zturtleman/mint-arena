@@ -38,15 +38,12 @@ Handles horizontal scrolling and cursor blinking
 x, y, charWidth, charHeight, are in 640*480 virtual screen size
 ===================
 */
-void MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, vec4_t color ) {
+void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor ) {
 	int		len;
 	int		drawLen;
 	int		prestep;
 	int		cursorChar;
 	char	str[MAX_STRING_CHARS];
-	fontInfo_t	*font;
-	int		decent;
-	int		style;
 
 	drawLen = edit->widthInChars;
 	len     = strlen( edit->buffer ) + 1;
@@ -75,24 +72,17 @@ void MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, v
 	memcpy( str, edit->buffer + prestep, drawLen );
 	str[ drawLen ] = 0;
 
-	if ( charHeight > SMALLCHAR_HEIGHT ) {
-		font = &cgs.media.textFont;
-		style = UI_DROPSHADOW;
+	if ( drawCursor ) {
+		if ( trap_Key_GetOverstrikeMode() ) {
+			cursorChar = 11;
+		} else {
+			cursorChar = 10;
+		}
 	} else {
-		font = &cgs.media.smallFont;
-		style = 0;
+		cursorChar = -1;
 	}
 
-	if ( trap_Key_GetOverstrikeMode() ) {
-		cursorChar = 11;
-	} else {
-		cursorChar = 10;
-	}
-
-	// This function expects that y is top of line, text_paint expects at baseline
-	decent = -font->glyphs[(int)'g'].top + font->glyphs[(int)'g'].height;
-	y = y + charHeight - decent * charHeight / 48.0f * font->glyphScale;
-	Text_PaintWithCursor( x, y, font, charHeight / 48.0f, color, str, ( edit->cursor - prestep ), cursorChar, 0, ( style & UI_DROPSHADOW ) ? 2 : 0 );
+	CG_DrawStringWithCursor( x, y, str, style, NULL, ( edit->cursor - prestep ), cursorChar );
 }
 
 /*

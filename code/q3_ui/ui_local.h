@@ -313,7 +313,6 @@ extern char	*ui_medalSounds[];
 //
 // ui_mfield.c
 //
-extern void			UI_Field_Draw( mfield_t *edit, int x, int y, int style, vec4_t color );
 extern void			MenuField_Init( menufield_s* m );
 extern void			MenuField_Draw( menufield_s *f );
 extern sfxHandle_t	MenuField_Key( menufield_s* m, int* key );

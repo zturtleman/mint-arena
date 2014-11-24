@@ -263,7 +263,7 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
   }
 }
 
-void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, float shadowOffset) {
+void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, qboolean forceColor) {
   int len, count;
 	vec4_t newColor;
 	const glyphInfo_t *glyph, *glyph2;
@@ -286,12 +286,15 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
       //int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
       //float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
 			if ( Q_IsColorString( s ) ) {
-				memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
-				newColor[3] = color[3];
-				trap_R_SetColor( newColor );
-				s += 2;
-				continue;
-			} else {
+				if ( !forceColor ) {
+					memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
+					newColor[3] = color[3];
+					trap_R_SetColor( newColor );
+				}
+				// display color codes in edit fields
+				//s += 2;
+				//continue;
+			}
 				yadj = useScale * glyph->top;
 				xadj = useScale * glyph->left;
 				if (shadowOffset) {
@@ -332,10 +335,9 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 														glyph2->glyph);
 				}
 
-				x += (glyph->xSkip * useScale);
+				x += (glyph->xSkip * useScale) + adjust;
 				s++;
 				count++;
-			}
     }
     // need to paint cursor at end of text
     if (cursorPos == len && !((cg.realTime/BLINK_DIVISOR) & 1)) {

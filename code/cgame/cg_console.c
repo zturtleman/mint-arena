@@ -240,7 +240,7 @@ void Con_DrawInput ( connstate_t state, int lines ) {
 
 	CG_DrawSmallStringColor( con.sideMargin, y, "]", g_color_table[ColorIndex(COLOR_WHITE)] );
 
-	MField_Draw( &g_consoleField, con.sideMargin + CG_DrawStrlen( "]", UI_SMALLFONT ), y, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, g_color_table[ColorIndex(COLOR_WHITE)] );
+	MField_Draw( &g_consoleField, con.sideMargin + CG_DrawStrlen( "]", UI_SMALLFONT ), y, UI_SMALLFONT, NULL, qtrue );
 }
 
 /*

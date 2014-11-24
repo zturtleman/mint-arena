@@ -192,7 +192,7 @@ void UI_Text_PaintWithCursor(float x, float y, float scale, const vec4_t color, 
 		shadowOffset = 0;
 	}
 
-	Text_PaintWithCursor(x, y, UI_FontForScale( scale ), scale, color, text, cursorPos, cursor, limit, shadowOffset);
+	Text_PaintWithCursor(x, y, UI_FontForScale( scale ), scale, color, text, cursorPos, cursor, 0, limit, shadowOffset, qfalse);
 }
 
 int UI_Text_Width(const char *text, float scale, int limit) {

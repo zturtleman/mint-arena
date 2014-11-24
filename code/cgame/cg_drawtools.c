@@ -366,9 +366,15 @@ Coordinates are at 640 by 480 virtual resolution
 ==================
 */
 void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color ) {
-	CG_DrawStringExt( x, y, str, style, color, 0, 0, 0 );
+	CG_DrawStringExtWithCursor( x, y, str, style, color, 0, 0, 0, -1, -1 );
+}
+void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const vec4_t color, int cursorPos, int cursorChar ) {
+	CG_DrawStringExtWithCursor( x, y, str, style, color, 0, 0, 0, cursorPos, cursorChar );
 }
 void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset ) {
+	CG_DrawStringExtWithCursor( x, y, str, style, color, scale, maxChars, shadowOffset, -1, -1 );
+}
+void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, int cursorPos, int cursorChar ) {
 	int		charh;
 	vec4_t	newcolor;
 	vec4_t	lowlight;
@@ -450,7 +456,11 @@ void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t co
 	// This function expects that y is top of line, text_paint expects at baseline
 	decent = -font->glyphs[(int)'g'].top + font->glyphs[(int)'g'].height;
 	y = y + charh - decent * scale * font->glyphScale;
-	Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, ( style & UI_FORCECOLOR ) );
+	if ( cursorChar >= 0 ) {
+		Text_PaintWithCursor( x, y, font, scale, drawcolor, str, cursorPos, cursorChar, 0, maxChars, shadowOffset, ( style & UI_FORCECOLOR ) );
+	} else {
+		Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, ( style & UI_FORCECOLOR ) );
+	}
 }
 
 void CG_DrawBigString( int x, int y, const char *s, float alpha ) {

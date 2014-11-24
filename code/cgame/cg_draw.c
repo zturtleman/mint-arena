@@ -522,7 +522,7 @@ static float CG_DrawAttacker( float y ) {
 	int			t;
 	float		size;
 	vec3_t		angles;
-	vec3_t		color;
+	vec4_t		color;
 	const char	*info;
 	const char	*name;
 	int			playerNum;

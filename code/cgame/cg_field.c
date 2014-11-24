@@ -74,9 +74,9 @@ void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolea
 
 	if ( drawCursor ) {
 		if ( trap_Key_GetOverstrikeMode() ) {
-			cursorChar = 11;
+			cursorChar = 11; // full block
 		} else {
-			cursorChar = 10;
+			cursorChar = 10; // full width low line
 		}
 	} else {
 		cursorChar = -1;

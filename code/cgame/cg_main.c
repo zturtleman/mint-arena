@@ -1835,7 +1835,7 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			cgDC.registerFont(tempStr, pointSize, &cgDC.Assets.textFont);
+			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.textFont);
 			continue;
 		}
 
@@ -1845,17 +1845,17 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			cgDC.registerFont(tempStr, pointSize, &cgDC.Assets.smallFont);
+			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.smallFont);
 			continue;
 		}
 
-		// font
+		// bigFont
 		if (Q_stricmp(token.string, "bigfont") == 0) {
 			int pointSize;
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			cgDC.registerFont(tempStr, pointSize, &cgDC.Assets.bigFont);
+			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.bigFont);
 			continue;
 		}
 

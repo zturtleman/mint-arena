@@ -394,7 +394,7 @@ qboolean Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle,&pointSize)) {
 				return qfalse;
 			}
-			trap_R_RegisterFont(tempStr, pointSize, &uiInfo.uiDC.Assets.textFont);
+			CG_InitTrueTypeFont(tempStr, pointSize, &uiInfo.uiDC.Assets.textFont);
 			uiInfo.uiDC.Assets.fontRegistered = qtrue;
 			continue;
 		}
@@ -404,7 +404,7 @@ qboolean Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle,&pointSize)) {
 				return qfalse;
 			}
-			trap_R_RegisterFont(tempStr, pointSize, &uiInfo.uiDC.Assets.smallFont);
+			CG_InitTrueTypeFont(tempStr, pointSize, &uiInfo.uiDC.Assets.smallFont);
 			continue;
 		}
 
@@ -413,7 +413,7 @@ qboolean Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle,&pointSize)) {
 				return qfalse;
 			}
-			trap_R_RegisterFont(tempStr, pointSize, &uiInfo.uiDC.Assets.bigFont);
+			CG_InitTrueTypeFont(tempStr, pointSize, &uiInfo.uiDC.Assets.bigFont);
 			continue;
 		}
 

@@ -454,4 +454,6 @@ void Controls_GetConfig( void );
 void Controls_SetConfig(qboolean restart);
 void Controls_SetDefaults( void );
 
+qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font );
+
 #endif

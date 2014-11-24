@@ -202,7 +202,7 @@ void Text_PaintChar(float x, float y, float width, float height, float scale, fl
   trap_R_DrawStretchPic( x, y, w, h, s, t, s2, t2, hShader );
 }
 
-void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, int style) {
+void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset) {
   int len, count;
 	vec4_t newColor;
 	const glyphInfo_t *glyph;
@@ -232,14 +232,13 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
 				float yadj = useScale * glyph->top;
 				float xadj = useScale * glyph->left;
 
-				if (style == ITEM_TEXTSTYLE_SHADOWED || style == ITEM_TEXTSTYLE_SHADOWEDMORE) {
-					int ofs = style == ITEM_TEXTSTYLE_SHADOWED ? 1 : 2;
+				if (shadowOffset) {
 					colorBlack[3] = newColor[3];
 					trap_R_SetColor( colorBlack );
-					Text_PaintChar(x + xadj + ofs, y - yadj + ofs, 
+					Text_PaintChar(x + xadj + shadowOffset, y - yadj + shadowOffset,
 														glyph->imageWidth,
 														glyph->imageHeight,
-														useScale, 
+														useScale,
 														glyph->s,
 														glyph->t,
 														glyph->s2,
@@ -251,7 +250,7 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
 				Text_PaintChar(x + xadj, y - yadj, 
 													glyph->imageWidth,
 													glyph->imageHeight,
-													useScale, 
+													useScale,
 													glyph->s,
 													glyph->t,
 													glyph->s2,
@@ -267,7 +266,7 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
   }
 }
 
-void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, int style) {
+void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, float shadowOffset) {
   int len, count;
 	vec4_t newColor;
 	const glyphInfo_t *glyph, *glyph2;
@@ -298,14 +297,13 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 			} else {
 				yadj = useScale * glyph->top;
 				xadj = useScale * glyph->left;
-				if (style == ITEM_TEXTSTYLE_SHADOWED || style == ITEM_TEXTSTYLE_SHADOWEDMORE) {
-					int ofs = style == ITEM_TEXTSTYLE_SHADOWED ? 1 : 2;
+				if (shadowOffset) {
 					colorBlack[3] = newColor[3];
 					trap_R_SetColor( colorBlack );
-					Text_PaintChar(x + xadj + ofs, y - yadj + ofs, 
+					Text_PaintChar(x + xadj + shadowOffset, y - yadj + shadowOffset,
 														glyph->imageWidth,
 														glyph->imageHeight,
-														useScale, 
+														useScale,
 														glyph->s,
 														glyph->t,
 														glyph->s2,
@@ -434,8 +432,18 @@ fontInfo_t *CG_FontForScale( float scale ) {
 }
 
 // CG_Text_* are for Team Arena HUD code compatiblity
-void CG_Text_PaintWithCursor(float x, float y, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, int style) {
-	Text_PaintWithCursor(x, y, CG_FontForScale( scale ), scale, color, text, cursorPos, cursor, limit, style);
+void CG_Text_PaintWithCursor(float x, float y, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, int textStyle) {
+	float shadowOffset;
+
+	if ( textStyle == ITEM_TEXTSTYLE_SHADOWED ) {
+		shadowOffset = 1;
+	} else if ( textStyle == ITEM_TEXTSTYLE_SHADOWEDMORE ) {
+		shadowOffset = 2;
+	} else {
+		shadowOffset = 0;
+	}
+
+	Text_PaintWithCursor( x, y, CG_FontForScale( scale ), scale, color, text, cursorPos, cursor, limit, shadowOffset );
 }
 
 int CG_Text_Width(const char *text, float scale, int limit) {
@@ -450,8 +458,18 @@ void CG_Text_PaintChar(float x, float y, float width, float height, float scale,
 	Text_PaintChar( x, y, width, height, scale, s, t, s2, t2, hShader );
 }
 
-void CG_Text_Paint(float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int style) {
-	Text_Paint( x, y, CG_FontForScale( scale ), scale, color, text, adjust, limit, style );
+void CG_Text_Paint(float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle) {
+	float shadowOffset;
+
+	if ( textStyle == ITEM_TEXTSTYLE_SHADOWED ) {
+		shadowOffset = 1;
+	} else if ( textStyle == ITEM_TEXTSTYLE_SHADOWEDMORE ) {
+		shadowOffset = 2;
+	} else {
+		shadowOffset = 0;
+	}
+
+	Text_Paint( x, y, CG_FontForScale( scale ), scale, color, text, adjust, limit, shadowOffset );
 }
 
 void CG_Text_Paint_Limit(float *maxX, float x, float y, float scale, const vec4_t color, const char* text, float adjust, int limit) {

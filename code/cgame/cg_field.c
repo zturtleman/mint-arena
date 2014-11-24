@@ -29,7 +29,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 //
 #include "cg_local.h"
-#include "../../ui/menudef.h"
 
 /*
 ===================
@@ -47,7 +46,7 @@ void MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, v
 	char	str[MAX_STRING_CHARS];
 	fontInfo_t	*font;
 	int		decent;
-	int		textStyle;
+	int		style;
 
 	drawLen = edit->widthInChars;
 	len     = strlen( edit->buffer ) + 1;
@@ -78,10 +77,10 @@ void MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, v
 
 	if ( charHeight > SMALLCHAR_HEIGHT ) {
 		font = &cgs.media.textFont;
-		textStyle = ITEM_TEXTSTYLE_SHADOWEDMORE;
+		style = UI_DROPSHADOW;
 	} else {
 		font = &cgs.media.smallFont;
-		textStyle = 0;
+		style = 0;
 	}
 
 	if ( trap_Key_GetOverstrikeMode() ) {
@@ -93,7 +92,7 @@ void MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, v
 	// This function expects that y is top of line, text_paint expects at baseline
 	decent = -font->glyphs[(int)'g'].top + font->glyphs[(int)'g'].height;
 	y = y + charHeight - decent * charHeight / 48.0f * font->glyphScale;
-	Text_PaintWithCursor( x, y, font, charHeight / 48.0f, color, str, ( edit->cursor - prestep ), cursorChar, 0, textStyle );
+	Text_PaintWithCursor( x, y, font, charHeight / 48.0f, color, str, ( edit->cursor - prestep ), cursorChar, 0, ( style & UI_DROPSHADOW ) ? 2 : 0 );
 }
 
 /*

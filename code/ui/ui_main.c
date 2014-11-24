@@ -181,8 +181,18 @@ fontInfo_t *UI_FontForScale( float scale ) {
 	return font;
 }
 
-void UI_Text_PaintWithCursor(float x, float y, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, int style) {
-	Text_PaintWithCursor(x, y, UI_FontForScale( scale ), scale, color, text, cursorPos, cursor, limit, style);
+void UI_Text_PaintWithCursor(float x, float y, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, int textStyle) {
+	float shadowOffset;
+
+	if ( textStyle == ITEM_TEXTSTYLE_SHADOWED ) {
+		shadowOffset = 1;
+	} else if ( textStyle == ITEM_TEXTSTYLE_SHADOWEDMORE ) {
+		shadowOffset = 2;
+	} else {
+		shadowOffset = 0;
+	}
+
+	Text_PaintWithCursor(x, y, UI_FontForScale( scale ), scale, color, text, cursorPos, cursor, limit, shadowOffset);
 }
 
 int UI_Text_Width(const char *text, float scale, int limit) {
@@ -197,8 +207,18 @@ void UI_Text_PaintChar(float x, float y, float width, float height, float scale,
 	Text_PaintChar( x, y, width, height, scale, s, t, s2, t2, hShader );
 }
 
-void UI_Text_Paint(float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int style) {
-	Text_Paint( x, y, UI_FontForScale( scale ), scale, color, text, adjust, limit, style );
+void UI_Text_Paint(float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle) {
+	float shadowOffset;
+
+	if ( textStyle == ITEM_TEXTSTYLE_SHADOWED ) {
+		shadowOffset = 1;
+	} else if ( textStyle == ITEM_TEXTSTYLE_SHADOWEDMORE ) {
+		shadowOffset = 2;
+	} else {
+		shadowOffset = 0;
+	}
+
+	Text_Paint( x, y, UI_FontForScale( scale ), scale, color, text, adjust, limit, shadowOffset );
 }
 
 void UI_Text_Paint_Limit(float *maxX, float x, float y, float scale, const vec4_t color, const char* text, float adjust, int limit) {

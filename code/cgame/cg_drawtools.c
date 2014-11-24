@@ -30,7 +30,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 // cg_drawtools.c -- helper functions called by cg_draw, cg_scoreboard, cg_info, etc
 #include "cg_local.h"
-#include "../../ui/menudef.h"
 
 static screenPlacement_e cg_horizontalPlacement = PLACE_CENTER;
 static screenPlacement_e cg_verticalPlacement = PLACE_CENTER;
@@ -465,7 +464,7 @@ void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t co
 	// This function expects that y is top of line, text_paint expects at baseline
 	decent = -font->glyphs[(int)'g'].top + font->glyphs[(int)'g'].height;
 	y = y + charh - decent * scale * font->glyphScale;
-	Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, ( style & UI_DROPSHADOW ) ? ITEM_TEXTSTYLE_SHADOWEDMORE : 0 );
+	Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, ( style & UI_DROPSHADOW ) ? 2 : 0 );
 }
 
 void CG_DrawBigString( int x, int y, const char *s, float alpha ) {

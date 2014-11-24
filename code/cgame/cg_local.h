@@ -1532,7 +1532,7 @@ void CG_ClearClipRegion( void );
 void CG_DrawChar( int x, int y, int width, int height, int ch );
 
 void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color );
-void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars );
+void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset );
 void CG_DrawBigString( int x, int y, const char *s, float alpha );
 void CG_DrawBigStringColor( int x, int y, const char *s, vec4_t color );
 void CG_DrawSmallString( int x, int y, const char *s, float alpha );

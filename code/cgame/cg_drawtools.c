@@ -384,9 +384,9 @@ Coordinates are at 640 by 480 virtual resolution
 ==================
 */
 void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color ) {
-	CG_DrawStringExt( x, y, str, style, color, 0, 0 );
+	CG_DrawStringExt( x, y, str, style, color, 0, 0, 0 );
 }
-void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars ) {
+void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset ) {
 	int		charh;
 	//vec4_t	newcolor;
 	//vec4_t	lowlight;
@@ -428,6 +428,8 @@ void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t co
 
 	if ( scale <= 0 ) {
 		scale = charh / 48.0f;
+	} else {
+		charh = 48 * scale;
 	}
 
 #if 0
@@ -461,10 +463,14 @@ void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t co
 			break;
 	}
 
+	if ( shadowOffset == 0 && ( style & UI_DROPSHADOW ) ) {
+		shadowOffset = 2;
+	}
+
 	// This function expects that y is top of line, text_paint expects at baseline
 	decent = -font->glyphs[(int)'g'].top + font->glyphs[(int)'g'].height;
 	y = y + charh - decent * scale * font->glyphScale;
-	Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, ( style & UI_DROPSHADOW ) ? 2 : 0 );
+	Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset );
 }
 
 void CG_DrawBigString( int x, int y, const char *s, float alpha ) {

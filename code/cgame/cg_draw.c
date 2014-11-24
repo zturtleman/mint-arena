@@ -760,14 +760,14 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 
 			xx = x + TINYCHAR_WIDTH;
 
-			CG_DrawStringExt( xx, y, pi->name, UI_TINYFONT, NULL, 0, TEAM_OVERLAY_MAXNAME_WIDTH );
+			CG_DrawStringExt( xx, y, pi->name, UI_TINYFONT, NULL, 0, TEAM_OVERLAY_MAXNAME_WIDTH, 0 );
 
 			if (lwidth) {
 				p = CG_ConfigString(CS_LOCATIONS + pi->location);
 				if (!p || !*p)
 					p = "unknown";
 				xx = x + TINYCHAR_WIDTH * 2 + pwidth;
-				CG_DrawStringExt( xx, y, p, UI_TINYFONT, NULL, 0, TEAM_OVERLAY_MAXLOCATION_WIDTH );
+				CG_DrawStringExt( xx, y, p, UI_TINYFONT, NULL, 0, TEAM_OVERLAY_MAXLOCATION_WIDTH, 0 );
 			}
 
 			CG_GetColorForHealth( pi->health, pi->armor, hcolor );
@@ -1740,9 +1740,6 @@ static void CG_DrawCenterString( void ) {
 	char	*start;
 	int		l;
 	int		y;
-#ifdef MISSIONPACK_HUD
-	int		x, w, h;
-#endif
 	int		charHeight;
 	float	*color;
 
@@ -1761,12 +1758,7 @@ static void CG_DrawCenterString( void ) {
 
 	start = cg.cur_lc->centerPrint;
 
-#ifdef MISSIONPACK_HUD
-	charHeight = CG_Text_Height("I", cg.cur_lc->centerPrintCharScale, 0);
-#else
-	charHeight = Text_Height( "I", &cgs.media.bigFont, cg.cur_lc->centerPrintCharScale, 0 );
-#endif
-
+	charHeight = cg.cur_lc->centerPrintCharScale * 48.0f;
 	y = cg.cur_lc->centerPrintY - cg.cur_lc->centerPrintLines * charHeight / 2;
 
 	while ( 1 ) {
@@ -1780,16 +1772,9 @@ static void CG_DrawCenterString( void ) {
 		}
 		linebuffer[l] = 0;
 
-#ifdef MISSIONPACK_HUD
-		w = CG_Text_Width(linebuffer, cg.cur_lc->centerPrintCharScale, 0);
-		h = CG_Text_Height(linebuffer, cg.cur_lc->centerPrintCharScale, 0);
-		x = (SCREEN_WIDTH - w) / 2;
-		CG_Text_Paint(x, y + h, cg.cur_lc->centerPrintCharScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
-		y += h + 6;
-#else
-		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, cg.cur_lc->centerPrintCharScale, 0 );
+		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, cg.cur_lc->centerPrintCharScale, 0, 0 );
 		y += charHeight + 6;
-#endif
+
 		while ( *start && ( *start != '\n' ) ) {
 			start++;
 		}
@@ -1840,9 +1825,6 @@ static void CG_DrawGlobalCenterString( void ) {
 	char	*start;
 	int		l;
 	int		y;
-#ifdef MISSIONPACK_HUD
-	int		x, w, h;
-#endif
 	int		charHeight;
 	float	*color;
 
@@ -1861,12 +1843,7 @@ static void CG_DrawGlobalCenterString( void ) {
 
 	start = cg.centerPrint;
 
-#ifdef MISSIONPACK_HUD
-	charHeight = CG_Text_Height("I", cg.centerPrintCharScale, 0);
-#else
-	charHeight = Text_Height( "I", &cgs.media.bigFont, cg.cur_lc->centerPrintCharScale, 0 );
-#endif
-
+	charHeight = cg.centerPrintCharScale * 48.0f;
 	y = cg.centerPrintY - cg.centerPrintLines * charHeight / 2;
 
 	while ( 1 ) {
@@ -1880,16 +1857,9 @@ static void CG_DrawGlobalCenterString( void ) {
 		}
 		linebuffer[l] = 0;
 
-#ifdef MISSIONPACK_HUD
-		w = CG_Text_Width(linebuffer, cg.centerPrintCharScale, 0);
-		h = CG_Text_Height(linebuffer, cg.centerPrintCharScale, 0);
-		x = (SCREEN_WIDTH - w) / 2;
-		CG_Text_Paint(x, y + h, cg.centerPrintCharScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
-		y += h + 6;
-#else
-		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, cg.centerPrintCharScale, 0 );
+		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, cg.centerPrintCharScale, 0, 0 );
 		y += charHeight + 6;
-#endif
+
 		while ( *start && ( *start != '\n' ) ) {
 			start++;
 		}
@@ -2186,9 +2156,6 @@ CG_DrawCrosshairNames
 static void CG_DrawCrosshairNames( void ) {
 	float		*color;
 	char		*name;
-#ifdef MISSIONPACK_HUD
-	int			w;
-#endif
 
 	if ( !cg_drawCrosshair.integer ) {
 		return;
@@ -2208,19 +2175,12 @@ static void CG_DrawCrosshairNames( void ) {
 	// draw the name of the player being looked at
 	color = CG_FadeColor( cg.cur_lc->crosshairPlayerTime, 1000 );
 	if ( !color ) {
-		trap_R_SetColor( NULL );
 		return;
 	}
 
 	name = cgs.playerinfo[ cg.cur_lc->crosshairPlayerNum ].name;
 	color[3] *= 0.5f;
-#ifdef MISSIONPACK_HUD
-	w = CG_Text_Width(name, 0.3f, 0);
-	CG_Text_Paint( 320 - w / 2, 190, 0.3f, color, name, 0, 0, ITEM_TEXTSTYLE_SHADOWED);
-#else
-	CG_DrawString( SCREEN_WIDTH / 2, 170, name, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color );
-#endif
-	trap_R_SetColor( NULL );
+	CG_DrawStringExt( SCREEN_WIDTH / 2, 170, name, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color, 0, 0, 1 );
 
 	if ( cg_voipShowCrosshairMeter.integer )
 	{
@@ -2243,7 +2203,7 @@ static void CG_DrawCrosshairNames( void ) {
 			buffer[i] = '\0';
 
 			Com_sprintf( string, sizeof ( string ), "VoIP: [%s]", buffer );
-			CG_DrawString( SCREEN_WIDTH / 2, 170 + BIGCHAR_HEIGHT * 1.5f, string, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color );
+			CG_DrawStringExt( SCREEN_WIDTH / 2, 170 + BIGCHAR_HEIGHT * 1.5f, string, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color, 0, 0, 1 );
 		}
 	}
 }
@@ -2658,9 +2618,6 @@ CG_DrawWarmup
 =================
 */
 static void CG_DrawWarmup( void ) {
-#ifdef MISSIONPACK_HUD
-	int			w;
-#endif
 	int			sec;
 	int			i;
 	float		scale;
@@ -2697,21 +2654,11 @@ static void CG_DrawWarmup( void ) {
 
 		if ( ci1 && ci2 ) {
 			s = va( "%s vs %s", ci1->name, ci2->name );
-#ifdef MISSIONPACK_HUD
-			w = CG_Text_Width(s, 0.6f, 0);
-			CG_Text_Paint(320 - w / 2, 60, 0.6f, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
-#else
-			CG_DrawString( SCREEN_WIDTH / 2, 20, s, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, NULL );
-#endif
+			CG_DrawStringExt( SCREEN_WIDTH / 2, 25, s, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, NULL, 32 / 48.0f, 0, 0 );
 		}
 	} else {
 		s = cgs.gametypeName;
-#ifdef MISSIONPACK_HUD
-		w = CG_Text_Width(s, 0.6f, 0);
-		CG_Text_Paint(320 - w / 2, 90, 0.6f, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
-#else
-		CG_DrawString( SCREEN_WIDTH / 2, 25, s, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, NULL );
-#endif
+		CG_DrawStringExt( SCREEN_WIDTH / 2, 25, s, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, NULL, 32 / 48.0f, 0, 0 );
 	}
 
 	sec = ( sec - cg.time ) / 1000;
@@ -2737,25 +2684,6 @@ static void CG_DrawWarmup( void ) {
 		}
 	}
 
-#ifdef MISSIONPACK_HUD
-	switch ( cg.warmupCount ) {
-	case 0:
-		scale = 0.54f;
-		break;
-	case 1:
-		scale = 0.51f;
-		break;
-	case 2:
-		scale = 0.48f;
-		break;
-	default:
-		scale = 0.45f;
-		break;
-	}
-
-	w = CG_Text_Width(s, scale, 0);
-	CG_Text_Paint(320 - w / 2, 125, scale, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
-#else
 	switch ( cg.warmupCount ) {
 	case 0:
 		scale = 28 / 48.0f;
@@ -2771,8 +2699,7 @@ static void CG_DrawWarmup( void ) {
 		break;
 	}
 
-	CG_DrawStringExt( 320, 70, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL, scale, 0 );
-#endif
+	CG_DrawStringExt( SCREEN_WIDTH / 2, 70, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL, scale, 0, 0 );
 }
 
 

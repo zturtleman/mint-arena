@@ -197,7 +197,7 @@ void Text_PaintChar(float x, float y, float width, float height, float scale, fl
   trap_R_DrawStretchPic( x, y, w, h, s, t, s2, t2, hShader );
 }
 
-void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset) {
+void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, qboolean forceColor) {
   int len, count;
 	vec4_t newColor;
 	const glyphInfo_t *glyph;
@@ -218,9 +218,11 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
       //int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
       //float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
 			if ( Q_IsColorString( s ) ) {
-				memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
-				newColor[3] = color[3];
-				trap_R_SetColor( newColor );
+				if ( !forceColor ) {
+					memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
+					newColor[3] = color[3];
+					trap_R_SetColor( newColor );
+				}
 				s += 2;
 				continue;
 			} else {

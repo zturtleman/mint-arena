@@ -85,7 +85,7 @@ void CG_Text_Paint(float x, float y, float scale, const vec4_t color, const char
 		shadowOffset = 0;
 	}
 
-	Text_Paint( x, y, CG_FontForScale( scale ), scale, color, text, adjust, limit, shadowOffset );
+	Text_Paint( x, y, CG_FontForScale( scale ), scale, color, text, adjust, limit, shadowOffset, qfalse );
 }
 
 void CG_Text_Paint_Limit(float *maxX, float x, float y, float scale, const vec4_t color, const char* text, float adjust, int limit) {

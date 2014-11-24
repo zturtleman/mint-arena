@@ -450,7 +450,7 @@ void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t co
 	// This function expects that y is top of line, text_paint expects at baseline
 	decent = -font->glyphs[(int)'g'].top + font->glyphs[(int)'g'].height;
 	y = y + charh - decent * scale * font->glyphScale;
-	Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset );
+	Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, ( style & UI_FORCECOLOR ) );
 }
 
 void CG_DrawBigString( int x, int y, const char *s, float alpha ) {
@@ -462,8 +462,7 @@ void CG_DrawBigString( int x, int y, const char *s, float alpha ) {
 }
 
 void CG_DrawBigStringColor( int x, int y, const char *s, vec4_t color ) {
-	// FIXME: force color
-	CG_DrawString( x, y, s, UI_DROPSHADOW|UI_BIGFONT, color );
+	CG_DrawString( x, y, s, UI_FORCECOLOR|UI_DROPSHADOW|UI_BIGFONT, color );
 }
 
 void CG_DrawSmallString( int x, int y, const char *s, float alpha ) {
@@ -475,8 +474,7 @@ void CG_DrawSmallString( int x, int y, const char *s, float alpha ) {
 }
 
 void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color ) {
-	// FIXME: force color
-	CG_DrawString( x, y, s, UI_SMALLFONT, color );
+	CG_DrawString( x, y, s, UI_FORCECOLOR|UI_SMALLFONT, color );
 }
 
 /*

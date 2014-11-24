@@ -35,6 +35,62 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #ifdef MISSIONPACK_HUD
 extern displayContextDef_t cgDC;
+
+fontInfo_t *CG_FontForScale( float scale ) {
+	fontInfo_t *font = &cgDC.Assets.textFont;
+	if (scale <= cg_smallFont.value) {
+		font = &cgDC.Assets.smallFont;
+	} else if (scale >= cg_bigFont.value) {
+		font = &cgDC.Assets.bigFont;
+	}
+
+	return font;
+}
+
+// CG_Text_* are for Team Arena HUD code compatiblity
+void CG_Text_PaintWithCursor(float x, float y, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, int textStyle) {
+	float shadowOffset;
+
+	if ( textStyle == ITEM_TEXTSTYLE_SHADOWED ) {
+		shadowOffset = 1;
+	} else if ( textStyle == ITEM_TEXTSTYLE_SHADOWEDMORE ) {
+		shadowOffset = 2;
+	} else {
+		shadowOffset = 0;
+	}
+
+	Text_PaintWithCursor( x, y, CG_FontForScale( scale ), scale, color, text, cursorPos, cursor, limit, shadowOffset );
+}
+
+int CG_Text_Width(const char *text, float scale, int limit) {
+	return Text_Width( text, CG_FontForScale( scale ), scale, limit );
+}
+
+int CG_Text_Height(const char *text, float scale, int limit) {
+	return Text_Height( text, CG_FontForScale( scale ), scale, limit );
+}
+
+void CG_Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader) {
+	Text_PaintChar( x, y, width, height, scale, s, t, s2, t2, hShader );
+}
+
+void CG_Text_Paint(float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle) {
+	float shadowOffset;
+
+	if ( textStyle == ITEM_TEXTSTYLE_SHADOWED ) {
+		shadowOffset = 1;
+	} else if ( textStyle == ITEM_TEXTSTYLE_SHADOWEDMORE ) {
+		shadowOffset = 2;
+	} else {
+		shadowOffset = 0;
+	}
+
+	Text_Paint( x, y, CG_FontForScale( scale ), scale, color, text, adjust, limit, shadowOffset );
+}
+
+void CG_Text_Paint_Limit(float *maxX, float x, float y, float scale, const vec4_t color, const char* text, float adjust, int limit) {
+	Text_Paint_Limit( maxX, x, y, CG_FontForScale( scale ), scale, color, text, adjust, limit );
+}
 #endif
 
 

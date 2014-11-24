@@ -831,7 +831,6 @@ typedef struct {
 	int			smallFontHeight;
 	int			bigFontHeight;
 
-	qhandle_t	charsetShader;
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
 	qhandle_t	nodrawShader;
@@ -1528,8 +1527,6 @@ void CG_DrawPic( float x, float y, float width, float height, qhandle_t hShader 
 void CG_DrawNamedPic( float x, float y, float width, float height, const char *picname );
 void CG_SetClipRegion( float x, float y, float w, float h );
 void CG_ClearClipRegion( void );
-
-void CG_DrawChar( int x, int y, int width, int height, int ch );
 
 void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color );
 void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset );

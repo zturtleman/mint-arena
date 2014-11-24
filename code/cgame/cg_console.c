@@ -300,12 +300,10 @@ void Con_DrawSolidConsole( connstate_t state, float frac ) {
 	{
 		int linewidth = con.screenFakeWidth / SMALLCHAR_WIDTH;
 		// draw arrows to show the buffer is backscrolled
-		trap_R_SetColor( color );
 		for (x=0 ; x<linewidth ; x+=4)
-			CG_DrawChar( (x+1)*SMALLCHAR_WIDTH, y, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, '^' );
+			CG_DrawString( (x+1)*SMALLCHAR_WIDTH, y, "^", UI_CENTER|UI_SMALLFONT, color );
 		y -= SMALLCHAR_HEIGHT;
 		rows--;
-		trap_R_SetColor( NULL );
 	}
 	
 	row = con.display;

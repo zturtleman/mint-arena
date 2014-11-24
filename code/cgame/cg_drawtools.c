@@ -336,44 +336,6 @@ void CG_ClearClipRegion( void ) {
 
 
 /*
-===============
-CG_DrawChar
-
-Coordinates and size in 640*480 virtual screen size
-===============
-*/
-void CG_DrawChar( int x, int y, int width, int height, int ch ) {
-	int row, col;
-	float frow, fcol;
-	float size;
-	float	ax, ay, aw, ah;
-
-	ch &= 255;
-
-	if ( ch == ' ' ) {
-		return;
-	}
-
-	ax = x;
-	ay = y;
-	aw = width;
-	ah = height;
-	CG_AdjustFrom640( &ax, &ay, &aw, &ah );
-
-	row = ch>>4;
-	col = ch&15;
-
-	frow = row*0.0625;
-	fcol = col*0.0625;
-	size = 0.0625;
-
-	trap_R_DrawStretchPic( ax, ay, aw, ah,
-					   fcol, frow, 
-					   fcol + size, frow + size, 
-					   cgs.media.charsetShader );
-}
-
-/*
 ==================
 CG_DrawString
 

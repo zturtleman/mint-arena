@@ -2293,13 +2293,8 @@ static void CG_DrawShaderInfo( void ) {
 
 	CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
 
-#ifdef MISSIONPACK_HUD
 	color[3] *= 0.5f;
-	CG_Text_Paint( 0, SCREEN_HEIGHT - height - 28, 0.3f, color, name, 0, 0, ITEM_TEXTSTYLE_SHADOWED);
-#else
-	CG_DrawBigString( 0, SCREEN_HEIGHT - height - 28, name, color[3] * 0.5f );
-#endif
-	trap_R_SetColor( NULL );
+	CG_DrawString( 0, SCREEN_HEIGHT - height - 28, name, UI_DROPSHADOW|UI_BIGFONT, color );
 
 	x = 0;
 	y = SCREEN_HEIGHT - height;

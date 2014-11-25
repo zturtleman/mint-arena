@@ -1606,6 +1606,7 @@ qboolean CG_AnyScoreboardShowing( void );
 // cg_text.c
 //
 void CG_TextInit( void );
+qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font );
 fontInfo_t *CG_FontForScale( float scale );
 
 void Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader);

@@ -39,6 +39,7 @@ void MenuField_Init( menufield_s* m ) {
 	int	l;
 	int	w;
 	int	h;
+	int	style;
 
 	MField_Clear( &m->field );
 
@@ -46,19 +47,16 @@ void MenuField_Init( menufield_s* m ) {
 	{
 		w = SMALLCHAR_WIDTH;
 		h = SMALLCHAR_HEIGHT;
+		style = UI_SMALLFONT;
 	}
 	else
 	{
 		w = BIGCHAR_WIDTH;
 		h = BIGCHAR_HEIGHT;
+		style = UI_BIGFONT;
 	}	
 
-	if (m->generic.name) {
-		l = (strlen( m->generic.name )+1) * w;		
-	}
-	else {
-		l = 0;
-	}
+	l = CG_DrawStrlen( m->generic.name, style ) + w;
 
 	m->generic.left   = m->generic.x - l;
 	m->generic.top    = m->generic.y;

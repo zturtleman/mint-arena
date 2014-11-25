@@ -82,7 +82,7 @@ void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolea
 		cursorChar = -1;
 	}
 
-	CG_DrawStringWithCursor( x, y, str, style, NULL, ( edit->cursor - prestep ), cursorChar );
+	CG_DrawStringWithCursor( x, y, str, style, color, ( edit->cursor - prestep ), cursorChar );
 }
 
 /*

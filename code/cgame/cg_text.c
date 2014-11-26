@@ -85,11 +85,13 @@ qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font 
 		}
 	}
 
-	// Team Arena per-rendered fonts don't have cursor characters (they're just transparent space)
 	if ( oldFont ) {
+		// Team Arena per-rendered fonts don't have cursor characters (they're just transparent space)
 		Com_Memcpy( &font->glyphs[10], &font->glyphs[(int)'_'], sizeof ( glyphInfo_t ) );
 		Com_Memcpy( &font->glyphs[11], &font->glyphs[(int)'|'], sizeof ( glyphInfo_t ) );
-		// character 13 is used as an arrow in q3_ui, but it's not absolutely required
+
+		// character 13 is used as a selection marker in q3_ui
+		Com_Memcpy( &font->glyphs[13], &font->glyphs[(int)'>'], sizeof ( glyphInfo_t ) );
 	}
 
 	return qtrue;

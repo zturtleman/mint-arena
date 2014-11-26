@@ -1898,7 +1898,7 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			cgDC.registerFont(tempStr, pointSize, &cgDC.Assets.textFont);
+			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.textFont);
 			continue;
 		}
 
@@ -1908,17 +1908,17 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			cgDC.registerFont(tempStr, pointSize, &cgDC.Assets.smallFont);
+			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.smallFont);
 			continue;
 		}
 
-		// font
+		// bigFont
 		if (Q_stricmp(token.string, "bigfont") == 0) {
 			int pointSize;
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			cgDC.registerFont(tempStr, pointSize, &cgDC.Assets.bigFont);
+			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.bigFont);
 			continue;
 		}
 
@@ -2358,10 +2358,6 @@ static float CG_Cvar_Get(const char *cvar) {
 	return atof(buff);
 }
 
-void CG_Text_PaintWithCursor(float x, float y, float scale, vec4_t color, const char *text, int cursorPos, char cursor, int limit, int style) {
-	CG_Text_Paint(x, y, scale, color, text, 0, limit, style);
-}
-
 static int CG_OwnerDrawWidth(int ownerDraw, float scale) {
 	switch (ownerDraw) {
 	  case CG_GAME_TYPE:
@@ -2556,10 +2552,11 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 	CG_InitConsoleCommands();
 
 	// load a few needed things before we do any screen updates
-	cgs.media.charsetShader		= trap_R_RegisterShader( "gfx/2d/bigchars" );
 	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
 	cgs.media.consoleShader		= trap_R_RegisterShader( "console" );
 	cgs.media.nodrawShader		= trap_R_RegisterShaderEx( "nodraw", LIGHTMAP_NONE, qtrue );
+
+	CG_TextInit();
 
 	// get the rendering configuration from the client system
 	CG_UpdateGlconfig( qtrue );

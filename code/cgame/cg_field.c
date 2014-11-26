@@ -38,7 +38,7 @@ Handles horizontal scrolling and cursor blinking
 x, y, charWidth, charHeight, are in 640*480 virtual screen size
 ===================
 */
-void MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, vec4_t color ) {
+void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor ) {
 	int		len;
 	int		drawLen;
 	int		prestep;
@@ -72,21 +72,17 @@ void MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, v
 	memcpy( str, edit->buffer + prestep, drawLen );
 	str[ drawLen ] = 0;
 
-	CG_DrawStringExt( x, y, str, color, 2, qtrue, charWidth, charHeight, 0 );
-
-	if ( (int)( cg.realTime >> 8 ) & 1 ) {
-		return;		// off blink
-	}
-
-	if ( trap_Key_GetOverstrikeMode() ) {
-		cursorChar = 11;
+	if ( drawCursor ) {
+		if ( trap_Key_GetOverstrikeMode() ) {
+			cursorChar = 11; // full block
+		} else {
+			cursorChar = 10; // full width low line
+		}
 	} else {
-		cursorChar = 10;
+		cursorChar = -1;
 	}
 
-	str[0] = cursorChar;
-	str[1] = 0;
-	CG_DrawStringExt( x + ( edit->cursor - prestep) * charWidth, y, str, color, qfalse, qtrue, charWidth, charHeight, 0 );
+	CG_DrawStringWithCursor( x, y, str, style, color, ( edit->cursor - prestep ), cursorChar );
 }
 
 /*

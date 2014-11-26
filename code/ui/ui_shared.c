@@ -3007,8 +3007,17 @@ void Item_TextField_Paint(itemDef_t *item) {
 
 	offset = (item->text && *item->text) ? 8 : 0;
 	if (item->window.flags & WINDOW_HASFOCUS && g_editingField) {
-		char cursor = DC->getOverstrikeMode() ? '_' : '|';
-		DC->drawTextWithCursor(item->textRect.x + item->textRect.w + offset, item->textRect.y, item->textscale, newColor, buff + editPtr->paintOffset, item->cursorPos - editPtr->paintOffset , cursor, editPtr->maxPaintChars, item->textStyle);
+		int cursorChar;
+
+		// NOTE: Team Arena didn't ship with these, they're copied over from '|' and '_'
+		//       in CG_InitTrueTypeFont.
+		if ( DC->getOverstrikeMode() ) {
+			cursorChar = 11; // full block
+		} else {
+			cursorChar = 10; // full width low line
+		}
+
+		DC->drawTextWithCursor(item->textRect.x + item->textRect.w + offset, item->textRect.y, item->textscale, newColor, buff + editPtr->paintOffset, item->cursorPos - editPtr->paintOffset , cursorChar, editPtr->maxPaintChars, item->textStyle);
 	} else {
 		DC->drawText(item->textRect.x + item->textRect.w + offset, item->textRect.y, item->textscale, newColor, buff + editPtr->paintOffset, 0, editPtr->maxPaintChars, item->textStyle);
 	}

@@ -313,7 +313,6 @@ extern char	*ui_medalSounds[];
 //
 // ui_mfield.c
 //
-extern void			UI_Field_Draw( mfield_t *edit, int x, int y, int style, vec4_t color );
 extern void			MenuField_Init( menufield_s* m );
 extern void			MenuField_Draw( menufield_s *f );
 extern sfxHandle_t	MenuField_Key( menufield_s* m, int* key );
@@ -535,10 +534,9 @@ typedef struct {
 	qhandle_t			whiteShader;
 	qhandle_t			menuBackShader;
 	qhandle_t			menuBackNoLogoShader;
-	qhandle_t			charset;
-	qhandle_t			charsetProp;
-	qhandle_t			charsetPropGlow;
-	qhandle_t			charsetPropB;
+	fontInfo_t			fontProp;
+	fontInfo_t			fontPropGlow;
+	fontInfo_t			fontPropB;
 	qhandle_t			cursor;
 	qhandle_t			rb_on;
 	qhandle_t			rb_off;
@@ -548,6 +546,8 @@ typedef struct {
 } uiStatic_t;
 
 extern void			UI_LerpColor(vec4_t a, vec4_t b, vec4_t c, float t);
+extern void			UI_InitBannerFont( fontInfo_t *font );
+extern void			UI_InitPropFont( fontInfo_t *font, qboolean glow );
 extern void			UI_DrawBannerString( int x, int y, const char* str, int style, vec4_t color );
 extern float		UI_ProportionalSizeScale( int style );
 extern void			UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color );

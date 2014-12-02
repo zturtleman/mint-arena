@@ -149,7 +149,7 @@ int Text_Width(const char *text, const fontInfo_t *font, float scale, int limit)
 				s += 2;
 				continue;
 			} else {
-				glyph = &font->glyphs[(int)*s];
+				glyph = &font->glyphs[*s & 255];
 				out += glyph->xSkip;
 				s++;
 				count++;
@@ -179,7 +179,7 @@ int Text_Height(const char *text, const fontInfo_t *font, float scale, int limit
 				s += 2;
 				continue;
 			} else {
-				glyph = &font->glyphs[(int)*s]; // TTimo: FIXME: getting nasty warnings without the cast, hopefully this doesn't break the VM build
+				glyph = &font->glyphs[*s & 255];
 	      if (max < glyph->height) {
 		      max = glyph->height;
 			  }
@@ -216,7 +216,7 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
 		}
 		count = 0;
 		while (s && *s && count < len) {
-			glyph = &font->glyphs[(int)*s]; // TTimo: FIXME: getting nasty warnings without the cast, hopefully this doesn't break the VM build
+			glyph = &font->glyphs[*s & 255];
       //int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
       //float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
 			if ( Q_IsColorString( s ) ) {
@@ -282,9 +282,9 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 			len = limit;
 		}
 		count = 0;
-		glyph2 = &font->glyphs[ (int) cursor];
+		glyph2 = &font->glyphs[cursor & 255];
 		while (s && *s && count < len) {
-			glyph = &font->glyphs[(int)*s]; // TTimo: FIXME: getting nasty warnings without the cast, hopefully this doesn't break the VM build
+			glyph = &font->glyphs[*s & 255];
       //int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
       //float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
 			if ( Q_IsColorString( s ) ) {
@@ -378,7 +378,7 @@ void Text_Paint_Limit(float *maxX, float x, float y, const fontInfo_t *font, flo
 		}
 		count = 0;
 		while (s && *s && count < len) {
-			glyph = &font->glyphs[(int)*s]; // TTimo: FIXME: getting nasty warnings without the cast, hopefully this doesn't break the VM build
+			glyph = &font->glyphs[*s & 255];
 			if ( Q_IsColorString( s ) ) {
 				memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
 				newColor[3] = color[3];

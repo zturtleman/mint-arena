@@ -78,7 +78,7 @@ qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font 
 
 	// check if it's a dynamicly rendered font (which has cursors)
 	oldFont = qtrue;
-	for ( i = GLYPH_START; i < GLYPH_END; ++i ) {
+	for ( i = 0; i < GLYPHS_PER_FONT; i++ ) {
 		if ( font->glyphs[i].left != 0 ) {
 			oldFont = qfalse;
 			break;
@@ -92,6 +92,12 @@ qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font 
 
 		// character 13 is used as a selection marker in q3_ui
 		Com_Memcpy( &font->glyphs[13], &font->glyphs[(int)'>'], sizeof ( glyphInfo_t ) );
+
+		// Team Arena's fonts don't have character 255,
+		// it's suppose to be a lowercase y with two dots over it
+		if ( font->glyphs[255].shaderName[0] == '\0' ) {
+			Com_Memcpy( &font->glyphs[255], &font->glyphs[(int)'y'], sizeof ( glyphInfo_t ) );
+		}
 	}
 
 	return qtrue;

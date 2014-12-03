@@ -886,7 +886,7 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 					cg.localPlayers[i].acceptLeader = vchat->playerNum;
 				}
 
-				cg.localPlayers[i].voiceTime = cg.time;
+				cg.localPlayers[i].voiceTime = cg.time + 2500;
 				cg.localPlayers[i].currentVoicePlayerNum = vchat->playerNum;
 				showHead = qtrue;
 			}

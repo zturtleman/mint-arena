@@ -2743,7 +2743,8 @@ void CG_DrawNotify( void ) {
 
 #ifdef MISSIONPACK_HUD
 	// voice head is being shown
-	if ( cg.cur_lc->voiceTime && cg.cur_lc->playerNum != cg.cur_lc->currentVoicePlayerNum )
+	if ( !cg.cur_lc->showScores && cg.cur_ps->stats[STAT_HEALTH] > 0 &&
+		cg.cur_lc->voiceTime && cg.cur_lc->voiceTime >= cg.time && cg.cur_lc->playerNum != cg.cur_lc->currentVoicePlayerNum )
 		x = 72;
 	else
 #endif
@@ -2761,14 +2762,7 @@ CG_DrawTimedMenus
 =================
 */
 void CG_DrawTimedMenus( void ) {
-	if (cg.cur_lc->voiceTime) {
-		int t = cg.time - cg.cur_lc->voiceTime;
-		if ( t > 2500 ) {
-			cg.cur_lc->voiceTime = 0;
-		}
-	}
-
-	if ( cg.cur_lc->voiceTime && cg.cur_lc->playerNum != cg.cur_lc->currentVoicePlayerNum ) {
+	if ( cg.cur_lc->voiceTime && cg.cur_lc->voiceTime >= cg.time && cg.cur_lc->playerNum != cg.cur_lc->currentVoicePlayerNum ) {
 		Menus_OpenByName("voiceMenu");
 	} else {
 		Menus_CloseByName("voiceMenu");

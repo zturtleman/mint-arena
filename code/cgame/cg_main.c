@@ -2408,6 +2408,9 @@ void CG_LoadHudMenu( void ) {
 	}
 
 	CG_LoadMenus(hudSet);
+
+	// make voice chat head stick to left side in widescreen
+	Menu_SetScreenPlacement( Menus_FindByName( "voiceMenu" ), PLACE_LEFT, PLACE_TOP );
 }
 
 void CG_AssetCache( void ) {

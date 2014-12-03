@@ -280,6 +280,9 @@ typedef struct {
   vec4_t focusColor;								// focus color for items
   vec4_t disableColor;							// focus color for items
   itemDef_t *items[MAX_MENUITEMS];	// items this menu contains   
+
+	qboolean forceScreenPlacement;
+	screenPlacement_e screenHPos, screenVPos;
 } menuDef_t;
 
 typedef struct {
@@ -444,6 +447,7 @@ void LerpColor(vec4_t a, vec4_t b, vec4_t c, float t);
 void Menus_CloseAll( void );
 void Menu_Paint(menuDef_t *menu, qboolean forcePaint);
 void Menu_SetFeederSelection(menuDef_t *menu, int feeder, int index, const char *name);
+void Menu_SetScreenPlacement(menuDef_t *menu, screenPlacement_e hpos, screenPlacement_e vpos );
 void Display_CacheAll( void );
 
 void *UI_Alloc( int size );

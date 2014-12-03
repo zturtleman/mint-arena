@@ -1862,13 +1862,6 @@ void CG_KeyEvent(int key, qboolean down) {
 }
 #endif // MISSIONPACK_HUD
 
-void CG_ShowResponseHead(void) {
-#ifdef MISSIONPACK_HUD
-	Init_Display(&cgDC);
-	Menus_OpenByName("voiceMenu");
-#endif // MISSIONPACK_HUD
-}
-
 void CG_RunMenuScript(char **args) {
 }
 

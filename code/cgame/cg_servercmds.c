@@ -868,6 +868,9 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 		return;
 	}
 
+	// remove bits for non-valid players
+	vchat->localPlayerBits &= CG_LocalPlayerBitsForTeam( -1 );
+
 	if ( !cg_noVoiceChats.integer ) {
 		trap_S_StartLocalSound( vchat->snd, CHAN_VOICE);
 
@@ -1061,7 +1064,7 @@ int CG_LocalPlayerBitsForTeam( team_t team ) {
 			continue;
 		}
 		
-		if ( pi->team == team ) {
+		if ( team == -1 || pi->team == team ) {
 			bits |= ( 1 << i );
 		}
 	}

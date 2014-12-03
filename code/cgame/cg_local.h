@@ -1832,6 +1832,7 @@ void CG_LoadVoiceChats( void );
 void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int playerNum, int color, const char *cmd );
 void CG_PlayBufferedVoiceChats( void );
 #endif
+int CG_LocalPlayerBitsForTeam( team_t );
 
 //
 // cg_playerstate.c

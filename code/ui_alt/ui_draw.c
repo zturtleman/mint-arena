@@ -166,7 +166,7 @@ void UI_DrawMainMenuBackground( void ) {
 	trap_R_RenderScene( &refdef );
 #endif
 
-	CG_DrawSmallStringColor( ( SCREEN_WIDTH - CG_DrawStrlen( MENU_COPYRIGHT ) * SMALLCHAR_WIDTH ) / 2, SCREEN_HEIGHT - SMALLCHAR_HEIGHT*2, MENU_COPYRIGHT, color_copyright );
+	CG_DrawSmallStringColor( ( SCREEN_WIDTH - CG_DrawStrlen( MENU_COPYRIGHT, UI_SMALLFONT ) ) / 2, SCREEN_HEIGHT - SMALLCHAR_HEIGHT*2, MENU_COPYRIGHT, color_copyright );
 }
 
 // from q3_ui/ui_atoms.c
@@ -270,7 +270,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 #ifdef Q3UIFONTS // ug, dialogs need to use prop font
 		current->header.width = UI_BannerStringWidth( current->menu->header );
 #else
-		current->header.width = CG_DrawStrlen( current->menu->header ) * BIGCHAR_WIDTH;
+		current->header.width = CG_DrawStrlen( current->menu->header, UI_BIGFONT );
 #endif
 		current->header.x = ( SCREEN_WIDTH - current->header.width ) / 2;
 		current->header.y = 10;
@@ -302,7 +302,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 #ifdef Q3UIFONTS
 		current->items[i].width = UI_ProportionalStringWidth( item->caption );
 #else
-		current->items[i].width = CG_DrawStrlen( item->caption ) * BIGCHAR_WIDTH;
+		current->items[i].width = CG_DrawStrlen( item->caption, UI_BIGFONT );
 #endif
 		current->items[i].height = BIGCHAR_HEIGHT;
 
@@ -430,11 +430,11 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 
 #if 1 // Fixed place in lower left
 		current->items[i].y = SCREEN_HEIGHT - BIGCHAR_HEIGHT - 10;
-		current->items[i].width = CG_DrawStrlen( current->items[i].caption ) * BIGCHAR_WIDTH;
+		current->items[i].width = CG_DrawStrlen( current->items[i].caption, UI_BIGFONT );
 		current->items[i].x = 10;
 #else // fake next of menu item (though it's not vertically centered by the above numItems code)
 		current->items[i].y = y;
-		current->items[i].width = CG_DrawStrlen( current->items[i].caption ) * BIGCHAR_WIDTH;
+		current->items[i].width = CG_DrawStrlen( current->items[i].caption, UI_BIGFONT );
 		current->items[i].x = (SCREEN_WIDTH - current->items[i].width) / 2;
 #endif
 		current->items[i].height = BIGCHAR_HEIGHT;

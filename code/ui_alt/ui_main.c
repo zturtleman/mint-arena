@@ -257,7 +257,7 @@ void	UI_DrawConnectScreen( qboolean overlay ) {
 // used by cg_info.c
 void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color ) {
 	// center it
-	x = ( SCREEN_WIDTH - CG_DrawStrlen( str ) * BIGCHAR_WIDTH ) / 2;
+	x = ( SCREEN_WIDTH - CG_DrawStrlen( str, UI_BIGFONT ) ) / 2;
 
 	CG_DrawBigStringColor( x, y, str, color );
 }

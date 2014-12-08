@@ -52,14 +52,17 @@ extern menudef_t credits2menu;
 //
 extern menudef_t postgamemenu;
 
-void launchTeamArena( int item ) {
 #ifdef MISSIONPACK
+void launchQ3( int item ) {
 	trap_Cvar_Set( "fs_game", BASEQ3 );
-#else
-	trap_Cvar_Set( "fs_game", BASETA );
-#endif
 	trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart;" );
 }
+#else
+void launchTeamArena( int item ) {
+	trap_Cvar_Set( "fs_game", BASETA );
+	trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart;" );
+}
+#endif
 
 void demoHandler( int item ) {
 	CG_Printf("DEBUG: TODO: play demo... got %d\n", item);
@@ -84,6 +87,7 @@ void exitHandler( int item ) {
 
 void newGame( int item ) {
 	trap_Cvar_SetValue( "ui_singlePlayerActive", 1 );
+	trap_Cvar_SetValue( "g_doWarmup", 0 );
 	trap_Cvar_SetValue( "g_gametype", GT_SINGLE_PLAYER );
 	trap_Cmd_ExecuteText( EXEC_APPEND, "map q3dm0\n" );
 }
@@ -101,7 +105,7 @@ void restartMap( int item ) {
 menuitem_t mainmenu_items[] =
 {
 	{ MIF_HEADER, "TEAM ARENA", NULL, 20 },
-	{ MIF_CALL, "Quake3", launchTeamArena, 0 },
+	{ MIF_CALL, "Quake3", launchQ3, 0 },
 	{ MIF_SUBMENU, "Rules", &rulesmenu, 0 },
 	{ MIF_SUBMENU, "Credits", &creditsmenu, 0 },
 	{ MIF_SUBMENU, "Mods", &modsmenu, 0 },

@@ -1174,6 +1174,9 @@ void PlayerEndFrame( gentity_t *ent ) {
 	}
 	SendPendingPredictableEvents( &ent->player->ps );
 
+	// store the client's position for backward reconciliation later
+	G_StoreHistory( ent );
+
 	// set the bit for the reachability area the player is currently in
 //	i = trap_AAS_PointReachabilityAreaIndex( ent->player->ps.origin );
 //	ent->player->areabits[i >> 3] |= 1 << (i & 7);

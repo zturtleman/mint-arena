@@ -2002,7 +2002,7 @@ void G_RunFrame( int levelTime ) {
 		}
 
 		if ( ent->s.eType == ET_MISSILE ) {
-			G_RunMissile( ent );
+			// we'll run missiles separately to save CPU in backward reconciliation
 			continue;
 		}
 
@@ -2023,6 +2023,29 @@ void G_RunFrame( int levelTime ) {
 
 		G_RunThink( ent );
 	}
+
+	// NOW run the missiles, with all players backward-reconciled
+	// to the positions they were in exactly 50ms ago, at the end
+	// of the last server frame
+	G_TimeShiftAllClients( level.previousTime, NULL );
+
+	ent = &g_entities[0];
+	for (i=0 ; i<level.num_entities ; i++, ent++) {
+		if ( !ent->inuse ) {
+			continue;
+		}
+
+		// temporary entities don't think
+		if ( ent->freeAfterEvent ) {
+			continue;
+		}
+
+		if ( ent->s.eType == ET_MISSILE ) {
+			G_RunMissile( ent );
+		}
+	}
+
+	G_UnTimeShiftAllClients( NULL );
 
 	// perform final fixups on the players
 	ent = &g_entities[0];

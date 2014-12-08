@@ -46,17 +46,17 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	SCREEN_WIDTH		640
 #define	SCREEN_HEIGHT		480
 
-#define TINYCHAR_WIDTH		(SMALLCHAR_WIDTH)
-#define TINYCHAR_HEIGHT		(SMALLCHAR_HEIGHT/2)
+#define TINYCHAR_WIDTH		8
+#define TINYCHAR_HEIGHT		8
 
 #define SMALLCHAR_WIDTH		8
-#define SMALLCHAR_HEIGHT	16
+#define SMALLCHAR_HEIGHT	cgs.media.smallFontHeight //16
 
 #define BIGCHAR_WIDTH		16
 #define BIGCHAR_HEIGHT		16
 
 #define	GIANTCHAR_WIDTH		32
-#define	GIANTCHAR_HEIGHT	48
+#define	GIANTCHAR_HEIGHT	cgs.media.bigFontHeight //48
 
 #ifdef MISSIONPACK
 #define CG_FONT_THRESHOLD 0.1
@@ -150,7 +150,7 @@ typedef struct {
 void	MField_Clear( mfield_t *edit );
 void	MField_KeyDownEvent( mfield_t *edit, int key );
 void	MField_CharEvent( mfield_t *edit, int ch );
-void	MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, vec4_t color );
+void	MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor );
 
 //=================================================
 
@@ -218,7 +218,6 @@ typedef struct centity_s {
 
 	int				muzzleFlashTime;	// move to playerEntity?
 	int				previousEvent;
-	int				teleportFlag;
 
 	int				trailTime;		// so missile trails can handle dropped initial packets
 	int				dustTrailTime;
@@ -229,14 +228,9 @@ typedef struct centity_s {
 	playerEntity_t	pe;
 
 	int				errorTime;		// decay the error from this time
-	vec3_t			errorOrigin;
-	vec3_t			errorAngles;
-	
-	qboolean		extrapolated;	// false if origin / angles is an interpolation
+
 	vec3_t			rawOrigin;
 	vec3_t			rawAngles;
-
-	vec3_t			beamEnd;
 
 	// exact interpolated position of entity on this frame
 	vec3_t			lerpOrigin;
@@ -267,6 +261,7 @@ typedef struct markPoly_s {
 	float		color[4];
 	int			numVerts;
 	polyVert_t	verts[MAX_VERTS_ON_POLY];
+	int			bmodelNum;
 } markPoly_t;
 
 
@@ -352,7 +347,6 @@ typedef struct {
 	int				ping;
 	int				time;
 	int				scoreFlags;
-	int				powerUps;
 	int				accuracy;
 	int				impressiveCount;
 	int				excellentCount;
@@ -468,7 +462,6 @@ typedef struct weaponInfo_s {
 	void			(*missileTrailFunc)( centity_t *, const struct weaponInfo_s *wi );
 	float			missileDlight;
 	vec3_t			missileDlightColor;
-	int				missileRenderfx;
 
 	void			(*ejectBrassFunc)( centity_t * );
 
@@ -624,7 +617,6 @@ typedef struct {
 	float		damageX, damageY, damageValue;
 
 	// status bar head
-	float		headYaw;
 	float		headEndPitch;
 	float		headEndYaw;
 	int			headEndTime;
@@ -831,7 +823,14 @@ typedef struct {
 // Other media that can be tied to players, weapons, or items are
 // stored in the playerInfo_t, weaponInfo_t, or itemInfo_t
 typedef struct {
-	qhandle_t	charsetShader;
+	fontInfo_t	tinyFont;
+	fontInfo_t	smallFont;
+	fontInfo_t	textFont;
+	fontInfo_t	bigFont;
+
+	int			smallFontHeight;
+	int			bigFontHeight;
+
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
 	qhandle_t	nodrawShader;
@@ -905,6 +904,8 @@ typedef struct {
 
 	qhandle_t	balloonShader;
 	qhandle_t	connectionShader;
+
+	qhandle_t	coronaShader;
 
 	qhandle_t	selectShader;
 	qhandle_t	viewBloodShader;
@@ -1204,7 +1205,6 @@ typedef struct {
 	char			gametypeName[MAX_NAME_LENGTH];
 	gametype_t		gametype;
 	int				dmflags;
-	int				teamflags;
 	int				fraglimit;
 	int				capturelimit;
 	int				timelimit;
@@ -1527,20 +1527,19 @@ void CG_DrawPic( float x, float y, float width, float height, qhandle_t hShader 
 void CG_DrawNamedPic( float x, float y, float width, float height, const char *picname );
 void CG_SetClipRegion( float x, float y, float w, float h );
 void CG_ClearClipRegion( void );
+void CG_LerpColor( const vec4_t a, const vec4_t b, vec4_t c, float t );
 
-void CG_DrawChar( int x, int y, int width, int height, int ch );
-
-void CG_DrawString( float x, float y, const char *string, 
-				   float charWidth, float charHeight, const float *modulate );
-void CG_DrawStringExt( int x, int y, const char *string, const float *setColor, 
-		int forceColor, qboolean shadow, int charWidth, int charHeight, int maxChars );
+void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color );
+void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const vec4_t color, int cursorPos, int cursorChar );
+void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset );
+void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, int cursorPos, int cursorChar );
 void CG_DrawBigString( int x, int y, const char *s, float alpha );
 void CG_DrawBigStringColor( int x, int y, const char *s, vec4_t color );
 void CG_DrawSmallString( int x, int y, const char *s, float alpha );
 void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color );
 
-int CG_DrawStrlenEx( const char *str, int maxchars );
-int CG_DrawStrlen( const char *str );
+int CG_DrawStrlenEx( const char *str, int style, int maxchars );
+int CG_DrawStrlen( const char *str, int style );
 
 float	*CG_FadeColor( int startMsec, int totalMsec );
 float *CG_TeamColor( int team );
@@ -1582,22 +1581,17 @@ void CG_DrawScreen2D( stereoFrame_t stereoView );
 void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean force2D );
 void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team );
 void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y, int ownerDraw, int ownerDrawFlags, int align, float special, float scale, vec4_t color, qhandle_t shader, int textStyle);
-void CG_Text_Paint(float x, float y, float scale, vec4_t color, const char *text, float adjust, int limit, int style);
-int CG_Text_Width(const char *text, float scale, int limit);
-int CG_Text_Height(const char *text, float scale, int limit);
 void CG_SelectPrevPlayer( int localPlayerNum );
 void CG_SelectNextPlayer( int localPlayerNum );
 float CG_GetValue(int ownerDraw);
 qboolean CG_OwnerDrawVisible(int flags);
 void CG_RunMenuScript(char **args);
-void CG_ShowResponseHead( void );
 void CG_SetPrintString(q3print_t type, const char *p);
 void CG_InitTeamChat( void );
 void CG_GetTeamColor(vec4_t *color);
 const char *CG_GetGameStatusText( void );
 const char *CG_GetKillerText( void );
 void CG_Draw3DModel(float x, float y, float w, float h, qhandle_t model, cgSkin_t *skin, vec3_t origin, vec3_t angles);
-void CG_Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader);
 void CG_CheckOrderPending( int localPlayerNum );
 const char *CG_GameTypeString( void );
 qboolean CG_YourTeamHasFlag( void );
@@ -1605,6 +1599,28 @@ qboolean CG_OtherTeamHasFlag( void );
 qhandle_t CG_StatusHandle(int task);
 qboolean CG_AnyScoreboardShowing( void );
 
+
+
+//
+// cg_text.c
+//
+void CG_TextInit( void );
+qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font );
+fontInfo_t *CG_FontForScale( float scale );
+
+void Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader);
+void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, qboolean forceColor);
+void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, qboolean forceColor);
+void Text_Paint_Limit(float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit);
+int Text_Width(const char *text, const fontInfo_t *font, float scale, int limit);
+int Text_Height(const char *text, const fontInfo_t *font, float scale, int limit);
+
+void CG_Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader);
+void CG_Text_Paint(float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle);
+void CG_Text_PaintWithCursor(float x, float y, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, int textStyle);
+void CG_Text_Paint_Limit(float *maxX, float x, float y, float scale, const vec4_t color, const char* text, float adjust, int limit);
+int CG_Text_Width(const char *text, float scale, int limit);
+int CG_Text_Height(const char *text, float scale, int limit);
 
 
 //
@@ -1815,6 +1831,7 @@ void CG_LoadVoiceChats( void );
 void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int playerNum, int color, const char *cmd );
 void CG_PlayBufferedVoiceChats( void );
 #endif
+int CG_LocalPlayerBitsForTeam( team_t );
 
 //
 // cg_playerstate.c

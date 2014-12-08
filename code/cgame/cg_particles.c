@@ -839,9 +839,9 @@ void CG_AddParticleToScene (cparticle_t *p, vec3_t org, float alpha)
 	}
 
 	if (p->type == P_WEATHER || p->type == P_WEATHER_TURBULENT || p->type == P_WEATHER_FLURRY)
-		trap_R_AddPolyToScene( p->pshader, 3, TRIverts );
+		trap_R_AddPolyToScene( p->pshader, 3, TRIverts, 0 );
 	else
-		trap_R_AddPolyToScene( p->pshader, 4, verts );
+		trap_R_AddPolyToScene( p->pshader, 4, verts, 0 );
 
 }
 

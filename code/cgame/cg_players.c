@@ -2214,7 +2214,7 @@ static qboolean CG_PlayerShadow( centity_t *cent, vec3_t start, float alphaMult,
 	VectorCopy( start, end );
 	end[2] -= SHADOW_DISTANCE;
 
-	trap_CM_BoxTrace( &trace, start, end, mins, maxs, 0, MASK_PLAYERSOLID );
+	CG_Trace( &trace, start, mins, maxs, end, cent->currentState.number, MASK_SOLID );
 
 	// no shadow if too high
 	if ( trace.fraction == 1.0 || trace.startsolid || trace.allsolid ) {
@@ -2326,7 +2326,7 @@ static void CG_PlayerSplash( centity_t *cent ) {
 	verts[3].modulate[2] = 255;
 	verts[3].modulate[3] = 255;
 
-	trap_R_AddPolyToScene( cgs.media.wakeMarkShader, 4, verts );
+	trap_R_AddPolyToScene( cgs.media.wakeMarkShader, 4, verts, 0 );
 }
 
 
@@ -2856,7 +2856,6 @@ A player just came into view or teleported, so reset all animation info
 */
 void CG_ResetPlayerEntity( centity_t *cent ) {
 	cent->errorTime = -99999;		// guarantee no error decay added
-	cent->extrapolated = qfalse;	
 
 	CG_ClearLerpFrame( &cgs.playerinfo[ cent->currentState.playerNum ], &cent->pe.legs, cent->currentState.legsAnim );
 	CG_ClearLerpFrame( &cgs.playerinfo[ cent->currentState.playerNum ], &cent->pe.torso, cent->currentState.torsoAnim );

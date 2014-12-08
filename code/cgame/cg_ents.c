@@ -609,7 +609,7 @@ static void CG_Missile( centity_t *cent ) {
 	// flicker between two skins
 	ent.skinNum = cg.clientFrame & 1;
 	ent.hModel = weapon->missileModel;
-	ent.renderfx = weapon->missileRenderfx | RF_NOSHADOW;
+	ent.renderfx = RF_NOSHADOW;
 
 #ifdef MISSIONPACK
 	if ( cent->currentState.weapon == WP_PROX_LAUNCHER ) {
@@ -682,7 +682,7 @@ static void CG_Grapple( centity_t *cent ) {
 	// flicker between two skins
 	ent.skinNum = cg.clientFrame & 1;
 	ent.hModel = weapon->missileModel;
-	ent.renderfx = weapon->missileRenderfx | RF_NOSHADOW;
+	ent.renderfx = RF_NOSHADOW;
 
 	// convert direction of travel into axis
 	if ( VectorNormalize2( s1->pos.trDelta, ent.axis[0] ) == 0 ) {
@@ -1128,7 +1128,8 @@ static void CG_Corona( centity_t *cent ) {
 		}
 	}
 
-	trap_R_AddCoronaToScene( cent->lerpOrigin, (float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f, (float)cent->currentState.density / 255.0f, cent->currentState.number, visible );
+	trap_R_AddCoronaToScene( cent->lerpOrigin, (float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f,
+			(float)cent->currentState.density / 255.0f, cent->currentState.number, visible, cgs.media.coronaShader );
 }
 
 /*

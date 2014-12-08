@@ -427,6 +427,28 @@ static int GraphicsOptions_FindDetectedResolution( int mode )
 
 /*
 =================
+GraphicsOptions_AspectString
+=================
+*/
+const char *GraphicsOptions_AspectString( float w, float h ) {
+	static char str[ sizeof(ratioBuf[0]) ];
+	int i;
+
+	Com_sprintf( str, sizeof(str), "%.2f:1", w / h );
+
+	// rename common ratios ("1.33:1" -> "4:3")
+	for( i = 0; knownRatios[i][0]; i++ ) {
+		if( !Q_stricmp( str, knownRatios[i][0] ) ) {
+			Q_strncpyz( str, knownRatios[i][1], sizeof( str ) );
+			break;
+		}
+	}
+
+	return str;
+}
+
+/*
+=================
 GraphicsOptions_GetAspectRatios
 =================
 */
@@ -445,21 +467,13 @@ static void GraphicsOptions_GetAspectRatios( void )
 		if (strchr(resolutions[r], '(')) {
 			w = cgs.glconfig.displayWidth;
 			h = cgs.glconfig.displayHeight;
-			Com_sprintf( str, sizeof(str), "Auto (%.2f:1)", (float)w / (float)h );
+			Com_sprintf( str, sizeof(str), "Auto (%s)", GraphicsOptions_AspectString( w, h ) );
 		} else {
 			x = strchr( resolutions[r], 'x' ) + 1;
 			Q_strncpyz( str, resolutions[r], x-resolutions[r] );
 			w = atoi( str );
 			h = atoi( x );
-			Com_sprintf( str, sizeof(str), "%.2f:1", (float)w / (float)h );
-		}
-
-		// rename common ratios ("1.33:1" -> "4:3")
-		for( i = 0; knownRatios[i][0]; i++ ) {
-			if( !Q_stricmp( str, knownRatios[i][0] ) ) {
-				Q_strncpyz( str, knownRatios[i][1], sizeof( str ) );
-				break;
-			}
+			Q_strncpyz( str, GraphicsOptions_AspectString( w, h ), sizeof( str ) );
 		}
 
 		// add ratio to list if it is new

@@ -65,8 +65,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define LTG_KILL					11	//kill someone
 #define LTG_HARVEST					12	//harvest skulls
 #define LTG_ATTACKENEMYBASE			13	//attack the enemy base
-#define LTG_MAKELOVE_UNDER			14
-#define LTG_MAKELOVE_ONTOP			15
 //some goal dedication times
 #define TEAM_HELP_TIME				60	//1 minute teamplay help time
 #define TEAM_ACCOMPANY_TIME			600	//10 minutes teamplay accompany time
@@ -260,7 +258,7 @@ typedef struct bot_state_s
 	float leadmessage_time;							//last time a messaged was sent to the team mate
 	float leadbackup_time;							//time backing up towards team mate
 	//
-	char teamleader[32];							//netname of the team leader
+	char teamleader[MAX_NETNAME];					//netname of the team leader
 	float askteamleader_time;						//time asked for team leader
 	float becometeamleader_time;					//time the bot will become the team leader
 	float teamgiveorders_time;						//time to give team orders

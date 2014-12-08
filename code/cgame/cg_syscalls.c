@@ -310,6 +310,26 @@ void	trap_S_StopBackgroundTrack( void ) {
 	syscall( CG_S_STOPBACKGROUNDTRACK );
 }
 
+void trap_S_StartStreamingSound( int stream, int entityNum, const char *filename, float volume ) {
+	syscall( CG_S_STARTSTREAMINGSOUND, stream, entityNum, filename, PASSFLOAT( volume ) );
+}
+
+void trap_S_StopStreamingSound( int stream ) {
+	syscall( CG_S_STOPSTREAMINGSOUND, stream );
+}
+
+void trap_S_QueueStreamingSound( int stream, const char *filename, float volume ) {
+	syscall( CG_S_QUEUESTREAMINGSOUND, stream, filename, PASSFLOAT( volume ) );
+}
+
+int trap_S_GetStreamPlayCount( int stream ) {
+	return syscall( CG_S_GETSTREAMPLAYCOUNT, stream );
+}
+
+void trap_S_SetStreamVolume( int stream, float volume ) {
+	syscall( CG_S_SETSTREAMVOLUME, stream, PASSFLOAT( volume ) );
+}
+
 void	trap_R_LoadWorldMap( const char *mapname ) {
 	syscall( CG_R_LOADWORLDMAP, mapname );
 }
@@ -362,12 +382,12 @@ void	trap_R_AddRefEntityToScene( const refEntity_t *re ) {
 	syscall( CG_R_ADDREFENTITYTOSCENE, re, sizeof ( refEntity_t ) );
 }
 
-void	trap_R_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts ) {
-	syscall( CG_R_ADDPOLYTOSCENE, hShader, numVerts, verts );
+void	trap_R_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int bmodelNum ) {
+	syscall( CG_R_ADDPOLYTOSCENE, hShader, numVerts, verts, bmodelNum );
 }
 
-void	trap_R_AddPolysToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num ) {
-	syscall( CG_R_ADDPOLYSTOSCENE, hShader, numVerts, verts, num );
+void	trap_R_AddPolysToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum ) {
+	syscall( CG_R_ADDPOLYSTOSCENE, hShader, numVerts, verts, numPolys, bmodelNum );
 }
 
 void    trap_R_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer ) {
@@ -382,8 +402,8 @@ void	trap_R_AddAdditiveLightToScene( const vec3_t org, float radius,float intens
 	syscall( CG_R_ADDADDITIVELIGHTTOSCENE, org, PASSFLOAT( radius ), PASSFLOAT(intensity), PASSFLOAT(r), PASSFLOAT(g), PASSFLOAT(b) );
 }
 
-void	trap_R_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible ) {
-	syscall( CG_R_ADDCORONATOSCENE, org, PASSFLOAT( r ), PASSFLOAT( g ), PASSFLOAT( b ), PASSFLOAT( scale ), id, visible  );
+void	trap_R_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible, qhandle_t hShader ) {
+	syscall( CG_R_ADDCORONATOSCENE, org, PASSFLOAT( r ), PASSFLOAT( g ), PASSFLOAT( b ), PASSFLOAT( scale ), id, visible, hShader );
 }
 
 int		trap_R_LightForPoint( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir ) {
@@ -454,12 +474,12 @@ void		trap_R_SetSurfaceShader( int surfaceNum, const char *name ) {
 	syscall( CG_R_SET_SURFACE_SHADER, surfaceNum, name );
 }
 
-qhandle_t	trap_R_GetSurfaceShader( int surfaceNum, int withlightmap ) {
-	return syscall( CG_R_GET_SURFACE_SHADER, surfaceNum, withlightmap );
+qhandle_t	trap_R_GetSurfaceShader( int surfaceNum, int lightmapIndex ) {
+	return syscall( CG_R_GET_SURFACE_SHADER, surfaceNum, lightmapIndex );
 }
 
-qhandle_t	trap_R_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap ) {
-	return syscall( CG_R_GET_SHADER_FROM_MODEL, hModel, surfnum, withlightmap );
+qhandle_t	trap_R_GetShaderFromModel( qhandle_t hModel, int surfnum, int lightmapIndex ) {
+	return syscall( CG_R_GET_SHADER_FROM_MODEL, hModel, surfnum, lightmapIndex );
 }
 
 void		trap_R_GetShaderName( qhandle_t hShader, char *buffer, int bufferSize ) {
@@ -614,6 +634,14 @@ void trap_Key_SetOverstrikeMode( qboolean state ) {
 
 qboolean trap_Key_GetOverstrikeMode( void ) {
   return syscall( CG_KEY_GETOVERSTRIKEMODE );
+}
+
+qboolean trap_Key_GetCapsLockMode( void ) {
+	return syscall( CG_KEY_GETCAPSLOCKMODE );
+}
+
+qboolean trap_Key_GetNumLockMode( void ) {
+	return syscall( CG_KEY_GETNUMLOCKMODE );
 }
 
 int trap_Mouse_GetState( int localPlayerNum ) {

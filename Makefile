@@ -1038,6 +1038,7 @@ Q3CGOBJ = \
   $(B)/$(BASEGAME)/cgame/cg_spawn.o \
   $(B)/$(BASEGAME)/cgame/cg_surface.o \
   $(B)/$(BASEGAME)/cgame/cg_syscalls.o \
+  $(B)/$(BASEGAME)/cgame/cg_text.o \
   $(B)/$(BASEGAME)/cgame/cg_view.o \
   $(B)/$(BASEGAME)/cgame/cg_weapons.o \
   \
@@ -1097,6 +1098,7 @@ MPCGOBJ = \
   $(B)/$(MISSIONPACK)/cgame/cg_spawn.o \
   $(B)/$(MISSIONPACK)/cgame/cg_surface.o \
   $(B)/$(MISSIONPACK)/cgame/cg_syscalls.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_text.o \
   $(B)/$(MISSIONPACK)/cgame/cg_view.o \
   $(B)/$(MISSIONPACK)/cgame/cg_weapons.o \
   \

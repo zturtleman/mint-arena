@@ -400,11 +400,11 @@ static cvarTable_t cgameCvarTable[] = {
 #ifdef MISSIONPACK
 	{ &cg_redTeamName, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, RANGE_ALL },
 	{ &cg_blueTeamName, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, RANGE_ALL },
-	{ &cg_enableDust, "g_enableDust", "0", CVAR_SERVERINFO, RANGE_BOOL },
-	{ &cg_enableBreath, "g_enableBreath", "0", CVAR_SERVERINFO, RANGE_BOOL },
+	{ &cg_enableDust, "g_enableDust", "0", CVAR_SYSTEMINFO, RANGE_BOOL },
+	{ &cg_enableBreath, "g_enableBreath", "0", CVAR_SYSTEMINFO, RANGE_BOOL },
 	{ &cg_recordSPDemo, "ui_recordSPDemo", "0", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_recordSPDemoName, "ui_recordSPDemoName", "", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SERVERINFO, RANGE_ALL },
+	{ &cg_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SYSTEMINFO, RANGE_ALL },
 #ifdef MISSIONPACK_HUD
 	{ &cg_hudFiles, "cg_hudFiles", "ui/hud.txt", CVAR_ARCHIVE, RANGE_ALL },
 #endif
@@ -1533,6 +1533,8 @@ static void CG_RegisterGraphics( void ) {
 
 	cgs.media.balloonShader = trap_R_RegisterShader( "sprites/balloon3" );
 
+	cgs.media.coronaShader = trap_R_RegisterShader( "flareShader" );
+
 	cgs.media.bloodExplosionShader = trap_R_RegisterShader( "bloodExplosion" );
 
 	cgs.media.bulletFlashModel = trap_R_RegisterModel("models/weaphits/bullet.md3");
@@ -1833,7 +1835,7 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			cgDC.registerFont(tempStr, pointSize, &cgDC.Assets.textFont);
+			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.textFont);
 			continue;
 		}
 
@@ -1843,17 +1845,17 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			cgDC.registerFont(tempStr, pointSize, &cgDC.Assets.smallFont);
+			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.smallFont);
 			continue;
 		}
 
-		// font
+		// bigFont
 		if (Q_stricmp(token.string, "bigfont") == 0) {
 			int pointSize;
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			cgDC.registerFont(tempStr, pointSize, &cgDC.Assets.bigFont);
+			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.bigFont);
 			continue;
 		}
 
@@ -2293,10 +2295,6 @@ static float CG_Cvar_Get(const char *cvar) {
 	return atof(buff);
 }
 
-void CG_Text_PaintWithCursor(float x, float y, float scale, vec4_t color, const char *text, int cursorPos, char cursor, int limit, int style) {
-	CG_Text_Paint(x, y, scale, color, text, 0, limit, style);
-}
-
 static int CG_OwnerDrawWidth(int ownerDraw, float scale) {
 	switch (ownerDraw) {
 	  case CG_GAME_TYPE:
@@ -2410,6 +2408,9 @@ void CG_LoadHudMenu( void ) {
 	}
 
 	CG_LoadMenus(hudSet);
+
+	// make voice chat head stick to left side in widescreen
+	Menu_SetScreenPlacement( Menus_FindByName( "voiceMenu" ), PLACE_LEFT, PLACE_TOP );
 }
 
 void CG_AssetCache( void ) {
@@ -2491,10 +2492,11 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 	CG_InitConsoleCommands();
 
 	// load a few needed things before we do any screen updates
-	cgs.media.charsetShader		= trap_R_RegisterShader( "gfx/2d/bigchars" );
 	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
 	cgs.media.consoleShader		= trap_R_RegisterShader( "console" );
 	cgs.media.nodrawShader		= trap_R_RegisterShaderEx( "nodraw", LIGHTMAP_NONE, qtrue );
+
+	CG_TextInit();
 
 	// get the rendering configuration from the client system
 	CG_UpdateGlconfig( qtrue );
@@ -2863,7 +2865,6 @@ CG_DistributeKeyEvent
 */
 void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state, int axisNum ) {
 	int keyCatcher;
-	qboolean onlybinds = qfalse;
 
 	cg.connState = state;
 
@@ -2880,16 +2881,12 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 		case K_KP_INS:
 		case K_KP_DEL:
 		case K_KP_HOME:
-			if ( trap_Key_IsDown( K_KP_NUMLOCK ) ) {
-				onlybinds = qtrue;
+			if ( !UI_WantsBindKeys() && trap_Key_GetNumLockMode() ) {
+				return;
 			}
 			break;
 		default:
 			break;
-	}
-
-	if ( onlybinds && !UI_WantsBindKeys() ) {
-		return;
 	}
 
 	// console key is hardcoded, so the user can never unbind it

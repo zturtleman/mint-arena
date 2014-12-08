@@ -163,12 +163,12 @@ void		trap_R_AddRefEntityToScene( const refEntity_t *re );
 // polys are intended for simple wall marks, not really for doing
 // significant construction
 void		trap_R_AddPolyRefEntityToScene( const refEntity_t *re, int numVerts, const polyVert_t *verts, int numPolys );
-void		trap_R_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts );
-void		trap_R_AddPolysToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int numPolys );
+void		trap_R_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int bmodelNum );
+void		trap_R_AddPolysToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum );
 void        trap_R_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
 void		trap_R_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
 void		trap_R_AddAdditiveLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
-void		trap_R_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible );
+void		trap_R_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible, qhandle_t hShader );
 int			trap_R_LightForPoint( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir );
 void		trap_R_RenderScene( const refdef_t *fd );
 void		trap_R_SetColor( const float *rgba );	// NULL = 1,1,1,1
@@ -190,8 +190,8 @@ void		trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque,
 void		trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater );
 
 void		trap_R_SetSurfaceShader( int surfaceNum, const char *name );
-qhandle_t	trap_R_GetSurfaceShader( int surfaceNum, int withlightmap );
-qhandle_t	trap_R_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap );
+qhandle_t	trap_R_GetSurfaceShader( int surfaceNum, int lightmapIndex );
+qhandle_t	trap_R_GetShaderFromModel( qhandle_t hModel, int surfnum, int lightmapIndex );
 void		trap_R_GetShaderName( qhandle_t hShader, char *buffer, int bufferSize );
 
 // normal sounds will have their volume dynamically changed as their entity
@@ -215,10 +215,18 @@ int			trap_S_SoundDuration( sfxHandle_t handle );
 void		trap_S_StartBackgroundTrack( const char *intro, const char *loop, float volume, float loopVolume );	// empty name stops music
 void		trap_S_StopBackgroundTrack( void );
 
+void		trap_S_StartStreamingSound( int stream, int entityNum, const char *filename, float volume );
+void		trap_S_StopStreamingSound( int stream );
+void		trap_S_QueueStreamingSound( int stream, const char *filename, float volume );
+int			trap_S_GetStreamPlayCount( int stream );
+void		trap_S_SetStreamVolume( int stream, float volume );
+
 void			trap_Key_KeynumToStringBuf( int keynum, char *buf, int buflen );
 void			trap_Key_GetBindingBuf( int keynum, char *buf, int buflen );
 void			trap_Key_SetBinding( int keynum, const char *binding );
 qboolean		trap_Key_IsDown( int keynum );
+qboolean		trap_Key_GetCapsLockMode( void );
+qboolean		trap_Key_GetNumLockMode( void );
 qboolean		trap_Key_GetOverstrikeMode( void );
 void			trap_Key_SetOverstrikeMode( qboolean state );
 void			trap_Key_ClearStates( void );

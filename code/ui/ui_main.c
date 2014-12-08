@@ -170,153 +170,59 @@ void AssetCache( void ) {
 	uiInfo.newHighScoreSound = trap_S_RegisterSound("sound/feedback/voc_newhighscore.wav", qfalse);
 }
 
-int Text_Width(const char *text, float scale, int limit) {
-  int count,len;
-	float out;
-	glyphInfo_t *glyph;
-	float useScale;
-	const char *s = text;
+fontInfo_t *UI_FontForScale( float scale ) {
 	fontInfo_t *font = &uiInfo.uiDC.Assets.textFont;
 	if (scale <= ui_smallFont.value) {
 		font = &uiInfo.uiDC.Assets.smallFont;
 	} else if (scale >= ui_bigFont.value) {
 		font = &uiInfo.uiDC.Assets.bigFont;
 	}
-	useScale = scale * font->glyphScale;
-  out = 0;
-  if (text) {
-    len = strlen(text);
-		if (limit > 0 && len > limit) {
-			len = limit;
-		}
-		count = 0;
-		while (s && *s && count < len) {
-			if ( Q_IsColorString(s) ) {
-				s += 2;
-				continue;
-			} else {
-				glyph = &font->glyphs[(int)*s];
-				out += glyph->xSkip;
-				s++;
-				count++;
-			}
-    }
-  }
-  return out * useScale;
+
+	return font;
 }
 
-int Text_Height(const char *text, float scale, int limit) {
-  int len, count;
-	float max;
-	glyphInfo_t *glyph;
-	float useScale;
-	const char *s = text;
-	fontInfo_t *font = &uiInfo.uiDC.Assets.textFont;
-	if (scale <= ui_smallFont.value) {
-		font = &uiInfo.uiDC.Assets.smallFont;
-	} else if (scale >= ui_bigFont.value) {
-		font = &uiInfo.uiDC.Assets.bigFont;
+void UI_Text_PaintWithCursor(float x, float y, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, int textStyle) {
+	float shadowOffset;
+
+	if ( textStyle == ITEM_TEXTSTYLE_SHADOWED ) {
+		shadowOffset = 1;
+	} else if ( textStyle == ITEM_TEXTSTYLE_SHADOWEDMORE ) {
+		shadowOffset = 2;
+	} else {
+		shadowOffset = 0;
 	}
-	useScale = scale * font->glyphScale;
-  max = 0;
-  if (text) {
-    len = strlen(text);
-		if (limit > 0 && len > limit) {
-			len = limit;
-		}
-		count = 0;
-		while (s && *s && count < len) {
-			if ( Q_IsColorString(s) ) {
-				s += 2;
-				continue;
-			} else {
-				glyph = &font->glyphs[(int)*s]; // TTimo: FIXME: getting nasty warnings without the cast, hopefully this doesn't break the VM build
-	      if (max < glyph->height) {
-		      max = glyph->height;
-			  }
-				s++;
-				count++;
-			}
-    }
-  }
-  return max * useScale;
+
+	Text_PaintWithCursor(x, y, UI_FontForScale( scale ), scale, color, text, cursorPos, cursor, 0, limit, shadowOffset, qfalse);
 }
 
-void Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader) {
-  float w, h;
-  w = width * scale;
-  h = height * scale;
-  CG_AdjustFrom640( &x, &y, &w, &h );
-  trap_R_DrawStretchPic( x, y, w, h, s, t, s2, t2, hShader );
+int UI_Text_Width(const char *text, float scale, int limit) {
+	return Text_Width( text, UI_FontForScale( scale ), scale, limit );
 }
 
-void Text_Paint(float x, float y, float scale, vec4_t color, const char *text, float adjust, int limit, int style) {
-  int len, count;
-	vec4_t newColor;
-	glyphInfo_t *glyph;
-	float useScale;
-	fontInfo_t *font = &uiInfo.uiDC.Assets.textFont;
-	if (scale <= ui_smallFont.value) {
-		font = &uiInfo.uiDC.Assets.smallFont;
-	} else if (scale >= ui_bigFont.value) {
-		font = &uiInfo.uiDC.Assets.bigFont;
+int UI_Text_Height(const char *text, float scale, int limit) {
+	return Text_Height( text, UI_FontForScale( scale ), scale, limit );
+}
+
+void UI_Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader) {
+	Text_PaintChar( x, y, width, height, scale, s, t, s2, t2, hShader );
+}
+
+void UI_Text_Paint(float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle) {
+	float shadowOffset;
+
+	if ( textStyle == ITEM_TEXTSTYLE_SHADOWED ) {
+		shadowOffset = 1;
+	} else if ( textStyle == ITEM_TEXTSTYLE_SHADOWEDMORE ) {
+		shadowOffset = 2;
+	} else {
+		shadowOffset = 0;
 	}
-	useScale = scale * font->glyphScale;
-  if (text) {
-    const char *s = text;
-		trap_R_SetColor( color );
-		memcpy(&newColor[0], &color[0], sizeof(vec4_t));
-    len = strlen(text);
-		if (limit > 0 && len > limit) {
-			len = limit;
-		}
-		count = 0;
-		while (s && *s && count < len) {
-			glyph = &font->glyphs[(int)*s]; // TTimo: FIXME: getting nasty warnings without the cast, hopefully this doesn't break the VM build
-      //int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
-      //float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
-			if ( Q_IsColorString( s ) ) {
-				memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
-				newColor[3] = color[3];
-				trap_R_SetColor( newColor );
-				s += 2;
-				continue;
-			} else {
-				float yadj = useScale * glyph->top;
-				float xadj = useScale * glyph->left;
-				if (style == ITEM_TEXTSTYLE_SHADOWED || style == ITEM_TEXTSTYLE_SHADOWEDMORE) {
-					int ofs = style == ITEM_TEXTSTYLE_SHADOWED ? 1 : 2;
-					colorBlack[3] = newColor[3];
-					trap_R_SetColor( colorBlack );
-					Text_PaintChar(x + xadj + ofs, y - yadj + ofs, 
-														glyph->imageWidth,
-														glyph->imageHeight,
-														useScale, 
-														glyph->s,
-														glyph->t,
-														glyph->s2,
-														glyph->t2,
-														glyph->glyph);
-					trap_R_SetColor( newColor );
-					colorBlack[3] = 1.0;
-				}
-				Text_PaintChar(x + xadj, y - yadj, 
-													glyph->imageWidth,
-													glyph->imageHeight,
-													useScale, 
-													glyph->s,
-													glyph->t,
-													glyph->s2,
-													glyph->t2,
-													glyph->glyph);
 
-				x += (glyph->xSkip * useScale) + adjust;
-				s++;
-				count++;
-			}
-    }
-	  trap_R_SetColor( NULL );
-  }
+	Text_Paint( x, y, UI_FontForScale( scale ), scale, color, text, adjust, limit, shadowOffset, qfalse );
+}
+
+void UI_Text_Paint_Limit(float *maxX, float x, float y, float scale, const vec4_t color, const char* text, float adjust, int limit) {
+	Text_Paint_Limit( maxX, x, y, UI_FontForScale( scale ), scale, color, text, adjust, limit );
 }
 
 // used by cgame/cg_info.c
@@ -328,12 +234,12 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 
 	switch( style & UI_FORMATMASK ) {
 		case UI_CENTER:
-			width = Text_Width( str, scale, 0 );
+			width = UI_Text_Width( str, scale, 0 );
 			x -= width / 2;
 			break;
 
 		case UI_RIGHT:
-			width = Text_Width( str, scale, 0 );
+			width = UI_Text_Width( str, scale, 0 );
 			x -= width;
 			break;
 
@@ -342,167 +248,8 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 			break;
 	}
 
-	Text_Paint( x, y, scale, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? ITEM_TEXTSTYLE_SHADOWED : 0 );
+	UI_Text_Paint( x, y, scale, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? ITEM_TEXTSTYLE_SHADOWED : 0 );
 }
-
-void Text_PaintWithCursor(float x, float y, float scale, vec4_t color, const char *text, int cursorPos, char cursor, int limit, int style) {
-  int len, count;
-	vec4_t newColor;
-	glyphInfo_t *glyph, *glyph2;
-	float yadj, xadj;
-	float useScale;
-	fontInfo_t *font = &uiInfo.uiDC.Assets.textFont;
-	if (scale <= ui_smallFont.value) {
-		font = &uiInfo.uiDC.Assets.smallFont;
-	} else if (scale >= ui_bigFont.value) {
-		font = &uiInfo.uiDC.Assets.bigFont;
-	}
-	useScale = scale * font->glyphScale;
-  if (text) {
-    const char *s = text;
-		trap_R_SetColor( color );
-		memcpy(&newColor[0], &color[0], sizeof(vec4_t));
-    len = strlen(text);
-		if (limit > 0 && len > limit) {
-			len = limit;
-		}
-		count = 0;
-		glyph2 = &font->glyphs[ (int) cursor];
-		while (s && *s && count < len) {
-			glyph = &font->glyphs[(int)*s]; // TTimo: FIXME: getting nasty warnings without the cast, hopefully this doesn't break the VM build
-      //int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
-      //float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
-			if ( Q_IsColorString( s ) ) {
-				memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
-				newColor[3] = color[3];
-				trap_R_SetColor( newColor );
-				s += 2;
-				continue;
-			} else {
-				yadj = useScale * glyph->top;
-				xadj = useScale * glyph->left;
-				if (style == ITEM_TEXTSTYLE_SHADOWED || style == ITEM_TEXTSTYLE_SHADOWEDMORE) {
-					int ofs = style == ITEM_TEXTSTYLE_SHADOWED ? 1 : 2;
-					colorBlack[3] = newColor[3];
-					trap_R_SetColor( colorBlack );
-					Text_PaintChar(x + xadj + ofs, y - yadj + ofs, 
-														glyph->imageWidth,
-														glyph->imageHeight,
-														useScale, 
-														glyph->s,
-														glyph->t,
-														glyph->s2,
-														glyph->t2,
-														glyph->glyph);
-					colorBlack[3] = 1.0;
-					trap_R_SetColor( newColor );
-				}
-				Text_PaintChar(x + xadj, y - yadj, 
-													glyph->imageWidth,
-													glyph->imageHeight,
-													useScale, 
-													glyph->s,
-													glyph->t,
-													glyph->s2,
-													glyph->t2,
-													glyph->glyph);
-
-	      yadj = useScale * glyph2->top;
-		    if (count == cursorPos && !((uiInfo.uiDC.realTime/BLINK_DIVISOR) & 1)) {
-					Text_PaintChar(x, y - yadj, 
-														glyph2->imageWidth,
-														glyph2->imageHeight,
-														useScale, 
-														glyph2->s,
-														glyph2->t,
-														glyph2->s2,
-														glyph2->t2,
-														glyph2->glyph);
-				}
-
-				x += (glyph->xSkip * useScale);
-				s++;
-				count++;
-			}
-    }
-    // need to paint cursor at end of text
-    if (cursorPos == len && !((uiInfo.uiDC.realTime/BLINK_DIVISOR) & 1)) {
-        yadj = useScale * glyph2->top;
-        Text_PaintChar(x, y - yadj, 
-                          glyph2->imageWidth,
-                          glyph2->imageHeight,
-                          useScale, 
-                          glyph2->s,
-                          glyph2->t,
-                          glyph2->s2,
-                          glyph2->t2,
-                          glyph2->glyph);
-
-    }
-
-	  trap_R_SetColor( NULL );
-  }
-}
-
-
-#if 0
-static void Text_Paint_Limit(float *maxX, float x, float y, float scale, vec4_t color, const char* text, float adjust, int limit) {
-  int len, count;
-	vec4_t newColor;
-	glyphInfo_t *glyph;
-  if (text) {
-    const char *s = text;
-		float max = *maxX;
-		float useScale;
-		fontInfo_t *font = &uiInfo.uiDC.Assets.textFont;
-		if (scale <= ui_smallFont.value) {
-			font = &uiInfo.uiDC.Assets.smallFont;
-		} else if (scale > ui_bigFont.value) {
-			font = &uiInfo.uiDC.Assets.bigFont;
-		}
-		useScale = scale * font->glyphScale;
-		trap_R_SetColor( color );
-    len = strlen(text);					 
-		if (limit > 0 && len > limit) {
-			len = limit;
-		}
-		count = 0;
-		while (s && *s && count < len) {
-			glyph = &font->glyphs[(int)*s]; // TTimo: FIXME: getting nasty warnings without the cast, hopefully this doesn't break the VM build
-			if ( Q_IsColorString( s ) ) {
-				memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
-				newColor[3] = color[3];
-				trap_R_SetColor( newColor );
-				s += 2;
-				continue;
-			} else {
-	      float yadj = useScale * glyph->top;
-	      float xadj = useScale * glyph->left;
-				if (Text_Width(s, useScale, 1) + x > max) {
-					*maxX = 0;
-					break;
-				}
-		    Text_PaintChar(x + xadj, y - yadj, 
-			                 glyph->imageWidth,
-				               glyph->imageHeight,
-				               useScale, 
-						           glyph->s,
-								       glyph->t,
-								       glyph->s2,
-									     glyph->t2,
-										   glyph->glyph);
-	      x += (glyph->xSkip * useScale) + adjust;
-				*maxX = x;
-				count++;
-				s++;
-	    }
-		}
-	  trap_R_SetColor( NULL );
-  }
-
-}
-#endif
-
 
 void UI_ShowPostGame(qboolean newHigh) {
 	trap_Cvar_SetValue( "cg_cameraOrbit", 0 );
@@ -647,7 +394,7 @@ qboolean Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle,&pointSize)) {
 				return qfalse;
 			}
-			trap_R_RegisterFont(tempStr, pointSize, &uiInfo.uiDC.Assets.textFont);
+			CG_InitTrueTypeFont(tempStr, pointSize, &uiInfo.uiDC.Assets.textFont);
 			uiInfo.uiDC.Assets.fontRegistered = qtrue;
 			continue;
 		}
@@ -657,7 +404,7 @@ qboolean Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle,&pointSize)) {
 				return qfalse;
 			}
-			trap_R_RegisterFont(tempStr, pointSize, &uiInfo.uiDC.Assets.smallFont);
+			CG_InitTrueTypeFont(tempStr, pointSize, &uiInfo.uiDC.Assets.smallFont);
 			continue;
 		}
 
@@ -666,7 +413,7 @@ qboolean Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle,&pointSize)) {
 				return qfalse;
 			}
-			trap_R_RegisterFont(tempStr, pointSize, &uiInfo.uiDC.Assets.bigFont);
+			CG_InitTrueTypeFont(tempStr, pointSize, &uiInfo.uiDC.Assets.bigFont);
 			continue;
 		}
 
@@ -988,11 +735,11 @@ static void UI_DrawHandicap(rectDef_t *rect, float scale, vec4_t color, int text
   h = Com_Clamp( 5, 100, trap_Cvar_VariableValue("handicap") );
   i = 20 - h / 5;
 
-  Text_Paint(rect->x, rect->y, scale, color, handicapValues[i], 0, 0, textStyle);
+  UI_Text_Paint(rect->x, rect->y, scale, color, handicapValues[i], 0, 0, textStyle);
 }
 
 static void UI_DrawClanName(rectDef_t *rect, float scale, vec4_t color, int textStyle) {
-  Text_Paint(rect->x, rect->y, scale, color, CG_Cvar_VariableString("ui_teamName"), 0, 0, textStyle);
+  UI_Text_Paint(rect->x, rect->y, scale, color, CG_Cvar_VariableString("ui_teamName"), 0, 0, textStyle);
 }
 
 
@@ -1014,15 +761,15 @@ static void UI_SetCapFragLimits(qboolean uiVars) {
 }
 // ui_gameType assumes gametype 0 is -1 ALL and will not show
 static void UI_DrawGameType(rectDef_t *rect, float scale, vec4_t color, int textStyle) {
-  Text_Paint(rect->x, rect->y, scale, color, uiInfo.gameTypes[ui_gameType.integer].gameType, 0, 0, textStyle);
+  UI_Text_Paint(rect->x, rect->y, scale, color, uiInfo.gameTypes[ui_gameType.integer].gameType, 0, 0, textStyle);
 }
 
 static void UI_DrawNetGameType(rectDef_t *rect, float scale, vec4_t color, int textStyle) {
-  Text_Paint(rect->x, rect->y, scale, color, uiInfo.gameTypes[ui_netGameType.integer].gameType , 0, 0, textStyle);
+  UI_Text_Paint(rect->x, rect->y, scale, color, uiInfo.gameTypes[ui_netGameType.integer].gameType , 0, 0, textStyle);
 }
 
 static void UI_DrawJoinGameType(rectDef_t *rect, float scale, vec4_t color, int textStyle) {
-  Text_Paint(rect->x, rect->y, scale, color, uiInfo.joinGameTypes[ui_joinGameType.integer].gameType , 0, 0, textStyle);
+  UI_Text_Paint(rect->x, rect->y, scale, color, uiInfo.joinGameTypes[ui_joinGameType.integer].gameType , 0, 0, textStyle);
 }
 
 
@@ -1107,7 +854,7 @@ static void UI_DrawSkill(rectDef_t *rect, float scale, vec4_t color, int textSty
   if (i < 1 || i > numSkillLevels) {
     i = 1;
   }
-  Text_Paint(rect->x, rect->y, scale, color, skillLevels[i-1],0, 0, textStyle);
+  UI_Text_Paint(rect->x, rect->y, scale, color, skillLevels[i-1],0, 0, textStyle);
 }
 
 
@@ -1115,7 +862,7 @@ static void UI_DrawTeamName(rectDef_t *rect, float scale, vec4_t color, qboolean
   int i;
   i = UI_TeamIndexFromName(CG_Cvar_VariableString((blue) ? "ui_blueTeam" : "ui_redTeam"));
   if (i >= 0 && i < uiInfo.teamCount) {
-    Text_Paint(rect->x, rect->y, scale, color, va("%s: %s", (blue) ? "Blue" : "Red", uiInfo.teamList[i].teamName),0, 0, textStyle);
+    UI_Text_Paint(rect->x, rect->y, scale, color, va("%s: %s", (blue) ? "Blue" : "Red", uiInfo.teamList[i].teamName),0, 0, textStyle);
   }
 }
 
@@ -1144,7 +891,7 @@ static void UI_DrawTeamMember(rectDef_t *rect, float scale, vec4_t color, qboole
 			text = UI_GetBotNameByNumber(value);
 		}
 	}
-  Text_Paint(rect->x, rect->y, scale, color, text, 0, 0, textStyle);
+  UI_Text_Paint(rect->x, rect->y, scale, color, text, 0, 0, textStyle);
 }
 
 static void UI_DrawEffects(rectDef_t *rect, float scale, vec4_t color) {
@@ -1193,7 +940,7 @@ static void UI_DrawMapTimeToBeat(rectDef_t *rect, float scale, vec4_t color, int
 	minutes = time / 60;
 	seconds = time % 60;
 
-  Text_Paint(rect->x, rect->y, scale, color, va("%02i:%02i", minutes, seconds), 0, 0, textStyle);
+  UI_Text_Paint(rect->x, rect->y, scale, color, va("%02i:%02i", minutes, seconds), 0, 0, textStyle);
 }
 
 
@@ -1268,7 +1015,7 @@ static void UI_DrawNetSource(rectDef_t *rect, float scale, vec4_t color, int tex
 	if (ui_netSource.integer < 0 || ui_netSource.integer > numNetSources) {
 		ui_netSource.integer = 0;
 	}
-  Text_Paint(rect->x, rect->y, scale, color, va("Source: %s", netSources[ui_netSource.integer]), 0, 0, textStyle);
+  UI_Text_Paint(rect->x, rect->y, scale, color, va("Source: %s", netSources[ui_netSource.integer]), 0, 0, textStyle);
 }
 
 static void UI_DrawNetMapPreview(rectDef_t *rect, float scale, vec4_t color) {
@@ -1292,7 +1039,7 @@ static void UI_DrawNetMapCinematic(rectDef_t *rect, float scale, vec4_t color) {
 
 
 static void UI_DrawNetFilter(rectDef_t *rect, float scale, vec4_t color, int textStyle) {
-	Text_Paint(rect->x, rect->y, scale, color, va("Filter: %s", UI_FilterDescription( ui_serverFilterType.integer ) ), 0, 0, textStyle);
+	UI_Text_Paint(rect->x, rect->y, scale, color, va("Filter: %s", UI_FilterDescription( ui_serverFilterType.integer ) ), 0, 0, textStyle);
 }
 
 
@@ -1302,7 +1049,7 @@ static void UI_DrawTier(rectDef_t *rect, float scale, vec4_t color, int textStyl
   if (i < 0 || i >= uiInfo.tierCount) {
     i = 0;
   }
-  Text_Paint(rect->x, rect->y, scale, color, va("Tier: %s", uiInfo.tierList[i].tierName),0, 0, textStyle);
+  UI_Text_Paint(rect->x, rect->y, scale, color, va("Tier: %s", uiInfo.tierList[i].tierName),0, 0, textStyle);
 }
 
 static void UI_DrawTierMap(rectDef_t *rect, int index) {
@@ -1340,7 +1087,7 @@ static void UI_DrawTierMapName(rectDef_t *rect, float scale, vec4_t color, int t
 		j = 0;
 	}
 
-  Text_Paint(rect->x, rect->y, scale, color, UI_EnglishMapName(uiInfo.tierList[i].maps[j]), 0, 0, textStyle);
+  UI_Text_Paint(rect->x, rect->y, scale, color, UI_EnglishMapName(uiInfo.tierList[i].maps[j]), 0, 0, textStyle);
 }
 
 static void UI_DrawTierGameType(rectDef_t *rect, float scale, vec4_t color, int textStyle) {
@@ -1354,7 +1101,7 @@ static void UI_DrawTierGameType(rectDef_t *rect, float scale, vec4_t color, int 
 		j = 0;
 	}
 
-  Text_Paint(rect->x, rect->y, scale, color, uiInfo.gameTypes[uiInfo.tierList[i].gameTypes[j]].gameType , 0, 0, textStyle);
+  UI_Text_Paint(rect->x, rect->y, scale, color, uiInfo.gameTypes[uiInfo.tierList[i].gameTypes[j]].gameType , 0, 0, textStyle);
 }
 
 
@@ -1513,12 +1260,12 @@ static void	UI_DrawOpponentLogoName(rectDef_t *rect, vec3_t color) {
 static void UI_DrawAllMapsSelection(rectDef_t *rect, float scale, vec4_t color, int textStyle, qboolean net) {
 	int map = (net) ? ui_currentNetMap.integer : ui_currentMap.integer;
 	if (map >= 0 && map < uiInfo.mapCount) {
-	  Text_Paint(rect->x, rect->y, scale, color, uiInfo.mapList[map].mapName, 0, 0, textStyle);
+	  UI_Text_Paint(rect->x, rect->y, scale, color, uiInfo.mapList[map].mapName, 0, 0, textStyle);
 	}
 }
 
 static void UI_DrawOpponentName(rectDef_t *rect, float scale, vec4_t color, int textStyle) {
-  Text_Paint(rect->x, rect->y, scale, color, CG_Cvar_VariableString("ui_opponentName"), 0, 0, textStyle);
+  UI_Text_Paint(rect->x, rect->y, scale, color, CG_Cvar_VariableString("ui_opponentName"), 0, 0, textStyle);
 }
 
 
@@ -1630,7 +1377,7 @@ static int UI_OwnerDrawWidth(int ownerDraw, float scale) {
   }
 
 	if (s) {
-		return Text_Width(s, scale, 0);
+		return UI_Text_Width(s, scale, 0);
 	}
 	return 0;
 }
@@ -1650,17 +1397,17 @@ static void UI_DrawBotName(rectDef_t *rect, float scale, vec4_t color, int textS
 		}
 		text = UI_GetBotNameByNumber(value);
 	}
-  Text_Paint(rect->x, rect->y, scale, color, text, 0, 0, textStyle);
+  UI_Text_Paint(rect->x, rect->y, scale, color, text, 0, 0, textStyle);
 }
 
 static void UI_DrawBotSkill(rectDef_t *rect, float scale, vec4_t color, int textStyle) {
 	if (uiInfo.skillIndex >= 0 && uiInfo.skillIndex < numSkillLevels) {
-	  Text_Paint(rect->x, rect->y, scale, color, skillLevels[uiInfo.skillIndex], 0, 0, textStyle);
+	  UI_Text_Paint(rect->x, rect->y, scale, color, skillLevels[uiInfo.skillIndex], 0, 0, textStyle);
 	}
 }
 
 static void UI_DrawRedBlue(rectDef_t *rect, float scale, vec4_t color, int textStyle) {
-  Text_Paint(rect->x, rect->y, scale, color, (uiInfo.redBlue == 0) ? "Red" : "Blue", 0, 0, textStyle);
+  UI_Text_Paint(rect->x, rect->y, scale, color, (uiInfo.redBlue == 0) ? "Red" : "Blue", 0, 0, textStyle);
 }
 
 static void UI_DrawCrosshair(rectDef_t *rect, float scale, vec4_t color) {
@@ -1737,7 +1484,7 @@ static void UI_DrawSelectedPlayer(rectDef_t *rect, float scale, vec4_t color, in
 		uiInfo.playerRefresh = uiInfo.uiDC.realTime + 3000;
 		UI_BuildPlayerList();
 	}
-  Text_Paint(rect->x, rect->y, scale, color, (uiInfo.teamLeader) ? CG_Cvar_VariableString("cg_selectedPlayerName") : CG_Cvar_VariableString("name") , 0, 0, textStyle);
+  UI_Text_Paint(rect->x, rect->y, scale, color, (uiInfo.teamLeader) ? CG_Cvar_VariableString("cg_selectedPlayerName") : CG_Cvar_VariableString("name") , 0, 0, textStyle);
 }
 
 static void UI_DrawServerRefreshDate(rectDef_t *rect, float scale, vec4_t color, int textStyle) {
@@ -1748,11 +1495,11 @@ static void UI_DrawServerRefreshDate(rectDef_t *rect, float scale, vec4_t color,
 		lowLight[2] = 0.8 * color[2]; 
 		lowLight[3] = 0.8 * color[3]; 
 		LerpColor(color,lowLight,newColor,0.5+0.5*sin(uiInfo.uiDC.realTime / PULSE_DIVISOR));
-	  Text_Paint(rect->x, rect->y, scale, newColor, va("Getting info for %d servers (ESC to cancel)", trap_LAN_GetServerCount(UI_SourceForLAN())), 0, 0, textStyle);
+	  UI_Text_Paint(rect->x, rect->y, scale, newColor, va("Getting info for %d servers (ESC to cancel)", trap_LAN_GetServerCount(UI_SourceForLAN())), 0, 0, textStyle);
 	} else {
 		char buff[64];
 		Q_strncpyz(buff, CG_Cvar_VariableString(va("ui_lastServerRefresh_%i", ui_netSource.integer)), 64);
-	  Text_Paint(rect->x, rect->y, scale, color, va("Refresh Time: %s", buff), 0, 0, textStyle);
+	  UI_Text_Paint(rect->x, rect->y, scale, color, va("Refresh Time: %s", buff), 0, 0, textStyle);
 	}
 }
 
@@ -1760,14 +1507,14 @@ static void UI_DrawServerRefreshDate(rectDef_t *rect, float scale, vec4_t color,
 
 static void UI_DrawServerMOTD(rectDef_t *rect, float scale, vec4_t color) {
 	char  *text = uiInfo.serverStatus.motd;
-	float textWidth = MAX(rect->w, Text_Width( text, scale, 0 ));
+	float textWidth = MAX(rect->w, UI_Text_Width( text, scale, 0 ));
 	int now = uiInfo.uiDC.realTime;
 	int delta = now - uiInfo.serverStatus.motdTime;
 
 	CG_SetClipRegion( rect->x, rect->y, rect->w, rect->h );
 
-	Text_Paint( rect->x - uiInfo.serverStatus.motdOffset, rect->y + rect->h - 3, scale, color, text, 0, 0, 0 );
-	Text_Paint( rect->x + textWidth - uiInfo.serverStatus.motdOffset, rect->y + rect->h - 3, scale, color, text, 0, 0, 0 );
+	UI_Text_Paint( rect->x - uiInfo.serverStatus.motdOffset, rect->y + rect->h - 3, scale, color, text, 0, 0, 0 );
+	UI_Text_Paint( rect->x + textWidth - uiInfo.serverStatus.motdOffset, rect->y + rect->h - 3, scale, color, text, 0, 0, 0 );
 
 	CG_ClearClipRegion( );
 
@@ -1782,9 +1529,9 @@ static void UI_DrawServerMOTD(rectDef_t *rect, float scale, vec4_t color) {
 static void UI_DrawKeyBindStatus(rectDef_t *rect, float scale, vec4_t color, int textStyle) {
 //	int ofs = 0; TTimo: unused
 	if (Display_KeyBindPending()) {
-		Text_Paint(rect->x, rect->y, scale, color, "Waiting for new key... Press ESCAPE to cancel", 0, 0, textStyle);
+		UI_Text_Paint(rect->x, rect->y, scale, color, "Waiting for new key... Press ESCAPE to cancel", 0, 0, textStyle);
 	} else {
-		Text_Paint(rect->x, rect->y, scale, color, "Press ENTER or CLICK to change, Press BACKSPACE to clear", 0, 0, textStyle);
+		UI_Text_Paint(rect->x, rect->y, scale, color, "Press ENTER or CLICK to change, Press BACKSPACE to clear", 0, 0, textStyle);
 	}
 }
 
@@ -1794,9 +1541,9 @@ static void UI_DrawGLInfo(rectDef_t *rect, float scale, vec4_t color, int textSt
 	const char *lines[64];
 	int y, numLines, i;
 
-	Text_Paint(rect->x + 2, rect->y, scale, color, va("VENDOR: %s", cgs.glconfig.vendor_string), 0, 30, textStyle);
-	Text_Paint(rect->x + 2, rect->y + 15, scale, color, va("VERSION: %s: %s", cgs.glconfig.version_string,cgs.glconfig.renderer_string), 0, 30, textStyle);
-	Text_Paint(rect->x + 2, rect->y + 30, scale, color, va ("PIXELFORMAT: color(%d-bits) Z(%d-bits) stencil(%d-bits)", cgs.glconfig.colorBits, cgs.glconfig.depthBits, cgs.glconfig.stencilBits), 0, 30, textStyle);
+	UI_Text_Paint(rect->x + 2, rect->y, scale, color, va("VENDOR: %s", cgs.glconfig.vendor_string), 0, 30, textStyle);
+	UI_Text_Paint(rect->x + 2, rect->y + 15, scale, color, va("VERSION: %s: %s", cgs.glconfig.version_string,cgs.glconfig.renderer_string), 0, 30, textStyle);
+	UI_Text_Paint(rect->x + 2, rect->y + 30, scale, color, va ("PIXELFORMAT: color(%d-bits) Z(%d-bits) stencil(%d-bits)", cgs.glconfig.colorBits, cgs.glconfig.depthBits, cgs.glconfig.stencilBits), 0, 30, textStyle);
 
 	// build null terminated extension strings
   // TTimo: https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=399
@@ -1822,9 +1569,9 @@ static void UI_DrawGLInfo(rectDef_t *rect, float scale, vec4_t color, int textSt
 
 	i = 0;
 	while (i < numLines) {
-		Text_Paint(rect->x + 2, y, scale, color, lines[i++], 0, 20, textStyle);
+		UI_Text_Paint(rect->x + 2, y, scale, color, lines[i++], 0, 20, textStyle);
 		if (i < numLines) {
-			Text_Paint(rect->x + rect->w / 2, y, scale, color, lines[i++], 0, 20, textStyle);
+			UI_Text_Paint(rect->x + rect->w / 2, y, scale, color, lines[i++], 0, 20, textStyle);
 		}
 		y += 10;
 		if (y > rect->y + rect->h - 11) {
@@ -4891,9 +4638,9 @@ void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	uiInfo.uiDC.setColor = &trap_R_SetColor;
 	uiInfo.uiDC.drawHandlePic = &CG_DrawPic;
 	uiInfo.uiDC.drawStretchPic = &trap_R_DrawStretchPic;
-	uiInfo.uiDC.drawText = &Text_Paint;
-	uiInfo.uiDC.textWidth = &Text_Width;
-	uiInfo.uiDC.textHeight = &Text_Height;
+	uiInfo.uiDC.drawText = &UI_Text_Paint;
+	uiInfo.uiDC.textWidth = &UI_Text_Width;
+	uiInfo.uiDC.textHeight = &UI_Text_Height;
 	uiInfo.uiDC.registerModel = &trap_R_RegisterModel;
 	uiInfo.uiDC.modelBounds = &trap_R_ModelBounds;
 	uiInfo.uiDC.fillRect = &CG_FillRect;
@@ -4912,7 +4659,7 @@ void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	uiInfo.uiDC.setCVar = trap_Cvar_Set;
 	uiInfo.uiDC.getCVarString = trap_Cvar_VariableStringBuffer;
 	uiInfo.uiDC.getCVarValue = trap_Cvar_VariableValue;
-	uiInfo.uiDC.drawTextWithCursor = &Text_PaintWithCursor;
+	uiInfo.uiDC.drawTextWithCursor = &UI_Text_PaintWithCursor;
 	uiInfo.uiDC.setOverstrikeMode = &trap_Key_SetOverstrikeMode;
 	uiInfo.uiDC.getOverstrikeMode = &trap_Key_GetOverstrikeMode;
 	uiInfo.uiDC.startLocalSound = &trap_S_StartLocalSound;
@@ -5219,12 +4966,12 @@ static void UI_PrintTime ( char *buf, int bufsize, int time ) {
 	}
 }
 
-void Text_PaintCenter(float x, float y, float scale, vec4_t color, const char *text, float adjust) {
-	int len = Text_Width(text, scale, 0);
-	Text_Paint(x - len / 2, y, scale, color, text, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
+void UI_Text_PaintCenter(float x, float y, float scale, vec4_t color, const char *text, float adjust) {
+	int len = UI_Text_Width(text, scale, 0);
+	UI_Text_Paint(x - len / 2, y, scale, color, text, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
 }
 
-void Text_PaintCenter_AutoWrapped(float x, float y, float xmax, float ystep, float scale, vec4_t color, const char *str, float adjust) {
+void UI_Text_PaintCenter_AutoWrapped(float x, float y, float xmax, float ystep, float scale, vec4_t color, const char *str, float adjust) {
 	int width;
 	char *s1,*s2,*s3;
 	char c_bcp;
@@ -5242,7 +4989,7 @@ void Text_PaintCenter_AutoWrapped(float x, float y, float xmax, float ystep, flo
 		} while (*s3!=' ' && *s3!='\0');
 		c_bcp = *s3;
 		*s3 = '\0';
-		width = Text_Width(s1, scale, 0);
+		width = UI_Text_Width(s1, scale, 0);
 		*s3 = c_bcp;
 		if (width > xmax) {
 			if (s1==s2)
@@ -5251,7 +4998,7 @@ void Text_PaintCenter_AutoWrapped(float x, float y, float xmax, float ystep, flo
 				s2 = s3;
 			}
 			*s2 = '\0';
-			Text_PaintCenter(x, y, scale, color, s1, adjust);
+			UI_Text_PaintCenter(x, y, scale, color, s1, adjust);
 			y += ystep;
 			if (c_bcp == '\0')
       {
@@ -5261,7 +5008,7 @@ void Text_PaintCenter_AutoWrapped(float x, float y, float xmax, float ystep, flo
         // so just print it now if needed
         s2++;
         if (*s2 != '\0') // if we are printing an overflowing line we have s2 == s3
-          Text_PaintCenter(x, y, scale, color, s2, adjust);
+          UI_Text_PaintCenter(x, y, scale, color, s2, adjust);
         break;
       }
 			s2++;
@@ -5273,7 +5020,7 @@ void Text_PaintCenter_AutoWrapped(float x, float y, float xmax, float ystep, flo
 			s2 = s3;
 			if (c_bcp == '\0') // we reached the end
 			{
-				Text_PaintCenter(x, y, scale, color, s1, adjust);
+				UI_Text_PaintCenter(x, y, scale, color, s1, adjust);
 				break;
 			}
 		}
@@ -5298,9 +5045,9 @@ static void UI_DisplayDownloadInfo( const char *downloadName, float centerPoint,
 	leftWidth = 320;
 
 	trap_R_SetColor(colorWhite);
-	Text_PaintCenter(centerPoint, yStart + 112, scale, colorWhite, dlText, 0);
-	Text_PaintCenter(centerPoint, yStart + 192, scale, colorWhite, etaText, 0);
-	Text_PaintCenter(centerPoint, yStart + 248, scale, colorWhite, xferText, 0);
+	UI_Text_PaintCenter(centerPoint, yStart + 112, scale, colorWhite, dlText, 0);
+	UI_Text_PaintCenter(centerPoint, yStart + 192, scale, colorWhite, etaText, 0);
+	UI_Text_PaintCenter(centerPoint, yStart + 248, scale, colorWhite, xferText, 0);
 
 	if (downloadSize > 0) {
 		s = va( "%s (%d%%)", downloadName,
@@ -5309,14 +5056,14 @@ static void UI_DisplayDownloadInfo( const char *downloadName, float centerPoint,
 		s = downloadName;
 	}
 
-	Text_PaintCenter(centerPoint, yStart+136, scale, colorWhite, s, 0);
+	UI_Text_PaintCenter(centerPoint, yStart+136, scale, colorWhite, s, 0);
 
 	UI_ReadableSize( dlSizeBuf,		sizeof dlSizeBuf,		downloadCount );
 	UI_ReadableSize( totalSizeBuf,	sizeof totalSizeBuf,	downloadSize );
 
 	if (downloadCount < 4096 || !downloadTime) {
-		Text_PaintCenter(leftWidth, yStart+216, scale, colorWhite, "estimating", 0);
-		Text_PaintCenter(leftWidth, yStart+160, scale, colorWhite, va("(%s of %s copied)", dlSizeBuf, totalSizeBuf), 0);
+		UI_Text_PaintCenter(leftWidth, yStart+216, scale, colorWhite, "estimating", 0);
+		UI_Text_PaintCenter(leftWidth, yStart+160, scale, colorWhite, va("(%s of %s copied)", dlSizeBuf, totalSizeBuf), 0);
 	} else {
 		if ((uiInfo.uiDC.realTime - downloadTime) / 1000) {
 			xferRate = downloadCount / ((uiInfo.uiDC.realTime - downloadTime) / 1000);
@@ -5333,19 +5080,19 @@ static void UI_DisplayDownloadInfo( const char *downloadName, float centerPoint,
 			UI_PrintTime ( dlTimeBuf, sizeof dlTimeBuf, 
 				(n - (((downloadCount/1024) * n) / (downloadSize/1024))) * 1000);
 
-			Text_PaintCenter(leftWidth, yStart+216, scale, colorWhite, dlTimeBuf, 0);
-			Text_PaintCenter(leftWidth, yStart+160, scale, colorWhite, va("(%s of %s copied)", dlSizeBuf, totalSizeBuf), 0);
+			UI_Text_PaintCenter(leftWidth, yStart+216, scale, colorWhite, dlTimeBuf, 0);
+			UI_Text_PaintCenter(leftWidth, yStart+160, scale, colorWhite, va("(%s of %s copied)", dlSizeBuf, totalSizeBuf), 0);
 		} else {
-			Text_PaintCenter(leftWidth, yStart+216, scale, colorWhite, "estimating", 0);
+			UI_Text_PaintCenter(leftWidth, yStart+216, scale, colorWhite, "estimating", 0);
 			if (downloadSize) {
-				Text_PaintCenter(leftWidth, yStart+160, scale, colorWhite, va("(%s of %s copied)", dlSizeBuf, totalSizeBuf), 0);
+				UI_Text_PaintCenter(leftWidth, yStart+160, scale, colorWhite, va("(%s of %s copied)", dlSizeBuf, totalSizeBuf), 0);
 			} else {
-				Text_PaintCenter(leftWidth, yStart+160, scale, colorWhite, va("(%s copied)", dlSizeBuf), 0);
+				UI_Text_PaintCenter(leftWidth, yStart+160, scale, colorWhite, va("(%s copied)", dlSizeBuf), 0);
 			}
 		}
 
 		if (xferRate) {
-			Text_PaintCenter(leftWidth, yStart+272, scale, colorWhite, va("%s/Sec", xferRateBuf), 0);
+			UI_Text_PaintCenter(leftWidth, yStart+272, scale, colorWhite, va("%s/Sec", xferRateBuf), 0);
 		}
 	}
 }
@@ -5386,21 +5133,21 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 
 	info[0] = '\0';
 	if( trap_GetConfigString( CS_SERVERINFO, info, sizeof(info) ) ) {
-		Text_PaintCenter(centerPoint, yStart, scale, colorWhite, va( "Loading %s", Info_ValueForKey( info, "mapname" )), 0);
+		UI_Text_PaintCenter(centerPoint, yStart, scale, colorWhite, va( "Loading %s", Info_ValueForKey( info, "mapname" )), 0);
 	}
 
 	if (!Q_stricmp(cstate.servername,"localhost")) {
-		Text_PaintCenter(centerPoint, yStart + 48, scale, colorWhite, "Starting up...", ITEM_TEXTSTYLE_SHADOWEDMORE);
+		UI_Text_PaintCenter(centerPoint, yStart + 48, scale, colorWhite, "Starting up...", ITEM_TEXTSTYLE_SHADOWEDMORE);
 	} else {
 		strcpy(text, va("Connecting to %s", cstate.servername));
-		Text_PaintCenter(centerPoint, yStart + 48, scale, colorWhite,text , ITEM_TEXTSTYLE_SHADOWEDMORE);
+		UI_Text_PaintCenter(centerPoint, yStart + 48, scale, colorWhite,text , ITEM_TEXTSTYLE_SHADOWEDMORE);
 	}
 
 	// display global MOTD at bottom
-	Text_PaintCenter(centerPoint, 600, scale, colorWhite, Info_ValueForKey( cstate.updateInfoString, "motd" ), 0);
+	UI_Text_PaintCenter(centerPoint, 600, scale, colorWhite, Info_ValueForKey( cstate.updateInfoString, "motd" ), 0);
 	// print any server info (server full, bad version, etc)
 	if ( cstate.connState < CA_CONNECTED ) {
-		Text_PaintCenter_AutoWrapped(centerPoint, yStart + 176, 630, 20, scale, colorWhite, cstate.messageString, 0);
+		UI_Text_PaintCenter_AutoWrapped(centerPoint, yStart + 176, 630, 20, scale, colorWhite, cstate.messageString, 0);
 	}
 
 	if ( lastConnState > cstate.connState ) {
@@ -5436,7 +5183,7 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 
 
 	if (Q_stricmp(cstate.servername,"localhost")) {
-		Text_PaintCenter(centerPoint, yStart + 80, scale, colorWhite, s, 0);
+		UI_Text_PaintCenter(centerPoint, yStart + 80, scale, colorWhite, s, 0);
 	}
 
 	// password required / connection rejected information goes here

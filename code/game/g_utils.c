@@ -165,6 +165,9 @@ void G_TeamCommand( team_t team, char *cmd ) {
 		connection = &level.connections[i];
 
 		for ( j = 0; j < MAX_SPLITVIEW; j++ ) {
+			if ( level.connections[i].localPlayerNums[j] == -1 )
+				continue;
+
 			playerNum = connection->localPlayerNums[j];
 
 			if ( level.players[playerNum].sess.sessionTeam == team )
@@ -658,7 +661,6 @@ void G_AddEvent( gentity_t *ent, int event, int eventParm ) {
 		bits = ( bits + EV_EVENT_BIT1 ) & EV_EVENT_BITS;
 		ent->player->ps.externalEvent = event | bits;
 		ent->player->ps.externalEventParm = eventParm;
-		ent->player->ps.externalEventTime = level.time;
 	} else {
 		bits = ent->s.event & EV_EVENT_BITS;
 		bits = ( bits + EV_EVENT_BIT1 ) & EV_EVENT_BITS;

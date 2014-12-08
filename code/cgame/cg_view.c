@@ -997,6 +997,9 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	// clear all the render lists
 	trap_R_ClearScene();
 
+	// clear poly buffers for this frame
+	CG_PB_ClearPolyBuffers();
+
 	// set up cg.snap and possibly cg.nextSnap
 	CG_ProcessSnapshots( qfalse );
 
@@ -1083,8 +1086,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		// decide on third person view
 		cg.cur_lc->renderingThirdPerson = cg.cur_ps->persistant[PERS_TEAM] != TEAM_SPECTATOR
 							&& (cg_thirdPerson[cg.cur_localPlayerNum].integer || (cg.cur_ps->stats[STAT_HEALTH] <= 0));
-
-		CG_PB_ClearPolyBuffers();
 
 		// build cg.refdef
 		inwater = CG_CalcViewValues();

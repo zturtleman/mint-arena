@@ -280,6 +280,9 @@ typedef struct {
   vec4_t focusColor;								// focus color for items
   vec4_t disableColor;							// focus color for items
   itemDef_t *items[MAX_MENUITEMS];	// items this menu contains   
+
+	qboolean forceScreenPlacement;
+	screenPlacement_e screenHPos, screenVPos;
 } menuDef_t;
 
 typedef struct {
@@ -332,7 +335,7 @@ typedef struct {
   void (*setColor) (const vec4_t v);
   void (*drawHandlePic) (float x, float y, float w, float h, qhandle_t asset);
   void (*drawStretchPic) (float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader );
-  void (*drawText) (float x, float y, float scale, vec4_t color, const char *text, float adjust, int limit, int style );
+  void (*drawText) (float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int style );
   int (*textWidth) (const char *text, float scale, int limit);
   int (*textHeight) (const char *text, float scale, int limit);
   qhandle_t (*registerModel) (const char *p);
@@ -353,7 +356,7 @@ typedef struct {
   void (*getCVarString)(const char *cvar, char *buffer, int bufsize);
   float (*getCVarValue)(const char *cvar);
   void (*setCVar)(const char *cvar, const char *value);
-  void (*drawTextWithCursor)(float x, float y, float scale, vec4_t color, const char *text, int cursorPos, char cursor, int limit, int style);
+  void (*drawTextWithCursor)(float x, float y, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, int style);
   void (*setOverstrikeMode)(qboolean b);
   qboolean (*getOverstrikeMode)( void );
   void (*startLocalSound)( sfxHandle_t sfx, int channelNum );
@@ -444,6 +447,7 @@ void LerpColor(vec4_t a, vec4_t b, vec4_t c, float t);
 void Menus_CloseAll( void );
 void Menu_Paint(menuDef_t *menu, qboolean forcePaint);
 void Menu_SetFeederSelection(menuDef_t *menu, int feeder, int index, const char *name);
+void Menu_SetScreenPlacement(menuDef_t *menu, screenPlacement_e hpos, screenPlacement_e vpos );
 void Display_CacheAll( void );
 
 void *UI_Alloc( int size );
@@ -453,5 +457,7 @@ qboolean UI_OutOfMemory( void );
 void Controls_GetConfig( void );
 void Controls_SetConfig(qboolean restart);
 void Controls_SetDefaults( void );
+
+qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font );
 
 #endif

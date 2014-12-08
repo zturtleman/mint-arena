@@ -185,7 +185,6 @@ void CG_ParseServerinfo( void ) {
 	cgs.gametype = atoi( Info_ValueForKey( info, "g_gametype" ) );
 	trap_Cvar_SetValue("g_gametype", cgs.gametype);
 	cgs.dmflags = atoi( Info_ValueForKey( info, "dmflags" ) );
-	cgs.teamflags = atoi( Info_ValueForKey( info, "teamflags" ) );
 	cgs.fraglimit = atoi( Info_ValueForKey( info, "fraglimit" ) );
 	cgs.capturelimit = atoi( Info_ValueForKey( info, "capturelimit" ) );
 	cgs.timelimit = atoi( Info_ValueForKey( info, "timelimit" ) );
@@ -861,7 +860,6 @@ CG_PlayVoiceChat
 */
 void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 #ifdef MISSIONPACK
-	qboolean	showHead;
 	int			i;
 
 	// if we are going into the intermission, don't start any voices
@@ -869,10 +867,12 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 		return;
 	}
 
+	// remove bits for non-valid players
+	vchat->localPlayerBits &= CG_LocalPlayerBitsForTeam( -1 );
+
 	if ( !cg_noVoiceChats.integer ) {
 		trap_S_StartLocalSound( vchat->snd, CHAN_VOICE);
 
-		showHead = qfalse;
 		for ( i = 0; i < CG_MaxSplitView(); i++ ) {
 			if ( ! ( vchat->localPlayerBits & ( 1 << i ) ) ) {
 				continue;
@@ -887,15 +887,9 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 					cg.localPlayers[i].acceptLeader = vchat->playerNum;
 				}
 
-				cg.localPlayers[i].voiceTime = cg.time;
+				cg.localPlayers[i].voiceTime = cg.time + 2500;
 				cg.localPlayers[i].currentVoicePlayerNum = vchat->playerNum;
-				showHead = qtrue;
 			}
-		}
-
-		if ( showHead ) {
-			// see if this was an order
-			CG_ShowResponseHead();
 		}
 	}
 	if (!vchat->voiceOnly && !cg_noVoiceText.integer) {
@@ -1062,7 +1056,7 @@ int CG_LocalPlayerBitsForTeam( team_t team ) {
 			continue;
 		}
 		
-		if ( pi->team == team ) {
+		if ( team == -1 || pi->team == team ) {
 			bits |= ( 1 << i );
 		}
 	}

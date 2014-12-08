@@ -763,6 +763,13 @@ void PlayerThink_real( gentity_t *ent ) {
 //		G_Printf("serverTime >>>>>\n" );
 	} 
 
+#ifdef UNLAGGED
+	// frameOffset should be about the number of milliseconds into a frame
+	// this command packet was received, depending on how fast the server
+	// does a G_RunFrame()
+	player->frameOffset = trap_Milliseconds() - level.frameStartTime;
+#endif
+
 	msec = ucmd->serverTime - player->ps.commandTime;
 	// following others may result in bad times, but we still want
 	// to check for follow toggles

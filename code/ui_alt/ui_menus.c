@@ -49,6 +49,9 @@ extern menudef_t playermenu;
 extern menudef_t creditsmenu;
 extern menudef_t credits2menu;
 
+//
+extern menudef_t postgamemenu;
+
 void launchTeamArena( int item ) {
 #ifdef MISSIONPACK
 	trap_Cvar_Set( "fs_game", BASEQ3 );
@@ -88,6 +91,11 @@ void newGame( int item ) {
 void endGame( int item ) {
 	trap_Cmd_ExecuteText( EXEC_APPEND, "disconnect\n" );
 }
+
+void restartMap( int item ) {
+	trap_Cmd_ExecuteText( EXEC_APPEND, "map_restart 0\n" );
+}
+
 
 #ifdef MISSIONPACK
 menuitem_t mainmenu_items[] =
@@ -166,6 +174,14 @@ menuitem_t credits2menu_items[] =
 	{ MIF_SWAPMENU|MIF_NEXTBUTTON, "id Credit", &creditsmenu, 0 },
 };
 
+// Team Arena uses; Replay, Demo, Menu, Next
+menuitem_t postgamemenu_items[] =
+{
+	{ MIF_CALL, "Menu", endGame, 0 },
+	{ MIF_CALL|MIF_POPMENU, "Replay", restartMap, 0 },
+	{ MIF_CALL|MIF_POPMENU, "Next", restartMap, 0 }, // TODO: add next map logic
+};
+
 menuitem_t stubmenu_items[] =
 {
 	{ 0, "STUB", NULL, 0 },
@@ -196,6 +212,7 @@ menudef_t playermenu = { MENUTYPE_GENERIC, "Player Setup", stubmenu_items, ARRAY
 menudef_t creditsmenu = { MENUTYPE_GENERIC, "id Credit", creditsmenu_items, ARRAY_LEN( creditsmenu_items ) };
 menudef_t credits2menu = { MENUTYPE_GENERIC, "Additional Credit", credits2menu_items, ARRAY_LEN( credits2menu_items ) };
 
-
+// in game menus
+menudef_t postgamemenu = { MENUTYPE_POSTGAME, NULL, postgamemenu_items, ARRAY_LEN( postgamemenu_items ) };
 
 

@@ -182,7 +182,7 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 	if ( cg.connected ) {
 		drawFramePics = qfalse;
 
-		if ( current->menu->menuType != MENUTYPE_DIALOG ) {
+		if ( current->menu->menuType != MENUTYPE_DIALOG && current->menu->menuType != MENUTYPE_POSTGAME ) {
 			CG_DrawPic( 320-233, 240-166, 466, 332, uiAssets.dialogLargeBackground );
 		}
 	} else {
@@ -273,6 +273,13 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		current->header.y = 204;
 		headerBottom = 265;
 		horizontalMenu = qtrue;
+	} else if ( current->menu->menuType == MENUTYPE_POSTGAME ) {
+		horizontalMenu = qtrue;
+#ifdef Q3UIFONTS
+		headerBottom = SCREEN_HEIGHT - PROP_HEIGHT - 10;
+#else
+		headerBottom = SCREEN_HEIGHT - BIGCHAR_HEIGHT - 10;
+#endif
 	}
 
 	lineHeight = BIGCHAR_HEIGHT * 2;

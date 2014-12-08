@@ -119,6 +119,7 @@ typedef enum {
 	MENUTYPE_DEMOS,
 	MENUTYPE_CINEMATICS,
 	MENUTYPE_MODS,
+	MENUTYPE_POSTGAME,	// cannot exit using escape
 
 } menuType_t;
 
@@ -195,6 +196,7 @@ extern uiStatic_t uis;
 
 // ui_menus.c
 extern menudef_t mainmenu;
+extern menudef_t postgamemenu;
 
 // ui_draw.c
 void UI_LoadAssets( void );

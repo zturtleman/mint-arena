@@ -91,6 +91,12 @@ void	UI_SetActiveMenu( uiMenuCommand_t menu ) {
 			// TODO: separate ingame menu
 			UI_SetMenu( &currentMenu, &mainmenu );
 		}
+	} else if ( menu == UIMENU_POSTGAME ) {
+		// postgame doesn't pause
+		trap_Mouse_SetState( 0, MOUSE_CGAME );
+		trap_Key_SetCatcher( KEYCATCH_UI );
+
+		UI_SetMenu( &currentMenu, &postgamemenu );
 	}
 }
 
@@ -107,7 +113,9 @@ void	UI_KeyEvent( int key, qboolean down ) {
 	switch ( key ) {
 		case K_MOUSE2:
 		case K_ESCAPE:
-			UI_PopMenu( &currentMenu );
+			if ( currentMenu.menu && currentMenu.menu->menuType != MENUTYPE_POSTGAME ) {
+				UI_PopMenu( &currentMenu );
+			}
 			break;
 
 		case K_JOY_DPAD_UP:

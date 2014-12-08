@@ -30,11 +30,16 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "ui_local.h"
 
+static void UI_Postgame_f( void ) {
+	// TODO: show stats like Q3A and Team Arena
+	UI_SetActiveMenu( UIMENU_POSTGAME );
+}
+
 // UI commands
 consoleCommand_t ui_commands[] = {
-	{ NULL, 0 }
+	{ "postgame", UI_Postgame_f, CMD_INGAME },
 };
-int ui_numCommands = 0;// ARRAY_LEN( ui_commands );
+int ui_numCommands = ARRAY_LEN( ui_commands );
 
 void	UI_ConsoleCommand( int realTime ) {
 

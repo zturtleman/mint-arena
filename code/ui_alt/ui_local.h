@@ -72,7 +72,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define MENU_COPYRIGHT "Quake III Arena(c) 1999-2000, Id Software, Inc.  All Rights Reserved"
 
-//#define Q3UIFONTS // use banner and proportional fonts
+#define Q3UIFONTS // use banner and proportional fonts
 
 #endif
 
@@ -175,9 +175,9 @@ typedef struct {
 
 typedef struct {
 #ifdef Q3UIFONTS
-	qhandle_t charsetProp;
-	qhandle_t charsetPropGlow;
-	qhandle_t charsetPropB;
+	fontInfo_t fontProp;
+	fontInfo_t fontPropGlow;
+	fontInfo_t fontPropB;
 #endif
 
 	qhandle_t cursorShader;
@@ -212,8 +212,10 @@ void UI_MenuAction( currentMenu_t *current, int itemNum );
 
 // ui_fonts.c
 #ifdef Q3UIFONTS
+void UI_InitBannerFont( fontInfo_t *font );
 int UI_BannerStringWidth( const char* str );
-void UI_DrawBannerString( int x, int y, const char* str, vec4_t color );
+void UI_DrawBannerString( int x, int y, const char* str, int style, vec4_t color );
+void UI_InitPropFont( fontInfo_t *font, qboolean glow );
 int UI_ProportionalStringWidth( const char* str );
 float UI_ProportionalSizeScale( int style );
 void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color );

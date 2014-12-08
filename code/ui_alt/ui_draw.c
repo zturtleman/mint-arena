@@ -166,29 +166,14 @@ void UI_DrawMainMenuBackground( void ) {
 	trap_R_RenderScene( &refdef );
 #endif
 
-	CG_DrawSmallStringColor( ( SCREEN_WIDTH - CG_DrawStrlen( MENU_COPYRIGHT, UI_SMALLFONT ) ) / 2, SCREEN_HEIGHT - SMALLCHAR_HEIGHT*2, MENU_COPYRIGHT, color_copyright );
-}
-
-// from q3_ui/ui_atoms.c
-void UI_LerpColor(vec4_t a, vec4_t b, vec4_t c, float t)
-{
-	int i;
-
-	// lerp and clamp each component
-	for (i=0; i<4; i++)
-	{
-		c[i] = a[i] + t*(b[i]-a[i]);
-		if (c[i] < 0)
-			c[i] = 0;
-		else if (c[i] > 1.0)
-			c[i] = 1.0;
-	}
+	CG_DrawString( SCREEN_WIDTH / 2, SCREEN_HEIGHT - SMALLCHAR_HEIGHT*2, MENU_COPYRIGHT, UI_CENTER|UI_SMALLFONT, color_copyright );
 }
 
 void UI_DrawCurrentMenu( currentMenu_t *current ) {
 	int i;
 	qboolean drawFramePics = qtrue;
 	vec4_t drawcolor;
+	int style;
 
 	if ( !current->menu ) {
 		return;
@@ -223,35 +208,30 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 	// doesn't have a special header handling, use generic
 	if ( current->menu->header ) {
 #ifdef Q3UIFONTS
-		UI_DrawBannerString( current->header.x, current->header.y, current->menu->header, color_header );
+		UI_DrawBannerString( current->header.x, current->header.y, current->menu->header, 0, color_header );
 #else
-		CG_DrawBigStringColor( current->header.x, current->header.y, current->menu->header, color_header );
+		CG_DrawString( current->header.x, current->header.y, current->menu->header, UI_DROPSHADOW|UI_BIGFONT, color_header );
 #endif
 	}
 
 	for ( i = 0; i < current->numItems; i++ ) {
+		style = 0;
+
 		if ( !( current->items[i].flags & MIF_SELECTABLE ) ) {
 			Vector4Copy( color_bigtext, drawcolor );
 
 			VectorScale( drawcolor, 0.7f, drawcolor );
 		} else if ( current->selectedItem == i ) {
-#ifdef Q3UIFONTS
+			style |= UI_PULSE;
 			Vector4Copy( color_selected, drawcolor );
-#else
-			vec4_t lowlight;
-
-			Vector4Scale( color_selected, 0.8, lowlight );
-
-			UI_LerpColor(color_selected, lowlight, drawcolor, 0.5+0.5*sin(cg.realTime/PULSE_DIVISOR));
-#endif
 		} else {
 			Vector4Copy( color_bigtext, drawcolor );
 		}
 
 #ifdef Q3UIFONTS
-		UI_DrawProportionalString( current->items[i].x, current->items[i].y, current->items[i].caption, current->selectedItem == i ? UI_PULSE : 0, drawcolor );
+		UI_DrawProportionalString( current->items[i].x, current->items[i].y, current->items[i].caption, style, drawcolor );
 #else
-		CG_DrawBigStringColor( current->items[i].x, current->items[i].y, current->items[i].caption, drawcolor );
+		CG_DrawString( current->items[i].x, current->items[i].y, current->items[i].caption, UI_DROPSHADOW|UI_BIGFONT|style, drawcolor );
 #endif
 	}
 }
@@ -301,10 +281,11 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 	for ( i = 0, item = current->menu->items; i < current->menu->numItems; i++, item++ ) {
 #ifdef Q3UIFONTS
 		current->items[i].width = UI_ProportionalStringWidth( item->caption );
+		current->items[i].height = PROP_HEIGHT;
 #else
 		current->items[i].width = CG_DrawStrlen( item->caption, UI_BIGFONT );
-#endif
 		current->items[i].height = BIGCHAR_HEIGHT;
+#endif
 
 		if ( item->flags & MIF_HEADER ) {
 			numHeaders++;
@@ -328,7 +309,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			current->items[i].flags = item->flags;
 			current->items[i].data = item->data;
 			current->items[i].caption = item->caption;
-			current->items[i].y = SCREEN_HEIGHT - BIGCHAR_HEIGHT - 10;
+			current->items[i].y = SCREEN_HEIGHT - current->items[i].height - 10;
 			current->items[i].x = SCREEN_WIDTH - current->items[i].width - 10;
 			continue;
 		}
@@ -428,16 +409,22 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 #endif
 		current->items[i].caption = "Back";
 
-#if 1 // Fixed place in lower left
-		current->items[i].y = SCREEN_HEIGHT - BIGCHAR_HEIGHT - 10;
+#ifdef Q3UIFONTS
+		current->items[i].width = UI_ProportionalStringWidth( current->items[i].caption );
+		current->items[i].height = PROP_HEIGHT;
+#else
 		current->items[i].width = CG_DrawStrlen( current->items[i].caption, UI_BIGFONT );
+		current->items[i].height = BIGCHAR_HEIGHT;
+#endif
+
+#if 1 // Fixed place in lower left
+		current->items[i].y = SCREEN_HEIGHT - current->items[i].height - 10;
 		current->items[i].x = 10;
 #else // fake next of menu item (though it's not vertically centered by the above numItems code)
 		current->items[i].y = y;
-		current->items[i].width = CG_DrawStrlen( current->items[i].caption, UI_BIGFONT );
 		current->items[i].x = (SCREEN_WIDTH - current->items[i].width) / 2;
 #endif
-		current->items[i].height = BIGCHAR_HEIGHT;
+
 		i++;
 		current->numItems++;
 	}

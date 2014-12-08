@@ -46,9 +46,15 @@ void	UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	UI_LoadAssets();
 
 #ifdef Q3UIFONTS
-	uis.charsetProp		= trap_R_RegisterShaderNoMip( "menu/art/font1_prop.tga" );
-	uis.charsetPropGlow	= trap_R_RegisterShaderNoMip( "menu/art/font1_prop_glo.tga" );
-	uis.charsetPropB	= trap_R_RegisterShaderNoMip( "menu/art/font2_prop.tga" );
+	if ( !CG_InitTrueTypeFont( "fonts/font1_prop", PROP_HEIGHT, &uis.fontProp ) ) {
+		UI_InitPropFont( &uis.fontProp, qfalse );
+	}
+	if ( !CG_InitTrueTypeFont( "fonts/font1_prop_glo", PROP_HEIGHT, &uis.fontPropGlow ) ) {
+		UI_InitPropFont( &uis.fontPropGlow, qtrue );
+	}
+	if ( !CG_InitTrueTypeFont( "fonts/font2_prop", 36/*PROPB_HEIGHT*/, &uis.fontPropB ) ) {
+		UI_InitBannerFont( &uis.fontPropB );
+	}
 #endif
 
 	uis.itemActionSound = trap_S_RegisterSound( ITEM_ACTION_SOUND, qfalse );
@@ -256,10 +262,7 @@ void	UI_DrawConnectScreen( qboolean overlay ) {
 #ifndef Q3UIFONTS
 // used by cg_info.c
 void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color ) {
-	// center it
-	x = ( SCREEN_WIDTH - CG_DrawStrlen( str, UI_BIGFONT ) ) / 2;
-
-	CG_DrawBigStringColor( x, y, str, color );
+	CG_DrawString( x, y, str, style, color );
 }
 #endif
 

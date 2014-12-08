@@ -30,6 +30,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 #include "g_local.h"
 
+#ifdef UNLAGGED
+
 /*
 ============
 G_ResetHistory
@@ -633,3 +635,6 @@ This is the entry point to the server-side-only prediction code
 void G_PredictPlayerMove( gentity_t *ent, float frametime ) {
 	G_PredictPlayerStepSlideMove( ent, frametime );
 }
+
+#endif // UNLAGGED
+

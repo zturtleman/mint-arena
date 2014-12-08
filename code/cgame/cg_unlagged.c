@@ -30,6 +30,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "cg_local.h"
 
+#ifdef UNLAGGED
+
 // we'll need these prototypes
 void CG_ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, int otherEntNum );
 void CG_Bullet( vec3_t end, int sourceEntityNum, vec3_t normal, qboolean flesh, int fleshEntityNum );
@@ -427,3 +429,6 @@ qboolean CG_Cvar_ClampInt( const char *name, vmCvar_t *vmCvar, int min, int max 
 
 	return qfalse;
 }
+
+#endif // UNLAGGED
+

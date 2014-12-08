@@ -32,11 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #ifdef UNLAGGED
 
-// we'll need these prototypes
-void CG_ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, int otherEntNum );
-void CG_Bullet( vec3_t end, int sourceEntityNum, vec3_t normal, qboolean flesh, int fleshEntityNum );
-
-// and this as well
+// we'll need this
 #define MACHINEGUN_SPREAD	200
 
 /*

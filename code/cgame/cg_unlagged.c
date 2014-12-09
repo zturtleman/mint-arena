@@ -393,38 +393,5 @@ void CG_AddBoundingBox( centity_t *cent ) {
 	trap_R_AddPolyToScene( bboxShader_nocull, 4, verts, 0 );
 }
 
-/*
-================
-CG_Cvar_ClampInt
-
-Clamps a cvar between two integer values, returns qtrue if it had to.
-================
-*/
-qboolean CG_Cvar_ClampInt( const char *name, vmCvar_t *vmCvar, int min, int max ) {
-	if ( vmCvar->integer > max ) {
-		CG_Printf( "Allowed values are %d to %d.\n", min, max );
-
-		Com_sprintf( vmCvar->string, MAX_CVAR_VALUE_STRING, "%d", max );
-		vmCvar->value = max;
-		vmCvar->integer = max;
-
-		trap_Cvar_Set( name, vmCvar->string );
-		return qtrue;
-	}
-
-	if ( vmCvar->integer < min ) {
-		CG_Printf( "Allowed values are %d to %d.\n", min, max );
-
-		Com_sprintf( vmCvar->string, MAX_CVAR_VALUE_STRING, "%d", min );
-		vmCvar->value = min;
-		vmCvar->integer = min;
-
-		trap_Cvar_Set( name, vmCvar->string );
-		return qtrue;
-	}
-
-	return qfalse;
-}
-
 #endif
 

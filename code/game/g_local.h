@@ -267,15 +267,14 @@ typedef struct {
 	qboolean	teamInfo;			// send team overlay updates?
 } playerPersistant_t;
 
-// the size of history we'll keep
-#define NUM_CLIENT_HISTORY 17
+#define MAX_PLAYER_MARKERS 17
 
-// everything we need to know to backward reconcile
 typedef struct {
-	vec3_t		mins, maxs;
-	vec3_t		currentOrigin;
-	int			leveltime;
-} playerHistory_t;
+	vec3_t		mins;
+	vec3_t		maxs;
+	vec3_t		origin;
+	int			time;
+} playerMarker_t;
 
 // this structure is cleared on each PlayerSpawn(),
 // except for 'player->pers' and 'player->sess'
@@ -292,9 +291,9 @@ struct gplayer_s {
 	qboolean	noclip;
 
 	// history for backward reconcile
-	int			historyHead;
-	playerHistory_t	history[NUM_CLIENT_HISTORY];
-	playerHistory_t	saved;			// the player's saved position, used to restore after time shift
+	int			topMarker;
+	playerMarker_t	playerMarkers[MAX_PLAYER_MARKERS];
+	playerMarker_t	backupMarker;
 
 	int			frameOffset;		// an approximation of the actual server time we received this
 									// command (not in 50ms increments)

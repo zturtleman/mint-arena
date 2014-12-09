@@ -41,12 +41,12 @@ void G_ResetHistory( gentity_t *ent ) {
 	int		i, time;
 
 	// fill up the history with data (assume the current position)
-	ent->player->historyHead = NUM_CLIENT_HISTORY - 1;
-	for ( i = ent->player->historyHead, time = level.time; i >= 0; i--, time -= 50 ) {
-		VectorCopy( ent->s.mins, ent->player->history[i].mins );
-		VectorCopy( ent->s.maxs, ent->player->history[i].maxs );
-		VectorCopy( ent->r.currentOrigin, ent->player->history[i].currentOrigin );
-		ent->player->history[i].leveltime = time;
+	ent->player->topMarker = MAX_PLAYER_MARKERS - 1;
+	for ( i = ent->player->topMarker, time = level.time; i >= 0; i--, time -= 50 ) {
+		VectorCopy( ent->s.mins, ent->player->playerMarkers[i].mins );
+		VectorCopy( ent->s.maxs, ent->player->playerMarkers[i].maxs );
+		VectorCopy( ent->r.currentOrigin, ent->player->playerMarkers[i].origin );
+		ent->player->playerMarkers[i].time = time;
 	}
 }
 
@@ -63,19 +63,19 @@ void G_StoreHistory( gentity_t *ent ) {
 
 	frametime = level.time - level.previousTime;
 
-	ent->player->historyHead++;
-	if ( ent->player->historyHead >= NUM_CLIENT_HISTORY ) {
-		ent->player->historyHead = 0;
+	ent->player->topMarker++;
+	if ( ent->player->topMarker >= MAX_PLAYER_MARKERS ) {
+		ent->player->topMarker = 0;
 	}
 
-	head = ent->player->historyHead;
+	head = ent->player->topMarker;
 
 	// store all the collision-detection info and the time
-	VectorCopy( ent->s.mins, ent->player->history[head].mins );
-	VectorCopy( ent->s.maxs, ent->player->history[head].maxs );
-	VectorCopy( ent->s.pos.trBase, ent->player->history[head].currentOrigin );
-	SnapVector( ent->player->history[head].currentOrigin );
-	ent->player->history[head].leveltime = level.time;
+	VectorCopy( ent->s.mins, ent->player->playerMarkers[head].mins );
+	VectorCopy( ent->s.maxs, ent->player->playerMarkers[head].maxs );
+	VectorCopy( ent->s.pos.trBase, ent->player->playerMarkers[head].origin );
+	SnapVector( ent->player->playerMarkers[head].origin );
+	ent->player->playerMarkers[head].time = level.time;
 }
 
 
@@ -119,24 +119,24 @@ void G_TimeShiftClient( gentity_t *ent, int time, qboolean debug, gentity_t *deb
 		char	str[MAX_STRING_CHARS];
 
 		Com_sprintf(str, sizeof(str), "print \"head: %d, %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n\"",
-			ent->client->historyHead,
-			ent->client->history[0].leveltime,
-			ent->client->history[1].leveltime,
-			ent->client->history[2].leveltime,
-			ent->client->history[3].leveltime,
-			ent->client->history[4].leveltime,
-			ent->client->history[5].leveltime,
-			ent->client->history[6].leveltime,
-			ent->client->history[7].leveltime,
-			ent->client->history[8].leveltime,
-			ent->client->history[9].leveltime,
-			ent->client->history[10].leveltime,
-			ent->client->history[11].leveltime,
-			ent->client->history[12].leveltime,
-			ent->client->history[13].leveltime,
-			ent->client->history[14].leveltime,
-			ent->client->history[15].leveltime,
-			ent->client->history[16].leveltime);
+			ent->client->topMarker,
+			ent->client->playerMarkers[0].time,
+			ent->client->playerMarkers[1].time,
+			ent->client->playerMarkers[2].time,
+			ent->client->playerMarkers[3].time,
+			ent->client->playerMarkers[4].time,
+			ent->client->playerMarkers[5].time,
+			ent->client->playerMarkers[6].time,
+			ent->client->playerMarkers[7].time,
+			ent->client->playerMarkers[8].time,
+			ent->client->playerMarkers[9].time,
+			ent->client->playerMarkers[10].time,
+			ent->client->playerMarkers[11].time,
+			ent->client->playerMarkers[12].time,
+			ent->client->playerMarkers[13].time,
+			ent->client->playerMarkers[14].time,
+			ent->client->playerMarkers[15].time,
+			ent->client->playerMarkers[16].time);
 
 		trap_SendServerCommand( debugger - g_entities, str );
 	}
@@ -144,48 +144,48 @@ void G_TimeShiftClient( gentity_t *ent, int time, qboolean debug, gentity_t *deb
 
 	// find two entries in the history whose times sandwich "time"
 	// assumes no two adjacent records have the same timestamp
-	j = k = ent->player->historyHead;
+	j = k = ent->player->topMarker;
 	do {
-		if ( ent->player->history[j].leveltime <= time )
+		if ( ent->player->playerMarkers[j].time <= time )
 			break;
 
 		k = j;
 		j--;
 		if ( j < 0 ) {
-			j = NUM_CLIENT_HISTORY - 1;
+			j = MAX_PLAYER_MARKERS - 1;
 		}
 	}
-	while ( j != ent->player->historyHead );
+	while ( j != ent->player->topMarker );
 
 	// if we got past the first iteration above, we've sandwiched (or wrapped)
 	if ( j != k ) {
 		// make sure it doesn't get re-saved
-		if ( ent->player->saved.leveltime != level.time ) {
+		if ( ent->player->backupMarker.time != level.time ) {
 			// save the current origin and bounding box
-			VectorCopy( ent->s.mins, ent->player->saved.mins );
-			VectorCopy( ent->s.maxs, ent->player->saved.maxs );
-			VectorCopy( ent->r.currentOrigin, ent->player->saved.currentOrigin );
-			ent->player->saved.leveltime = level.time;
+			VectorCopy( ent->s.mins, ent->player->backupMarker.mins );
+			VectorCopy( ent->s.maxs, ent->player->backupMarker.maxs );
+			VectorCopy( ent->r.currentOrigin, ent->player->backupMarker.origin );
+			ent->player->backupMarker.time = level.time;
 		}
 
 		// if we haven't wrapped back to the head, we've sandwiched, so
 		// we shift the client's position back to where he was at "time"
-		if ( j != ent->player->historyHead ) {
-			float	frac = (float)(time - ent->player->history[j].leveltime) /
-				(float)(ent->player->history[k].leveltime - ent->player->history[j].leveltime);
+		if ( j != ent->player->topMarker ) {
+			float	frac = (float)(time - ent->player->playerMarkers[j].time) /
+				(float)(ent->player->playerMarkers[k].time - ent->player->playerMarkers[j].time);
 
 			// interpolate between the two origins to give position at time index "time"
 			TimeShiftLerp( frac,
-				ent->player->history[j].currentOrigin, ent->player->history[k].currentOrigin,
+				ent->player->playerMarkers[j].origin, ent->player->playerMarkers[k].origin,
 				ent->r.currentOrigin );
 
 			// lerp these too, just for fun (and ducking)
 			TimeShiftLerp( frac,
-				ent->player->history[j].mins, ent->player->history[k].mins,
+				ent->player->playerMarkers[j].mins, ent->player->playerMarkers[k].mins,
 				ent->s.mins );
 
 			TimeShiftLerp( frac,
-				ent->player->history[j].maxs, ent->player->history[k].maxs,
+				ent->player->playerMarkers[j].maxs, ent->player->playerMarkers[k].maxs,
 				ent->s.maxs );
 
 			if ( debug && debugger != NULL ) {
@@ -196,15 +196,15 @@ void G_TimeShiftClient( gentity_t *ent, int time, qboolean debug, gentity_t *deb
 					"print \"^1Rec: time: %d, j: %d, k: %d, origin: %0.2f %0.2f %0.2f\n"
 					"^2frac: %0.4f, origin1: %0.2f %0.2f %0.2f, origin2: %0.2f %0.2f %0.2f\n"
 					"^7level.time: %d, est time: %d, level.time delta: %d, est real ping: %d\n\"",
-					time, ent->player->history[j].leveltime, ent->player->history[k].leveltime,
+					time, ent->player->playerMarkers[j].time, ent->player->playerMarkers[k].time,
 					ent->r.currentOrigin[0], ent->r.currentOrigin[1], ent->r.currentOrigin[2],
 					frac,
-					ent->player->history[j].currentOrigin[0],
-					ent->player->history[j].currentOrigin[1],
-					ent->player->history[j].currentOrigin[2], 
-					ent->player->history[k].currentOrigin[0],
-					ent->player->history[k].currentOrigin[1],
-					ent->player->history[k].currentOrigin[2],
+					ent->player->playerMarkers[j].origin[0],
+					ent->player->playerMarkers[j].origin[1],
+					ent->player->playerMarkers[j].origin[2], 
+					ent->player->playerMarkers[k].origin[0],
+					ent->player->playerMarkers[k].origin[1],
+					ent->player->playerMarkers[k].origin[2],
 					level.time, level.time + debugger->player->frameOffset,
 					level.time - time, level.time + debugger->player->frameOffset - time);
 
@@ -215,9 +215,9 @@ void G_TimeShiftClient( gentity_t *ent, int time, qboolean debug, gentity_t *deb
 			trap_LinkEntity( ent );
 		} else {
 			// we wrapped, so grab the earliest
-			VectorCopy( ent->player->history[k].currentOrigin, ent->r.currentOrigin );
-			VectorCopy( ent->player->history[k].mins, ent->s.mins );
-			VectorCopy( ent->player->history[k].maxs, ent->s.maxs );
+			VectorCopy( ent->player->playerMarkers[k].origin, ent->r.currentOrigin );
+			VectorCopy( ent->player->playerMarkers[k].mins, ent->s.mins );
+			VectorCopy( ent->player->playerMarkers[k].maxs, ent->s.maxs );
 
 			// this will recalculate absmin and absmax
 			trap_LinkEntity( ent );
@@ -320,12 +320,12 @@ Move a client back to where he was before the time shift
 */
 void G_UnTimeShiftClient( gentity_t *ent ) {
 	// if it was saved
-	if ( ent->player->saved.leveltime == level.time ) {
+	if ( ent->player->backupMarker.time == level.time ) {
 		// move it back
-		VectorCopy( ent->player->saved.mins, ent->s.mins );
-		VectorCopy( ent->player->saved.maxs, ent->s.maxs );
-		VectorCopy( ent->player->saved.currentOrigin, ent->r.currentOrigin );
-		ent->player->saved.leveltime = 0;
+		VectorCopy( ent->player->backupMarker.mins, ent->s.mins );
+		VectorCopy( ent->player->backupMarker.maxs, ent->s.maxs );
+		VectorCopy( ent->player->backupMarker.origin, ent->r.currentOrigin );
+		ent->player->backupMarker.time = 0;
 
 		// this will recalculate absmin and absmax
 		trap_LinkEntity( ent );

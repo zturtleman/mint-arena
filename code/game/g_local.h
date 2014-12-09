@@ -267,7 +267,6 @@ typedef struct {
 	qboolean	teamInfo;			// send team overlay updates?
 } playerPersistant_t;
 
-#ifdef UNLAGGED
 // the size of history we'll keep
 #define NUM_CLIENT_HISTORY 17
 
@@ -277,7 +276,6 @@ typedef struct {
 	vec3_t		currentOrigin;
 	int			leveltime;
 } playerHistory_t;
-#endif
 
 // this structure is cleared on each PlayerSpawn(),
 // except for 'player->pers' and 'player->sess'
@@ -293,7 +291,6 @@ struct gplayer_s {
 
 	qboolean	noclip;
 
-#ifdef UNLAGGED
 	// history for backward reconcile
 	int			historyHead;
 	playerHistory_t	history[NUM_CLIENT_HISTORY];
@@ -303,7 +300,6 @@ struct gplayer_s {
 									// command (not in 50ms increments)
 
 	int			lastCmdServerTime;	// ucmd.serverTime from last usercmd_t
-#endif
 
 	int			lastCmdTime;		// level.time of last usercmd_t, for EF_CONNECTION
 									// we can't just use pers.lastCommand.time, because
@@ -398,9 +394,7 @@ typedef struct {
 
 	int			startTime;				// level.time the map was started
 
-#ifdef UNLAGGED
 	int			frameStartTime;			// time this server frame started
-#endif
 
 	int			teamScores[TEAM_NUM_TEAMS];
 	int			lastTeamLocationTime;		// last time of client team location update

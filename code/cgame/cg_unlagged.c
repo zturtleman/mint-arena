@@ -30,7 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "cg_local.h"
 
-#if 0 // #ifdef UNLAGGED
+#if 0
 
 // we'll need this
 #define MACHINEGUN_SPREAD	200
@@ -426,5 +426,5 @@ qboolean CG_Cvar_ClampInt( const char *name, vmCvar_t *vmCvar, int min, int max 
 	return qfalse;
 }
 
-#endif // UNLAGGED
+#endif
 

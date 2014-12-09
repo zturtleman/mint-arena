@@ -739,6 +739,10 @@ void PlayerUserinfoChanged( int playerNum ) {
 		player->pers.predictItemPickup = qtrue;
 	}
 
+	// check the anti lag
+	s = Info_ValueForKey( userinfo, "cg_antiLag" );
+	player->pers.antiLag = atoi( s );
+
 	// set name
 	Q_strncpyz ( oldname, player->pers.netname, sizeof( oldname ) );
 	s = Info_ValueForKey (userinfo, "name");

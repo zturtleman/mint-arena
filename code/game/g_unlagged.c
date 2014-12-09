@@ -287,14 +287,6 @@ Decide what time to shift everyone back to, and do it
 ================
 */
 void G_DoTimeShiftFor( gentity_t *ent ) {	
-#if 0 // TODO
-#ifdef MISSIONPACK
-	int wpflags[WP_NUM_WEAPONS] = { 0, 0, 2, 4, 0, 0, 8, 16, 0, 0, 0, 32, 0, 64 };
-#else
-	int wpflags[WP_NUM_WEAPONS] = { 0, 0, 2, 4, 0, 0, 8, 16, 0, 0, 0 };
-#endif
-	int wpflag = wpflags[ent->player->ps.weapon];
-#endif
 	int time;
 
 	// don't time shift for mistakes or bots
@@ -302,17 +294,19 @@ void G_DoTimeShiftFor( gentity_t *ent ) {
 		return;
 	}
 
-#if 0 // TODO
-	// if it's enabled server-side and the client wants it or wants it for this weapon
-	if ( g_delagHitscan.integer && ( ent->player->pers.delag & 1 || ent->player->pers.delag & wpflag ) ) {
-		// do the full lag compensation, except what the client nudges
-		time = ent->player->attackTime + ent->player->pers.cmdTimeNudge;
-	}
-	else
-#endif
-	{
-		// do just 50ms
-		time = level.previousTime + ent->player->frameOffset;
+	switch ( ent->player->pers.antiLag ) {
+		case 1:
+			// do just 50ms
+			time = level.previousTime + ent->player->frameOffset;
+			break;
+
+		case 2:
+			// do the full lag compensation, except what the client nudges
+			time = ent->player->lastCmdServerTime;// TODO + ent->player->pers.cmdTimeNudge;
+			break;
+
+		default:
+			return;
 	}
 
 	G_TimeShiftAllClients( time, ent );

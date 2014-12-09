@@ -768,6 +768,8 @@ void PlayerThink_real( gentity_t *ent ) {
 	// this command packet was received, depending on how fast the server
 	// does a G_RunFrame()
 	player->frameOffset = trap_Milliseconds() - level.frameStartTime;
+
+	player->lastCmdServerTime = ucmd->serverTime;
 #endif
 
 	msec = ucmd->serverTime - player->ps.commandTime;

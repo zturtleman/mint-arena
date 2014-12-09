@@ -257,6 +257,7 @@ typedef struct {
 	qboolean	initialSpawn;		// the first spawn should be at a cool location
 	qboolean	predictItemPickup;	// based on cg_predictItems userinfo
 	qboolean	pmoveFixed;			//
+	int			antiLag;			// based on cg_antiLag userinfo
 	char		netname[MAX_NETNAME];
 	int			maxHealth;			// for handicapping
 	int			enterTime;			// level.time the player entered the game
@@ -300,6 +301,8 @@ struct gplayer_s {
 
 	int			frameOffset;		// an approximation of the actual server time we received this
 									// command (not in 50ms increments)
+
+	int			lastCmdServerTime;	// ucmd.serverTime from last usercmd_t
 #endif
 
 	int			lastCmdTime;		// level.time of last usercmd_t, for EF_CONNECTION

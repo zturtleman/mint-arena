@@ -1094,13 +1094,6 @@ void PlayerSpawn(gentity_t *ent) {
 	flags = ent->player->ps.eFlags & (EF_TELEPORT_BIT | EF_VOTED | EF_TEAMVOTED);
 	flags ^= EF_TELEPORT_BIT;
 
-#ifdef UNLAGGED
-	// we don't want players being backward-reconciled to the place they died
-	G_ResetHistory( ent );
-	// and this is as good a time as any to clear the saved state
-	ent->player->saved.leveltime = 0;
-#endif
-
 	// clear everything but the persistant data
 
 	saved = player->pers;
@@ -1234,6 +1227,9 @@ void PlayerSpawn(gentity_t *ent) {
 
 	// clear entity state values
 	BG_PlayerStateToEntityState( &player->ps, &ent->s, qtrue );
+
+	// we don't want players being backward-reconciled to the place they died
+	G_ResetHistory( ent );
 }
 
 

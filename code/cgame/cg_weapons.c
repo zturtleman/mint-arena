@@ -979,8 +979,14 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 
 	memset( &beam, 0, sizeof( beam ) );
 
+	// use our view angles if full lag compensation is enabled
+	if ( cent->currentState.number == cg.cur_lc->predictedPlayerState.playerNum && cg_antiLag.integer == 2 ) {
+		// always shoot straight forward from our current position
+		AngleVectors( cg.cur_lc->predictedPlayerState.viewangles, forward, NULL, NULL );
+		VectorCopy( cg.cur_lc->predictedPlayerState.origin, muzzlePoint );
+	}
 	// CPMA  "true" lightning
-	if ((cent->currentState.number == cg.cur_lc->predictedPlayerState.playerNum) && (cg_trueLightning.value != 0)) {
+	else if ((cent->currentState.number == cg.cur_lc->predictedPlayerState.playerNum) && (cg_trueLightning.value != 0)) {
 		vec3_t angle;
 		int i;
 

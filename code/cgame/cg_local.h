@@ -1392,6 +1392,7 @@ extern	vmCvar_t		cg_skybox;
 extern	vmCvar_t		cg_drawScores;
 extern	vmCvar_t		cg_oldBubbles;
 extern	vmCvar_t		cg_smoothBodySink;
+extern	vmCvar_t		cg_antiLag;
 extern	vmCvar_t		ui_stretch;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;

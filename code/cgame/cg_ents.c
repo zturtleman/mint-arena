@@ -481,7 +481,6 @@ static void CG_Item( centity_t *cent ) {
 	// add to refresh list
 	CG_AddRefEntityWithMinLight(&ent);
 
-#ifdef MISSIONPACK
 	if ( item->giType == IT_WEAPON && wi && wi->barrelModel ) {
 		refEntity_t	barrel;
 		vec3_t		angles;
@@ -505,7 +504,6 @@ static void CG_Item( centity_t *cent ) {
 
 		CG_AddRefEntityWithMinLight( &barrel );
 	}
-#endif
 
 	// accompanying rings / spheres for powerups
 	if ( !cg_simpleItems.integer ) 

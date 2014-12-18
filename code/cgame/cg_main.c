@@ -93,6 +93,9 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_KEY_EVENT:
 		CG_DistributeKeyEvent(arg0, arg1, arg2, arg3, 0);
 		return 0;
+	case CG_CHAR_EVENT:
+		CG_DistributeCharEvent(arg0, arg1);
+		return 0;
 	case CG_MOUSE_EVENT:
 		if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
 			CG_MouseEvent(arg0, arg1, arg2);
@@ -2941,6 +2944,33 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 		CG_KeyEvent( key, down );
 	} else if ( keyCatcher & KEYCATCH_UI ) {
 		UI_KeyEvent( key, down );
+	}
+}
+
+/*
+================
+CG_DistributeCharEvent
+================
+*/
+void CG_DistributeCharEvent( int character, connstate_t state ) {
+	int key, keyCatcher;
+
+	cg.connState = state;
+
+	key = ( character | K_CHAR_FLAG );
+
+	// reduce redundent system calls
+	keyCatcher = trap_Key_GetCatcher( );
+
+	// distribute the character event to the apropriate handler
+	if ( keyCatcher & KEYCATCH_CONSOLE ) {
+		Console_Key( key, qtrue );
+	} else if ( keyCatcher & KEYCATCH_MESSAGE ) {
+		Message_Key( key, qtrue );
+	} else if ( cg.connected && ( keyCatcher & KEYCATCH_CGAME ) ) {
+		CG_KeyEvent( key, qtrue );
+	} else if ( keyCatcher & KEYCATCH_UI ) {
+		UI_KeyEvent( key, qtrue );
 	}
 }
 

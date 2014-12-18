@@ -138,6 +138,11 @@ enum {
 
 //=================================================
 
+// The menu code needs to get both key and char events, but
+// to avoid duplicating the paths, the char events are just
+// distinguished by or'ing in K_CHAR_FLAG (ugly)
+#define	K_CHAR_FLAG		1024
+
 #define	MAX_EDIT_LINE	256
 typedef struct {
 	int		cursor;
@@ -1447,6 +1452,7 @@ int CG_CrosshairPlayer( int localPlayerNum );
 int CG_LastAttacker( int localPlayerNum );
 void CG_LoadMenus(const char *menuFile);
 void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state, int axisNum );
+void CG_DistributeCharEvent( int key, connstate_t state );
 void CG_KeyEvent(int key, qboolean down);
 void CG_MouseEvent(int localPlayerNum, int x, int y);
 void CG_JoystickAxisEvent( int localPlayerNum, int axis, int value, unsigned time, connstate_t state );

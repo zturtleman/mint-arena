@@ -92,14 +92,47 @@ MField_Paste
 */
 void MField_Paste( mfield_t *edit ) {
 	char	pasteBuffer[64];
-	int		pasteLen, i;
+	char *c;
 
 	trap_GetClipboardData( pasteBuffer, 64 );
 
-	// send as if typed, so insert / overstrike works properly
-	pasteLen = strlen( pasteBuffer );
-	for ( i = 0 ; i < pasteLen ; i++ ) {
-		MField_CharEvent( edit, pasteBuffer[i] );
+	c = pasteBuffer;
+
+	// Quick and dirty UTF-8 to UTF-32 conversion
+	while( *c )
+	{
+		int utf32 = 0;
+
+		if( ( *c & 0x80 ) == 0 )
+			utf32 = *c++;
+		else if( ( *c & 0xE0 ) == 0xC0 ) // 110x xxxx
+		{
+			utf32 |= ( *c++ & 0x1F ) << 6;
+			utf32 |= ( *c++ & 0x3F );
+		}
+		else if( ( *c & 0xF0 ) == 0xE0 ) // 1110 xxxx
+		{
+			utf32 |= ( *c++ & 0x0F ) << 12;
+			utf32 |= ( *c++ & 0x3F ) << 6;
+			utf32 |= ( *c++ & 0x3F );
+		}
+		else if( ( *c & 0xF8 ) == 0xF0 ) // 1111 0xxx
+		{
+			utf32 |= ( *c++ & 0x07 ) << 18;
+			utf32 |= ( *c++ & 0x3F ) << 6;
+			utf32 |= ( *c++ & 0x3F ) << 6;
+			utf32 |= ( *c++ & 0x3F );
+		}
+		else
+		{
+			Com_DPrintf( "Unrecognised UTF-8 lead byte: 0x%x\n", (unsigned int)*c );
+			c++;
+		}
+
+		if( utf32 != 0 )
+		{
+			MField_CharEvent( edit, utf32 );
+		}
 	}
 }
 

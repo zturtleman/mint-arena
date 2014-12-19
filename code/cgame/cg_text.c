@@ -136,8 +136,8 @@ void CG_TextInit( void ) {
 	}
 }
 
-const glyphInfo_t *Text_GetGlyph( const fontInfo_t *font, int index ) {
-	if ( index <= 0 || index >= GLYPHS_PER_FONT )
+const glyphInfo_t *Text_GetGlyph( const fontInfo_t *font, unsigned long index ) {
+	if ( index == 0 || index >= GLYPHS_PER_FONT )
 		return &font->glyphs[(int)'.'];
 
 	return &font->glyphs[index];
@@ -148,7 +148,7 @@ int Text_Width(const char *text, const fontInfo_t *font, float scale, int limit)
 	float out;
 	const glyphInfo_t *glyph;
 	float useScale;
-	int cp;
+	unsigned long cp;
 	const char *s = text;
 
 	useScale = scale * font->glyphScale;
@@ -164,10 +164,9 @@ int Text_Width(const char *text, const fontInfo_t *font, float scale, int limit)
 				s += 2;
 				continue;
 			} else {
-				cp = Q_UTF8_CodePoint( s );
+				cp = Q_UTF8_CodePoint( &s );
 				glyph = Text_GetGlyph( font, cp );
 				out += glyph->xSkip;
-				s += Q_UTF8_WidthCP( cp ); // FIXME: what if it returns 0
 				count++;
 			}
     }
@@ -180,7 +179,7 @@ int Text_Height(const char *text, const fontInfo_t *font, float scale, int limit
 	float max;
 	const glyphInfo_t *glyph;
 	float useScale;
-	int cp;
+	unsigned long cp;
 	const char *s = text;
 
 	useScale = scale * font->glyphScale;
@@ -196,12 +195,11 @@ int Text_Height(const char *text, const fontInfo_t *font, float scale, int limit
 				s += 2;
 				continue;
 			} else {
-				cp = Q_UTF8_CodePoint( s );
+				cp = Q_UTF8_CodePoint( &s );
 				glyph = Text_GetGlyph( font, cp );
 	      if (max < glyph->height) {
 		      max = glyph->height;
 			  }
-				s += Q_UTF8_WidthCP( cp ); // FIXME: what if it returns 0
 				count++;
 			}
     }
@@ -221,8 +219,9 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
   int len, count;
 	vec4_t newColor;
 	const glyphInfo_t *glyph;
+	float yadj, xadj;
 	float useScale;
-	int cp;
+	unsigned long cp;
 
 	useScale = scale * font->glyphScale;
   if (text) {
@@ -235,8 +234,6 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
 		}
 		count = 0;
 		while (s && *s && count < len) {
-				cp = Q_UTF8_CodePoint( s );
-				glyph = Text_GetGlyph( font, cp );
       //int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
       //float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
 			if ( Q_IsColorString( s ) ) {
@@ -247,10 +244,13 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
 				}
 				s += 2;
 				continue;
-			} else {
-				float yadj = useScale * glyph->top;
-				float xadj = useScale * glyph->left;
+			}
 
+			cp = Q_UTF8_CodePoint( &s );
+			glyph = Text_GetGlyph( font, cp );
+
+				yadj = useScale * glyph->top;
+				xadj = useScale * glyph->left;
 				if (shadowOffset) {
 					colorBlack[3] = newColor[3];
 					trap_R_SetColor( colorBlack );
@@ -277,9 +277,7 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
 													glyph->glyph);
 
 				x += (glyph->xSkip * useScale) + adjust;
-				s += Q_UTF8_WidthCP( cp ); // FIXME: what if it returns 0
 				count++;
-			}
     }
 	  trap_R_SetColor( NULL );
   }
@@ -291,7 +289,7 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 	const glyphInfo_t *glyph, *glyph2;
 	float yadj, xadj;
 	float useScale;
-	int cp;
+	unsigned long cp;
 
 	useScale = scale * font->glyphScale;
   if (text) {
@@ -305,8 +303,6 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 		count = 0;
 		glyph2 = &font->glyphs[cursor & 255];
 		while (s && *s && count < len) {
-				cp = Q_UTF8_CodePoint( s );
-				glyph = Text_GetGlyph( font, cp );
       //int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
       //float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
 			if ( Q_IsColorString( s ) ) {
@@ -319,6 +315,10 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 				//s += 2;
 				//continue;
 			}
+
+			cp = Q_UTF8_CodePoint( &s );
+			glyph = Text_GetGlyph( font, cp );
+
 				yadj = useScale * glyph->top;
 				xadj = useScale * glyph->left;
 				if (shadowOffset) {
@@ -360,7 +360,6 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 				}
 
 				x += (glyph->xSkip * useScale) + adjust;
-				s += Q_UTF8_WidthCP( cp ); // FIXME: what if it returns 0
 				count++;
     }
     // need to paint cursor at end of text
@@ -390,8 +389,9 @@ void Text_Paint_Limit(float *maxX, float x, float y, const fontInfo_t *font, flo
   if (text) {
     const char *s = text;
 		float max = *maxX;
+		float yadj, xadj;
 		float useScale;
-		int cp;
+		unsigned long cp;
 
 		useScale = scale * font->glyphScale;
 		trap_R_SetColor( color );
@@ -401,17 +401,19 @@ void Text_Paint_Limit(float *maxX, float x, float y, const fontInfo_t *font, flo
 		}
 		count = 0;
 		while (s && *s && count < len) {
-			cp = Q_UTF8_CodePoint( s );
-			glyph = Text_GetGlyph( font, cp );
 			if ( Q_IsColorString( s ) ) {
 				memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
 				newColor[3] = color[3];
 				trap_R_SetColor( newColor );
 				s += 2;
 				continue;
-			} else {
-	      float yadj = useScale * glyph->top;
-	      float xadj = useScale * glyph->left;
+			}
+
+			cp = Q_UTF8_CodePoint( &s );
+			glyph = Text_GetGlyph( font, cp );
+
+				yadj = useScale * glyph->top;
+				xadj = useScale * glyph->left;
 				if (Text_Width(s, font, useScale, 1) + x > max) {
 					*maxX = 0;
 					break;
@@ -428,8 +430,6 @@ void Text_Paint_Limit(float *maxX, float x, float y, const fontInfo_t *font, flo
 	      x += (glyph->xSkip * useScale) + adjust;
 				*maxX = x;
 				count++;
-				s += Q_UTF8_WidthCP( cp ); // FIXME: what if it returns 0
-	    }
 		}
 	  trap_R_SetColor( NULL );
   }

@@ -115,10 +115,13 @@ qboolean Q_UTF8_ContByte( char c )
   return (unsigned char )0x80 <= (unsigned char)c && (unsigned char)c <= (unsigned char )0xBF;
 }
 
-unsigned long Q_UTF8_CodePoint( const char *str )
+// step str over next unicode character and return the character code point
+unsigned long Q_UTF8_CodePoint( const char **str )
 {
   unsigned long utf32 = 0;
-  const char *c = str;
+  const char *c;
+
+  c = *str;
 
   // Quick and dirty UTF-8 to UTF-32 conversion
   if( ( *c & 0x80 ) == 0 )
@@ -146,6 +149,8 @@ unsigned long Q_UTF8_CodePoint( const char *str )
     Com_DPrintf( "Unrecognised UTF-8 lead byte: 0x%x\n", (unsigned int)*c );
     c++;
   }
+
+  *str = c;
 
   return utf32;
 }

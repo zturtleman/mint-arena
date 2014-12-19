@@ -2848,7 +2848,7 @@ void Message_Key( int key, qboolean down ) {
 
 	if ( key == K_ENTER || key == K_KP_ENTER ) {
 		if ( cg.messageField.buffer[0] && cg.connected ) {
-			Com_sprintf( buffer, sizeof ( buffer ), "%s %s\n", cg.messageCommand, cg.messageField.buffer );
+			Com_sprintf( buffer, sizeof ( buffer ), "%s %s\n", cg.messageCommand, MField_Buffer( &cg.messageField ) );
 
 			trap_SendClientCommand( buffer );
 		}

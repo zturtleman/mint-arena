@@ -1093,7 +1093,8 @@ Q3CGOBJ = \
   $(B)/$(BASEGAME)/ui/ui_video.o \
   \
   $(B)/$(BASEGAME)/qcommon/q_math.o \
-  $(B)/$(BASEGAME)/qcommon/q_shared.o
+  $(B)/$(BASEGAME)/qcommon/q_shared.o \
+  $(B)/$(BASEGAME)/qcommon/q_unicode.o
 
 Q3CGVMOBJ = $(Q3CGOBJ:%.o=%.asm)
 
@@ -1146,7 +1147,8 @@ MPCGOBJ = \
   $(B)/$(MISSIONPACK)/cgame/cg_weapons.o \
   \
   $(B)/$(MISSIONPACK)/qcommon/q_math.o \
-  $(B)/$(MISSIONPACK)/qcommon/q_shared.o
+  $(B)/$(MISSIONPACK)/qcommon/q_shared.o \
+  $(B)/$(MISSIONPACK)/qcommon/q_unicode.o
 
 ifeq ($(USE_MISSIONPACK_Q3_UI), 1)
 MPCGOBJ += \

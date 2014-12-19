@@ -146,15 +146,18 @@ enum {
 #define	MAX_EDIT_LINE	256
 typedef struct {
 	int		cursor;
-	int		scroll;
-	int		widthInChars;
-	char	buffer[MAX_EDIT_LINE];
-	int		maxchars;
+	int		scroll;					// display buffer offset
+	int		widthInChars;			// display width
+	int		buffer[MAX_EDIT_LINE];	// buffer holding Unicode code points
+	int		len;					// length of buffer
+	int		maxchars;				// max number of characters to insert in buffer
 } mfield_t;
 
 void	MField_Clear( mfield_t *edit );
 void	MField_KeyDownEvent( mfield_t *edit, int key );
 void	MField_CharEvent( mfield_t *edit, int ch );
+void	MField_SetText( mfield_t *edit, const char *text );
+const char *MField_Buffer( mfield_t *edit );
 void	MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor );
 
 //=================================================

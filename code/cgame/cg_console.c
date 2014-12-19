@@ -453,33 +453,36 @@ void Console_Key ( int key, qboolean down ) {
 
 	// enter finishes the line
 	if ( key == K_ENTER || key == K_KP_ENTER ) {
+		const char *editLine;
+
+		editLine = MField_Buffer( &g_consoleField );
+
 		// if not in the game explicitly prepend a slash if needed
 		if ( cg.connState != CA_ACTIVE && con_autochat.integer &&
-				g_consoleField.buffer[0] &&
-				g_consoleField.buffer[0] != '\\' &&
-				g_consoleField.buffer[0] != '/' ) {
-			char	temp[MAX_EDIT_LINE-1];
+				editLine[0] &&
+				editLine[0] != '\\' &&
+				editLine[0] != '/' ) {
+			char	temp[MAX_EDIT_LINE*4];
 
-			Q_strncpyz( temp, g_consoleField.buffer, sizeof( temp ) );
-			Com_sprintf( g_consoleField.buffer, sizeof( g_consoleField.buffer ), "\\%s", temp );
-			g_consoleField.cursor++;
+			Com_sprintf( temp, sizeof( temp ), "\\%s", editLine );
+			MField_SetText( &g_consoleField, temp );
 		}
 
-		Com_Printf ( "]%s\n", g_consoleField.buffer );
+		Com_Printf ( "]%s\n", editLine );
 
 		// leading slash is an explicit command
-		if ( g_consoleField.buffer[0] == '\\' || g_consoleField.buffer[0] == '/' ) {
-			trap_Cmd_ExecuteText( EXEC_APPEND, g_consoleField.buffer+1 );	// valid command
+		if ( editLine[0] == '\\' || editLine[0] == '/' ) {
+			trap_Cmd_ExecuteText( EXEC_APPEND, editLine+1 );	// valid command
 			trap_Cmd_ExecuteText( EXEC_APPEND, "\n" );
 		} else {
 			// other text will be chat messages
-			if ( !g_consoleField.buffer[0] ) {
+			if ( !editLine[0] ) {
 				return;	// empty lines just scroll the console without adding to history
 			} else {
 				if ( con_autochat.integer ) {
 					trap_Cmd_ExecuteText( EXEC_APPEND, "cmd say " );
 				}
-				trap_Cmd_ExecuteText( EXEC_APPEND, g_consoleField.buffer );
+				trap_Cmd_ExecuteText( EXEC_APPEND, editLine );
 				trap_Cmd_ExecuteText( EXEC_APPEND, "\n" );
 			}
 		}
@@ -504,13 +507,15 @@ void Console_Key ( int key, qboolean down ) {
 	// command completion
 
 	if (key == K_TAB) {
-		char newbuf[MAX_EDIT_LINE];
+		char newbuf[MAX_EDIT_LINE*4];
+		const char *editLine;
 
-		trap_Cmd_AutoComplete( g_consoleField.buffer, newbuf, sizeof ( newbuf ) );
+		editLine = MField_Buffer( &g_consoleField );
 
-		if ( strcmp( newbuf, g_consoleField.buffer ) != 0 ) {
-			Q_strncpyz( g_consoleField.buffer, newbuf, sizeof ( g_consoleField.buffer ) );
-			g_consoleField.cursor = strlen( g_consoleField.buffer );
+		trap_Cmd_AutoComplete( editLine, newbuf, sizeof ( newbuf ) );
+
+		if ( strcmp( newbuf, editLine ) != 0 ) {
+			MField_SetText( &g_consoleField, newbuf );
 		}
 		return;
 	}
@@ -602,7 +607,8 @@ Load the console history from cl_consoleHistory
 void CG_LoadConsoleHistory( void )
 {
 	char					*token, *text_p;
-	int						i, numChars, numLines = 0;
+	int						i, numChars, numLines = 0, cursor, scroll;
+	char					tempLine[MAX_EDIT_LINE*4];
 	fileHandle_t	f;
 
 	consoleSaveBufferSize = trap_FS_FOpenFile( CONSOLE_HISTORY_FILE, &f, FS_READ );
@@ -622,12 +628,12 @@ void CG_LoadConsoleHistory( void )
 			if( !*( token = COM_Parse( &text_p ) ) )
 				break;
 
-			historyEditLines[ i ].cursor = atoi( token );
+			cursor = atoi( token );
 
 			if( !*( token = COM_Parse( &text_p ) ) )
 				break;
 
-			historyEditLines[ i ].scroll = atoi( token );
+			scroll = atoi( token );
 
 			if( !*( token = COM_Parse( &text_p ) ) )
 				break;
@@ -639,9 +645,11 @@ void CG_LoadConsoleHistory( void )
 				Com_DPrintf( S_COLOR_YELLOW "WARNING: probable corrupt history\n" );
 				break;
 			}
-			Com_Memcpy( historyEditLines[ i ].buffer,
-					text_p, numChars );
-			historyEditLines[ i ].buffer[ numChars ] = '\0';
+			Com_Memcpy( tempLine, text_p, numChars );
+			tempLine[ numChars ] = '\0';
+			MField_SetText( &historyEditLines[ i ], tempLine );
+			historyEditLines[ i ].cursor = cursor;
+			historyEditLines[ i ].scroll = scroll;
 			text_p += numChars;
 
 			numLines++;
@@ -672,6 +680,7 @@ void CG_SaveConsoleHistory( void )
 {
 	int						i;
 	int						lineLength, saveBufferLength, additionalLength;
+	const char				*lineBuffer;
 	fileHandle_t	f;
 
 	consoleSaveBuffer[ 0 ] = '\0';
@@ -681,7 +690,8 @@ void CG_SaveConsoleHistory( void )
 	{
 		if( historyEditLines[ i ].buffer[ 0 ] )
 		{
-			lineLength = strlen( historyEditLines[ i ].buffer );
+			lineBuffer = MField_Buffer( &historyEditLines[ i ] );
+			lineLength = strlen( lineBuffer );
 			saveBufferLength = strlen( consoleSaveBuffer );
 
 			//ICK
@@ -694,7 +704,7 @@ void CG_SaveConsoleHistory( void )
 						historyEditLines[ i ].cursor,
 						historyEditLines[ i ].scroll,
 						lineLength,
-						historyEditLines[ i ].buffer ) );
+						lineBuffer ) );
 			}
 			else
 				break;

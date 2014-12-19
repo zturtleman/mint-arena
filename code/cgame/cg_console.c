@@ -29,6 +29,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 //
 #include "cg_local.h"
+#include "../qcommon/q_unicode.h"
 
 #define		CON_MAXLINES	512
 #define		CON_LINELENGTH	128
@@ -169,8 +170,9 @@ void CG_ConsolePrint( const char *p ) {
 		lineDrawLen = CG_DrawStrlen( con.lines[con.current % CON_MAXLINES], UI_SMALLFONT );
 		wordDrawLen = charDrawLen = 0;
 
-		for ( i = 0; i < CON_LINELENGTH; i++ ) {
+		for ( i = 0; i < CON_LINELENGTH; /**/ ) {
 			if ( Q_IsColorString( &p[i] ) ) {
+				i += 2;
 				continue;
 			}
 
@@ -191,6 +193,7 @@ void CG_ConsolePrint( const char *p ) {
 			}
 
 			wordDrawLen += charDrawLen;
+			i += Q_UTF8_Width( &p[i] );
 		}
 
 		// if *p is a word separator or word is too long, just copy one char at a time

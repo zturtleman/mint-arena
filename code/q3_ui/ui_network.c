@@ -50,7 +50,8 @@ NETWORK OPTIONS MENU
 #define ID_NETWORK			13
 #define ID_RATE				14
 #define ID_VOIP				15
-#define ID_BACK				16
+#define ID_ANTILAG			16
+#define ID_BACK				17
 
 
 static const char *rate_items[] = {
@@ -59,6 +60,13 @@ static const char *rate_items[] = {
 	"56K",
 	"ISDN",
 	"LAN/Cable/xDSL",
+	NULL
+};
+
+static const char *antilag_items[] = {
+	"None",
+	"One Server Frame",
+	"Full",
 	NULL
 };
 
@@ -76,6 +84,7 @@ typedef struct {
 
 	menulist_s		rate;
 	menuradiobutton_s voip;
+	menulist_s		antilag;
 
 	menubitmap_s	back;
 } networkOptionsInfo_t;
@@ -137,6 +146,10 @@ static void UI_NetworkOptionsMenu_Event( void* ptr, int event ) {
 
 	case ID_VOIP:
 		trap_Cvar_SetValue( "cl_voip", (networkOptionsInfo.voip.curvalue) ? 1 : 0 );
+		break;
+
+	case ID_ANTILAG:
+		trap_Cvar_SetValue( "cg_antiLag", networkOptionsInfo.antilag.curvalue );
 		break;
 
 	case ID_BACK:
@@ -225,7 +238,7 @@ static void UI_NetworkOptionsMenu_Init( void ) {
 	networkOptionsInfo.network.style				= UI_RIGHT;
 	networkOptionsInfo.network.color				= text_big_color;
 
-	y = 240 - 1 * (BIGCHAR_HEIGHT+2);
+	y = 240 - 1.5f * (BIGCHAR_HEIGHT+2);
 	networkOptionsInfo.rate.generic.type		= MTYPE_SPINCONTROL;
 	networkOptionsInfo.rate.generic.name		= "Data Rate:";
 	networkOptionsInfo.rate.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
@@ -243,6 +256,16 @@ static void UI_NetworkOptionsMenu_Init( void ) {
 	networkOptionsInfo.voip.generic.callback	= UI_NetworkOptionsMenu_Event;
 	networkOptionsInfo.voip.generic.id			= ID_VOIP;
 	networkOptionsInfo.voip.generic.y			= y;
+
+	y += BIGCHAR_HEIGHT+2;
+	networkOptionsInfo.antilag.generic.type		= MTYPE_SPINCONTROL;
+	networkOptionsInfo.antilag.generic.name		= "Lag Compensation:";
+	networkOptionsInfo.antilag.generic.flags	= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	networkOptionsInfo.antilag.generic.callback	= UI_NetworkOptionsMenu_Event;
+	networkOptionsInfo.antilag.generic.id		= ID_ANTILAG;
+	networkOptionsInfo.antilag.generic.x		= 400;
+	networkOptionsInfo.antilag.generic.y		= y;
+	networkOptionsInfo.antilag.itemnames		= antilag_items;
 
 	networkOptionsInfo.back.generic.type		= MTYPE_BITMAP;
 	networkOptionsInfo.back.generic.name		= ART_BACK0;
@@ -264,6 +287,7 @@ static void UI_NetworkOptionsMenu_Init( void ) {
 	Menu_AddItem( &networkOptionsInfo.menu, ( void * ) &networkOptionsInfo.network );
 	Menu_AddItem( &networkOptionsInfo.menu, ( void * ) &networkOptionsInfo.rate );
 	Menu_AddItem( &networkOptionsInfo.menu, ( void * ) &networkOptionsInfo.voip );
+	Menu_AddItem( &networkOptionsInfo.menu, ( void * ) &networkOptionsInfo.antilag );
 	Menu_AddItem( &networkOptionsInfo.menu, ( void * ) &networkOptionsInfo.back );
 
 	rate = trap_Cvar_VariableValue( "rate" );
@@ -284,6 +308,7 @@ static void UI_NetworkOptionsMenu_Init( void ) {
 	}
 
 	networkOptionsInfo.voip.curvalue			= (trap_Cvar_VariableValue( "cl_voip" ) == 1);
+	networkOptionsInfo.antilag.curvalue			= Com_Clamp( 0, 2, trap_Cvar_VariableValue( "cg_antiLag" ) );
 }
 
 

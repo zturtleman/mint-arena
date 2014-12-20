@@ -1097,6 +1097,8 @@ qboolean	BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTim
 int		BG_ComposeUserCmdValue( int weapon );
 void	BG_DecomposeUserCmdValue( int value, int *weapon );
 
+void	SnapVectorTowards( vec3_t v, vec3_t to );
+
 #define ARENAS_PER_TIER		4
 #define MAX_ARENAS			1024
 #define	MAX_ARENAS_TEXT		8192

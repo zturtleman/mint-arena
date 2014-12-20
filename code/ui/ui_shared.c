@@ -4056,6 +4056,15 @@ void Menu_SetFeederSelection(menuDef_t *menu, int feeder, int index, const char 
 	}
 }
 
+void Menu_SetScreenPlacement(menuDef_t *menu, screenPlacement_e hpos, screenPlacement_e vpos ) {
+	if ( !menu )
+		return;
+
+	menu->forceScreenPlacement = qtrue;
+	menu->screenHPos = hpos;
+	menu->screenVPos = vpos;
+}
+
 qboolean Menus_AnyFullScreenVisible(void) {
   int i;
   for (i = 0; i < DC->menuCount; i++) {
@@ -4184,6 +4193,10 @@ void Menu_Paint(menuDef_t *menu, qboolean forcePaint) {
 		menu->window.flags |= WINDOW_FORCED;
 	}
 
+	if (menu->forceScreenPlacement) {
+		CG_SetScreenPlacement( menu->screenHPos, menu->screenVPos );
+	}
+
 	// draw the background if necessary
 	if (menu->fullScreen) {
 		// implies a background shader
@@ -4206,6 +4219,10 @@ void Menu_Paint(menuDef_t *menu, qboolean forcePaint) {
 		color[0] = color[2] = color[3] = 1;
 		color[1] = 0;
 		DC->drawRect(menu->window.rect.x, menu->window.rect.y, menu->window.rect.w, menu->window.rect.h, 1, color);
+	}
+
+	if (menu->forceScreenPlacement) {
+		CG_PopScreenPlacement();
 	}
 }
 

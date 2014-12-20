@@ -93,6 +93,9 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_KEY_EVENT:
 		CG_DistributeKeyEvent(arg0, arg1, arg2, arg3, 0);
 		return 0;
+	case CG_CHAR_EVENT:
+		CG_DistributeCharEvent(arg0, arg1);
+		return 0;
 	case CG_MOUSE_EVENT:
 		if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
 			CG_MouseEvent(arg0, arg1, arg2);
@@ -258,6 +261,7 @@ vmCvar_t	cg_skybox;
 vmCvar_t	cg_drawScores;
 vmCvar_t	cg_oldBubbles;
 vmCvar_t	cg_smoothBodySink;
+vmCvar_t	cg_antiLag;
 vmCvar_t	cg_introPlayed;
 vmCvar_t	cg_joystickDebug;
 vmCvar_t	ui_stretch;
@@ -446,6 +450,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_drawScores, "cg_drawScores", "1", 0, RANGE_BOOL },
 	{ &cg_oldBubbles, "cg_oldBubbles", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_smoothBodySink, "cg_smoothBodySink", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_antiLag, "cg_antiLag", "0", CVAR_USERINFO_ALL | CVAR_ARCHIVE, RANGE_INT( 0, 2 ) },
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
 
 	{ &cg_introPlayed, "com_introPlayed", "0", CVAR_ARCHIVE, RANGE_BOOL },
@@ -2471,6 +2476,9 @@ void CG_LoadHudMenu( void ) {
 	}
 
 	CG_LoadMenus(hudSet);
+
+	// make voice chat head stick to left side in widescreen
+	Menu_SetScreenPlacement( Menus_FindByName( "voiceMenu" ), PLACE_LEFT, PLACE_TOP );
 }
 
 void CG_AssetCache( void ) {
@@ -2908,7 +2916,7 @@ void Message_Key( int key, qboolean down ) {
 
 	if ( key == K_ENTER || key == K_KP_ENTER ) {
 		if ( cg.messageField.buffer[0] && cg.connected ) {
-			Com_sprintf( buffer, sizeof ( buffer ), "%s %s\n", cg.messageCommand, cg.messageField.buffer );
+			Com_sprintf( buffer, sizeof ( buffer ), "%s %s\n", cg.messageCommand, MField_Buffer( &cg.messageField ) );
 
 			trap_SendClientCommand( buffer );
 		}
@@ -3004,6 +3012,33 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 		CG_KeyEvent( key, down );
 	} else if ( keyCatcher & KEYCATCH_UI ) {
 		UI_KeyEvent( key, down );
+	}
+}
+
+/*
+================
+CG_DistributeCharEvent
+================
+*/
+void CG_DistributeCharEvent( int character, connstate_t state ) {
+	int key, keyCatcher;
+
+	cg.connState = state;
+
+	key = ( character | K_CHAR_FLAG );
+
+	// reduce redundent system calls
+	keyCatcher = trap_Key_GetCatcher( );
+
+	// distribute the character event to the apropriate handler
+	if ( keyCatcher & KEYCATCH_CONSOLE ) {
+		Console_Key( key, qtrue );
+	} else if ( keyCatcher & KEYCATCH_MESSAGE ) {
+		Message_Key( key, qtrue );
+	} else if ( cg.connected && ( keyCatcher & KEYCATCH_CGAME ) ) {
+		CG_KeyEvent( key, qtrue );
+	} else if ( keyCatcher & KEYCATCH_UI ) {
+		UI_KeyEvent( key, qtrue );
 	}
 }
 

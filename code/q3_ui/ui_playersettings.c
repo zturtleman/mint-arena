@@ -157,7 +157,7 @@ static void PlayerSettings_DrawName( void *self ) {
 	MField_Draw( &f->field, x, y, style, colorWhite, focus );
 
 	// draw at bottom also using proportional font
-	Q_strncpyz( name, f->field.buffer, sizeof(name) );
+	Q_strncpyz( name, MField_Buffer( &f->field ), sizeof(name) );
 	Q_CleanStr( name );
 	UI_DrawProportionalString( 320, 440, name, UI_CENTER|UI_BIGFONT, text_color_normal );
 }
@@ -290,7 +290,8 @@ PlayerSettings_SaveChanges
 */
 static void PlayerSettings_SaveChanges( void ) {
 	// name
-	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "name"), s_playersettings.name.field.buffer );
+	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "name"),
+			MField_Buffer( &s_playersettings.name.field ) );
 
 	// handicap
 	trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "handicap"),
@@ -329,8 +330,8 @@ static void PlayerSettings_SetMenuItems( void ) {
 	char	model[MAX_QPATH], headmodel[MAX_QPATH];
 
 	// name
-	Q_strncpyz( s_playersettings.name.field.buffer, CG_Cvar_VariableString(
-			Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "name")), sizeof(s_playersettings.name.field.buffer) );
+	MField_SetText( &s_playersettings.name.field, CG_Cvar_VariableString(
+			Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "name")) );
 
 	// effects color
 	c = trap_Cvar_VariableValue( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "color1") ) - 1;

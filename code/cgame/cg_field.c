@@ -29,6 +29,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 //
 #include "cg_local.h"
+#include "../qcommon/q_unicode.h"
 
 /*
 ===================
@@ -39,6 +40,7 @@ x, y, charWidth, charHeight, are in 640*480 virtual screen size
 ===================
 */
 void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor ) {
+	int		i;
 	int		len;
 	int		drawLen;
 	int		prestep;
@@ -46,7 +48,7 @@ void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolea
 	char	str[MAX_STRING_CHARS];
 
 	drawLen = edit->widthInChars;
-	len     = strlen( edit->buffer ) + 1;
+	len     = edit->len + 1;
 
 	// guarantee that cursor will be visible
 	if ( len <= drawLen ) {
@@ -69,8 +71,11 @@ void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolea
 	if ( drawLen >= MAX_STRING_CHARS ) {
 		trap_Error( "drawLen >= MAX_STRING_CHARS" );
 	}
-	memcpy( str, edit->buffer + prestep, drawLen );
-	str[ drawLen ] = 0;
+
+	str[0] = 0;
+	for ( i = 0; i < drawLen; i++ ) {
+		Q_strcat( str, sizeof( str ), Q_UTF8_Encode( edit->buffer[prestep+i] ) );
+	}
 
 	if ( drawCursor ) {
 		if ( trap_Key_GetOverstrikeMode() ) {
@@ -87,20 +92,61 @@ void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolea
 
 /*
 ================
+MField_Buffer
+
+Returns a UTF-8 encoded string.
+================
+*/
+const char *MField_Buffer( mfield_t *edit ) {
+	static char	str[MAX_STRING_CHARS];
+	int i;
+
+	str[0] = 0;
+	for ( i = 0; i < edit->len; i++ ) {
+		Q_strcat( str, sizeof( str ), Q_UTF8_Encode( edit->buffer[i] ) );
+	}
+
+	return str;
+}
+
+/*
+================
+MField_AddText
+================
+*/
+void MField_AddText( mfield_t *edit, const char *text ) {
+	int codePoint;
+
+	while ( *text ) {
+		codePoint = Q_UTF8_CodePoint( &text );
+
+		if ( codePoint != 0 ) {
+			MField_CharEvent( edit, codePoint );
+		}
+	}
+}
+
+/*
+================
+MField_SetText
+================
+*/
+void MField_SetText( mfield_t *edit, const char *text ) {
+	MField_Clear( edit );
+	MField_AddText( edit, text );
+}
+
+/*
+================
 MField_Paste
 ================
 */
 void MField_Paste( mfield_t *edit ) {
 	char	pasteBuffer[64];
-	int		pasteLen, i;
 
 	trap_GetClipboardData( pasteBuffer, 64 );
 
-	// send as if typed, so insert / overstrike works properly
-	pasteLen = strlen( pasteBuffer );
-	for ( i = 0 ; i < pasteLen ; i++ ) {
-		MField_CharEvent( edit, pasteBuffer[i] );
-	}
+	MField_AddText( edit, pasteBuffer );
 }
 
 /*
@@ -114,30 +160,30 @@ Key events are used for non-printable characters, others are gotten from char ev
 =================
 */
 void MField_KeyDownEvent( mfield_t *edit, int key ) {
-	int		len;
-
 	// shift-insert is paste
 	if ( ( ( key == K_INS ) || ( key == K_KP_INS ) ) && trap_Key_IsDown( K_SHIFT ) ) {
 		MField_Paste( edit );
 		return;
 	}
 
-	len = strlen( edit->buffer );
-
 	if ( key == K_DEL || key == K_KP_DEL ) {
-		if ( edit->cursor < len ) {
-			memmove( edit->buffer + edit->cursor, 
-				edit->buffer + edit->cursor + 1, len - edit->cursor );
+		int i;
+
+		if ( edit->cursor < edit->len ) {
+			for ( i = edit->cursor; i < edit->len; i++ ) {
+				edit->buffer[i] = edit->buffer[i+1];
+			}
+			edit->len--;
 		}
 		return;
 	}
 
 	if ( key == K_RIGHTARROW || key == K_KP_RIGHTARROW ) 
 	{
-		if ( edit->cursor < len ) {
+		if ( edit->cursor < edit->len ) {
 			edit->cursor++;
 		}
-		if ( edit->cursor >= edit->scroll + edit->widthInChars && edit->cursor <= len )
+		if ( edit->cursor >= edit->scroll + edit->widthInChars && edit->cursor <= edit->len )
 		{
 			edit->scroll++;
 		}
@@ -163,8 +209,8 @@ void MField_KeyDownEvent( mfield_t *edit, int key ) {
 	}
 
 	if ( key == K_END || key == K_KP_END || ( tolower(key) == 'e' && trap_Key_IsDown( K_CTRL ) ) ) {
-		edit->cursor = len;
-		edit->scroll = len - edit->widthInChars + 1;
+		edit->cursor = edit->len;
+		edit->scroll = edit->len - edit->widthInChars + 1;
 		if (edit->scroll < 0)
 			edit->scroll = 0;
 		return;
@@ -182,7 +228,7 @@ MField_CharEvent
 ==================
 */
 void MField_CharEvent( mfield_t *edit, int ch ) {
-	int		len;
+	int i;
 
 	if ( ch == 'v' - 'a' + 1 ) {	// ctrl-v is paste
 		MField_Paste( edit );
@@ -194,17 +240,18 @@ void MField_CharEvent( mfield_t *edit, int ch ) {
 		return;
 	}
 
-	len = strlen( edit->buffer );
-
 	if ( ch == 'h' - 'a' + 1 )	{	// ctrl-h is backspace
 		if ( edit->cursor > 0 ) {
-			memmove( edit->buffer + edit->cursor - 1, 
-				edit->buffer + edit->cursor, len + 1 - edit->cursor );
+			for ( i = edit->cursor; i < edit->len+1; i++ ) {
+				edit->buffer[i-1] = edit->buffer[i];
+			}
+
 			edit->cursor--;
 			if ( edit->cursor < edit->scroll )
 			{
 				edit->scroll--;
 			}
+			edit->len--;
 		}
 		return;
 	}
@@ -216,7 +263,7 @@ void MField_CharEvent( mfield_t *edit, int ch ) {
 	}
 
 	if ( ch == 'e' - 'a' + 1 ) {	// ctrl-e is end
-		edit->cursor = len;
+		edit->cursor = edit->len;
 		edit->scroll = edit->cursor - edit->widthInChars + 1;
 		if (edit->scroll < 0)
 			edit->scroll = 0;
@@ -235,9 +282,12 @@ void MField_CharEvent( mfield_t *edit, int ch ) {
 			return;
 	} else {
 		// insert mode
-		if (( len == MAX_EDIT_LINE - 1 ) || (edit->maxchars && len >= edit->maxchars))
+		if (( edit->len == MAX_EDIT_LINE - 1 ) || (edit->maxchars && edit->len >= edit->maxchars))
 			return;
-		memmove( edit->buffer + edit->cursor + 1, edit->buffer + edit->cursor, len + 1 - edit->cursor );
+
+		for ( i = edit->len + 1; i >= edit->cursor; i-- ) {
+			edit->buffer[i+1] = edit->buffer[i];
+		}
 	}
 
 	edit->buffer[edit->cursor] = ch;
@@ -249,8 +299,9 @@ void MField_CharEvent( mfield_t *edit, int ch ) {
 		edit->scroll++;
 	}
 
-	if ( edit->cursor == len + 1) {
+	if ( edit->cursor == edit->len + 1) {
 		edit->buffer[edit->cursor] = 0;
+		edit->len++;
 	}
 }
 
@@ -261,6 +312,7 @@ MField_Clear
 */
 void MField_Clear( mfield_t *edit ) {
 	edit->buffer[0] = 0;
+	edit->len = 0;
 	edit->cursor = 0;
 	edit->scroll = 0;
 }

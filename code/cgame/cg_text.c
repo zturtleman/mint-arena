@@ -29,6 +29,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 //
 #include "cg_local.h"
+#include "../qcommon/q_unicode.h"
 
 // 256x256 image with characters that are 16x16
 void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth ) {
@@ -78,7 +79,7 @@ qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font 
 
 	// check if it's a dynamicly rendered font (which has cursors)
 	oldFont = qtrue;
-	for ( i = GLYPH_START; i < GLYPH_END; ++i ) {
+	for ( i = 0; i < GLYPHS_PER_FONT; i++ ) {
 		if ( font->glyphs[i].left != 0 ) {
 			oldFont = qfalse;
 			break;
@@ -92,6 +93,12 @@ qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font 
 
 		// character 13 is used as a selection marker in q3_ui
 		Com_Memcpy( &font->glyphs[13], &font->glyphs[(int)'>'], sizeof ( glyphInfo_t ) );
+
+		// Team Arena's fonts don't have character 255,
+		// it's suppose to be a lowercase y with two dots over it
+		if ( font->glyphs[255].shaderName[0] == '\0' ) {
+			Com_Memcpy( &font->glyphs[255], &font->glyphs[(int)'y'], sizeof ( glyphInfo_t ) );
+		}
 	}
 
 	return qtrue;
@@ -129,17 +136,25 @@ void CG_TextInit( void ) {
 	}
 }
 
+const glyphInfo_t *Text_GetGlyph( const fontInfo_t *font, unsigned long index ) {
+	if ( index == 0 || index >= GLYPHS_PER_FONT )
+		return &font->glyphs[(int)'.'];
+
+	return &font->glyphs[index];
+}
+
 int Text_Width(const char *text, const fontInfo_t *font, float scale, int limit) {
   int count,len;
 	float out;
 	const glyphInfo_t *glyph;
 	float useScale;
+	unsigned long cp;
 	const char *s = text;
 
 	useScale = scale * font->glyphScale;
   out = 0;
   if (text) {
-    len = strlen(text);
+		len = Q_UTF8_PrintStrlen(text);
 		if (limit > 0 && len > limit) {
 			len = limit;
 		}
@@ -149,9 +164,9 @@ int Text_Width(const char *text, const fontInfo_t *font, float scale, int limit)
 				s += 2;
 				continue;
 			} else {
-				glyph = &font->glyphs[(int)*s];
+				cp = Q_UTF8_CodePoint( &s );
+				glyph = Text_GetGlyph( font, cp );
 				out += glyph->xSkip;
-				s++;
 				count++;
 			}
     }
@@ -164,12 +179,13 @@ int Text_Height(const char *text, const fontInfo_t *font, float scale, int limit
 	float max;
 	const glyphInfo_t *glyph;
 	float useScale;
+	unsigned long cp;
 	const char *s = text;
 
 	useScale = scale * font->glyphScale;
   max = 0;
   if (text) {
-    len = strlen(text);
+		len = Q_UTF8_PrintStrlen(text);
 		if (limit > 0 && len > limit) {
 			len = limit;
 		}
@@ -179,11 +195,11 @@ int Text_Height(const char *text, const fontInfo_t *font, float scale, int limit
 				s += 2;
 				continue;
 			} else {
-				glyph = &font->glyphs[(int)*s]; // TTimo: FIXME: getting nasty warnings without the cast, hopefully this doesn't break the VM build
+				cp = Q_UTF8_CodePoint( &s );
+				glyph = Text_GetGlyph( font, cp );
 	      if (max < glyph->height) {
 		      max = glyph->height;
 			  }
-				s++;
 				count++;
 			}
     }
@@ -203,20 +219,21 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
   int len, count;
 	vec4_t newColor;
 	const glyphInfo_t *glyph;
+	float yadj, xadj;
 	float useScale;
+	unsigned long cp;
 
 	useScale = scale * font->glyphScale;
   if (text) {
     const char *s = text;
 		trap_R_SetColor( color );
 		memcpy(&newColor[0], &color[0], sizeof(vec4_t));
-    len = strlen(text);
+		len = Q_UTF8_PrintStrlen(text);
 		if (limit > 0 && len > limit) {
 			len = limit;
 		}
 		count = 0;
 		while (s && *s && count < len) {
-			glyph = &font->glyphs[(int)*s]; // TTimo: FIXME: getting nasty warnings without the cast, hopefully this doesn't break the VM build
       //int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
       //float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
 			if ( Q_IsColorString( s ) ) {
@@ -227,10 +244,13 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
 				}
 				s += 2;
 				continue;
-			} else {
-				float yadj = useScale * glyph->top;
-				float xadj = useScale * glyph->left;
+			}
 
+			cp = Q_UTF8_CodePoint( &s );
+			glyph = Text_GetGlyph( font, cp );
+
+				yadj = useScale * glyph->top;
+				xadj = useScale * glyph->left;
 				if (shadowOffset) {
 					colorBlack[3] = newColor[3];
 					trap_R_SetColor( colorBlack );
@@ -257,9 +277,7 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
 													glyph->glyph);
 
 				x += (glyph->xSkip * useScale) + adjust;
-				s++;
 				count++;
-			}
     }
 	  trap_R_SetColor( NULL );
   }
@@ -271,20 +289,20 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 	const glyphInfo_t *glyph, *glyph2;
 	float yadj, xadj;
 	float useScale;
+	unsigned long cp;
 
 	useScale = scale * font->glyphScale;
   if (text) {
     const char *s = text;
 		trap_R_SetColor( color );
 		memcpy(&newColor[0], &color[0], sizeof(vec4_t));
-    len = strlen(text);
+		len = Q_UTF8_Strlen(text); // note: doesn't use Q_UTF8_PrintStrlen because this function draws color codes
 		if (limit > 0 && len > limit) {
 			len = limit;
 		}
 		count = 0;
-		glyph2 = &font->glyphs[ (int) cursor];
+		glyph2 = &font->glyphs[cursor & 255];
 		while (s && *s && count < len) {
-			glyph = &font->glyphs[(int)*s]; // TTimo: FIXME: getting nasty warnings without the cast, hopefully this doesn't break the VM build
       //int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
       //float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
 			if ( Q_IsColorString( s ) ) {
@@ -297,6 +315,10 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 				//s += 2;
 				//continue;
 			}
+
+			cp = Q_UTF8_CodePoint( &s );
+			glyph = Text_GetGlyph( font, cp );
+
 				yadj = useScale * glyph->top;
 				xadj = useScale * glyph->left;
 				if (shadowOffset) {
@@ -338,7 +360,6 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 				}
 
 				x += (glyph->xSkip * useScale) + adjust;
-				s++;
 				count++;
     }
     // need to paint cursor at end of text
@@ -368,26 +389,31 @@ void Text_Paint_Limit(float *maxX, float x, float y, const fontInfo_t *font, flo
   if (text) {
     const char *s = text;
 		float max = *maxX;
+		float yadj, xadj;
 		float useScale;
+		unsigned long cp;
 
 		useScale = scale * font->glyphScale;
 		trap_R_SetColor( color );
-    len = strlen(text);					 
+		len = Q_UTF8_PrintStrlen(text);
 		if (limit > 0 && len > limit) {
 			len = limit;
 		}
 		count = 0;
 		while (s && *s && count < len) {
-			glyph = &font->glyphs[(int)*s]; // TTimo: FIXME: getting nasty warnings without the cast, hopefully this doesn't break the VM build
 			if ( Q_IsColorString( s ) ) {
 				memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
 				newColor[3] = color[3];
 				trap_R_SetColor( newColor );
 				s += 2;
 				continue;
-			} else {
-	      float yadj = useScale * glyph->top;
-	      float xadj = useScale * glyph->left;
+			}
+
+			cp = Q_UTF8_CodePoint( &s );
+			glyph = Text_GetGlyph( font, cp );
+
+				yadj = useScale * glyph->top;
+				xadj = useScale * glyph->left;
 				if (Text_Width(s, font, useScale, 1) + x > max) {
 					*maxX = 0;
 					break;
@@ -404,8 +430,6 @@ void Text_Paint_Limit(float *maxX, float x, float y, const fontInfo_t *font, flo
 	      x += (glyph->xSkip * useScale) + adjust;
 				*maxX = x;
 				count++;
-				s++;
-	    }
 		}
 	  trap_R_SetColor( NULL );
   }

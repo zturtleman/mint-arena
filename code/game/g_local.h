@@ -257,6 +257,7 @@ typedef struct {
 	qboolean	initialSpawn;		// the first spawn should be at a cool location
 	qboolean	predictItemPickup;	// based on cg_predictItems userinfo
 	qboolean	pmoveFixed;			//
+	int			antiLag;			// based on cg_antiLag userinfo
 	char		netname[MAX_NETNAME];
 	int			maxHealth;			// for handicapping
 	int			enterTime;			// level.time the player entered the game
@@ -266,6 +267,14 @@ typedef struct {
 	qboolean	teamInfo;			// send team overlay updates?
 } playerPersistant_t;
 
+#define MAX_PLAYER_MARKERS 17
+
+typedef struct {
+	vec3_t		mins;
+	vec3_t		maxs;
+	vec3_t		origin;
+	int			time;
+} playerMarker_t;
 
 // this structure is cleared on each PlayerSpawn(),
 // except for 'player->pers' and 'player->sess'
@@ -280,6 +289,16 @@ struct gplayer_s {
 	qboolean	readyToExit;		// wishes to leave the intermission
 
 	qboolean	noclip;
+
+	// history for backward reconcile
+	int			topMarker;
+	playerMarker_t	playerMarkers[MAX_PLAYER_MARKERS];
+	playerMarker_t	backupMarker;
+
+	int			frameOffset;		// an approximation of the actual server time we received this
+									// command (not in 50ms increments)
+
+	int			lastCmdServerTime;	// ucmd.serverTime from last usercmd_t
 
 	int			lastCmdTime;		// level.time of last usercmd_t, for EF_CONNECTION
 									// we can't just use pers.lastCommand.time, because
@@ -373,6 +392,8 @@ typedef struct {
 	int			previousTime;			// so movers can back up when blocked
 
 	int			startTime;				// level.time the map was started
+
+	int			frameStartTime;			// time this server frame started
 
 	int			teamScores[TEAM_NUM_TEAMS];
 	int			lastTeamLocationTime;		// last time of client team location update
@@ -580,7 +601,6 @@ void DropPortalDestination( gentity_t *ent );
 //
 qboolean LogAccuracyHit( gentity_t *target, gentity_t *attacker );
 void CalcMuzzlePoint ( gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint );
-void SnapVectorTowards( vec3_t v, vec3_t to );
 qboolean CheckGauntletAttack( gentity_t *ent );
 void Weapon_HookFree (gentity_t *ent);
 void Weapon_HookThink (gentity_t *ent);
@@ -603,6 +623,18 @@ void player_die (gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 void AddScore( gentity_t *ent, vec3_t origin, int score );
 void CalculateRanks( void );
 qboolean SpotWouldTelefrag( gentity_t *spot );
+
+//
+// g_unlagged.c
+//
+void G_ResetHistory( gentity_t *ent );
+void G_StoreHistory( gentity_t *ent );
+void G_TimeShiftAllClients( int time, gentity_t *skip );
+void G_UnTimeShiftAllClients( gentity_t *skip );
+void G_DoTimeShiftFor( gentity_t *ent );
+void G_UndoTimeShiftFor( gentity_t *ent );
+void G_UnTimeShiftClient( gentity_t *client );
+void G_PredictPlayerMove( gentity_t *ent, float frametime );
 
 //
 // g_svcmds.c

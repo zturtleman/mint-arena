@@ -739,6 +739,10 @@ void PlayerUserinfoChanged( int playerNum ) {
 		player->pers.predictItemPickup = qtrue;
 	}
 
+	// check the anti lag
+	s = Info_ValueForKey( userinfo, "cg_antiLag" );
+	player->pers.antiLag = atoi( s );
+
 	// set name
 	Q_strncpyz ( oldname, player->pers.netname, sizeof( oldname ) );
 	s = Info_ValueForKey (userinfo, "name");
@@ -1227,6 +1231,9 @@ void PlayerSpawn(gentity_t *ent) {
 
 	// clear entity state values
 	BG_PlayerStateToEntityState( &player->ps, &ent->s, qtrue );
+
+	// we don't want players being backward-reconciled to the place they died
+	G_ResetHistory( ent );
 }
 
 

@@ -2057,4 +2057,9 @@ void G_RunFrame( int levelTime ) {
 		}
 		trap_Cvar_SetValue("g_listEntity", 0);
 	}
+
+	// record the time at the end of this frame - it should be about
+	// the time the next frame begins - when the server starts
+	// accepting commands from connected clients
+	level.frameStartTime = trap_Milliseconds();
 }

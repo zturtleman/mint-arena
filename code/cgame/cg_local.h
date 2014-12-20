@@ -1400,6 +1400,7 @@ extern	vmCvar_t		cg_skybox;
 extern	vmCvar_t		cg_drawScores;
 extern	vmCvar_t		cg_oldBubbles;
 extern	vmCvar_t		cg_smoothBodySink;
+extern	vmCvar_t		cg_antiLag;
 extern	vmCvar_t		ui_stretch;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;
@@ -1693,6 +1694,7 @@ void CG_RegisterItemVisuals( int itemNum );
 void CG_FireWeapon( centity_t *cent );
 void CG_MissileHitWall( int weapon, int playerNum, vec3_t origin, vec3_t dir, impactSound_t soundType );
 void CG_MissileHitPlayer( int weapon, vec3_t origin, vec3_t dir, int entityNum );
+void CG_ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, int otherEntNum );
 void CG_ShotgunFire( entityState_t *es );
 void CG_Bullet( vec3_t origin, int sourceEntityNum, vec3_t normal, qboolean flesh, int fleshEntityNum );
 
@@ -1762,6 +1764,7 @@ localEntity_t *CG_MakeExplosion( vec3_t origin, vec3_t dir,
 //
 void CG_ProcessSnapshots( qboolean initialOnly );
 void CG_RestoreSnapshot( void );
+void CG_TransitionEntity( centity_t *cent );
 playerState_t *CG_LocalPlayerState( int playerNum );
 int CG_NumLocalPlayers( void );
 

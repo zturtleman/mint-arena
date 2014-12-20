@@ -142,6 +142,9 @@ void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
 	if ( player->player->sess.sessionTeam != TEAM_SPECTATOR ) {
 		trap_LinkEntity (player);
 	}
+
+	// we don't want players being backward-reconciled back through teleporters
+	G_ResetHistory( player );
 }
 
 

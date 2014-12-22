@@ -2133,41 +2133,6 @@ static int CG_FeederCount(float feederID) {
 	return count;
 }
 
-
-void CG_SetScoreSelection(void *p) {
-	menuDef_t *menu = (menuDef_t*)p;
-	playerState_t *ps = cg.cur_ps;
-	int i, red, blue;
-	red = blue = 0;
-	for (i = 0; i < cg.numScores; i++) {
-		if (cg.scores[i].team == TEAM_RED) {
-			red++;
-		} else if (cg.scores[i].team == TEAM_BLUE) {
-			blue++;
-		}
-		if (ps && ps->playerNum == cg.scores[i].playerNum) {
-			cg.selectedScore = i;
-		}
-	}
-
-	if (menu == NULL) {
-		// just interested in setting the selected score
-		return;
-	}
-
-	if ( cgs.gametype >= GT_TEAM ) {
-		int feeder = FEEDER_REDTEAM_LIST;
-		i = red;
-		if (cg.scores[cg.selectedScore].team == TEAM_BLUE) {
-			feeder = FEEDER_BLUETEAM_LIST;
-			i = blue;
-		}
-		Menu_SetFeederSelection(menu, feeder, i, NULL);
-	} else {
-		Menu_SetFeederSelection(menu, FEEDER_SCOREBOARD, cg.selectedScore, NULL);
-	}
-}
-
 // FIXME: might need to cache this info
 static playerInfo_t * CG_InfoFromScoreIndex(int index, int team, int *scoreIndex) {
 	int i, count;
@@ -2276,6 +2241,11 @@ static qhandle_t CG_FeederItemImage(float feederID, int index) {
 }
 
 static void CG_FeederSelection(float feederID, int index) {
+#if 0 // this only gets called from Menu_SetFeederSelection
+	if ( !cg.cur_lc ) {
+		return;
+	}
+
 	if ( cgs.gametype >= GT_TEAM ) {
 		int i, count;
 		int team = (feederID == FEEDER_REDTEAM_LIST) ? TEAM_RED : TEAM_BLUE;
@@ -2283,14 +2253,15 @@ static void CG_FeederSelection(float feederID, int index) {
 		for (i = 0; i < cg.numScores; i++) {
 			if (cg.scores[i].team == team) {
 				if (index == count) {
-					cg.selectedScore = i;
+					cg.cur_lc->selectedScore = i;
 				}
 				count++;
 			}
 		}
 	} else {
-		cg.selectedScore = index;
+		cg.cur_lc->selectedScore = index;
 	}
+#endif
 }
 
 static float CG_Cvar_Get(const char *cvar) {

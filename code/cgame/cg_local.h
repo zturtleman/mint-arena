@@ -652,6 +652,7 @@ typedef struct {
 	qboolean	scoreBoardShowing;
 	int			scoreFadeTime;
 	char		killerName[MAX_NAME_LENGTH];
+	int			selectedScore;
 
 	// console
 	char			consoleText[ MAX_CONSOLE_TEXT ];
@@ -772,7 +773,7 @@ typedef struct {
 	// scoreboard
 	int			scoresRequestTime;
 	int			numScores;
-	int			selectedScore;
+	int			intermissionSelectedScore;
 	int			teamScores[2];
 	score_t		scores[MAX_CLIENTS];
 	clientList_t	readyPlayers;
@@ -1464,7 +1465,6 @@ void CG_JoystickButtonEvent( int localPlayerNum, int button, qboolean down, unsi
 void CG_JoystickHatEvent( int localPlayerNum, int hat, int value, unsigned time, connstate_t state );
 void CG_EventHandling(int type);
 void CG_RankRunFrame( void );
-void CG_SetScoreSelection(void *menu);
 score_t *CG_GetSelectedScore( void );
 void CG_BuildSpectatorString( void );
 

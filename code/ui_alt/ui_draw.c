@@ -182,11 +182,11 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 	if ( cg.connected ) {
 		drawFramePics = qfalse;
 
-		if ( current->menu->menuType != MENUTYPE_DIALOG && current->menu->menuType != MENUTYPE_POSTGAME ) {
+		if ( !( current->menu->menuFlags & ( MF_DIALOG | MF_POSTGAME ) ) ) {
 			CG_DrawPic( 320-233, 240-166, 466, 332, uiAssets.dialogLargeBackground );
 		}
 	} else {
-		if ( current->menu->menuType == MENUTYPE_MAINMENU ) {
+		if ( current->menu->menuFlags & MF_MAINMENU ) {
 			UI_DrawMainMenuBackground();
 			drawFramePics = qfalse;
 		} else {
@@ -194,7 +194,7 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 		}
 	}
 
-	if ( current->menu->menuType == MENUTYPE_DIALOG ) {
+	if ( current->menu->menuFlags & MF_DIALOG ) {
 		CG_DrawPic( 142, 118, 359, 256, uiAssets.dialogSmallBackground );
 	}
 	else if ( drawFramePics ) {
@@ -263,17 +263,17 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 	}
 
 #ifndef MISSIONPACK
-	if ( !cg.connected && current->menu->menuType == MENUTYPE_MAINMENU ) {
+	if ( !cg.connected && ( current->menu->menuFlags & MF_MAINMENU ) ) {
 		// Q3 banner model
 		headerBottom = 120;
 	}
 #endif
 
-	if ( current->menu->menuType == MENUTYPE_DIALOG ) {
+	if ( current->menu->menuFlags & MF_DIALOG ) {
 		current->header.y = 204;
 		headerBottom = 265;
 		horizontalMenu = qtrue;
-	} else if ( current->menu->menuType == MENUTYPE_POSTGAME ) {
+	} else if ( current->menu->menuFlags & MF_POSTGAME ) {
 		horizontalMenu = qtrue;
 #ifdef Q3UIFONTS
 		headerBottom = SCREEN_HEIGHT - PROP_HEIGHT - 10;
@@ -364,7 +364,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 				// center x
 				x = (SCREEN_WIDTH - totalWidth[numHeaders]) / 2;
 
-				//if ( current->menu->menuType == MENUTYPE_DIALOG ) {
+				//if ( current->menu->menuFlags & MF_DIALOG ) {
 					y = headerBottom;
 				/*} else if ( item->y != 0 ) {
 					y = item->y;
@@ -404,7 +404,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 	current->numItems = i;
 
 	// add back button
-	if ( current->numStacked && current->menu->menuType != MENUTYPE_DIALOG ) {
+	if ( current->numStacked && !( current->menu->menuFlags & MF_NOBACK ) ) {
 		y += lineHeight;
 		current->items[i].flags = MIF_POPMENU;
 		current->items[i].data = NULL;

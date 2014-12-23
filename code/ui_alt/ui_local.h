@@ -83,6 +83,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 */
 
+// Menu Item Flags
 #define	MIF_SUBMENU		0x01	// data is menudef_t // on action, change to new menu (adds previous menu to stack)
 //#define	MIF_CVAR		0x02	// data is a cvar name.
 #define	MIF_CALL		0x04	// data is functionu8_t.
@@ -101,6 +102,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define		MIF_SWAPMENU	0x200	// on action, change to new menu without adding calling menu to stack
 #define		MIF_NEXTBUTTON	0x400	// this should have 'next' button graphic and placement. should be last in menudef_t item list.
 #define		MIF_HEADER		0x800	// A Team Arena main menu header
+//#define		MIF_CALLPLAYER	0x1000	// when this is selected create a menu to select a player (listing Player 1, Player 2, etc) that will call
 
 #define		MIF_SELECTABLE (MIF_SUBMENU|MIF_CALL|MIF_POPMENU|MIF_SWAPMENU)
 
@@ -112,19 +114,15 @@ typedef struct {
 
 } menuitem_t;
 
-typedef enum {
-	MENUTYPE_GENERIC,
-	MENUTYPE_DIALOG,	// yes/no dialog
-	MENUTYPE_MAINMENU,	// special main menu handling
-	MENUTYPE_DEMOS,
-	MENUTYPE_CINEMATICS,
-	MENUTYPE_MODS,
-	MENUTYPE_POSTGAME,	// cannot exit using escape
-
-} menuType_t;
+// Menu Flags
+#define		MF_MAINMENU		0x1		// special main menu handling
+#define		MF_DIALOG		0x2		// draw dialog box with header (the message text) inside the box and items horizonally before it
+#define		MF_NOESCAPE		0x4		// menu must be closed using menu buttons, not escape key
+#define		MF_NOBACK		0x8		// don't add back button, but still allows escape key to pop menu -- seems like poor UI tbh
+#define		MF_POSTGAME		0x10	// hacks for post game menu... draw items horizonally at the bottom of the screen and no background in-game
 
 typedef struct {
-	menuType_t	menuType;
+	int			menuFlags;
 	const char	*header;
 	menuitem_t	*items;
 	int			numItems;

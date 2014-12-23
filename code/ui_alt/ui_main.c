@@ -113,7 +113,7 @@ void	UI_KeyEvent( int key, qboolean down ) {
 	switch ( key ) {
 		case K_MOUSE2:
 		case K_ESCAPE:
-			if ( currentMenu.menu && currentMenu.menu->menuType != MENUTYPE_POSTGAME ) {
+			if ( currentMenu.menu && !( currentMenu.menu->menuFlags & MF_NOESCAPE ) ) {
 				UI_PopMenu( &currentMenu );
 			}
 			break;

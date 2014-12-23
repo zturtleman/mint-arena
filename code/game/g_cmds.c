@@ -683,6 +683,13 @@ void StopFollowing( gentity_t *ent ) {
 	ent->player->ps.pm_flags &= ~PMF_FOLLOW;
 	ent->r.svFlags &= ~SVF_BOT;
 	ent->player->ps.playerNum = ent - g_entities;
+
+	SetPlayerViewAngle( ent, ent->player->ps.viewangles );
+
+	// don't use dead view angles
+	if ( ent->player->ps.stats[STAT_HEALTH] <= 0 ) {
+		ent->player->ps.stats[STAT_HEALTH] = 1;
+	}
 }
 
 /*

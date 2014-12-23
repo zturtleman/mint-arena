@@ -213,8 +213,7 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 		Field_Clear( &passwordField.field );
 		passwordField.width = 256;
 		passwordField.field.widthInChars = 16;
-		Q_strncpyz( passwordField.field.buffer, Cvar_VariableString("password"), 
-			sizeof(passwordField.field.buffer) );
+		MField_SetText( &passwordField.field, Cvar_VariableString("password") );
 
 		Menu_AddItem( &s_ingame_menu, ( void * ) &s_customize_player_action );
 

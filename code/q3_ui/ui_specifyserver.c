@@ -86,9 +86,9 @@ static void SpecifyServer_Event( void* ptr, int event )
 
 			if (s_specifyserver.domain.field.buffer[0])
 			{
-				strcpy(buff,s_specifyserver.domain.field.buffer);
+				strcpy(buff, MField_Buffer( &s_specifyserver.domain.field ) );
 				if (s_specifyserver.port.field.buffer[0])
-					Com_sprintf( buff+strlen(buff), 128, ":%s", s_specifyserver.port.field.buffer );
+					Com_sprintf( buff+strlen(buff), 128, ":%s", MField_Buffer( &s_specifyserver.port.field ) );
 
 				trap_Cmd_ExecuteText( EXEC_APPEND, va( "connect %s\n", buff ) );
 			}
@@ -187,7 +187,7 @@ void SpecifyServer_MenuInit( void )
 	Menu_AddItem( &s_specifyserver.menu, &s_specifyserver.go );
 	Menu_AddItem( &s_specifyserver.menu, &s_specifyserver.back );
 
-	Com_sprintf( s_specifyserver.port.field.buffer, 6, "%i", 27960 );
+	MField_SetText( &s_specifyserver.port.field, va( "%i", 27960 ) );
 }
 
 /*

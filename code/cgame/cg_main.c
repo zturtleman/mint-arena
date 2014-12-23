@@ -93,6 +93,9 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_KEY_EVENT:
 		CG_DistributeKeyEvent(arg0, arg1, arg2, arg3, 0);
 		return 0;
+	case CG_CHAR_EVENT:
+		CG_DistributeCharEvent(arg0, arg1);
+		return 0;
 	case CG_MOUSE_EVENT:
 		if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
 			CG_MouseEvent(arg0, arg1, arg2);
@@ -258,6 +261,7 @@ vmCvar_t	cg_skybox;
 vmCvar_t	cg_drawScores;
 vmCvar_t	cg_oldBubbles;
 vmCvar_t	cg_smoothBodySink;
+vmCvar_t	cg_antiLag;
 vmCvar_t	cg_introPlayed;
 vmCvar_t	cg_joystickDebug;
 vmCvar_t	ui_stretch;
@@ -446,6 +450,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_drawScores, "cg_drawScores", "1", 0, RANGE_BOOL },
 	{ &cg_oldBubbles, "cg_oldBubbles", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_smoothBodySink, "cg_smoothBodySink", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_antiLag, "cg_antiLag", "0", CVAR_USERINFO_ALL | CVAR_ARCHIVE, RANGE_INT( 0, 2 ) },
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
 
 	{ &cg_introPlayed, "com_introPlayed", "0", CVAR_ARCHIVE, RANGE_BOOL },
@@ -2128,41 +2133,6 @@ static int CG_FeederCount(float feederID) {
 	return count;
 }
 
-
-void CG_SetScoreSelection(void *p) {
-	menuDef_t *menu = (menuDef_t*)p;
-	playerState_t *ps = cg.cur_ps;
-	int i, red, blue;
-	red = blue = 0;
-	for (i = 0; i < cg.numScores; i++) {
-		if (cg.scores[i].team == TEAM_RED) {
-			red++;
-		} else if (cg.scores[i].team == TEAM_BLUE) {
-			blue++;
-		}
-		if (ps && ps->playerNum == cg.scores[i].playerNum) {
-			cg.selectedScore = i;
-		}
-	}
-
-	if (menu == NULL) {
-		// just interested in setting the selected score
-		return;
-	}
-
-	if ( cgs.gametype >= GT_TEAM ) {
-		int feeder = FEEDER_REDTEAM_LIST;
-		i = red;
-		if (cg.scores[cg.selectedScore].team == TEAM_BLUE) {
-			feeder = FEEDER_BLUETEAM_LIST;
-			i = blue;
-		}
-		Menu_SetFeederSelection(menu, feeder, i, NULL);
-	} else {
-		Menu_SetFeederSelection(menu, FEEDER_SCOREBOARD, cg.selectedScore, NULL);
-	}
-}
-
 // FIXME: might need to cache this info
 static playerInfo_t * CG_InfoFromScoreIndex(int index, int team, int *scoreIndex) {
 	int i, count;
@@ -2271,6 +2241,11 @@ static qhandle_t CG_FeederItemImage(float feederID, int index) {
 }
 
 static void CG_FeederSelection(float feederID, int index) {
+#if 0 // this only gets called from Menu_SetFeederSelection
+	if ( !cg.cur_lc ) {
+		return;
+	}
+
 	if ( cgs.gametype >= GT_TEAM ) {
 		int i, count;
 		int team = (feederID == FEEDER_REDTEAM_LIST) ? TEAM_RED : TEAM_BLUE;
@@ -2278,14 +2253,15 @@ static void CG_FeederSelection(float feederID, int index) {
 		for (i = 0; i < cg.numScores; i++) {
 			if (cg.scores[i].team == team) {
 				if (index == count) {
-					cg.selectedScore = i;
+					cg.cur_lc->selectedScore = i;
 				}
 				count++;
 			}
 		}
 	} else {
-		cg.selectedScore = index;
+		cg.cur_lc->selectedScore = index;
 	}
+#endif
 }
 
 static float CG_Cvar_Get(const char *cvar) {
@@ -2845,7 +2821,7 @@ void Message_Key( int key, qboolean down ) {
 
 	if ( key == K_ENTER || key == K_KP_ENTER ) {
 		if ( cg.messageField.buffer[0] && cg.connected ) {
-			Com_sprintf( buffer, sizeof ( buffer ), "%s %s\n", cg.messageCommand, cg.messageField.buffer );
+			Com_sprintf( buffer, sizeof ( buffer ), "%s %s\n", cg.messageCommand, MField_Buffer( &cg.messageField ) );
 
 			trap_SendClientCommand( buffer );
 		}
@@ -2941,6 +2917,33 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 		CG_KeyEvent( key, down );
 	} else if ( keyCatcher & KEYCATCH_UI ) {
 		UI_KeyEvent( key, down );
+	}
+}
+
+/*
+================
+CG_DistributeCharEvent
+================
+*/
+void CG_DistributeCharEvent( int character, connstate_t state ) {
+	int key, keyCatcher;
+
+	cg.connState = state;
+
+	key = ( character | K_CHAR_FLAG );
+
+	// reduce redundent system calls
+	keyCatcher = trap_Key_GetCatcher( );
+
+	// distribute the character event to the apropriate handler
+	if ( keyCatcher & KEYCATCH_CONSOLE ) {
+		Console_Key( key, qtrue );
+	} else if ( keyCatcher & KEYCATCH_MESSAGE ) {
+		Message_Key( key, qtrue );
+	} else if ( cg.connected && ( keyCatcher & KEYCATCH_CGAME ) ) {
+		CG_KeyEvent( key, qtrue );
+	} else if ( keyCatcher & KEYCATCH_UI ) {
+		UI_KeyEvent( key, qtrue );
 	}
 }
 

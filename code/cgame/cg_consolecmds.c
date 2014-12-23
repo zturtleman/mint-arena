@@ -260,21 +260,80 @@ static void CG_LoadHud_f( void) {
   menuScoreboard = NULL;
 }
 
+// In team gametypes skip spectators and scroll through entire team.
+// First time through list only use red player then switch to only blue players, etc.
+static int CG_ScrollScores( int scoreIndex, int dir ) {
+	int i, team;
 
-static void CG_scrollScoresDown_f( void) {
-	if (menuScoreboard && CG_AnyScoreboardShowing()) {
-		Menu_ScrollFeeder(menuScoreboard, FEEDER_SCOREBOARD, qtrue);
-		Menu_ScrollFeeder(menuScoreboard, FEEDER_REDTEAM_LIST, qtrue);
-		Menu_ScrollFeeder(menuScoreboard, FEEDER_BLUETEAM_LIST, qtrue);
+	if ( cg.numScores == 0 )
+		return 0;
+
+	if ( cgs.gametype < GT_TEAM ) {
+		scoreIndex += dir;
+
+		if ( scoreIndex < 0 )
+			scoreIndex = cg.numScores - 1;
+		else if ( scoreIndex >= cg.numScores )
+			scoreIndex = 0;
+
+		return scoreIndex;
+	}
+
+	team = cg.scores[scoreIndex].team;
+
+	if ( team == TEAM_SPECTATOR ) {
+		team = TEAM_RED;
+	}
+
+	for ( i = scoreIndex + dir; i < cg.numScores && i >= 0; i += dir ) {
+		if ( cg.scores[i].team == team ) {
+			return i;
+		}
+	}
+
+	// didn't find any more players on this team in this direction,
+	// wrap around and switch teams
+	if ( cgs.gametype >= GT_TEAM ) {
+		if ( team == TEAM_RED ) {
+			team = TEAM_BLUE;
+		} else {
+			team = TEAM_RED;
+		}
+	}
+
+	if ( dir > 0 )
+		i = 0;
+	else
+		i = cg.numScores - 1;
+
+	for ( /**/; i < cg.numScores && i >= 0; i += dir ) {
+		if ( cg.scores[i].team == team ) {
+			return i;
+		}
+	}
+
+	// no change
+	return scoreIndex;
+}
+
+static void CG_ScrollScoresDown_f( int localPlayerNum ) {
+	if ( cg.snap && cg.snap->pss[localPlayerNum].pm_type == PM_INTERMISSION ) {
+		cg.intermissionSelectedScore = CG_ScrollScores( cg.intermissionSelectedScore, 1 );
+	}
+
+	if ( cg.localPlayers[localPlayerNum].scoreBoardShowing ) {
+		cg.localPlayers[localPlayerNum].selectedScore = CG_ScrollScores( cg.localPlayers[localPlayerNum].selectedScore, 1 );
 	}
 }
 
 
-static void CG_scrollScoresUp_f( void) {
-	if (menuScoreboard && CG_AnyScoreboardShowing()) {
-		Menu_ScrollFeeder(menuScoreboard, FEEDER_SCOREBOARD, qfalse);
-		Menu_ScrollFeeder(menuScoreboard, FEEDER_REDTEAM_LIST, qfalse);
-		Menu_ScrollFeeder(menuScoreboard, FEEDER_BLUETEAM_LIST, qfalse);
+static void CG_ScrollScoresUp_f( int localPlayerNum ) {
+	if ( cg.snap && cg.snap->pss[localPlayerNum].pm_type == PM_INTERMISSION ) {
+		cg.intermissionSelectedScore = CG_ScrollScores( cg.intermissionSelectedScore, -1 );
+	}
+
+	if ( cg.localPlayers[localPlayerNum].scoreBoardShowing ) {
+		cg.localPlayers[localPlayerNum].selectedScore = CG_ScrollScores( cg.localPlayers[localPlayerNum].selectedScore, -1 );
 	}
 }
 #endif
@@ -794,8 +853,6 @@ static consoleCommand_t	cg_commands[] = {
 	{ "spLose", CG_spLose_f, CMD_INGAME },
 #ifdef MISSIONPACK_HUD
 	{ "loadhud", CG_LoadHud_f, CMD_INGAME },
-	{ "scoresDown", CG_scrollScoresDown_f, CMD_INGAME },
-	{ "scoresUp", CG_scrollScoresUp_f, CMD_INGAME },
 #endif
 #endif
 	{ "startOrbit", CG_StartOrbit_f, CMD_INGAME },
@@ -914,6 +971,10 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "tauntTaunt", CG_TauntTaunt_f, CMD_INGAME },
 	{ "tauntDeathInsult", CG_TauntDeathInsult_f, CMD_INGAME },
 	{ "tauntGauntlet", CG_TauntGauntlet_f, CMD_INGAME },
+#endif
+#ifdef MISSIONPACK_HUD
+	{ "scoresDown", CG_ScrollScoresDown_f, CMD_INGAME },
+	{ "scoresUp", CG_ScrollScoresUp_f, CMD_INGAME },
 #endif
 	{ "model", CG_SetModel_f, 0 },
 	{ "viewpos", CG_Viewpos_f, CMD_INGAME },

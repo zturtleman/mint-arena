@@ -1670,6 +1670,42 @@ qboolean Item_OwnerDraw_HandleKey(itemDef_t *item, int key) {
   return qfalse;
 }
 
+void Item_ListBox_SetSelection(itemDef_t *item, int selection ) {
+	listBoxDef_t *listPtr = (listBoxDef_t*)item->typeData;
+	int max, viewmax;
+	int count = DC->feederCount(item->special);
+
+	max = Item_ListBox_MaxScroll(item);
+
+	if ( selection < 0 ) {
+		selection = 0;
+	} else if ( selection >= count ) {
+		selection = count - 1;
+	}
+
+	item->cursorPos = listPtr->cursorPos = selection;
+
+	if (item->window.flags & WINDOW_HORIZONTAL) {
+		viewmax = (item->window.rect.w / listPtr->elementWidth);
+	} else {
+		viewmax = (item->window.rect.h / listPtr->elementHeight);
+	}
+
+	if (listPtr->cursorPos < listPtr->startPos) {
+		listPtr->startPos = listPtr->cursorPos;
+	}
+	if (listPtr->cursorPos >= listPtr->startPos + viewmax) {
+		listPtr->startPos = listPtr->cursorPos - viewmax + 1;
+	}
+
+	if (listPtr->startPos < 0) {
+		listPtr->startPos = 0;
+	}
+	if (listPtr->startPos > max) {
+		listPtr->startPos = max;
+	}
+}
+
 qboolean Item_ListBox_HandleKey(itemDef_t *item, int key, qboolean down, qboolean force) {
 	listBoxDef_t *listPtr = (listBoxDef_t*)item->typeData;
 	int count = DC->feederCount(item->special);
@@ -1720,6 +1756,7 @@ qboolean Item_ListBox_HandleKey(itemDef_t *item, int key, qboolean down, qboolea
 				}
 				else {
 					listPtr->startPos++;
+					// ZTM: FIXME: should this be >= max like all the other startPos checks?
 					if (listPtr->startPos >= count)
 						listPtr->startPos = count-1;
 				}
@@ -4043,13 +4080,15 @@ void Menu_SetFeederSelection(menuDef_t *menu, int feeder, int index, const char 
 		int i;
     for (i = 0; i < menu->itemCount; i++) {
 			if (menu->items[i]->special == feeder) {
-				if (index == 0) {
-					listBoxDef_t *listPtr = (listBoxDef_t*)menu->items[i]->typeData;
-					listPtr->cursorPos = 0;
-					listPtr->startPos = 0;
+				if ( menu->items[i]->cursorPos == index ) {
+					return;
 				}
-				menu->items[i]->cursorPos = index;
+
+				Item_ListBox_SetSelection( menu->items[i], index );
 				DC->feederSelection(menu->items[i]->special, menu->items[i]->cursorPos);
+
+				// use the non-range check value so selection can be disabled using -1
+				menu->items[i]->cursorPos = index; 
 				return;
 			}
 		}
@@ -5135,6 +5174,13 @@ static void Item_ApplyHacks( itemDef_t *item ) {
 		}
 	}
 
+	// Show selected score on the scoreboard
+	if ( item->type == ITEM_TYPE_LISTBOX && item->window.outlineColor[3] == 0 && ( item->special == FEEDER_SCOREBOARD
+		|| item->special == FEEDER_REDTEAM_LIST || item->special == FEEDER_BLUETEAM_LIST ) ) {
+		Com_DPrintf( "Making scoreboard listbox have an outline color\n" );
+		VectorSet( item->window.outlineColor, 0.7f, 0.7f, 0.7f );
+		item->window.outlineColor[3] = 0.3f;
+	}
 }
 
 /*

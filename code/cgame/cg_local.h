@@ -138,18 +138,26 @@ enum {
 
 //=================================================
 
+// The menu code needs to get both key and char events, but
+// to avoid duplicating the paths, the char events are just
+// distinguished by or'ing in K_CHAR_FLAG (ugly)
+#define	K_CHAR_FLAG		(1<<31)
+
 #define	MAX_EDIT_LINE	256
 typedef struct {
 	int		cursor;
-	int		scroll;
-	int		widthInChars;
-	char	buffer[MAX_EDIT_LINE];
-	int		maxchars;
+	int		scroll;					// display buffer offset
+	int		widthInChars;			// display width
+	int		buffer[MAX_EDIT_LINE];	// buffer holding Unicode code points
+	int		len;					// length of buffer
+	int		maxchars;				// max number of characters to insert in buffer
 } mfield_t;
 
 void	MField_Clear( mfield_t *edit );
 void	MField_KeyDownEvent( mfield_t *edit, int key );
 void	MField_CharEvent( mfield_t *edit, int ch );
+void	MField_SetText( mfield_t *edit, const char *text );
+const char *MField_Buffer( mfield_t *edit );
 void	MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor );
 
 //=================================================
@@ -644,6 +652,7 @@ typedef struct {
 	qboolean	scoreBoardShowing;
 	int			scoreFadeTime;
 	char		killerName[MAX_NAME_LENGTH];
+	int			selectedScore;
 
 	// console
 	char			consoleText[ MAX_CONSOLE_TEXT ];
@@ -764,7 +773,7 @@ typedef struct {
 	// scoreboard
 	int			scoresRequestTime;
 	int			numScores;
-	int			selectedScore;
+	int			intermissionSelectedScore;
 	int			teamScores[2];
 	score_t		scores[MAX_CLIENTS];
 	clientList_t	readyPlayers;
@@ -1392,6 +1401,7 @@ extern	vmCvar_t		cg_skybox;
 extern	vmCvar_t		cg_drawScores;
 extern	vmCvar_t		cg_oldBubbles;
 extern	vmCvar_t		cg_smoothBodySink;
+extern	vmCvar_t		cg_antiLag;
 extern	vmCvar_t		ui_stretch;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;
@@ -1447,6 +1457,7 @@ int CG_CrosshairPlayer( int localPlayerNum );
 int CG_LastAttacker( int localPlayerNum );
 void CG_LoadMenus(const char *menuFile);
 void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state, int axisNum );
+void CG_DistributeCharEvent( int key, connstate_t state );
 void CG_KeyEvent(int key, qboolean down);
 void CG_MouseEvent(int localPlayerNum, int x, int y);
 void CG_JoystickAxisEvent( int localPlayerNum, int axis, int value, unsigned time, connstate_t state );
@@ -1454,7 +1465,6 @@ void CG_JoystickButtonEvent( int localPlayerNum, int button, qboolean down, unsi
 void CG_JoystickHatEvent( int localPlayerNum, int hat, int value, unsigned time, connstate_t state );
 void CG_EventHandling(int type);
 void CG_RankRunFrame( void );
-void CG_SetScoreSelection(void *menu);
 score_t *CG_GetSelectedScore( void );
 void CG_BuildSpectatorString( void );
 
@@ -1684,6 +1694,7 @@ void CG_RegisterItemVisuals( int itemNum );
 void CG_FireWeapon( centity_t *cent );
 void CG_MissileHitWall( int weapon, int playerNum, vec3_t origin, vec3_t dir, impactSound_t soundType );
 void CG_MissileHitPlayer( int weapon, vec3_t origin, vec3_t dir, int entityNum );
+void CG_ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, int otherEntNum );
 void CG_ShotgunFire( entityState_t *es );
 void CG_Bullet( vec3_t origin, int sourceEntityNum, vec3_t normal, qboolean flesh, int fleshEntityNum );
 
@@ -1753,6 +1764,7 @@ localEntity_t *CG_MakeExplosion( vec3_t origin, vec3_t dir,
 //
 void CG_ProcessSnapshots( qboolean initialOnly );
 void CG_RestoreSnapshot( void );
+void CG_TransitionEntity( centity_t *cent );
 playerState_t *CG_LocalPlayerState( int playerNum );
 int CG_NumLocalPlayers( void );
 
@@ -1789,7 +1801,7 @@ void CG_DrawInformation( void );
 // cg_scoreboard.c
 //
 qboolean CG_DrawOldScoreboard( void );
-void CG_DrawOldTourneyScoreboard( void );
+void CG_DrawTourneyScoreboard( void );
 
 //
 // cg_console.c

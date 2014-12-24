@@ -2513,6 +2513,7 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	int	playerNums[MAX_SPLITVIEW];
 	const char	*s;
 	int			i;
+	demoState_t	demoState;
 
 	cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
 	cg.numViewports = 1;
@@ -2521,6 +2522,8 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	playerNums[1] = playerNum1;
 	playerNums[2] = playerNum2;
 	playerNums[3] = playerNum3;
+
+	demoState = trap_GetDemoState();
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
 		// clear team preference if was previously set (only want it used for one game)
@@ -2531,7 +2534,13 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 			continue;
 		}
 
-		trap_Mouse_SetState( i, MOUSE_CLIENT );
+		// don't grab mouse during demo playback
+		if ( demoState == DS_PLAYBACK ) {
+			trap_Mouse_SetState( i, MOUSE_SYSTEMCURSOR );
+		} else {
+			trap_Mouse_SetState( i, MOUSE_CLIENT );
+		}
+
 		trap_GetViewAngles( i, cg.localPlayers[i].viewangles );
 		CG_LocalPlayerAdded(i, playerNums[i]);
 	}
@@ -2972,7 +2981,9 @@ void Key_SetCatcher( int catcher ) {
 		trap_Key_SetRepeat( catcher != 0 );
 
 		// release mouse grab and show system cursor when console is open
-		if ( catcher & KEYCATCH_CONSOLE ) {
+		if ( trap_GetDemoState() == DS_PLAYBACK ) {
+			// always set to MOUSE_SYSTEMCURSOR, do nothing
+		} else if ( catcher & KEYCATCH_CONSOLE ) {
 			trap_Mouse_SetState( 0, ( trap_Mouse_GetState( 0 ) & ~MOUSE_CLIENT ) | MOUSE_SYSTEMCURSOR );
 		} else if ( keyCatchers & KEYCATCH_CONSOLE ) {
 			int state = trap_Mouse_GetState( 0 ) & ~MOUSE_SYSTEMCURSOR;

@@ -2428,11 +2428,12 @@ CG_ClearState
 Called at init and killing server from UI
 =================
 */
-void CG_ClearState( qboolean everything ) {
+void CG_ClearState( qboolean everything, int maxSplitView ) {
 	int i;
 
 	if ( everything ) {
 		memset( &cgs, 0, sizeof( cgs ) );
+		cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
 	}
 	memset( &cg, 0, sizeof( cg ) );
 	memset( cg_entities, 0, sizeof(cg_entities) );
@@ -2454,14 +2455,17 @@ Called after every cgame load, such as main menu, level change, or subsystem res
 =================
 */
 void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
+	int i;
 
 	// clear everything
-	CG_ClearState( qtrue );
+	CG_ClearState( qtrue, maxSplitView );
 
 	cg.connState = state;
 	cg.connected = ( cg.connState > CA_CONNECTED && cg.connState != CA_CINEMATIC );
 
-	cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
+	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+		CG_UpdateMouseState( 0 );
+	}
 
 	CG_RegisterCvars();
 
@@ -2634,7 +2638,7 @@ void CG_KillServer( void ) {
 
 	trap_SV_Shutdown( "Server was killed" );
 
-	CG_ClearState( qfalse );
+	CG_ClearState( qfalse, cgs.maxSplitView );
 
 	cgs.localServer = qfalse;
 }

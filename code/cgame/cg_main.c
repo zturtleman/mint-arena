@@ -2449,23 +2449,37 @@ void CG_ClearState( qboolean everything, int maxSplitView ) {
 
 /*
 =================
+CG_SetConnectionState
+=================
+*/
+void CG_SetConnectionState( connstate_t state ) {
+	int i;
+
+	if ( cg.connState == state ) {
+		return;
+	}
+
+	cg.connState = state;
+	cg.connected = ( cg.connState > CA_CONNECTED && cg.connState != CA_CINEMATIC );
+
+	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+		CG_UpdateMouseState( i );
+	}
+}
+
+/*
+=================
 CG_Init
 
 Called after every cgame load, such as main menu, level change, or subsystem restart
 =================
 */
 void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
-	int i;
 
 	// clear everything
 	CG_ClearState( qtrue, maxSplitView );
 
-	cg.connState = state;
-	cg.connected = ( cg.connState > CA_CONNECTED && cg.connState != CA_CINEMATIC );
-
-	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
-		CG_UpdateMouseState( 0 );
-	}
+	CG_SetConnectionState( state );
 
 	CG_RegisterCvars();
 
@@ -2534,8 +2548,6 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 			cg.localPlayers[i].playerNum = -1;
 			continue;
 		}
-
-		CG_UpdateMouseState( i );
 
 		trap_GetViewAngles( i, cg.localPlayers[i].viewangles );
 		CG_LocalPlayerAdded(i, playerNums[i]);
@@ -2670,7 +2682,7 @@ Draw the frame
 */
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime ) {
 
-	cg.connState = state;
+	CG_SetConnectionState( state );
 	cg.realFrameTime = realTime - cg.realTime;
 	cg.realTime = realTime;
 
@@ -2847,7 +2859,7 @@ CG_DistributeKeyEvent
 void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state, int axisNum ) {
 	int keyCatcher;
 
-	cg.connState = state;
+	CG_SetConnectionState( state );
 
 	switch ( key ) {
 		case K_KP_PGUP:
@@ -2933,7 +2945,7 @@ CG_DistributeCharEvent
 void CG_DistributeCharEvent( int character, connstate_t state ) {
 	int key, keyCatcher;
 
-	cg.connState = state;
+	CG_SetConnectionState( state );
 
 	key = ( character | K_CHAR_FLAG );
 

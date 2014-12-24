@@ -791,8 +791,6 @@ void CG_StopCinematic_f( void ) {
 	trap_CIN_StopCinematic(cg.cinematicHandle);
 	cg.cinematicHandle = -1;
 	//trap_S_StopAllSounds();
-
-	CG_UpdateMouseState( 0 );
 }
 
 /*

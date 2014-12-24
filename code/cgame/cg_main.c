@@ -2513,7 +2513,6 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	int	playerNums[MAX_SPLITVIEW];
 	const char	*s;
 	int			i;
-	demoState_t	demoState;
 
 	cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
 	cg.numViewports = 1;
@@ -2522,8 +2521,6 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	playerNums[1] = playerNum1;
 	playerNums[2] = playerNum2;
 	playerNums[3] = playerNum3;
-
-	demoState = trap_GetDemoState();
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
 		// clear team preference if was previously set (only want it used for one game)
@@ -2534,12 +2531,7 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 			continue;
 		}
 
-		// don't grab mouse during demo playback
-		if ( demoState == DS_PLAYBACK ) {
-			trap_Mouse_SetState( i, MOUSE_SYSTEMCURSOR );
-		} else {
-			trap_Mouse_SetState( i, MOUSE_CLIENT );
-		}
+		CG_UpdateMouseState( i );
 
 		trap_GetViewAngles( i, cg.localPlayers[i].viewangles );
 		CG_LocalPlayerAdded(i, playerNums[i]);
@@ -2956,6 +2948,33 @@ void CG_DistributeCharEvent( int character, connstate_t state ) {
 	}
 }
 
+/*
+====================
+CG_UpdateMouseState
+====================
+*/
+void CG_UpdateMouseState( int localPlayerNum ) {
+	int state;
+
+	if ( ( Key_GetCatcher() & KEYCATCH_CONSOLE ) || ( cg.connState != CA_DISCONNECTED && cg.connState != CA_ACTIVE )
+		|| trap_GetDemoState() == DS_PLAYBACK ) {
+		// no grab, show system cursor
+		state = MOUSE_SYSTEMCURSOR;
+	} else {
+		state = 0;
+	}
+
+	if ( Key_GetCatcher() & KEYCATCH_UI ) {
+		// call mouse move event, no grab, hide system cursor
+		state |= MOUSE_CGAME;
+	} else if ( !( state & MOUSE_SYSTEMCURSOR ) ) {
+		// change viewangles, grab mouse, hide system cursor
+		state = MOUSE_CLIENT;
+	}
+
+	trap_Mouse_SetState( localPlayerNum, state );
+}
+
 static int keyCatchers = 0;
 
 /*
@@ -2979,23 +2998,11 @@ void Key_SetCatcher( int catcher ) {
 
 		// If catcher is 0, disable held key repeating so binds don't repeat
 		trap_Key_SetRepeat( catcher != 0 );
-
-		// release mouse grab and show system cursor when console is open
-		if ( trap_GetDemoState() == DS_PLAYBACK ) {
-			// always set to MOUSE_SYSTEMCURSOR, do nothing
-		} else if ( catcher & KEYCATCH_CONSOLE ) {
-			trap_Mouse_SetState( 0, ( trap_Mouse_GetState( 0 ) & ~MOUSE_CLIENT ) | MOUSE_SYSTEMCURSOR );
-		} else if ( keyCatchers & KEYCATCH_CONSOLE ) {
-			int state = trap_Mouse_GetState( 0 ) & ~MOUSE_SYSTEMCURSOR;
-
-			if ( catcher == 0 ) {
-				state |= MOUSE_CLIENT;
-			}
-			trap_Mouse_SetState( 0, state );
-		}
 	}
 
 	keyCatchers = catcher;
+
+	CG_UpdateMouseState( 0 );
 }
 
 /*

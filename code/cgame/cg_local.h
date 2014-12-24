@@ -1475,6 +1475,8 @@ void CG_SetupDlightstyles( void );
 
 void CG_KillServer( void );
 
+void CG_UpdateMouseState( int localPlayerNum );
+
 // in order from highest priority to lowest
 // if none of the catchers are active, bound key strings will be executed
 #define	KEYCATCH_CONSOLE		0x0001

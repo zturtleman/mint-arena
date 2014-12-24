@@ -111,6 +111,14 @@ void	UI_KeyEvent( int key, qboolean down ) {
 		return;
 
 	switch ( key ) {
+		case K_F11:
+			// Q3A/TA toggle debug drawing mode
+			break;
+
+		case K_F12:
+			trap_Cmd_ExecuteText( EXEC_APPEND, "screenshot\n" );
+			break;
+
 		case K_MOUSE2:
 		case K_ESCAPE:
 			if ( currentMenu.menu && !( currentMenu.menu->menuFlags & MF_NOESCAPE ) ) {

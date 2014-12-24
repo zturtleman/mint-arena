@@ -221,3 +221,35 @@ float UI_ProportionalSizeScale( int style );
 void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color );
 #endif
 
+/*
+
+thinking about how to handle TA main menu
+
+make the horizontal menus be MIF_INLINEMENU
+store which item to change to when up/down/left/right are pressed.
+
+==========================
+
+thinking about how to handle TA setup menu
+would probably be nice for Q3 as well (especially in wide screen when we for sure have the space any way...)
+
+[1  ]	2
+[   ]	
+[   ]	
+[   ]	
+		[3  ]  [  ]  [  ]
+
+1 = side bar
+2 = menu content
+3 = menu panel select
+
+3 swaps menu
+1 swaps menu and panel
+
+side bar could be a 'container menu', though might be best to reference from the menudef
+other wise keeping track of it in the stack and going to a menu directly is harder.
+
+panel could be an inline horizonal menu referenced from the menu
+
+*/
+

@@ -94,10 +94,10 @@ void exitHandler( int item ) {
 // 0 = yes, 1 = no
 void defaultsHandler( int item ) {
 	if ( item == 0 ) {
-	// should put cvar_restart first? sometimes people put cvars in it -- this would apply to q3_ui too
-	trap_Cmd_ExecuteText( EXEC_APPEND, "exec default.cfg\n");
-	trap_Cmd_ExecuteText( EXEC_APPEND, "cvar_restart\n");
-	trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
+		// should put cvar_restart first? sometimes people put cvars in it -- this would apply to q3_ui too
+		trap_Cmd_ExecuteText( EXEC_APPEND, "exec default.cfg\n");
+		trap_Cmd_ExecuteText( EXEC_APPEND, "cvar_restart\n");
+		trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
 	} else {
 		CG_Printf("DEBUG: canceled reseting to defaults...\n");
 	}

@@ -2484,6 +2484,13 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 		return;
 	}
 
+#ifdef MISSIONPACK_HUD
+	Init_Display(&cgDC);
+	String_Init();
+#endif
+
+	UI_Init( cg.connected, maxSplitView );
+
 	// if the user didn't give any commands, run default action
 	if ( playVideo == 1 ) {
 		trap_Cmd_ExecuteText( EXEC_APPEND, "cinematic idlogo.RoQ\n" );
@@ -2492,13 +2499,6 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 			trap_Cvar_Set( "nextmap", "cinematic intro.RoQ" );
 		}
 	}
-
-#ifdef MISSIONPACK_HUD
-	Init_Display(&cgDC);
-	String_Init();
-#endif
-
-	UI_Init( cg.connected, maxSplitView );
 }
 
 /*

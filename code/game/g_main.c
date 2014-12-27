@@ -589,6 +589,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	// clear ready players from intermission
 	trap_SetConfigstring( CS_PLAYERS_READY, "" );
+	trap_SetConfigstring( CS_INTERMISSION, "" );
 }
 
 

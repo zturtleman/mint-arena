@@ -33,8 +33,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 uiStatic_t uis;
 currentMenu_t currentMenu;
 
-extern menudef_t mainmenu;
-
 void	UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	int i;
 
@@ -78,7 +76,7 @@ void	UI_Shutdown( void ) {
 
 void	UI_SetActiveMenu( uiMenuCommand_t menu ) {
 	if ( menu == UIMENU_NONE ) {
-		UI_SetMenu( &currentMenu, NULL );
+		UI_SetMenu( &currentMenu, M_NONE );
 	}
 	else if ( menu == UIMENU_MAIN || menu == UIMENU_INGAME ) {
 		trap_Mouse_SetState( 0, MOUSE_CGAME );
@@ -86,17 +84,17 @@ void	UI_SetActiveMenu( uiMenuCommand_t menu ) {
 		trap_Cvar_SetValue( "cl_paused", 1 );
 
 		if ( menu == UIMENU_MAIN ) {
-			UI_SetMenu( &currentMenu, &mainmenu );
+			UI_SetMenu( &currentMenu, M_MAIN );
 		} else if ( menu == UIMENU_INGAME ) {
 			// TODO: separate ingame menu
-			UI_SetMenu( &currentMenu, &mainmenu );
+			UI_SetMenu( &currentMenu, M_MAIN );
 		}
 	} else if ( menu == UIMENU_POSTGAME ) {
 		// postgame doesn't pause
 		trap_Mouse_SetState( 0, MOUSE_CGAME );
 		trap_Key_SetCatcher( KEYCATCH_UI );
 
-		UI_SetMenu( &currentMenu, &postgamemenu );
+		UI_SetMenu( &currentMenu, M_POSTGAME );
 	}
 }
 
@@ -121,7 +119,7 @@ void	UI_KeyEvent( int key, qboolean down ) {
 
 		case K_MOUSE2:
 		case K_ESCAPE:
-			if ( currentMenu.menu && !( currentMenu.menu->menuFlags & MF_NOESCAPE ) ) {
+			if ( !( ui_menus[currentMenu.menu].menuFlags & MF_NOESCAPE ) ) {
 				UI_PopMenu( &currentMenu );
 			}
 			break;

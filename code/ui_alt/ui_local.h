@@ -78,6 +78,41 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 
 /*
+	List of menus
+*/
+typedef enum {
+	M_NONE,
+
+	M_MAIN,
+	M_SINGLEPLAYER,
+	M_MULTIPLAYER,
+	M_SETUP,
+	M_DEMOS,
+	M_CINEMATICS,
+	M_MODS,
+	M_EXIT, // exit confim dialog
+
+	M_PLAYER,
+	M_CONTROLS,
+	M_SYSTEM,
+	M_GAME_OPTIONS,
+	M_DEFAULTS,
+
+	// only referenced by team arena right now
+	M_RULES,
+	M_START_SERVER,
+
+	M_CREDITS_PAGE1,
+	M_CREDITS_PAGE2,
+
+	M_POSTGAME,
+
+	M_NUM_MENUS
+
+} menuId_t;
+
+
+/*
 
 	Menu Info
 
@@ -109,7 +144,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 typedef struct {
 	int flags;
 	const char *caption;
-	void *data;
+	void (*action)(int item);
+	menuId_t menuid;
 	int y;
 
 } menuitem_t;
@@ -140,7 +176,8 @@ typedef struct {
 	int flags;
 	const char *caption;
 	float x, y, width, height;
-	void *data;
+	void (*action)(int item);
+	menuId_t menuid;
 
 } currentMenuItem_t;
 
@@ -148,13 +185,13 @@ typedef struct {
 #define MAX_MENU_ITEMS	64
 typedef struct {
 	struct {
-		menudef_t	*menu;
+		menuId_t	menu;
 		int			selectedItem;
 
 	} stack[MAX_MENU_DEPTH];
 	int			numStacked;
 
-	menudef_t	*menu;
+	menuId_t	menu;
 	int			selectedItem;
 	int			mouseItem; // item mouse points to. -1 if none.
 
@@ -193,8 +230,7 @@ typedef struct {
 extern uiStatic_t uis;
 
 // ui_menus.c
-extern menudef_t mainmenu;
-extern menudef_t postgamemenu;
+extern menudef_t ui_menus[M_NUM_MENUS];
 
 // ui_draw.c
 void UI_LoadAssets( void );
@@ -202,8 +238,8 @@ void UI_BuildCurrentMenu( currentMenu_t *current );
 void UI_DrawCurrentMenu( currentMenu_t *current );
 
 // ui_logic.c
-void UI_SetMenu( currentMenu_t *current, menudef_t *menu );
-void UI_PushMenu( currentMenu_t *current, menudef_t *menu );
+void UI_SetMenu( currentMenu_t *current, menuId_t menu );
+void UI_PushMenu( currentMenu_t *current, menuId_t menu );
 void UI_PopMenu( currentMenu_t *current );
 void UI_MenuAdjustCursor( currentMenu_t *current, int dir );
 void UI_MenuCursorPoint( currentMenu_t *current, int x, int y );

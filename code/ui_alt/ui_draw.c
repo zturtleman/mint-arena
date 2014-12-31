@@ -174,19 +174,22 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 	qboolean drawFramePics = qtrue;
 	vec4_t drawcolor;
 	int style;
+	menudef_t	*menuInfo;
 
 	if ( !current->menu ) {
 		return;
 	}
 
+	menuInfo = &ui_menus[current->menu];
+
 	if ( cg.connected ) {
 		drawFramePics = qfalse;
 
-		if ( !( current->menu->menuFlags & ( MF_DIALOG | MF_POSTGAME ) ) ) {
+		if ( !( menuInfo->menuFlags & ( MF_DIALOG | MF_POSTGAME ) ) ) {
 			CG_DrawPic( 320-233, 240-166, 466, 332, uiAssets.dialogLargeBackground );
 		}
 	} else {
-		if ( current->menu->menuFlags & MF_MAINMENU ) {
+		if ( menuInfo->menuFlags & MF_MAINMENU ) {
 			UI_DrawMainMenuBackground();
 			drawFramePics = qfalse;
 		} else {
@@ -194,7 +197,7 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 		}
 	}
 
-	if ( current->menu->menuFlags & MF_DIALOG ) {
+	if ( menuInfo->menuFlags & MF_DIALOG ) {
 		CG_DrawPic( 142, 118, 359, 256, uiAssets.dialogSmallBackground );
 	}
 	else if ( drawFramePics ) {
@@ -206,11 +209,11 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 	}
 
 	// doesn't have a special header handling, use generic
-	if ( current->menu->header ) {
+	if ( menuInfo->header ) {
 #ifdef Q3UIFONTS
-		UI_DrawBannerString( current->header.x, current->header.y, current->menu->header, 0, color_header );
+		UI_DrawBannerString( current->header.x, current->header.y, menuInfo->header, 0, color_header );
 #else
-		CG_DrawString( current->header.x, current->header.y, current->menu->header, UI_DROPSHADOW|UI_BIGFONT, color_header );
+		CG_DrawString( current->header.x, current->header.y, menuInfo->header, UI_DROPSHADOW|UI_BIGFONT, color_header );
 #endif
 	}
 
@@ -245,12 +248,19 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 	int headerBottom = -1;
 	menuitem_t *item;
 	qboolean horizontalMenu = qfalse;
+	menudef_t	*menuInfo;
 
-	if ( current->menu->header ) {
+	if ( !current->menu ) {
+		return;
+	}
+
+	menuInfo = &ui_menus[current->menu];
+
+	if ( menuInfo->header ) {
 #ifdef Q3UIFONTS // ug, dialogs need to use prop font
-		current->header.width = UI_BannerStringWidth( current->menu->header );
+		current->header.width = UI_BannerStringWidth( menuInfo->header );
 #else
-		current->header.width = CG_DrawStrlen( current->menu->header, UI_BIGFONT );
+		current->header.width = CG_DrawStrlen( menuInfo->header, UI_BIGFONT );
 #endif
 		current->header.x = ( SCREEN_WIDTH - current->header.width ) / 2;
 		current->header.y = 10;
@@ -263,17 +273,17 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 	}
 
 #ifndef MISSIONPACK
-	if ( !cg.connected && ( current->menu->menuFlags & MF_MAINMENU ) ) {
+	if ( !cg.connected && ( menuInfo->menuFlags & MF_MAINMENU ) ) {
 		// Q3 banner model
 		headerBottom = 120;
 	}
 #endif
 
-	if ( current->menu->menuFlags & MF_DIALOG ) {
+	if ( menuInfo->menuFlags & MF_DIALOG ) {
 		current->header.y = 204;
 		headerBottom = 265;
 		horizontalMenu = qtrue;
-	} else if ( current->menu->menuFlags & MF_POSTGAME ) {
+	} else if ( menuInfo->menuFlags & MF_POSTGAME ) {
 		horizontalMenu = qtrue;
 #ifdef Q3UIFONTS
 		headerBottom = SCREEN_HEIGHT - PROP_HEIGHT - 10;
@@ -285,7 +295,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 	lineHeight = BIGCHAR_HEIGHT * 2;
 
 	numHeaders = 0;
-	for ( i = 0, item = current->menu->items; i < current->menu->numItems; i++, item++ ) {
+	for ( i = 0, item = menuInfo->items; i < menuInfo->numItems; i++, item++ ) {
 #ifdef Q3UIFONTS
 		current->items[i].width = UI_ProportionalStringWidth( item->caption );
 		current->items[i].height = PROP_HEIGHT;
@@ -303,18 +313,19 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		}
 
 		totalWidth[numHeaders] += current->items[i].width;
-		if ( i != current->menu->numItems - 1 && !(current->menu->items[i+1].flags & MIF_HEADER) ) {
+		if ( i != menuInfo->numItems - 1 && !(menuInfo->items[i+1].flags & MIF_HEADER) ) {
 			totalWidth[numHeaders] += horizontalGap;
 		}
 	}
 
 	numHeaders = 0;
-	for ( i = 0, item = current->menu->items; i < current->menu->numItems; i++, item++ ) {
+	for ( i = 0, item = menuInfo->items; i < menuInfo->numItems; i++, item++ ) {
 
 		if ( item->flags & MIF_NEXTBUTTON ) {
 			// Fixed place in lower right
 			current->items[i].flags = item->flags;
-			current->items[i].data = item->data;
+			current->items[i].action = item->action;
+			current->items[i].menuid = item->menuid;
 			current->items[i].caption = item->caption;
 			current->items[i].y = SCREEN_HEIGHT - current->items[i].height - 10;
 			current->items[i].x = SCREEN_WIDTH - current->items[i].width - 10;
@@ -334,7 +345,8 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			}
 
 			current->items[i].flags = item->flags;
-			current->items[i].data = item->data;
+			current->items[i].action = item->action;
+			current->items[i].menuid = item->menuid;
 			current->items[i].caption = item->caption;
 			current->items[i].y = y;
 			current->items[i].x = (SCREEN_WIDTH - current->items[i].width) / 2;
@@ -352,7 +364,8 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			}
 
 			current->items[i].flags = item->flags;
-			current->items[i].data = item->data;
+			current->items[i].action = item->action;
+			current->items[i].menuid = item->menuid;
 			current->items[i].caption = item->caption;
 			current->items[i].y = y;
 			current->items[i].x = x;
@@ -364,7 +377,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 				// center x
 				x = (SCREEN_WIDTH - totalWidth[numHeaders]) / 2;
 
-				//if ( current->menu->menuFlags & MF_DIALOG ) {
+				//if ( menuInfo->menuFlags & MF_DIALOG ) {
 					y = headerBottom;
 				/*} else if ( item->y != 0 ) {
 					y = item->y;
@@ -383,7 +396,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 				y = item->y;
 			} else if ( i == 0 ) {
 				// center Y
-				y = headerBottom + (SCREEN_HEIGHT - headerBottom - current->menu->numItems * lineHeight) / 2;
+				y = headerBottom + (SCREEN_HEIGHT - headerBottom - menuInfo->numItems * lineHeight) / 2;
 			} else {
 				y += lineHeight;
 			}
@@ -395,7 +408,8 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		}
 
 		current->items[i].flags = item->flags;
-		current->items[i].data = item->data;
+		current->items[i].action = item->action;
+		current->items[i].menuid = item->menuid;
 		current->items[i].caption = item->caption;
 		current->items[i].y = y;
 		current->items[i].x = x;
@@ -404,10 +418,11 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 	current->numItems = i;
 
 	// add back button
-	if ( current->numStacked && !( current->menu->menuFlags & MF_NOBACK ) ) {
+	if ( current->numStacked && !( menuInfo->menuFlags & MF_NOBACK ) ) {
 		y += lineHeight;
 		current->items[i].flags = MIF_POPMENU;
-		current->items[i].data = NULL;
+		current->items[i].action = NULL;
+		current->items[i].menuid = M_NONE;
 
 #ifdef MISSIONPACK
 		if ( current->numStacked == 1 )

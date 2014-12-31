@@ -32,7 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "ui_local.h"
 
 // clear stack, change to menu
-void UI_SetMenu( currentMenu_t *current, menudef_t *menu ) {
+void UI_SetMenu( currentMenu_t *current, menuId_t menu ) {
 	current->numStacked = 0;
 	current->menu = menu;
 	current->selectedItem = 0;
@@ -56,7 +56,7 @@ void UI_SetMenu( currentMenu_t *current, menudef_t *menu ) {
 }
 
 // change current menu, without changing stack
-void UI_SwapMenu( currentMenu_t *current, menudef_t *menu ) {
+void UI_SwapMenu( currentMenu_t *current, menuId_t menu ) {
 	if ( current->menu == menu )
 		return;
 
@@ -75,7 +75,7 @@ void UI_SwapMenu( currentMenu_t *current, menudef_t *menu ) {
 }
 
 // add current menu to stask, then change to new menu
-void UI_PushMenu( currentMenu_t *current, menudef_t *menu ) {
+void UI_PushMenu( currentMenu_t *current, menuId_t menu ) {
 	if ( current->menu == menu )
 		return;
 
@@ -101,7 +101,7 @@ void UI_PushMenu( currentMenu_t *current, menudef_t *menu ) {
 void UI_PopMenu( currentMenu_t *current ) {
 	if ( current->numStacked == 0 ) {
 		if ( cg.connected ) {
-			UI_SetMenu( current, NULL );
+			UI_SetMenu( current, M_NONE );
 		}
 		return;
 	}
@@ -166,25 +166,25 @@ void UI_MenuCursorPoint( currentMenu_t *current, int x, int y ) {
 }
 
 void UI_MenuAction( currentMenu_t *current, int itemNum ) {
-	currentMenuItem_t *item = &current->items[itemNum];
-	qboolean popMenu = ( item->flags & MIF_POPMENU );
+	// item is copied instead of a pointer to avoid issues when switching menus
+	currentMenuItem_t item = current->items[itemNum];
 
-	if ( item->flags & MIF_CALL ) {
-		void    (*function)( int item );
+	if ( item.flags & MIF_CALL ) {
+		if ( item.action ) {
+			item.action( itemNum );
+		}
+	}
 
-		function = item->data;
-
-		function( itemNum );
-	} else if ( item->flags & MIF_SWAPMENU ) {
-		UI_SwapMenu( current, item->data );
+	if ( item.flags & MIF_SWAPMENU ) {
+		UI_SwapMenu( current, item.menuid );
 		// warning, push menu replaces the current->items
-	} else if ( item->flags & MIF_SUBMENU ) {
-		UI_PushMenu( current, item->data );
+	} else if ( item.flags & MIF_SUBMENU ) {
+		UI_PushMenu( current, item.menuid );
 		// warning, push menu replaces the current->items
 	}
 
 	// can use call and popmenu on the same item
-	if ( popMenu ) {
+	if ( item.flags & MIF_POPMENU ) {
 		UI_PopMenu( current );
 		return; // popmenu plays a sound
 	}

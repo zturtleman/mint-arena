@@ -119,33 +119,25 @@ typedef enum {
 */
 
 // Menu Item Flags
-#define	MIF_SUBMENU		0x01	// data is menudef_t // on action, change to new menu (adds previous menu to stack)
-//#define	MIF_CVAR		0x02	// data is a cvar name.
-#define	MIF_CALL		0x04	// data is functionu8_t.
-//#define	MIF_CONTROL		0x08	// y is PC_* (PlayerControl Index)
-#define	MIF_SPACE		0x10	// Skip line, no action. But still draw text.
+#define		MIF_POPMENU		0x0001	// on action, return to previous menu
+#define		MIF_SWAPMENU	0x0002	// on action, change to new menu without adding calling menu to stack
+#define		MIF_SUBMENU		0x0004	// on action, change to new menu (adds previous menu to stack)
+#define		MIF_CALL		0x0008	// on action, call the item's action function with item number
+//#define		MIF_CALLPLAYER	0x0010	// on action, create a menu to select a player (listing Player 1, Player 2, etc) that will call the item's action function with local player number
 
-//#define	MIF_HIDE		0x20	// Hide MenuItem.
-//#define	MIF_CENTER		0x40	// Center x of MenuItem on the screen.
-//#define	MIF_YELLOW		0x80	// Text is always yellow.
+#define		MIF_NEXTBUTTON	0x0100	// this itemshould have 'next' button graphic and placement. It should be the last item in list, so arrow keys work correct.
+#define		MIF_HEADER		0x0200	// A Team Arena main menu header
 
-// "Fake" flags.
-//#define	MIF_SETY		(MIF_HIDE|MIF_SPACE)
-//#define	MIF_YELLOWSKIP	(MIF_SPACE|MIF_YELLOW)
-
-#define		MIF_POPMENU		0x100	// on action, return to previous menu
-#define		MIF_SWAPMENU	0x200	// on action, change to new menu without adding calling menu to stack
-#define		MIF_NEXTBUTTON	0x400	// this should have 'next' button graphic and placement. should be last in menudef_t item list.
-#define		MIF_HEADER		0x800	// A Team Arena main menu header
-//#define		MIF_CALLPLAYER	0x1000	// when this is selected create a menu to select a player (listing Player 1, Player 2, etc) that will call
+//#define		MIF_CVAR		0x1000
+//#define		MIF_CONTROL		0x2000	// y is PC_* (PlayerControl Index)
 
 #define		MIF_SELECTABLE (MIF_SUBMENU|MIF_CALL|MIF_POPMENU|MIF_SWAPMENU)
 
 typedef struct {
 	int flags;
 	const char *caption;
-	void (*action)(int item);
-	menuId_t menuid;
+	void (*action)(int item); // used for MIF_CALL
+	menuId_t menuid; // used for MIF_SUBMENU and MIF_SWAPMENU
 	int y;
 
 } menuitem_t;

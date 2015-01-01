@@ -125,6 +125,7 @@ typedef enum {
 #define		MIF_CALL		0x0008	// on action, call the item's action function with item number
 //#define		MIF_CALLPLAYER	0x0010	// on action, create a menu to select a player (listing Player 1, Player 2, etc) that will call the item's action function with local player number
 
+#define		MIF_BIGTEXT		0x0080	// use a larger font for this item
 #define		MIF_NEXTBUTTON	0x0100	// this itemshould have 'next' button graphic and placement. It should be the last item in list, so arrow keys work correct.
 #define		MIF_HEADER		0x0200	// A Team Arena main menu header
 
@@ -134,11 +135,31 @@ typedef enum {
 #define		MIF_SELECTABLE (MIF_SUBMENU|MIF_CALL|MIF_POPMENU|MIF_SWAPMENU)
 
 typedef struct {
+	float value;
+	const char *string;
+
+} cvarRangePair_t;
+
+// ZTM: FIXME:? Either min/max/integral or pairs/numPairs is used.
+// So... having there together seems like it might be confusing/waste of code in ui_menus.c.
+typedef struct {
+	float min;
+	float max;
+	qboolean integral;
+
+	cvarRangePair_t *pairs;
+	int numPairs;
+} cvarRange_t;
+
+typedef struct {
 	int flags;
 	const char *caption;
 	void (*action)(int item); // used for MIF_CALL
 	menuId_t menuid; // used for MIF_SUBMENU and MIF_SWAPMENU
 	int y;
+
+	const char	*cvarName;
+	cvarRange_t *cvarRange;
 
 } menuitem_t;
 
@@ -165,11 +186,19 @@ typedef struct {
 */
 
 typedef struct {
-	int flags;
-	const char *caption;
-	float x, y, width, height;
-	void (*action)(int item);
-	menuId_t menuid;
+	// copied from menuitem_t (although it's generated for back button)
+	int				flags;
+	const char		*caption;
+	void			(*action)(int item);
+	menuId_t		menuid;
+	const char		*cvarName;
+	cvarRange_t		*cvarRange;
+
+	// unique
+	float			x, y, width, height;
+	//float			cvarValue;	// if cvarRange->numPairs > 0 it's an index, otherwise it's the clamped value for slider
+	vmCvar_t		vmCvar;
+	int				cvarPair;
 
 } currentMenuItem_t;
 
@@ -187,7 +216,7 @@ typedef struct {
 	int			selectedItem;
 	int			mouseItem; // item mouse points to. -1 if none.
 
-	// info generated from menudef
+	// info generated from menudef_t
 	currentMenuItem_t	header;
 	currentMenuItem_t	items[MAX_MENU_ITEMS];
 	int numItems;
@@ -236,6 +265,7 @@ void UI_PopMenu( currentMenu_t *current );
 void UI_MenuAdjustCursor( currentMenu_t *current, int dir );
 void UI_MenuCursorPoint( currentMenu_t *current, int x, int y );
 void UI_MenuAction( currentMenu_t *current, int itemNum );
+qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir );
 
 
 // ui_fonts.c
@@ -274,10 +304,54 @@ would probably be nice for Q3 as well (especially in wide screen when we for sur
 3 swaps menu
 1 swaps menu and panel
 
-side bar could be a 'container menu', though might be best to reference from the menudef
+side bar could be a 'container menu', though might be best to reference from the menudef_t
 other wise keeping track of it in the stack and going to a menu directly is harder.
 
 panel could be an inline horizonal menu referenced from the menu
+
+==========================
+
+thinking about how to handle items have display / edit a console variable
+
+most have a list of possible values, others use slider with min and max, or bool ratio button
+
+typedef struct {
+	float	value;
+	char *name;
+} cvarPossValue_t;
+
+char *cvarName; // hmm, or reference vmCvar_t ???
+float value;
+float			min, max; // slider
+cvarPossValue_t *valueNames;
+int				numValueNames;
+
+get range check values from engine? -- would be nice if engine knew bool.
+
+typedef struct {
+	float value;
+	const char *string;
+
+} cvarValuePair_t;
+
+typedef struct {
+	float min, max;
+	qboolean intergal;
+
+	cvarValuePair_t *pairs;
+	int numPairs;
+} cvarRangeInfo_t;
+
+cvarRangeInfo_t *cvarRange;
+
+cvarRangeInfo_t cv_boolRatio = { 0, 1, qtrue, NULL };
+
+vmCvar_t	*cvar;
+float		value;	// used for draw / logic, but might be clamped etc which don't want to go into affect without it actually being changed in menu?
+cvarRangeInfo_t *cvarRange;
+int			index; // index in 
+
+
 
 */
 

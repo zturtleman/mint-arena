@@ -114,85 +114,132 @@ void restartMap( int item ) {
 #ifdef MISSIONPACK
 menuitem_t mainmenu_items[] =
 {
-	{ MIF_HEADER, "TEAM ARENA", NULL, M_NONE, 20 },
-	{ MIF_CALL, "Quake3", launchQ3, M_NONE, 0 },
-	{ MIF_SUBMENU, "Rules", NULL, M_RULES, 0 },
-	{ MIF_SUBMENU, "Credits", NULL, M_CREDITS_PAGE1, 0 },
-	{ MIF_SUBMENU, "Mods", NULL, M_MODS, 0 },
-	{ MIF_SUBMENU, "Cinematics", NULL, M_CINEMATICS, 0 },
+	{ MIF_BIGTEXT|MIF_HEADER, "TEAM ARENA", NULL, M_NONE, 20 },
+	{ MIF_BIGTEXT|MIF_CALL, "Quake3", launchQ3, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Rules", NULL, M_RULES, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Credits", NULL, M_CREDITS_PAGE1, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Mods", NULL, M_MODS, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Cinematics", NULL, M_CINEMATICS, 0 },
 
-	{ MIF_HEADER, "PLAY", NULL, M_NONE, 0 },
-	{ MIF_SUBMENU, "SinglePlayer", NULL, M_SINGLEPLAYER, 0 },
-	{ MIF_SUBMENU, "MultiPlayer", NULL, M_MULTIPLAYER, 0 },
-	{ MIF_SUBMENU, "StartServer", NULL, M_START_SERVER, 0 },
+	{ MIF_BIGTEXT|MIF_HEADER, "PLAY", NULL, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "SinglePlayer", NULL, M_SINGLEPLAYER, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "MultiPlayer", NULL, M_MULTIPLAYER, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "StartServer", NULL, M_START_SERVER, 0 },
 
-	{ MIF_HEADER, "OPTIONS", NULL, M_NONE, 340 },
-	{ MIF_SUBMENU, "Player", NULL, M_PLAYER, 0 },
-	{ MIF_SUBMENU, "Setup", NULL, M_SETUP, 0 },
-	{ MIF_SUBMENU, "Demos", NULL, M_DEMOS, 0 },
+	{ MIF_BIGTEXT|MIF_HEADER, "OPTIONS", NULL, M_NONE, 340 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Player", NULL, M_PLAYER, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Setup", NULL, M_SETUP, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Demos", NULL, M_DEMOS, 0 },
 
-	{ MIF_HEADER|MIF_SUBMENU, "QUIT", NULL, M_EXIT, 0 }
+	{ MIF_BIGTEXT|MIF_HEADER|MIF_SUBMENU, "QUIT", NULL, M_EXIT, 0 }
 };
 #else
 menuitem_t mainmenu_items[] =
 {
-	{ MIF_SUBMENU, "Single Player", NULL, M_SINGLEPLAYER, 0 },
-	{ MIF_SUBMENU, "Multiplayer", NULL, M_MULTIPLAYER, 0 },
-	{ MIF_SUBMENU, "Setup", NULL, M_SETUP, 0 },
-	{ MIF_SUBMENU, "Demos", NULL, M_DEMOS, 0 },
-	{ MIF_SUBMENU, "Cinematics", NULL, M_CINEMATICS, 0 },
-	{ MIF_CALL, "Team Arena", launchTeamArena, M_NONE, 0 },
-	{ MIF_SUBMENU, "Mods", NULL, M_MODS, 0 },
-	{ MIF_SUBMENU, "Exit", NULL, M_EXIT, 0 }
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Single Player", NULL, M_SINGLEPLAYER, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Multiplayer", NULL, M_MULTIPLAYER, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Setup", NULL, M_SETUP, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Demos", NULL, M_DEMOS, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Cinematics", NULL, M_CINEMATICS, 0 },
+	{ MIF_BIGTEXT|MIF_CALL, "Team Arena", launchTeamArena, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Mods", NULL, M_MODS, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Exit", NULL, M_EXIT, 0 }
 };
 #endif
 
+cvarRangePair_t cr_skillPairs[] = {
+{ 1, "I Can Win" },
+{ 2, "Bring It On" },
+{ 3, "Hurt Me Plenty" },
+{ 4, "Hardcore" },
+{ 5, "Nightmare!" }
+};
+cvarRange_t cr_skill = { 1, 5, qtrue, cr_skillPairs, ARRAY_LEN(cr_skillPairs) };
+
 menuitem_t singleplayermenu_items[] =
 {
-	{ MIF_CALL, "New Game", newGame, M_NONE, 0 },
-	{ MIF_CALL, "End Game", endGame, M_NONE, 0 },
-	//{ 0, "Level Select...", NULL, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_CALL, "Bot skill:", NULL, M_NONE, 0, "g_spSkill", &cr_skill },
+	{ MIF_BIGTEXT|MIF_CALL, "New Game", newGame, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_CALL, "End Game", endGame, M_NONE, 0 },
+	//{ MIF_BIGTEXT, "Level Select...", NULL, M_NONE, 0 },
 };
 
 menuitem_t setupmenu_items[] =
 {
-	{ MIF_SUBMENU, "Players", NULL, M_PLAYER, 0 }, // Player or Players in q3_ui depending on number of max players
-	{ MIF_SUBMENU, "Controls", NULL, M_CONTROLS, 0 },
-	{ MIF_SUBMENU, "System", NULL, M_SYSTEM, 0 },
-	{ MIF_SUBMENU, "Game Options", NULL, M_GAME_OPTIONS, 0 },
-	{ MIF_SUBMENU, "Defaults", NULL, M_DEFAULTS, 0 }, // TODO: only show if not in-game?
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Players", NULL, M_PLAYER, 0 }, // Player or Players in q3_ui depending on number of max players
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Controls", NULL, M_CONTROLS, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "System", NULL, M_SYSTEM, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Game Options", NULL, M_GAME_OPTIONS, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Defaults", NULL, M_DEFAULTS, 0 }, // TODO: only show if not in-game?
 };
 
 menuitem_t demosmenu_items[] =
 {
-	{ MIF_CALL|MIF_NEXTBUTTON, "Play Demo", demoHandler, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_CALL|MIF_NEXTBUTTON, "Play Demo", demoHandler, M_NONE, 0 },
 };
 
 menuitem_t cinematicsmenu_items[] =
 {
-	{ MIF_CALL|MIF_NEXTBUTTON, "Play Cinematic", cinematicHandler, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_CALL|MIF_NEXTBUTTON, "Play Cinematic", cinematicHandler, M_NONE, 0 },
 };
 
 menuitem_t modsmenu_items[] =
 {
-	{ MIF_CALL|MIF_NEXTBUTTON, "Load Mod", modHandler, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_CALL|MIF_NEXTBUTTON, "Load Mod", modHandler, M_NONE, 0 },
 };
 
 menuitem_t exitmenu_items[] =
 {
-	{ MIF_CALL, "Yes", exitHandler, M_NONE, 0 },
-	{ 0, "/", NULL, M_NONE, 0 },
-	{ MIF_CALL|MIF_POPMENU, "No", exitHandler, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_CALL, "Yes", exitHandler, M_NONE, 0 },
+	{ MIF_BIGTEXT, "/", NULL, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_CALL|MIF_POPMENU, "No", exitHandler, M_NONE, 0 },
 };
 
 menuitem_t defaultsmenu_items[] =
 {
-	{ MIF_CALL, "Yes", defaultsHandler, M_NONE, 0 },
-	{ 0, "/", NULL, M_NONE, 0 },
-	{ MIF_CALL|MIF_POPMENU, "No", defaultsHandler, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_CALL, "Yes", defaultsHandler, M_NONE, 0 },
+	{ MIF_BIGTEXT, "/", NULL, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_CALL|MIF_POPMENU, "No", defaultsHandler, M_NONE, 0 },
 
-	{ MIF_HEADER, "WARNING: This will reset *ALL*", NULL, M_NONE, 400 },
-	{ 0, "options to their default values.", NULL, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_HEADER, "WARNING: This will reset *ALL*", NULL, M_NONE, 400 },
+	{ MIF_BIGTEXT, "options to their default values.", NULL, M_NONE, 0 },
+};
+
+
+static cvarRangePair_t cr_teamoverlayPairs[] = { { 0, "off" }, { 1, "upper right" }, { 2, "lower right" }, { 3, "lower left" } };
+static cvarRange_t cr_teamoverlay = { 0, 3, qtrue, cr_teamoverlayPairs, ARRAY_LEN(cr_teamoverlayPairs) };
+
+static cvarRangePair_t cr_splitverticalPairs[] = { { 0, "horizontal" }, { 1, "vertical" } };
+static cvarRange_t cr_splitvertical = { 0, 1, qtrue, cr_splitverticalPairs, ARRAY_LEN(cr_splitverticalPairs) };
+
+static cvarRangePair_t cr_atmeffectsPairs[] = { { 0, "off" }, { 0.5f, "low" }, { 1, "high" } };
+static cvarRange_t cr_atmeffects = { 0, 1, qfalse, cr_atmeffectsPairs, ARRAY_LEN(cr_atmeffectsPairs) };
+
+static cvarRangePair_t cr_boolPairs[] = { { 0, "off" }, { 1, "on" } };
+static cvarRange_t cr_bool = { 0, 1, qtrue, cr_boolPairs, ARRAY_LEN(cr_boolPairs) };
+
+static cvarRangePair_t cr_boolInvertPairs[] = { { 0, "on" }, { 1, "off" } };
+static cvarRange_t cr_boolInvert = { 0, 1, qtrue, cr_boolInvertPairs, ARRAY_LEN(cr_boolInvertPairs) };
+
+static cvarRangePair_t cr_brassTimePairs[] = { { 0, "off" }, { 2500, "on" } };
+static cvarRange_t cr_brassTime = { 0, 1, qtrue, cr_brassTimePairs, ARRAY_LEN(cr_brassTimePairs) };
+
+menuitem_t gameoptionsmenu_items[] =
+{
+	//{ MIF_CALL, "Crosshair:",				NULL, M_NONE, 0, "cg_drawCrosshair", NULL }, // ZTM: TODO: draw crosshair shaders
+	{ MIF_CALL, "View Bobbing:",			NULL, M_NONE, 0, "cg_viewbob", &cr_bool },
+	{ MIF_CALL, "Simple Items:",			NULL, M_NONE, 0, "cg_simpleItems", &cr_bool },
+	{ MIF_CALL, "Marks on Walls:",			NULL, M_NONE, 0, "cg_marks", &cr_bool },
+	{ MIF_CALL, "Ejecting Brass:",			NULL, M_NONE, 0, "cg_brassTime", &cr_brassTime },
+	{ MIF_CALL, "Dynamic Lights:",			NULL, M_NONE, 0, "r_dynamiclight", &cr_bool },
+	{ MIF_CALL, "Identify Target:",			NULL, M_NONE, 0, "cg_drawCrosshairNames", &cr_bool },
+	{ MIF_CALL, "High Quality Sky:",		NULL, M_NONE, 0, "r_fastsky", &cr_boolInvert },
+	{ MIF_CALL, "Sync Every Frame:",		NULL, M_NONE, 0, "r_finish", &cr_bool },
+	{ MIF_CALL, "Force Player Models:",		NULL, M_NONE, 0, "cg_forcemodel", &cr_bool },
+	{ MIF_CALL, "Draw Team Overlay:",		NULL, M_NONE, 0, "cg_drawTeamOverlay", &cr_teamoverlay },
+	{ MIF_CALL, "Automatic Downloading:",	NULL, M_NONE, 0, "cl_allowDownload", &cr_bool },
+	{ MIF_CALL, "Splitscreen Mode:",		NULL, M_NONE, 0, "cg_splitviewVertical", &cr_splitvertical },
+	{ MIF_CALL, "Snow/Rain:",				NULL, M_NONE, 0, "cg_atmosphericEffects", &cr_atmeffects },
 };
 
 menuitem_t creditsmenu_items[] =
@@ -210,9 +257,9 @@ menuitem_t credits2menu_items[] =
 // Team Arena uses; Replay, Demo, Menu, Next
 menuitem_t postgamemenu_items[] =
 {
-	{ MIF_CALL, "Menu", endGame, M_NONE, 0 },
-	{ MIF_CALL|MIF_POPMENU, "Replay", restartMap, M_NONE, 0 },
-	{ MIF_CALL|MIF_POPMENU, "Next", restartMap, M_NONE, 0 }, // TODO: add next map logic
+	{ MIF_BIGTEXT|MIF_CALL, "Menu", endGame, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_CALL|MIF_POPMENU, "Replay", restartMap, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_CALL|MIF_POPMENU, "Next", restartMap, M_NONE, 0 }, // TODO: add next map logic
 };
 
 menuitem_t stubmenu_items[] =
@@ -254,7 +301,7 @@ menudef_t ui_menus[M_NUM_MENUS] = {
 	QMENUSTUB( playermenu, 0, "Player Setup" ),			// M_PLAYER
 	QMENUSTUB( controlsmenu, 0, "Controls" ),			// M_CONTROLS
 	QMENUSTUB( systemmenu, 0, "System" ),				// M_SYSTEM
-	QMENUSTUB( gameoptionsmenu, 0, "Game Options" ),	// M_GAME_OPTIONS
+	QMENUDEF( gameoptionsmenu, 0, "Game Options" ),	// M_GAME_OPTIONS
 	QMENUDEF( defaultsmenu, MF_DIALOG|MF_NOBACK, "Set to defaults?" ),	// M_DEFAULTS
 
 	// Team Arena stubs

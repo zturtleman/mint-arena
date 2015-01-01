@@ -117,9 +117,16 @@ void UI_PopMenu( currentMenu_t *current ) {
 	UI_BuildCurrentMenu( current );
 }
 
-// dir -1 = up, 1 = down
+// dir -1 = up, 1 = down, 2 = left, 4 = right
 void UI_MenuAdjustCursor( currentMenu_t *current, int dir ) {
-	int origial = current->selectedItem;
+	int original;
+
+	if ( dir == 2 || dir == 4 ) {
+		UI_MenuItemChangeValue( current, current->selectedItem, dir - 3 );
+		return;
+	}
+
+	original = current->selectedItem;
 
 	do {
 		current->selectedItem += dir;
@@ -130,20 +137,21 @@ void UI_MenuAdjustCursor( currentMenu_t *current, int dir ) {
 			current->selectedItem = current->numItems - 1;
 
 		// nothing was selectable...
-		if ( current->selectedItem == origial )
+		if ( current->selectedItem == original )
 			break;
 
 	} while ( !( current->items[ current->selectedItem ].flags & MIF_SELECTABLE ) );
 
-	if ( current->selectedItem != origial ) {
+	if ( current->selectedItem != original ) {
 		trap_S_StartLocalSound( uis.itemFocusSound, CHAN_LOCAL_SOUND );
 	}
 }
 
 void UI_MenuCursorPoint( currentMenu_t *current, int x, int y ) {
-	int origial = current->selectedItem;
+	int original;
 	int i;
 
+	original = current->selectedItem;
 	current->mouseItem = -1;
 
 	for ( i = 0; i < current->numItems; i++ ) {
@@ -160,14 +168,76 @@ void UI_MenuCursorPoint( currentMenu_t *current, int x, int y ) {
 		}
 	}
 
-	if ( current->selectedItem != origial ) {
+	if ( current->selectedItem != original ) {
 		trap_S_StartLocalSound( uis.itemFocusSound, CHAN_LOCAL_SOUND );
 	}
 }
 
+// returns qfalse if item is a cvar and did not change value
+qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) {
+	currentMenuItem_t *item;
+	float value;
+
+	item = &current->items[itemNum];
+
+	if ( !item->cvarName || !item->cvarRange ) {
+		return qtrue;
+	}
+
+	if ( item->cvarRange->numPairs > 0 ) {
+		item->cvarPair += dir;
+
+		if ( item->cvarPair >= item->cvarRange->numPairs )
+			item->cvarPair = 0;
+		else if ( item->cvarPair < 0 )
+			item->cvarPair = item->cvarRange->numPairs - 1;
+
+		value = item->cvarRange->pairs[ item->cvarPair ].value;
+	}
+	else
+	{
+		float min, max;
+		qboolean slider;//, ratioButton;
+
+		//value = item->vmCvar.value + dir;
+		value = trap_Cvar_VariableValue( item->cvarName ) + dir;
+
+		min = item->cvarRange->min;
+		max = item->cvarRange->max;
+
+		//ratioButton = item->cvarRange->integral && max == 1 && min == 0;
+		slider = !item->cvarRange->integral;
+
+		if ( slider ) {
+			if ( value < min || value > max ) {
+				// ZTM: TODO: AltUI: play buzz sound
+				return qfalse;
+			}
+		}
+		// ratio button, ..erm or any wrapping value
+		else if ( min != max ) {
+			// if cvar has min and max and out of range, wrap around
+			if ( value < min ) value = max;
+			if ( value > max ) value = min;
+		}
+	}
+
+	// FIXME: What about cases when it should not take affect until 'Apply' is clicked?
+	trap_Cvar_SetValue( item->cvarName, value );
+	trap_Cvar_Update( &item->vmCvar );
+
+	return qtrue;
+}
+
 void UI_MenuAction( currentMenu_t *current, int itemNum ) {
+	currentMenuItem_t item;
+
+	if ( !UI_MenuItemChangeValue( current, itemNum, 1 ) ) {
+		return;
+	}
+
 	// item is copied instead of a pointer to avoid issues when switching menus
-	currentMenuItem_t item = current->items[itemNum];
+	item = current->items[itemNum];
 
 	if ( item.flags & MIF_CALL ) {
 		if ( item.action ) {

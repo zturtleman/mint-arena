@@ -151,6 +151,32 @@ void	UI_KeyEvent( int key, qboolean down ) {
 			UI_MenuAdjustCursor( &currentMenu, 1 );
 			break;
 
+		case K_JOY_DPAD_LEFT:
+		case K_JOY_LEFTSTICK_LEFT:
+		case K_2JOY_DPAD_LEFT:
+		case K_2JOY_LEFTSTICK_LEFT:
+		case K_3JOY_DPAD_LEFT:
+		case K_3JOY_LEFTSTICK_LEFT:
+		case K_4JOY_DPAD_LEFT:
+		case K_4JOY_LEFTSTICK_LEFT:
+		case K_KP_LEFTARROW:
+		case K_LEFTARROW:
+			UI_MenuAdjustCursor( &currentMenu, 2 );
+			break;
+
+		case K_JOY_DPAD_RIGHT:
+		case K_JOY_LEFTSTICK_RIGHT:
+		case K_2JOY_DPAD_RIGHT:
+		case K_2JOY_LEFTSTICK_RIGHT:
+		case K_3JOY_DPAD_RIGHT:
+		case K_3JOY_LEFTSTICK_RIGHT:
+		case K_4JOY_DPAD_RIGHT:
+		case K_4JOY_LEFTSTICK_RIGHT:
+		case K_KP_RIGHTARROW:
+		case K_RIGHTARROW:
+			UI_MenuAdjustCursor( &currentMenu, 4 );
+			break;
+
 		case K_JOY_A:
 		case K_2JOY_A:
 		case K_3JOY_A:

@@ -206,8 +206,10 @@ menuitem_t defaultsmenu_items[] =
 };
 
 
+#ifndef MISSIONPACK_HUD
 static cvarRangePair_t cr_teamoverlayPairs[] = { { 0, "off" }, { 1, "upper right" }, { 2, "lower right" }, { 3, "lower left" } };
 static cvarRange_t cr_teamoverlay = { 0, 3, qtrue, cr_teamoverlayPairs, ARRAY_LEN(cr_teamoverlayPairs) };
+#endif
 
 static cvarRangePair_t cr_splitverticalPairs[] = { { 0, "horizontal" }, { 1, "vertical" } };
 static cvarRange_t cr_splitvertical = { 0, 1, qtrue, cr_splitverticalPairs, ARRAY_LEN(cr_splitverticalPairs) };
@@ -224,20 +226,39 @@ static cvarRange_t cr_boolInvert = { 0, 1, qtrue, cr_boolInvertPairs, ARRAY_LEN(
 static cvarRangePair_t cr_brassTimePairs[] = { { 0, "off" }, { 2500, "on" } };
 static cvarRange_t cr_brassTime = { 0, 1, qtrue, cr_brassTimePairs, ARRAY_LEN(cr_brassTimePairs) };
 
+static cvarRangePair_t cr_drawGunPairs[] = { { 0, "off" }, { 1, "right-handed" }, { 3, "centered" }, { 2, "left-handed" } };
+static cvarRange_t cr_drawGun = { 0, 3, qtrue, cr_drawGunPairs, ARRAY_LEN(cr_drawGunPairs) };
+
 menuitem_t gameoptionsmenu_items[] =
 {
 	//{ MIF_CALL, "Crosshair:",				NULL, M_NONE, 0, "cg_drawCrosshair", NULL }, // ZTM: TODO: draw crosshair shaders
 	{ MIF_CALL, "View Bobbing:",			NULL, M_NONE, 0, "cg_viewbob", &cr_bool },
 	{ MIF_CALL, "Simple Items:",			NULL, M_NONE, 0, "cg_simpleItems", &cr_bool },
 	{ MIF_CALL, "Marks on Walls:",			NULL, M_NONE, 0, "cg_marks", &cr_bool },
+	{ MIF_CALL, "Show Floating Scores:",	NULL, M_NONE, 0, "cg_scorePlums", &cr_bool }, // Note: From Q3TA
 	{ MIF_CALL, "Ejecting Brass:",			NULL, M_NONE, 0, "cg_brassTime", &cr_brassTime },
 	{ MIF_CALL, "Dynamic Lights:",			NULL, M_NONE, 0, "r_dynamiclight", &cr_bool },
 	{ MIF_CALL, "Identify Target:",			NULL, M_NONE, 0, "cg_drawCrosshairNames", &cr_bool },
-	{ MIF_CALL, "High Quality Sky:",		NULL, M_NONE, 0, "r_fastsky", &cr_boolInvert },
+	{ MIF_CALL, "Draw Gun:",				NULL, M_NONE, 0, "cg_drawGun", &cr_drawGun }, // Note: From Q3TA
+	{ MIF_CALL, "High Quality Sky:",		NULL, M_NONE, 0, "r_fastsky", &cr_boolInvert }, // Note: Q3TA changed this from High Quality Sky to Low Quality Sky (and flip logic)
 	{ MIF_CALL, "Sync Every Frame:",		NULL, M_NONE, 0, "r_finish", &cr_bool },
 	{ MIF_CALL, "Force Player Models:",		NULL, M_NONE, 0, "cg_forcemodel", &cr_bool },
+#ifdef MISSIONPACK_HUD // TA hud only have on/off
+	{ MIF_CALL, "Draw Team Overlay:",		NULL, M_NONE, 0, "cg_drawTeamOverlay", &cr_bool },
+#else
 	{ MIF_CALL, "Draw Team Overlay:",		NULL, M_NONE, 0, "cg_drawTeamOverlay", &cr_teamoverlay },
-	{ MIF_CALL, "Automatic Downloading:",	NULL, M_NONE, 0, "cl_allowDownload", &cr_bool },
+#endif
+	{ MIF_CALL, "Automatic Downloading:",	NULL, M_NONE, 0, "cl_allowDownload", &cr_bool }, // Note: Q3TA renamed to Auto Download
+	{ MIF_CALL, "Show Time:",				NULL, M_NONE, 0, "cg_drawTimer", &cr_bool }, // Note: From Q3TA
+#ifdef MISSIONPACK // Q3 doesn't have voice chats
+	{ MIF_CALL, "Voice Chat (audio):",		NULL, M_NONE, 0, "cg_noVoiceChats", &cr_boolInvert }, // was Voices Off, might be confused with VoIP
+	{ MIF_CALL, "Voice Chat (text):",		NULL, M_NONE, 0, "cg_noVoiceText", &cr_boolInvert }, // was Voice Text Off
+	{ MIF_CALL, "Voice Chat (taunts):",		NULL, M_NONE, 0, "cg_noTaunt", &cr_boolInvert }, // was Taunts Off
+#endif
+	{ MIF_CALL, "Team Chats Only:",			NULL, M_NONE, 0, "cg_teamChatsOnly", &cr_bool }, // Note: From Q3TA
+#ifdef MISSIONPACK // vanilla Q3 doesn't have videos in level shaders
+	{ MIF_CALL, "In Game Video:",			NULL, M_NONE, 0, "r_inGameVideo", &cr_bool }, // Note: From Q3TA
+#endif
 	{ MIF_CALL, "Splitscreen Mode:",		NULL, M_NONE, 0, "cg_splitviewVertical", &cr_splitvertical },
 	{ MIF_CALL, "Snow/Rain:",				NULL, M_NONE, 0, "cg_atmosphericEffects", &cr_atmeffects },
 };

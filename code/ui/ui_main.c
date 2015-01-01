@@ -2794,14 +2794,12 @@ static void UI_Update(const char *name) {
 }
 
 void UI_ForceMenuOff (void) {
-	trap_Mouse_SetState( 0, ( trap_Mouse_GetState( 0 ) & ~MOUSE_CGAME ) | MOUSE_CLIENT );
 	trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
 	trap_Cvar_SetValue( "cl_paused", 0 );
 	Menus_CloseAll();
 }
 
 void UI_EnterMenu (void) {
-	trap_Mouse_SetState( 0, ( trap_Mouse_GetState( 0 ) & ~MOUSE_CLIENT ) | MOUSE_CGAME );
 	trap_Key_SetCatcher( KEYCATCH_UI );
 	trap_Cvar_SetValue( "cl_paused", 1 );
 }

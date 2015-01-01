@@ -200,8 +200,8 @@ void UI_InitBannerFont( fontInfo_t *font ) {
 	font->glyphScale = 48.0f / PROPB_HEIGHT;
 
 	for ( i = 0; i < GLYPHS_PER_FONT; i++ ) {
-		if ( i >= 'A' && i <= 'Z' ) {
-			int ch = i - 'A';
+		if ( ( i >= 'A' && i <= 'Z' ) || ( i >= 'a' && i <= 'z' ) ) {
+			int ch = toupper( i ) - 'A';
 			fcol = (float)propMapB[ch][0] / 256.0f;
 			frow = (float)propMapB[ch][1] / 256.0f;
 			fwidth = (float)propMapB[ch][2] / 256.0f;

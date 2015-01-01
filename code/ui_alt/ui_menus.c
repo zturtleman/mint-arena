@@ -223,8 +223,8 @@ static cvarRange_t cr_bool = { 0, 1, qtrue, cr_boolPairs, ARRAY_LEN(cr_boolPairs
 static cvarRangePair_t cr_boolInvertPairs[] = { { 0, "on" }, { 1, "off" } };
 static cvarRange_t cr_boolInvert = { 0, 1, qtrue, cr_boolInvertPairs, ARRAY_LEN(cr_boolInvertPairs) };
 
-static cvarRangePair_t cr_brassTimePairs[] = { { 0, "off" }, { 2500, "on" } };
-static cvarRange_t cr_brassTime = { 0, 1, qtrue, cr_brassTimePairs, ARRAY_LEN(cr_brassTimePairs) };
+static cvarRangePair_t cr_brassTimePairs[] = { { 0, "off" }, { 1250, "short" }, { 2500, "long" } };
+static cvarRange_t cr_brassTime = { 0, 2500, qtrue, cr_brassTimePairs, ARRAY_LEN(cr_brassTimePairs) };
 
 static cvarRangePair_t cr_drawGunPairs[] = { { 0, "off" }, { 1, "right-handed" }, { 3, "centered" }, { 2, "left-handed" } };
 static cvarRange_t cr_drawGun = { 0, 3, qtrue, cr_drawGunPairs, ARRAY_LEN(cr_drawGunPairs) };
@@ -236,7 +236,7 @@ menuitem_t gameoptionsmenu_items[] =
 	{ MIF_CALL, "Simple Items:",			NULL, M_NONE, 0, "cg_simpleItems", &cr_bool },
 	{ MIF_CALL, "Marks on Walls:",			NULL, M_NONE, 0, "cg_marks", &cr_bool },
 	{ MIF_CALL, "Show Floating Scores:",	NULL, M_NONE, 0, "cg_scorePlums", &cr_bool }, // Note: From Q3TA
-	{ MIF_CALL, "Ejecting Brass:",			NULL, M_NONE, 0, "cg_brassTime", &cr_brassTime },
+	{ MIF_CALL, "Show Empty Shells:",		NULL, M_NONE, 0, "cg_brassTime", &cr_brassTime }, // was Ejecting Brass
 	{ MIF_CALL, "Dynamic Lights:",			NULL, M_NONE, 0, "r_dynamiclight", &cr_bool },
 	{ MIF_CALL, "Identify Target:",			NULL, M_NONE, 0, "cg_drawCrosshairNames", &cr_bool },
 	{ MIF_CALL, "Draw Gun:",				NULL, M_NONE, 0, "cg_drawGun", &cr_drawGun }, // Note: From Q3TA

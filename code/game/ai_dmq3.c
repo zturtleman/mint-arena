@@ -4571,7 +4571,6 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 	// if the bot is not blocked by anything
 	if (!moveresult->blocked) {
 		bs->notblocked_time = FloatTime();
-		bs->flags &= ~BFL_AVOIDRIGHT;
 		return;
 	}
 	// if stuck in a solid area
@@ -4603,6 +4602,9 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 				return;
 			}
 		}
+
+		// always try right side first
+		bs->flags &= ~BFL_AVOIDRIGHT;
 	}
 	// else if blocked by a bsp model
 	else if (entinfo.modelindex > 0 && entinfo.modelindex <= max_bspmodelindex) {

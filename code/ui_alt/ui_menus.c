@@ -31,13 +31,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "ui_local.h"
 
-#ifdef Q3_VM
-// shut the hell up about
-// warning: conversion from `pointer to void' to `pointer to void function(int)' is compiler dependent
-#undef NULL
-#define NULL 0
-#endif
-
 /*
 
 	Menu action functions

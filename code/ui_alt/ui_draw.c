@@ -497,7 +497,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 	// add back button
 	if ( current->numStacked && !( menuInfo->menuFlags & MF_NOBACK ) ) {
 		current->items[i].flags = MIF_BIGTEXT|MIF_POPMENU;
-		current->items[i].action = 0;//NULL; // FIXME: q3lcc is a bitch about the conversion
+		current->items[i].action = NULL;
 		current->items[i].menuid = M_NONE;
 		current->items[i].cvarName = NULL;
 		current->items[i].cvarRange = NULL;

@@ -667,7 +667,7 @@ void UI_Load(void) {
 	menuSet = CG_Cvar_VariableString("ui_menuFiles");
 
 	if (menu && menu->window.name) {
-		Q_strncpyz(lastName, menu->window.name,sizeof(lastName));
+		Q_strncpyz(lastName, menu->window.name, sizeof(lastName));
 	} else {
 		lastName[0] = '\0';
 	}
@@ -978,8 +978,8 @@ static void UI_DrawPlayerModel(rectDef_t *rect) {
 	vec3_t	moveangles;
 
 	  if (trap_Cvar_VariableValue("ui_Q3Model")) {
-	  strcpy(model, CG_Cvar_VariableString("model"));
-		strcpy(head, CG_Cvar_VariableString("headmodel"));
+		Q_strncpyz(model, CG_Cvar_VariableString("model"), sizeof(model));
+		Q_strncpyz(head, CG_Cvar_VariableString("headmodel"), sizeof(head));
 		if (!q3Model) {
 			q3Model = qtrue;
 			updateModel = qtrue;
@@ -987,9 +987,9 @@ static void UI_DrawPlayerModel(rectDef_t *rect) {
 		team[0] = '\0';
 	} else {
 
-		strcpy(team, CG_Cvar_VariableString("ui_teamName"));
-		strcpy(model, CG_Cvar_VariableString("team_model"));
-		strcpy(head, CG_Cvar_VariableString("team_headmodel"));
+		Q_strncpyz(team, CG_Cvar_VariableString("ui_teamName"), sizeof(team));
+		Q_strncpyz(model, CG_Cvar_VariableString("team_model"), sizeof(model));
+		Q_strncpyz(head, CG_Cvar_VariableString("team_headmodel"), sizeof(head));
 		if (q3Model) {
 			q3Model = qfalse;
 			updateModel = qtrue;
@@ -1127,8 +1127,8 @@ static void UI_DrawOpponent(rectDef_t *rect) {
   
 	if (updateOpponentModel) {
 		
-		strcpy(model, CG_Cvar_VariableString("ui_opponentModel"));
-	  strcpy(headmodel, CG_Cvar_VariableString("ui_opponentModel"));
+		Q_strncpyz(model, CG_Cvar_VariableString("ui_opponentModel"), sizeof(model));
+		Q_strncpyz(headmodel, CG_Cvar_VariableString("ui_opponentModel"), sizeof(headmodel));
 		team[0] = '\0';
 
   	memset( &info2, 0, sizeof(uiPlayerInfo_t) );
@@ -3090,8 +3090,8 @@ static void UI_RunMenuScript(char **args) {
 			if (String_Parse(args, &orders)) {
 				int selectedPlayer = trap_Cvar_VariableValue("cg_selectedPlayer");
 				if (selectedPlayer < uiInfo.myTeamCount) {
-					strcpy(buff, orders);
-					trap_Cmd_ExecuteText( EXEC_APPEND, va(buff, uiInfo.teamPlayerNums[selectedPlayer]) );
+					Com_sprintf( buff, sizeof( buff ), orders, uiInfo.teamPlayerNums[selectedPlayer] );
+					trap_Cmd_ExecuteText( EXEC_APPEND, buff );
 					trap_Cmd_ExecuteText( EXEC_APPEND, "\n" );
 				} else {
 					int i;
@@ -3099,8 +3099,8 @@ static void UI_RunMenuScript(char **args) {
 						if (Q_stricmp(CG_Cvar_VariableString("name"), uiInfo.teamPlayerNames[i]) == 0) {
 							continue;
 						}
-						strcpy(buff, orders);
-						trap_Cmd_ExecuteText( EXEC_APPEND, va(buff, uiInfo.teamPlayerNames[i]) );
+						Com_sprintf( buff, sizeof( buff ), orders, uiInfo.teamPlayerNames[i] );
+						trap_Cmd_ExecuteText( EXEC_APPEND, buff );
 						trap_Cmd_ExecuteText( EXEC_APPEND, "\n" );
 					}
 				}
@@ -3121,8 +3121,8 @@ static void UI_RunMenuScript(char **args) {
 			if (String_Parse(args, &orders)) {
 				int selectedPlayer = trap_Cvar_VariableValue("cg_selectedPlayer");
 				if (selectedPlayer < uiInfo.myTeamCount) {
-					strcpy(buff, orders);
-					trap_Cmd_ExecuteText( EXEC_APPEND, va(buff, uiInfo.teamPlayerNums[selectedPlayer]) );
+					Com_sprintf( buff, sizeof( buff ), orders, uiInfo.teamPlayerNums[selectedPlayer] );
+					trap_Cmd_ExecuteText( EXEC_APPEND, buff );
 					trap_Cmd_ExecuteText( EXEC_APPEND, "\n" );
 				}
 				UI_ForceMenuOff();
@@ -5137,7 +5137,7 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 	if (!Q_stricmp(cstate.servername,"localhost")) {
 		UI_Text_PaintCenter(centerPoint, yStart + 48, scale, colorWhite, "Starting up...", ITEM_TEXTSTYLE_SHADOWEDMORE);
 	} else {
-		strcpy(text, va("Connecting to %s", cstate.servername));
+		Com_sprintf(text, sizeof(text), "Connecting to %s", cstate.servername);
 		UI_Text_PaintCenter(centerPoint, yStart + 48, scale, colorWhite,text , ITEM_TEXTSTYLE_SHADOWEDMORE);
 	}
 

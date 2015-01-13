@@ -193,7 +193,7 @@ static void UI_SPLevelMenu_SetBots( void ) {
 		while( *p && *p == ' ' ) {
 			p++;
 		}
-		if( !p ) {
+		if( !*p ) {
 			break;
 		}
 

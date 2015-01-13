@@ -3096,10 +3096,10 @@ static void UI_RunMenuScript(char **args) {
 				} else {
 					int i;
 					for (i = 0; i < uiInfo.myTeamCount; i++) {
-						if (Q_stricmp(CG_Cvar_VariableString("name"), uiInfo.teamPlayerNames[i]) == 0) {
+						if (uiInfo.playerNumber == uiInfo.teamPlayerNums[i]) {
 							continue;
 						}
-						Com_sprintf( buff, sizeof( buff ), orders, uiInfo.teamPlayerNames[i] );
+						Com_sprintf( buff, sizeof( buff ), orders, uiInfo.teamPlayerNums[i] );
 						trap_Cmd_ExecuteText( EXEC_APPEND, buff );
 						trap_Cmd_ExecuteText( EXEC_APPEND, "\n" );
 					}

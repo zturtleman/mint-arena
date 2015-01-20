@@ -63,6 +63,10 @@ typedef struct {
 	qhandle_t frameRight;
 #endif
 
+	qhandle_t sliderBar;
+	qhandle_t sliderButton;
+	qhandle_t sliderButtonSelected;
+
 	qhandle_t dialogSmallBackground;
 	qhandle_t dialogLargeBackground;
 
@@ -81,6 +85,9 @@ void UI_LoadAssets( void ) {
 	uiAssets.menuBackgroundE = trap_R_RegisterShaderNoMip( "menuback_e" );
 	uiAssets.levelShotDetail = trap_R_RegisterShaderNoMip( "levelshotdetail" );
 	uiAssets.menuBackgroundNoLogo = uiAssets.menuBackground;
+	uiAssets.sliderBar = trap_R_RegisterShaderNoMip( "ui/assets/slider2" );
+	uiAssets.sliderButton = trap_R_RegisterShaderNoMip( "ui/assets/sliderbutt_1" );
+	uiAssets.sliderButtonSelected = uiAssets.sliderButton;
 #else
 	uiAssets.bannerModel = trap_R_RegisterModel( "models/mapobjects/banner/banner5.md3" );
 	uiAssets.menuBackground = trap_R_RegisterShaderNoMip( "menuback" );
@@ -89,6 +96,9 @@ void UI_LoadAssets( void ) {
 	uiAssets.frameLeft = trap_R_RegisterShaderNoMip( "menu/art/frame2_l" );
 	uiAssets.frameLeftFilled = trap_R_RegisterShaderNoMip( "menu/art/frame1_l" );
 	uiAssets.frameRight = trap_R_RegisterShaderNoMip( "menu/art/frame1_r" );
+	uiAssets.sliderBar = trap_R_RegisterShaderNoMip( "menu/art/slider2" );
+	uiAssets.sliderButton = trap_R_RegisterShaderNoMip( "menu/art/sliderbutt_0" );
+	uiAssets.sliderButtonSelected = trap_R_RegisterShaderNoMip( "menu/art/sliderbutt_1" );
 #endif
 
 	uiAssets.dialogSmallBackground = trap_R_RegisterShaderNoMip( "menu/art/cut_frame" );
@@ -173,12 +183,35 @@ void UI_DrawMainMenuBackground( void ) {
 	CG_DrawString( SCREEN_WIDTH / 2, SCREEN_HEIGHT - SMALLCHAR_HEIGHT*2, MENU_COPYRIGHT, UI_CENTER|UI_SMALLFONT, color_copyright );
 }
 
+void UI_DrawSlider( float x, float y, float min, float max, float value, qboolean selected ) {
+	float frac;
+	qhandle_t hShader;
+
+	// draw the background
+	CG_DrawPic( x, y, 96, 16, uiAssets.sliderBar );
+
+	// draw the button
+	if ( selected )
+		hShader = uiAssets.sliderButtonSelected;
+	else
+		hShader = uiAssets.sliderButton;
+
+	// position of slider button
+	frac = ( value - min ) / ( max - min );
+
+	CG_DrawPic( x + 8 + ( 96 - 16 ) * frac - 2, y - 2, 12, 20, hShader );
+
+	// draw value
+	CG_DrawString( x + 96 + 8, y, va("%g", value), UI_DROPSHADOW|UI_GIANTFONT|selected?UI_PULSE:0, colorWhite/*drawcolor*/ );
+}
+
 void UI_DrawCurrentMenu( currentMenu_t *current ) {
 	int i;
 	qboolean drawFramePics = qtrue;
 	vec4_t drawcolor;
 	int style;
 	menudef_t	*menuInfo;
+	currentMenuItem_t *item;
 
 	if ( !current->menu ) {
 		return;
@@ -215,27 +248,27 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 	// doesn't have a special header handling, use generic
 	if ( menuInfo->header ) {
 #ifdef Q3UIFONTS
-		UI_DrawBannerString( current->header.x, current->header.y, menuInfo->header, 0, color_header );
+		UI_DrawBannerString( current->header.captionPos.x, current->header.captionPos.y, menuInfo->header, 0, color_header );
 #else
-		CG_DrawString( current->header.x, current->header.y, menuInfo->header, UI_DROPSHADOW|UI_GIANTFONT, color_header );
+		CG_DrawString( current->header.captionPos.x, current->header.captionPos.y, menuInfo->header, UI_DROPSHADOW|UI_GIANTFONT, color_header );
 #endif
 	}
 
-	for ( i = 0; i < current->numItems; i++ ) {
+	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
 		style = 0;
 
-		if ( current->items[i].flags & MIF_BIGTEXT ) {
+		if ( item->flags & MIF_BIGTEXT ) {
 			Vector4Copy( color_bigtext, drawcolor );
 		} else {
 			Vector4Copy( color_smalltext, drawcolor );
 		}
 
-		if ( !( current->items[i].flags & MIF_SELECTABLE ) ) {
+		if ( !( item->flags & MIF_SELECTABLE ) ) {
 			VectorScale( drawcolor, 0.7f, drawcolor );
 		} else if ( current->selectedItem == i ) {
 			style |= UI_PULSE;
 
-			if ( current->items[i].flags & MIF_BIGTEXT ) {
+			if ( item->flags & MIF_BIGTEXT ) {
 				Vector4Copy( color_bigSelected, drawcolor );
 			} else {
 				Vector4Copy( color_smallSelected, drawcolor );
@@ -243,54 +276,62 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 		}
 
 
-		if ( current->items[i].flags & MIF_BIGTEXT ) {
+		if ( item->flags & MIF_BIGTEXT ) {
 #ifdef Q3UIFONTS
-			UI_DrawProportionalString( current->items[i].x, current->items[i].y, current->items[i].caption, style, drawcolor );
+			UI_DrawProportionalString( item->captionPos.x, item->captionPos.y, item->caption, style, drawcolor );
 #else
-			CG_DrawString( current->items[i].x, current->items[i].y, current->items[i].caption, UI_DROPSHADOW|UI_GIANTFONT|style, drawcolor );
+			CG_DrawString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|UI_GIANTFONT|style, drawcolor );
 #endif
 		} else {
-			CG_DrawString( current->items[i].x, current->items[i].y, current->items[i].caption, UI_DROPSHADOW|UI_SMALLFONT|style, drawcolor );
+			CG_DrawString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|UI_SMALLFONT|style, drawcolor );
 		}
 
 		// draw cvar value
-		if ( current->items[i].cvarName ) {
+		if ( item->cvarName ) {
 			float x;
 			const char *string;
 
 			// Q3A bitmap prop font doesn't have this glyph
-			if ( current->selectedItem == i && !( current->items[i].flags & MIF_BIGTEXT ) ) {
+			if ( current->selectedItem == i && !( item->flags & MIF_BIGTEXT ) ) {
 				char cursorStr[2] = { 13, '\0' };
 
-				x = current->items[i].x + current->items[i].width + 2;
+				x = item->captionPos.x + item->captionPos.width + 2;
 
-				if ( current->items[i].flags & MIF_BIGTEXT ) {
+				if ( item->flags & MIF_BIGTEXT ) {
 #ifdef Q3UIFONTS
-					UI_DrawProportionalString( x, current->items[i].y, cursorStr, UI_BLINK|style, drawcolor );
+					UI_DrawProportionalString( x, item->captionPos.y, cursorStr, UI_BLINK|style, drawcolor );
 #else
-					CG_DrawString( x, current->items[i].y, cursorStr, UI_BLINK|UI_GIANTFONT|style, drawcolor );
+					CG_DrawString( x, item->captionPos.y, cursorStr, UI_BLINK|UI_GIANTFONT|style, drawcolor );
 #endif
 				} else {
-					CG_DrawString( x, current->items[i].y, cursorStr, UI_BLINK|UI_SMALLFONT|style, drawcolor );
+					CG_DrawString( x, item->captionPos.y, cursorStr, UI_BLINK|UI_SMALLFONT|style, drawcolor );
 				}
 			}
 
-			if ( current->items[i].cvarRange && current->items[i].cvarRange->numPairs > 0 ) {
-				string = current->items[i].cvarRange->pairs[ current->items[i].cvarPair ].string;
-			} else {
-				string = current->items[i].vmCvar.string;
+			// x position for cvar value
+			x = item->captionPos.x + item->captionPos.width + BIGCHAR_WIDTH;
+
+			if ( UI_ItemIsSlider( item ) ) {
+				UI_DrawSlider( x, item->captionPos.y,
+						item->cvarRange->min, item->cvarRange->max,
+						item->vmCvar.value, ( style & UI_PULSE ) );
+				continue;
 			}
 
-			x = current->items[i].x + current->items[i].width + BIGCHAR_WIDTH;
+			if ( item->cvarRange && item->cvarRange->numPairs > 0 ) {
+				string = item->cvarRange->pairs[ item->cvarPair ].string;
+			} else {
+				string = item->vmCvar.string;
+			}
 
-			if ( current->items[i].flags & MIF_BIGTEXT ) {
+			if ( item->flags & MIF_BIGTEXT ) {
 #ifdef Q3UIFONTS
-				UI_DrawProportionalString( x, current->items[i].y, string, style, drawcolor );
+				UI_DrawProportionalString( x, item->captionPos.y, string, style, drawcolor );
 #else
-				CG_DrawString( x, current->items[i].y, string, UI_DROPSHADOW|UI_GIANTFONT|style, drawcolor );
+				CG_DrawString( x, item->captionPos.y, string, UI_DROPSHADOW|UI_GIANTFONT|style, drawcolor );
 #endif
 			} else {
-				CG_DrawString( x, current->items[i].y, string, UI_DROPSHADOW|UI_SMALLFONT|style, drawcolor );
+				CG_DrawString( x, item->captionPos.y, string, UI_DROPSHADOW|UI_SMALLFONT|style, drawcolor );
 			}
 		}
 	}
@@ -303,9 +344,10 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 	int i, x, y = 0, horizontalGap = BIGCHAR_WIDTH, verticalGap = 2;
 	int	numHeaders = 0, totalWidth[MAX_MENU_HEADERS] = {0}, totalHeight = 0;
 	int headerBottom = -1;
-	menuitem_t *item;
 	qboolean horizontalMenu = qfalse;
 	menudef_t	*menuInfo;
+	menuitem_t	*itemInfo;
+	currentMenuItem_t *item;
 
 	if ( !current->menu ) {
 		return;
@@ -315,15 +357,15 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 
 	if ( menuInfo->header ) {
 #ifdef Q3UIFONTS // ug, dialogs need to use prop font
-		current->header.width = UI_BannerStringWidth( menuInfo->header );
+		current->header.captionPos.width = UI_BannerStringWidth( menuInfo->header );
 #else
-		current->header.width = CG_DrawStrlen( menuInfo->header, UI_GIANTFONT );
+		current->header.captionPos.width = CG_DrawStrlen( menuInfo->header, UI_GIANTFONT );
 #endif
-		current->header.x = ( SCREEN_WIDTH - current->header.width ) / 2;
-		current->header.y = 10;
-		current->header.height = BIGCHAR_HEIGHT;
+		current->header.captionPos.x = ( SCREEN_WIDTH - current->header.captionPos.width ) / 2;
+		current->header.captionPos.y = 10;
+		current->header.captionPos.height = BIGCHAR_HEIGHT;
 
-		headerBottom = current->header.y + current->header.height;
+		headerBottom = current->header.captionPos.y + current->header.captionPos.height;
 	} else {
 		Com_Memset( &current->header, 0, sizeof ( current->header ) );
 		headerBottom = 0;
@@ -337,7 +379,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 #endif
 
 	if ( menuInfo->menuFlags & MF_DIALOG ) {
-		current->header.y = 204;
+		current->header.captionPos.y = 204;
 		headerBottom = 265;
 		horizontalMenu = qtrue;
 	} else if ( menuInfo->menuFlags & MF_POSTGAME ) {
@@ -349,25 +391,63 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 #endif
 	}
 
+	//
+	// Convert item info
+	//
+	item = current->items;
+	itemInfo = menuInfo->items;
+	for ( i = 0; i < menuInfo->numItems; i++, itemInfo++, item++ ) {
+		item->flags = itemInfo->flags;
+		item->action = itemInfo->action;
+		item->menuid = itemInfo->menuid;
+		item->cvarName = itemInfo->cvarName;
+		item->cvarRange = itemInfo->cvarRange;
+		item->caption = itemInfo->caption;
+		item->captionPos.y = itemInfo->y;
+		item->captionPos.x = 0;
 
-	//
-	// Set item width/height and calculate total width/height
-	//
-	for ( i = 0, item = menuInfo->items; i < menuInfo->numItems; i++, item++ ) {
 		if ( item->flags & MIF_BIGTEXT ) {
 #ifdef Q3UIFONTS
-			current->items[i].width = UI_ProportionalStringWidth( item->caption );
-			current->items[i].height = PROP_HEIGHT;
+			item->captionPos.width = UI_ProportionalStringWidth( item->caption );
+			item->captionPos.height = PROP_HEIGHT;
 #else
-			current->items[i].width = CG_DrawStrlen( item->caption, UI_GIANTFONT );
-			current->items[i].height = GIANTCHAR_HEIGHT;
+			item->captionPos.width = CG_DrawStrlen( item->caption, UI_GIANTFONT );
+			item->captionPos.height = GIANTCHAR_HEIGHT;
 #endif
 		} else {
-			current->items[i].width = CG_DrawStrlen( item->caption, UI_SMALLFONT );
-			current->items[i].height = SMALLCHAR_HEIGHT;
+			item->captionPos.width = CG_DrawStrlen( item->caption, UI_SMALLFONT );
+			item->captionPos.height = SMALLCHAR_HEIGHT;
 		}
 
+		if ( UI_ItemIsSlider( item ) ) {
+			item->clickPos.x = 0;
+			item->clickPos.y = 0;
+			item->clickPos.width = item->captionPos.width + BIGCHAR_WIDTH + 96;
+			item->clickPos.height = 20;
+		} else {
+			item->clickPos.x = 0;
+			item->clickPos.y = 0;
+			item->clickPos.width = item->captionPos.width;
+			item->clickPos.height = item->captionPos.height;
+		}
 
+		if ( item->flags & MIF_NEXTBUTTON ) {
+			// Fixed place in lower right
+			item->captionPos.x = SCREEN_WIDTH - item->captionPos.width - 10;
+			item->captionPos.y = SCREEN_HEIGHT - item->captionPos.height - 10;
+
+			item->clickPos.x = item->captionPos.x;
+			item->clickPos.y = item->captionPos.y;
+		}
+	}
+
+	current->numItems = i;
+
+	//
+	//  Calculate total width/height
+	//
+	numHeaders = 0;
+	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
 		if ( item->flags & MIF_HEADER ) {
 			numHeaders++;
 
@@ -376,27 +456,22 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			}
 		}
 
-		totalWidth[numHeaders] += current->items[i].width;
-		if ( i != menuInfo->numItems - 1 && !(menuInfo->items[i+1].flags & MIF_HEADER) ) {
+		totalWidth[numHeaders] += item->captionPos.width;
+		if ( i != current->numItems - 1 && !(current->items[i+1].flags & MIF_HEADER) ) {
 			totalWidth[numHeaders] += horizontalGap;
 		}
 
-		totalHeight += current->items[i].height + verticalGap;
+		totalHeight += item->captionPos.height + verticalGap;
 	}
 
+	//
+	// Set item x and y
+	//
+	// FIXME: this section is really ugly
 	numHeaders = 0;
-	for ( i = 0, item = menuInfo->items; i < menuInfo->numItems; i++, item++ ) {
-
+	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
 		if ( item->flags & MIF_NEXTBUTTON ) {
 			// Fixed place in lower right
-			current->items[i].flags = item->flags;
-			current->items[i].action = item->action;
-			current->items[i].menuid = item->menuid;
-			current->items[i].cvarName = item->cvarName;
-			current->items[i].cvarRange = item->cvarRange;
-			current->items[i].caption = item->caption;
-			current->items[i].y = SCREEN_HEIGHT - current->items[i].height - 10;
-			current->items[i].x = SCREEN_WIDTH - current->items[i].width - 10;
 			continue;
 		}
 
@@ -404,43 +479,41 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			numHeaders++;
 			x = (SCREEN_WIDTH - totalWidth[numHeaders]) / 2;
 
-			if ( item->y != 0 ) {
-				y = item->y;
+			if ( item->captionPos.y != 0 ) {
+				y = item->captionPos.y;
 			} else if ( i == 0 ) {
 				y = headerBottom;
 			} else {
-				y += current->items[i-1].height + verticalGap;
+				y += current->items[i-1].captionPos.height + verticalGap;
 			}
 
-			current->items[i].flags = item->flags;
-			current->items[i].action = item->action;
-			current->items[i].menuid = item->menuid;
-			current->items[i].cvarName = item->cvarName;
-			current->items[i].cvarRange = item->cvarRange;
-			current->items[i].caption = item->caption;
-			current->items[i].y = y;
-			current->items[i].x = (SCREEN_WIDTH - current->items[i].width) / 2;
+			// uses absolute position because y might already be set to absolute
+			item->captionPos.y = y;
+			item->captionPos.x = (SCREEN_WIDTH - item->captionPos.width) / 2;
+
+			// clickable position is relative
+			item->clickPos.x += x;
+			item->clickPos.y += y;
 
 			// put items below header
-			y += current->items[i].height + verticalGap;
+			y += item->captionPos.height + verticalGap;
 
 			continue;
 		} else if ( numHeaders ) {
 			if ( i > 0 && !( current->items[i-1].flags & MIF_HEADER ) )
-				x += current->items[i-1].width + horizontalGap;
+				x += current->items[i-1].captionPos.width + horizontalGap;
 
-			if ( item->y != 0 ) {
-				y = item->y;
+			if ( item->captionPos.y != 0 ) {
+				y = item->captionPos.y;
 			}
 
-			current->items[i].flags = item->flags;
-			current->items[i].action = item->action;
-			current->items[i].menuid = item->menuid;
-			current->items[i].cvarName = item->cvarName;
-			current->items[i].cvarRange = item->cvarRange;
-			current->items[i].caption = item->caption;
-			current->items[i].y = y;
-			current->items[i].x = x;
+			// uses absolute position because y might already be set to absolute
+			item->captionPos.x = x;
+			item->captionPos.y = y;
+
+			// clickable position is relative
+			item->clickPos.x += x;
+			item->clickPos.y += y;
 			continue;
 		}
 
@@ -451,109 +524,114 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 
 				//if ( menuInfo->menuFlags & MF_DIALOG ) {
 					y = headerBottom;
-				/*} else if ( item->y != 0 ) {
-					y = item->y;
+				/*} else if ( item->captionPos.y != 0 ) {
+					y = item->captionPos.y;
 				} else {
 					// center y
 					y = headerBottom + (SCREEN_HEIGHT - headerBottom - totalHeight) / 2;
 				}*/
 			} else {
-				x += current->items[i-1].width + horizontalGap;
-				if ( item->y != 0 ) {
-					y = item->y;
+				x += current->items[i-1].captionPos.width + horizontalGap;
+				if ( item->captionPos.y != 0 ) {
+					y = item->captionPos.y;
 				}
 			}
 		} else {
-			if ( item->y != 0 ) {
-				y = item->y;
+			if ( item->captionPos.y != 0 ) {
+				y = item->captionPos.y;
 			} else if ( i == 0 ) {
 				// center Y
 				y = headerBottom + (SCREEN_HEIGHT - headerBottom - totalHeight) / 2;
 			} else {
-				y += current->items[i-1].height + verticalGap;
+				y += current->items[i-1].captionPos.height + verticalGap;
 			}
 
 			if ( item->cvarName ) {
 				// right align HACK for M_GAME_OPTIONS
-				x = SCREEN_WIDTH / 2 + totalWidth[0] / menuInfo->numItems / 6 - current->items[i].width;
+				x = SCREEN_WIDTH / 2 + totalWidth[0] / menuInfo->numItems / 6 - item->captionPos.width;
 			} else {
 				// center
-				x = (SCREEN_WIDTH - current->items[i].width) / 2;
+				x = (SCREEN_WIDTH - item->captionPos.width) / 2;
 			}
 		}
 
-		current->items[i].flags = item->flags;
-		current->items[i].action = item->action;
-		current->items[i].menuid = item->menuid;
-		current->items[i].cvarName = item->cvarName;
-		current->items[i].cvarRange = item->cvarRange;
-		current->items[i].caption = item->caption;
-		current->items[i].y = y;
-		current->items[i].x = x;
-	}
+		// uses absolute position because y might already be set to absolute
+		item->captionPos.x = x;
+		item->captionPos.y = y;
 
-	current->numItems = i;
+		// clickable position is relative
+		item->clickPos.x += x;
+		item->clickPos.y += y;
+	}
 
 	// add back button
 	if ( current->numStacked && !( menuInfo->menuFlags & MF_NOBACK ) ) {
-		current->items[i].flags = MIF_BIGTEXT|MIF_POPMENU;
-		current->items[i].action = NULL;
-		current->items[i].menuid = M_NONE;
-		current->items[i].cvarName = NULL;
-		current->items[i].cvarRange = NULL;
+		item = &current->items[current->numItems];
+		item->flags = MIF_BIGTEXT|MIF_POPMENU;
+		item->action = NULL;
+		item->menuid = M_NONE;
+		item->cvarName = NULL;
+		item->cvarRange = NULL;
 
 #ifdef MISSIONPACK
 		if ( current->numStacked == 1 )
-			current->items[i].caption = "Exit to Main Menu";
+			item->caption = "Exit to Main Menu";
 		else
 #endif
-		current->items[i].caption = "Back";
+		item->caption = "Back";
 
 		// note: assumes MIF_BIGTEXT
 #ifdef Q3UIFONTS
-		current->items[i].width = UI_ProportionalStringWidth( current->items[i].caption );
-		current->items[i].height = PROP_HEIGHT;
+		item->captionPos.width = UI_ProportionalStringWidth( item->caption );
+		item->captionPos.height = PROP_HEIGHT;
 #else
-		current->items[i].width = CG_DrawStrlen( current->items[i].caption, UI_GIANTFONT );
-		current->items[i].height = GIANTCHAR_HEIGHT;
+		item->captionPos.width = CG_DrawStrlen( item->caption, UI_GIANTFONT );
+		item->captionPos.height = GIANTCHAR_HEIGHT;
 #endif
 
 #if 1 // Fixed place in lower left
-		current->items[i].y = SCREEN_HEIGHT - current->items[i].height - 10;
-		current->items[i].x = 10;
+		item->captionPos.y = SCREEN_HEIGHT - item->captionPos.height - 10;
+		item->captionPos.x = 10;
 #else // fake next of menu item (though it's not vertically centered by the above numItems code)
 		if ( i > 0 ) {
-			y += current->items[i-1].height + verticalGap;
+			y += current->items[i-1].captionPos.height + verticalGap;
 		}
-		current->items[i].y = y;
-		current->items[i].x = (SCREEN_WIDTH - current->items[i].width) / 2;
+		item->captionPos.y = y;
+		item->captionPos.x = (SCREEN_WIDTH - item->captionPos.width) / 2;
 #endif
+
+		item->clickPos.x = item->captionPos.x;
+		item->clickPos.y = item->captionPos.y;
+		item->clickPos.width = item->captionPos.width;
+		item->clickPos.height = item->captionPos.height;
 
 		i++;
 		current->numItems++;
 	}
 
+	//
 	// setup cvar value name indexes
-	for ( i = 0; i < current->numItems; i++ ) {
-		current->items[i].cvarPair = 0;
+	//
+	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
+		item->cvarPair = 0;
 
-		if ( current->items[i].cvarName ) {
-			trap_Cvar_Register( &current->items[i].vmCvar, current->items[i].cvarName, "", 0 );
+		if ( item->cvarName ) {
+			trap_Cvar_Register( &item->vmCvar, item->cvarName, "", 0 );
 
-			if ( current->items[i].cvarRange ) {
+			if ( item->cvarRange ) {
 				float dist, bestDist = 10000;
 				int closestPair = 0;
 				int pair;
 
-				for ( pair = 0; pair < current->items[i].cvarRange->numPairs; pair++ ) {
-					dist = fabs( current->items[i].vmCvar.value - current->items[i].cvarRange->pairs[ pair ].value );
+				for ( pair = 0; pair < item->cvarRange->numPairs; pair++ ) {
+					dist = fabs( item->vmCvar.value - item->cvarRange->pairs[ pair ].value );
 					if ( dist < bestDist ) {
 						bestDist = dist;
 						closestPair = pair;
 					}
 				}
 
-				current->items[i].cvarPair = closestPair;
+				item->cvarPair = closestPair;
 			}
 		}
 	}

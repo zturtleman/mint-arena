@@ -48,6 +48,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define MAIN_MUSIC		"music/sonic1.wav"
 #define ITEM_ACTION_SOUND	"sound/misc/kcaction.wav" // from TA .menu item action scripts
 #define ITEM_FOCUS_SOUND	"sound/misc/menu2.wav" // from TA main.menu itemFocusSound
+#define ITEM_WARN_SOUND	"sound/misc/menu4.wav" // FIXME: what sound for TA? does it use this behavior?
 #define MENU_POP_SOUND	"sound/misc/tim_pump.wav" // from TA main.menu onOpen script
 
 #define MENU_COPYRIGHT "Quake III: Team Arena Copyright 2000 Id Software, Inc. All rights reserved"
@@ -63,12 +64,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 //#define MAIN_MUSIC		"music/sonic2.wav" // NOTE: Q3 doesn't actually have menu music
 #define ITEM_ACTION_SOUND	"sound/misc/menu1.wav" // q3_ui: menu_in_sound
 #define ITEM_FOCUS_SOUND	"sound/misc/menu2.wav" // q3_ui: menu_move_sound
+#define ITEM_WARN_SOUND	"sound/misc/menu4.wav" // q3_ui: menu_buzz_sound
 #define MENU_POP_SOUND	"sound/misc/menu3.wav" // q3_ui: menu_out_sound
-
-//	menu_in_sound	= trap_S_RegisterSound( "sound/misc/menu1.wav", qfalse );
-//	menu_move_sound	= trap_S_RegisterSound( "sound/misc/menu2.wav", qfalse );
-//	menu_out_sound	= trap_S_RegisterSound( "sound/misc/menu3.wav", qfalse );
-//	menu_buzz_sound	= trap_S_RegisterSound( "sound/misc/menu4.wav", qfalse );
 
 #define MENU_COPYRIGHT "Quake III Arena(c) 1999-2000, Id Software, Inc.  All Rights Reserved"
 
@@ -140,12 +137,14 @@ typedef struct {
 
 } cvarRangePair_t;
 
-// ZTM: FIXME:? Either min/max/integral or pairs/numPairs is used.
+// if pairs is set, item will loop through values and display text from pairs
+// otherwise it's treated as a slider (min, max, stepSize)
+// ZTM: FIXME:? Either min/max/stepSize or pairs/numPairs is used.
 // So... having there together seems like it might be confusing/waste of code in ui_menus.c.
 typedef struct {
 	float min;
 	float max;
-	qboolean integral;
+	float stepSize;
 
 	cvarRangePair_t *pairs;
 	int numPairs;
@@ -186,6 +185,10 @@ typedef struct {
 */
 
 typedef struct {
+	float x, y, width, height;
+} region_t;
+
+typedef struct {
 	// copied from menuitem_t (although it's generated for back button)
 	int				flags;
 	const char		*caption;
@@ -195,7 +198,9 @@ typedef struct {
 	cvarRange_t		*cvarRange;
 
 	// unique
-	float			x, y, width, height;
+	region_t		captionPos;
+	region_t		clickPos;	// bbox for slider or same as cation rect
+	//float			x, y, width, height;
 	//float			cvarValue;	// if cvarRange->numPairs > 0 it's an index, otherwise it's the clamped value for slider
 	vmCvar_t		vmCvar;
 	int				cvarPair;
@@ -215,6 +220,7 @@ typedef struct {
 	menuId_t	menu;
 	int			selectedItem;
 	int			mouseItem; // item mouse points to. -1 if none.
+	qboolean	mouseClickDown; // for click and drag sliders, mouseItem will be set to item
 
 	// info generated from menudef_t
 	currentMenuItem_t	header;
@@ -242,6 +248,7 @@ typedef struct {
 
 	qhandle_t itemActionSound;
 	qhandle_t itemFocusSound;
+	qhandle_t itemWarnSound;
 	qhandle_t menuPopSound;
 
 	qboolean startedMusic;
@@ -259,13 +266,22 @@ void UI_BuildCurrentMenu( currentMenu_t *current );
 void UI_DrawCurrentMenu( currentMenu_t *current );
 
 // ui_logic.c
+typedef enum {
+	MACTION_PRESS,
+	MACTION_DRAG,
+	MACTION_RELEASE,
+
+} mouseActionState_t;
+
 void UI_SetMenu( currentMenu_t *current, menuId_t menu );
 void UI_PushMenu( currentMenu_t *current, menuId_t menu );
 void UI_PopMenu( currentMenu_t *current );
 void UI_MenuAdjustCursor( currentMenu_t *current, int dir );
 void UI_MenuCursorPoint( currentMenu_t *current, int x, int y );
 void UI_MenuAction( currentMenu_t *current, int itemNum );
+qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, mouseActionState_t state );
 qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir );
+qboolean UI_ItemIsSlider( currentMenuItem_t *item );
 
 
 // ui_fonts.c

@@ -147,7 +147,7 @@ cvarRangePair_t cr_skillPairs[] = {
 { 4, "Hardcore" },
 { 5, "Nightmare!" }
 };
-cvarRange_t cr_skill = { 1, 5, qtrue, cr_skillPairs, ARRAY_LEN(cr_skillPairs) };
+cvarRange_t cr_skill = { 1, 5, 1, cr_skillPairs, 0 /*ARRAY_LEN(cr_skillPairs) force slider*/ };
 
 menuitem_t singleplayermenu_items[] =
 {
@@ -201,26 +201,26 @@ menuitem_t defaultsmenu_items[] =
 
 #ifndef MISSIONPACK_HUD
 static cvarRangePair_t cr_teamoverlayPairs[] = { { 0, "off" }, { 1, "upper right" }, { 2, "lower right" }, { 3, "lower left" } };
-static cvarRange_t cr_teamoverlay = { 0, 3, qtrue, cr_teamoverlayPairs, ARRAY_LEN(cr_teamoverlayPairs) };
+static cvarRange_t cr_teamoverlay = { 0, 3, 1, cr_teamoverlayPairs, ARRAY_LEN(cr_teamoverlayPairs) };
 #endif
 
 static cvarRangePair_t cr_splitverticalPairs[] = { { 0, "horizontal" }, { 1, "vertical" } };
-static cvarRange_t cr_splitvertical = { 0, 1, qtrue, cr_splitverticalPairs, ARRAY_LEN(cr_splitverticalPairs) };
+static cvarRange_t cr_splitvertical = { 0, 1, 1, cr_splitverticalPairs, ARRAY_LEN(cr_splitverticalPairs) };
 
 static cvarRangePair_t cr_atmeffectsPairs[] = { { 0, "off" }, { 0.5f, "low" }, { 1, "high" } };
-static cvarRange_t cr_atmeffects = { 0, 1, qfalse, cr_atmeffectsPairs, ARRAY_LEN(cr_atmeffectsPairs) };
+static cvarRange_t cr_atmeffects = { 0, 1, 0.5, cr_atmeffectsPairs, ARRAY_LEN(cr_atmeffectsPairs) };
 
 static cvarRangePair_t cr_boolPairs[] = { { 0, "off" }, { 1, "on" } };
-static cvarRange_t cr_bool = { 0, 1, qtrue, cr_boolPairs, ARRAY_LEN(cr_boolPairs) };
+static cvarRange_t cr_bool = { 0, 1, 1, cr_boolPairs, ARRAY_LEN(cr_boolPairs) };
 
 static cvarRangePair_t cr_boolInvertPairs[] = { { 0, "on" }, { 1, "off" } };
-static cvarRange_t cr_boolInvert = { 0, 1, qtrue, cr_boolInvertPairs, ARRAY_LEN(cr_boolInvertPairs) };
+static cvarRange_t cr_boolInvert = { 0, 1, 1, cr_boolInvertPairs, ARRAY_LEN(cr_boolInvertPairs) };
 
 static cvarRangePair_t cr_brassTimePairs[] = { { 0, "off" }, { 1250, "short" }, { 2500, "long" } };
-static cvarRange_t cr_brassTime = { 0, 2500, qtrue, cr_brassTimePairs, ARRAY_LEN(cr_brassTimePairs) };
+static cvarRange_t cr_brassTime = { 0, 2500, 1250, cr_brassTimePairs, ARRAY_LEN(cr_brassTimePairs) };
 
 static cvarRangePair_t cr_drawGunPairs[] = { { 0, "off" }, { 1, "right-handed" }, { 3, "centered" }, { 2, "left-handed" } };
-static cvarRange_t cr_drawGun = { 0, 3, qtrue, cr_drawGunPairs, ARRAY_LEN(cr_drawGunPairs) };
+static cvarRange_t cr_drawGun = { 0, 3, 1, cr_drawGunPairs, ARRAY_LEN(cr_drawGunPairs) };
 
 menuitem_t gameoptionsmenu_items[] =
 {

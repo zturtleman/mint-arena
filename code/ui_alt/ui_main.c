@@ -57,6 +57,7 @@ void	UI_Init( qboolean inGameLoad, int maxSplitView ) {
 
 	uis.itemActionSound = trap_S_RegisterSound( ITEM_ACTION_SOUND, qfalse );
 	uis.itemFocusSound = trap_S_RegisterSound( ITEM_FOCUS_SOUND, qfalse );
+	uis.itemWarnSound = trap_S_RegisterSound( ITEM_WARN_SOUND, qfalse );
 	uis.menuPopSound = trap_S_RegisterSound( MENU_POP_SOUND, qfalse );
 
 	uis.cursorShader = trap_R_RegisterShaderNoMip( CURSOR_SHADER );
@@ -99,13 +100,21 @@ void	UI_SetActiveMenu( uiMenuCommand_t menu ) {
 }
 
 void	UI_KeyEvent( int key, qboolean down ) {
-	if ( !down )
-		return;
 
 	if ( key & K_CHAR_FLAG )
 		return;
 
 	if ( !currentMenu.menu )
+		return;
+
+	if ( key == K_MOUSE1 && currentMenu.mouseClickDown && !down ) {
+		currentMenu.mouseClickDown = qfalse;
+		UI_MenuMouseAction( &currentMenu, currentMenu.mouseItem, uis.cursors[0].x, uis.cursors[0].y, MACTION_RELEASE );
+		UI_MenuCursorPoint( &currentMenu, uis.cursors[0].x, uis.cursors[0].y );
+		return;
+	}
+
+	if ( !down )
 		return;
 
 	switch ( key ) {
@@ -205,7 +214,11 @@ void	UI_KeyEvent( int key, qboolean down ) {
 		case K_MOUSE1:
 			UI_MenuCursorPoint( &currentMenu, uis.cursors[0].x, uis.cursors[0].y );
 			if ( currentMenu.mouseItem != -1 ) {
-				UI_MenuAction( &currentMenu, currentMenu.mouseItem );
+				if ( UI_MenuMouseAction( &currentMenu, currentMenu.mouseItem, uis.cursors[0].x, uis.cursors[0].y, MACTION_PRESS ) ) {
+					currentMenu.mouseClickDown = qtrue;
+				} else {
+					UI_MenuAction( &currentMenu, currentMenu.mouseItem );
+				}
 			}
 			break;
 
@@ -234,7 +247,11 @@ void	UI_MouseEvent( int localClientNum, int dx, int dy ) {
 
 	uis.cursors[localClientNum].show = qtrue;
 
-	UI_MenuCursorPoint( &currentMenu, uis.cursors[localClientNum].x, uis.cursors[localClientNum].y );
+	if ( currentMenu.mouseClickDown ) {
+		UI_MenuMouseAction( &currentMenu, currentMenu.mouseItem, uis.cursors[localClientNum].x, uis.cursors[localClientNum].y, MACTION_DRAG );
+	} else {
+		UI_MenuCursorPoint( &currentMenu, uis.cursors[localClientNum].x, uis.cursors[localClientNum].y );
+	}
 }
 
 void	UI_GetCursorPos( int localClientNum, int *x, int *y ) {

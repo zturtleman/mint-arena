@@ -53,6 +53,7 @@ void UI_SetMenu( currentMenu_t *current, menuId_t menu ) {
 	current->menu = menu;
 	current->selectedItem = 0;
 	current->mouseItem = -1;
+	current->mouseClickDown = qfalse;
 
 	if ( !menu ) {
 		if ( cg.connected ) {
@@ -76,6 +77,7 @@ void UI_SwapMenu( currentMenu_t *current, menuId_t menu ) {
 	current->menu = menu;
 	current->selectedItem = 0;
 	current->mouseItem = -1;
+	current->mouseClickDown = qfalse;
 
 	if ( !menu )
 		return;
@@ -99,6 +101,7 @@ void UI_PushMenu( currentMenu_t *current, menuId_t menu ) {
 	current->menu = menu;
 	current->selectedItem = 0;
 	current->mouseItem = -1;
+	current->mouseClickDown = qfalse;
 
 	UI_BuildCurrentMenu( current );
 	UI_SetInitalSelection( current );
@@ -118,6 +121,7 @@ void UI_PopMenu( currentMenu_t *current ) {
 	current->menu = current->stack[current->numStacked].menu;
 	current->selectedItem = current->stack[current->numStacked].selectedItem;
 	current->mouseItem = -1;
+	current->mouseClickDown = qfalse;
 
 	trap_S_StartLocalSound( uis.menuPopSound, CHAN_LOCAL_SOUND );
 
@@ -156,19 +160,20 @@ void UI_MenuAdjustCursor( currentMenu_t *current, int dir ) {
 }
 
 void UI_MenuCursorPoint( currentMenu_t *current, int x, int y ) {
+	currentMenuItem_t *item;
 	int original;
 	int i;
 
 	original = current->selectedItem;
 	current->mouseItem = -1;
 
-	for ( i = 0; i < current->numItems; i++ ) {
-		if ( !( current->items[i].flags & MIF_SELECTABLE ) ) {
+	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
+		if ( !( item->flags & MIF_SELECTABLE ) ) {
 			continue;
 		}
 
-		if ( x >= current->items[i].x && x <= current->items[i].x + current->items[i].width
-			&& y >= current->items[i].y && y <= current->items[i].y + current->items[i].height ) {
+		if ( x >= item->clickPos.x && x <= item->clickPos.x + item->clickPos.width
+			&& y >= item->clickPos.y && y <= item->clickPos.y + item->clickPos.height ) {
 			// inside item bbox
 			current->selectedItem = i;
 			current->mouseItem = i;
@@ -205,20 +210,19 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 	else
 	{
 		float min, max;
-		qboolean slider;//, ratioButton;
+		//qboolean ratioButton;
 
-		//value = item->vmCvar.value + dir;
-		value = trap_Cvar_VariableValue( item->cvarName ) + dir;
+		value = trap_Cvar_VariableValue( item->cvarName ) + dir * item->cvarRange->stepSize;
 
 		min = item->cvarRange->min;
 		max = item->cvarRange->max;
 
-		//ratioButton = item->cvarRange->integral && max == 1 && min == 0;
-		slider = !item->cvarRange->integral;
+		//ratioButton = item->cvarRange->stepSize == 1 && max == 1 && min == 0;
 
-		if ( slider ) {
+		if ( UI_ItemIsSlider( item ) ) {
 			if ( value < min || value > max ) {
-				// ZTM: TODO: AltUI: play buzz sound
+				// play buzz sound
+				trap_S_StartLocalSound( uis.itemWarnSound, CHAN_LOCAL_SOUND );
 				return qfalse;
 			}
 		}
@@ -233,6 +237,8 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 	// FIXME: What about cases when it should not take affect until 'Apply' is clicked?
 	trap_Cvar_SetValue( item->cvarName, value );
 	trap_Cvar_Update( &item->vmCvar );
+
+	trap_S_StartLocalSound( uis.itemActionSound, CHAN_LOCAL_SOUND );
 
 	return qtrue;
 }
@@ -268,5 +274,62 @@ void UI_MenuAction( currentMenu_t *current, int itemNum ) {
 	}
 
 	trap_S_StartLocalSound( uis.itemActionSound, CHAN_LOCAL_SOUND );
+}
+
+qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, mouseActionState_t state ) {
+	currentMenuItem_t *item;
+
+	item = &current->items[itemNum];
+
+	if ( UI_ItemIsSlider( item ) ) {
+		float frac, sliderx, targetStep, targetValue;
+
+		// clicked slider caption, ignore -- still allow clicking it to run an action
+		//if ( x < item->captionPos.x + item->captionPos.width && state == MACTION_PRESS )
+		//	return qfalse;
+
+		sliderx = item->captionPos.x + item->captionPos.width + BIGCHAR_WIDTH;
+
+		// click slider item outside of slider bar... eat action
+		if ( ( x < sliderx || x > sliderx + 96 ) && state == MACTION_PRESS ) {
+			return qtrue;
+		} else {
+			sliderx += 8;
+			frac = Com_Clamp( 0, 1, ( x - 6 - sliderx ) / ( 96 - 16 ) );
+
+			targetStep = frac * ( item->cvarRange->max - item->cvarRange->min );
+			targetValue = targetStep + item->cvarRange->min;
+		}
+
+		if ( state == MACTION_RELEASE ) {
+			float value, halfStep;
+
+			halfStep = item->cvarRange->stepSize / 2;
+
+			// snap to step
+			value = 0;
+			while ( value + halfStep <= targetStep ) {
+				value += item->cvarRange->stepSize;
+			}
+			value += item->cvarRange->min;
+
+			value = Com_Clamp( item->cvarRange->min, item->cvarRange->max, value );
+			trap_Cvar_SetValue( item->cvarName, value );
+
+			// force update because dragging changes the vmCvar directly
+			item->vmCvar.modificationCount = -1;
+			trap_Cvar_Update( &item->vmCvar );
+		} else {
+			// change the value shown to the user
+			item->vmCvar.value = targetValue;
+		}
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+qboolean UI_ItemIsSlider( currentMenuItem_t *item ) {
+	return ( item->cvarRange && item->cvarRange->numPairs == 0 );
 }
 

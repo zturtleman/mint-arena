@@ -46,9 +46,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 //#define CURSOR_SELECT_SHADER "ui/assets/selectcursor"
 
 #define MAIN_MUSIC		"music/sonic1.wav"
-#define ITEM_ACTION_SOUND	"sound/misc/kcaction.wav"
-#define ITEM_FOCUS_SOUND	"sound/misc/menu2.wav" // TA .menu: itemFocusSound
-#define MENU_POP_SOUND	"sound/misc/menu3.wav" // FIXME: what sound to play for TA?
+#define ITEM_ACTION_SOUND	"sound/misc/kcaction.wav" // from TA .menu item action scripts
+#define ITEM_FOCUS_SOUND	"sound/misc/menu2.wav" // from TA main.menu itemFocusSound
+#define MENU_POP_SOUND	"sound/misc/tim_pump.wav" // from TA main.menu onOpen script
 
 #define MENU_COPYRIGHT "Quake III: Team Arena Copyright 2000 Id Software, Inc. All rights reserved"
 

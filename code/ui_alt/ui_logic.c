@@ -31,6 +31,22 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "ui_local.h"
 
+// called when a new menu is shown to make selection valid
+static void UI_SetInitalSelection( currentMenu_t *current ) {
+	// if cursor is over an item select it
+	UI_MenuCursorPoint( current, uis.cursors[0].x, uis.cursors[0].y );
+
+	// if selected item, bail out
+	if ( current->mouseItem != -1 ) {
+		return;
+	}
+
+	// if initial item is not selectable, use to next
+	if ( !( current->items[ current->selectedItem ].flags & MIF_SELECTABLE ) ) {
+		UI_MenuAdjustCursor( current, 1 );
+	}
+}
+
 // clear stack, change to menu
 void UI_SetMenu( currentMenu_t *current, menuId_t menu ) {
 	current->numStacked = 0;
@@ -49,10 +65,7 @@ void UI_SetMenu( currentMenu_t *current, menuId_t menu ) {
 	}
 
 	UI_BuildCurrentMenu( current );
-
-	if ( !( current->items[ current->selectedItem ].flags & MIF_SELECTABLE ) ) {
-		UI_MenuAdjustCursor( current, 1 );
-	}
+	UI_SetInitalSelection( current );
 }
 
 // change current menu, without changing stack
@@ -68,10 +81,7 @@ void UI_SwapMenu( currentMenu_t *current, menuId_t menu ) {
 		return;
 
 	UI_BuildCurrentMenu( current );
-
-	if ( !( current->items[ current->selectedItem ].flags & MIF_SELECTABLE ) ) {
-		UI_MenuAdjustCursor( current, 1 );
-	}
+	UI_SetInitalSelection( current );
 }
 
 // add current menu to stask, then change to new menu
@@ -91,10 +101,7 @@ void UI_PushMenu( currentMenu_t *current, menuId_t menu ) {
 	current->mouseItem = -1;
 
 	UI_BuildCurrentMenu( current );
-
-	if ( !( current->items[ current->selectedItem ].flags & MIF_SELECTABLE ) ) {
-		UI_MenuAdjustCursor( current, 1 );
-	}
+	UI_SetInitalSelection( current );
 }
 
 // return to previous menu
@@ -115,6 +122,7 @@ void UI_PopMenu( currentMenu_t *current ) {
 	trap_S_StartLocalSound( uis.menuPopSound, CHAN_LOCAL_SOUND );
 
 	UI_BuildCurrentMenu( current );
+	UI_SetInitalSelection( current );
 }
 
 // dir -1 = up, 1 = down, 2 = left, 4 = right

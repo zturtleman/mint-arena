@@ -303,7 +303,7 @@ void UI_InitPropFont( fontInfo_t *font, qboolean glow ) {
 			aw = PROP_SPACE_WIDTH;
 			xSkip = PROP_SPACE_WIDTH;
 		}
-		else if ( propMap[ch][2] != -1 ) {
+		else if ( ch < ARRAY_LEN( propMap ) && propMap[ch][2] != -1 ) {
 			fcol = (float)propMap[ch][0] / 256.0f;
 			frow = (float)propMap[ch][1] / 256.0f;
 			fwidth = (float)propMap[ch][2] / 256.0f;

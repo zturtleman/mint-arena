@@ -1197,7 +1197,7 @@ static void ServerOptions_InitBotNames( void ) {
 		while( *p && *p == ' ' ) {
 			p++;
 		}
-		if( !p ) {
+		if( !*p ) {
 			break;
 		}
 

@@ -183,15 +183,17 @@ void UI_DrawMainMenuBackground( void ) {
 	CG_DrawString( SCREEN_WIDTH / 2, SCREEN_HEIGHT - SMALLCHAR_HEIGHT*2, MENU_COPYRIGHT, UI_CENTER|UI_SMALLFONT, color_copyright );
 }
 
-void UI_DrawSlider( float x, float y, float min, float max, float value, qboolean selected ) {
+void UI_DrawSlider( float x, float y, float min, float max, float value, int style, float *drawcolor ) {
 	float frac;
 	qhandle_t hShader;
+
+	trap_R_SetColor( drawcolor );
 
 	// draw the background
 	CG_DrawPic( x, y, 96, 16, uiAssets.sliderBar );
 
 	// draw the button
-	if ( selected )
+	if ( style & UI_PULSE )
 		hShader = uiAssets.sliderButtonSelected;
 	else
 		hShader = uiAssets.sliderButton;
@@ -201,8 +203,17 @@ void UI_DrawSlider( float x, float y, float min, float max, float value, qboolea
 
 	CG_DrawPic( x + 8 + ( 96 - 16 ) * frac - 2, y - 2, 12, 20, hShader );
 
+	trap_R_SetColor( NULL );
+
 	// draw value
-	CG_DrawString( x + 96 + 8, y, va("%g", value), UI_DROPSHADOW|UI_GIANTFONT|selected?UI_PULSE:0, colorWhite/*drawcolor*/ );
+#ifdef Q3UIFONTS
+	if ( style & UI_GIANTFONT ) {
+		UI_DrawProportionalString( x + 96 + 8, y, va("%g", value), style, drawcolor );
+	} else
+#endif
+	{
+		CG_DrawString( x + 96 + 8, y, va("%g", value), UI_DROPSHADOW|style, drawcolor );
+	}
 }
 
 void UI_DrawCurrentMenu( currentMenu_t *current ) {
@@ -259,8 +270,10 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 
 		if ( item->flags & MIF_BIGTEXT ) {
 			Vector4Copy( color_bigtext, drawcolor );
+			style |= UI_GIANTFONT;
 		} else {
 			Vector4Copy( color_smalltext, drawcolor );
+			style |= UI_SMALLFONT;
 		}
 
 		if ( !( item->flags & MIF_SELECTABLE ) ) {
@@ -275,15 +288,13 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 			}
 		}
 
-
-		if ( item->flags & MIF_BIGTEXT ) {
 #ifdef Q3UIFONTS
+		if ( item->flags & MIF_BIGTEXT ) {
 			UI_DrawProportionalString( item->captionPos.x, item->captionPos.y, item->caption, style, drawcolor );
-#else
-			CG_DrawString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|UI_GIANTFONT|style, drawcolor );
+		} else
 #endif
-		} else {
-			CG_DrawString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|UI_SMALLFONT|style, drawcolor );
+		{
+			CG_DrawString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|style, drawcolor );
 		}
 
 		// draw cvar value
@@ -297,14 +308,13 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 
 				x = item->captionPos.x + item->captionPos.width + 2;
 
-				if ( item->flags & MIF_BIGTEXT ) {
 #ifdef Q3UIFONTS
+				if ( item->flags & MIF_BIGTEXT ) {
 					UI_DrawProportionalString( x, item->captionPos.y, cursorStr, UI_BLINK|style, drawcolor );
-#else
-					CG_DrawString( x, item->captionPos.y, cursorStr, UI_BLINK|UI_GIANTFONT|style, drawcolor );
+				} else
 #endif
-				} else {
-					CG_DrawString( x, item->captionPos.y, cursorStr, UI_BLINK|UI_SMALLFONT|style, drawcolor );
+				{
+					CG_DrawString( x, item->captionPos.y, cursorStr, UI_BLINK|style, drawcolor );
 				}
 			}
 
@@ -314,7 +324,7 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 			if ( UI_ItemIsSlider( item ) ) {
 				UI_DrawSlider( x, item->captionPos.y,
 						item->cvarRange->min, item->cvarRange->max,
-						item->vmCvar.value, ( style & UI_PULSE ) );
+						item->vmCvar.value, style, drawcolor );
 				continue;
 			}
 
@@ -324,14 +334,13 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 				string = item->vmCvar.string;
 			}
 
-			if ( item->flags & MIF_BIGTEXT ) {
 #ifdef Q3UIFONTS
+			if ( item->flags & MIF_BIGTEXT ) {
 				UI_DrawProportionalString( x, item->captionPos.y, string, style, drawcolor );
-#else
-				CG_DrawString( x, item->captionPos.y, string, UI_DROPSHADOW|UI_GIANTFONT|style, drawcolor );
+			} else
 #endif
-			} else {
-				CG_DrawString( x, item->captionPos.y, string, UI_DROPSHADOW|UI_SMALLFONT|style, drawcolor );
+			{
+				CG_DrawString( x, item->captionPos.y, string, UI_DROPSHADOW|style, drawcolor );
 			}
 		}
 	}

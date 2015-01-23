@@ -162,7 +162,7 @@ cvarRangePair_t cr_skillPairs[] = {
 { 4, "Hardcore" },
 { 5, "Nightmare!" }
 };
-cvarRange_t cr_skill = { 1, 5, 1, cr_skillPairs, 0 /*ARRAY_LEN(cr_skillPairs) force slider*/ };
+cvarRange_t cr_skill = { 1, 5, 1, cr_skillPairs, ARRAY_LEN(cr_skillPairs) };
 
 menuitem_t singleplayermenu_items[] =
 {

@@ -100,6 +100,21 @@ void restartMap( int item ) {
 
 /*
 
+	Common cvar range definitions
+
+*/
+
+static cvarRangePair_t cr_boolPairs[] = { { 0, "off" }, { 1, "on" } };
+static cvarRange_t cr_bool = { 0, 1, 1, cr_boolPairs, ARRAY_LEN(cr_boolPairs) };
+
+static cvarRangePair_t cr_boolInvertPairs[] = { { 0, "on" }, { 1, "off" } };
+static cvarRange_t cr_boolInvert = { 0, 1, 1, cr_boolInvertPairs, ARRAY_LEN(cr_boolInvertPairs) };
+
+// 0.0 to 1.0 slider
+static cvarRange_t cr_zeroToOne = { 0, 1, 0.05f, NULL, 0 };
+
+/*
+
 	Menu item definitions
 
 */
@@ -159,7 +174,9 @@ menuitem_t singleplayermenu_items[] =
 
 menuitem_t setupmenu_items[] =
 {
+#ifndef MISSIONPACK
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Players", NULL, M_PLAYER, 0 }, // Player or Players in q3_ui depending on number of max players
+#endif
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Controls", NULL, M_CONTROLS, 0 },
 	{ MIF_BIGTEXT|MIF_SUBMENU, "System", NULL, M_SYSTEM, 0 },
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Game Options", NULL, M_GAME_OPTIONS, 0 },
@@ -199,6 +216,180 @@ menuitem_t defaultsmenu_items[] =
 };
 
 
+#define MIF_PANEL 0 //MIF_HEADER
+// From Team Arena's ui_main.c
+void graphicsPresetUpdate( int item ) {
+	int val;
+
+	(void)item;
+
+	val = trap_Cvar_VariableIntegerValue( "ui_glCustom" );
+
+	//Com_Printf("graphicsPresetUpdate: %d\n", val);
+
+	// ZTM: I'm not really a fan of changing settings that are not displayed in system -> video menu...
+	// ZTM: Disabled fullscreen because it takes effect immediately...
+	switch (val) {
+		case 0:	// very high quality
+			//trap_Cvar_SetValue( "r_fullScreen", 1 );
+			trap_Cvar_Reset( "r_subdivisions" );
+			trap_Cvar_Reset( "r_vertexlight" );
+			trap_Cvar_Reset( "r_lodbias" );
+			trap_Cvar_Reset( "r_colorbits" );
+			trap_Cvar_Reset( "r_depthbits" );
+			trap_Cvar_Reset( "r_picmip" );
+			trap_Cvar_SetValue( "r_mode", -2 );
+			trap_Cvar_Reset( "r_texturebits" );
+			trap_Cvar_Reset( "r_fastSky" );
+			trap_Cvar_Reset( "r_inGameVideo" );
+			trap_Cvar_Reset( "cg_shadows" );
+			trap_Cvar_Reset( "cg_brassTime" );
+			trap_Cvar_Reset( "r_texturemode" );
+		break;
+		case 1:	// high quality
+			//trap_Cvar_SetValue( "r_fullScreen", 1 );
+			trap_Cvar_Reset( "r_subdivisions" );
+			trap_Cvar_Reset( "r_vertexlight" );
+			trap_Cvar_Reset( "r_lodbias" );
+			trap_Cvar_Reset( "r_colorbits" );
+			trap_Cvar_Reset( "r_depthbits" );
+			trap_Cvar_Reset( "r_picmip" );
+			trap_Cvar_SetValue( "r_mode", 6 ); // 4 in TA
+			trap_Cvar_Reset( "r_texturebits" );
+			trap_Cvar_Reset( "r_fastSky" );
+			trap_Cvar_Reset( "r_inGameVideo" );
+			trap_Cvar_Reset( "cg_shadows" );
+			trap_Cvar_Reset( "cg_brassTime" );
+			trap_Cvar_Reset( "r_texturemode" );
+		break;
+		case 2: // normal 
+			//trap_Cvar_SetValue( "r_fullScreen", 1 );
+			trap_Cvar_SetValue( "r_subdivisions", 12 );
+			trap_Cvar_Reset( "r_vertexlight" );
+			trap_Cvar_Reset( "r_lodbias" );
+			trap_Cvar_Reset( "r_colorbits" );
+			trap_Cvar_Reset( "r_depthbits" );
+			trap_Cvar_SetValue( "r_picmip", 1 );
+			trap_Cvar_SetValue( "r_mode", 3 );
+			trap_Cvar_Reset( "r_texturebits" );
+			trap_Cvar_Reset( "r_fastSky" );
+			trap_Cvar_Reset( "r_inGameVideo" );
+			trap_Cvar_SetValue( "cg_shadows", 0 );
+			trap_Cvar_Reset( "cg_brassTime" );
+			trap_Cvar_Reset( "r_texturemode" );
+		break;
+		case 3: // fast
+			//trap_Cvar_SetValue( "r_fullScreen", 1 );
+			trap_Cvar_SetValue( "r_subdivisions", 8 );
+			trap_Cvar_Reset( "r_vertexlight" );
+			trap_Cvar_SetValue( "r_lodbias", 1 );
+			trap_Cvar_Reset( "r_colorbits" );
+			trap_Cvar_Reset( "r_depthbits" );
+			trap_Cvar_SetValue( "r_picmip", 1 );
+			trap_Cvar_SetValue( "r_mode", 3 );
+			trap_Cvar_SetValue( "r_texturebits", 0 );
+			trap_Cvar_SetValue( "r_fastSky", 1 );
+			trap_Cvar_SetValue( "r_inGameVideo", 0 );
+			trap_Cvar_SetValue( "cg_shadows", 0 );
+			trap_Cvar_SetValue( "cg_brassTime", 0 );
+			trap_Cvar_Set( "r_texturemode", "GL_LINEAR_MIPMAP_NEAREST" );
+		break;
+		case 4: // fastest
+			//trap_Cvar_SetValue( "r_fullScreen", 1 );
+			trap_Cvar_SetValue( "r_subdivisions", 20 );
+			trap_Cvar_SetValue( "r_vertexlight", 1 );
+			trap_Cvar_SetValue( "r_lodbias", 2 );
+			trap_Cvar_SetValue( "r_colorbits", 16 );
+			trap_Cvar_SetValue( "r_depthbits", 16 );
+			trap_Cvar_SetValue( "r_mode", 3 );
+			trap_Cvar_SetValue( "r_picmip", 2 );
+			trap_Cvar_SetValue( "r_texturebits", 16 );
+			trap_Cvar_SetValue( "r_fastSky", 1 );
+			trap_Cvar_SetValue( "r_inGameVideo", 0 );
+			trap_Cvar_SetValue( "cg_shadows", 0 );
+			trap_Cvar_SetValue( "cg_brassTime", 0 );
+			trap_Cvar_Set( "r_texturemode", "GL_LINEAR_MIPMAP_NEAREST" );
+		break;
+		default: // custom
+		break;
+	}
+}
+
+static cvarRangePair_t cr_glCustomPairs[] = { { 0, "Very High" }, { 1, "High" }, { 2, "Medium" }, { 3, "Fast" }, { 4, "Fastest" }, { 5, "Custom" } };
+static cvarRange_t cr_glCustom = { 0, 32, 16, cr_glCustomPairs, ARRAY_LEN(cr_glCustomPairs) };
+
+static cvarRange_t cr_pimip = { 3, 0, 1, NULL, 0 };
+
+static cvarRangePair_t cr_textureQualityPairs[] = { { 0, "default" }, { 16, "16 bit" }, { 32, "32 bit" } };
+static cvarRange_t cr_textureQuality = { 0, 32, 16, cr_textureQualityPairs, ARRAY_LEN(cr_textureQualityPairs) };
+
+static cvarRangePair_t cr_lightingPairs[] = { { 0, "Lightmap (High)" }, { 1, "Vertex (Low)" } };
+static cvarRange_t cr_lighting = { 0, 1, 1, cr_lightingPairs, ARRAY_LEN(cr_lightingPairs) };
+
+static cvarRange_t cr_gamma = { 0.5, 2.0, 0.1, NULL, 0 };
+static cvarRange_t cr_viewsize = { 30, 100, 10, NULL, 0 };
+
+static cvarRangePair_t cr_anaglyphModePairs[] =
+{
+	{ 0, "off" },
+	{ 1, "red-cyan" },
+	{ 2, "red-blue" },
+	{ 3, "red-green" },
+	{ 4, "green-magenta" },
+	{ 5, "cyan-red" },
+	{ 6, "blue-red" },
+	{ 7, "green-red" },
+	{ 8, "magenta-green" }
+};
+static cvarRange_t cr_anaglyphMode = { 0, 8, 1, cr_anaglyphModePairs, ARRAY_LEN(cr_anaglyphModePairs) };
+
+static cvarRangePair_t cr_soundSystemPairs[] = { { 0, "SDL" }, { 1, "OpenAL" } };
+static cvarRange_t cr_soundSystem = { 0, 1, 1, cr_soundSystemPairs, ARRAY_LEN(cr_soundSystemPairs) };
+
+static cvarRangePair_t cr_sdlSpeedPairs[] = { { 11025, "Low (11k)" }, { 22050, "Medium (22k)" }, { 44100, "High (44.1k)" }, { 0, "Very High (48k)" } }; // spearmint default 0 is 48k, ioq3 0 is 44.1k
+static cvarRange_t cr_sdlSpeed = { 0, 1, 1, cr_sdlSpeedPairs, ARRAY_LEN(cr_sdlSpeedPairs) };
+
+static cvarRangePair_t cr_networkRatePairs[] = { { 2500, "<= 28.8K" }, { 3000, "33.6K" }, { 4000, "56K" }, { 5000, "ISDN" }, { 25000, "LAN/Cable/xDSL" } };
+static cvarRange_t cr_networkRate = { 2500, 25000, 500, cr_networkRatePairs, ARRAY_LEN(cr_networkRatePairs) };
+
+static cvarRangePair_t cr_lagCompPairs[] = { { 0, "None" }, { 1, "One Server Frame" }, { 2, "Full" } };
+static cvarRange_t cr_lagComp = { 2500, 25000, 500, cr_lagCompPairs, ARRAY_LEN(cr_lagCompPairs) };
+
+menuitem_t systemmenu_items[] = {
+	{ MIF_BIGTEXT|MIF_PANEL, "Graphics", NULL, M_NONE, 0 },
+	{ MIF_CALL, "Graphics Settings:", graphicsPresetUpdate, M_NONE, 0, "ui_glCustom", &cr_glCustom }, // Custom, Very High, High, etc
+	{ MIF_CALL, "GL Extensions:", NULL, M_NONE, 0, "r_allowExtensions", &cr_bool },
+	{ MIF_CALL, "Aspect Ratio:", NULL, M_NONE, 0 }, // 4:3, ...
+	{ MIF_CALL, "Resolution:", NULL, M_NONE, 0, "r_mode", NULL }, // 1024x768, ...
+	{ MIF_CALL, "Fullscreen:", NULL, M_NONE, 0, "r_fullscreen", &cr_bool },
+	{ MIF_CALL, "Lighting:", NULL, M_NONE, 0, "r_vertexLight", &cr_lighting },
+	{ MIF_CALL, "Flares:", NULL, M_NONE, 0, "r_flares", &cr_bool },
+	{ MIF_CALL, "Geometric Detail:", NULL, M_NONE, 0 }, // TODO: modifies both "r_lodBias" and "r_subdivisions"
+	{ MIF_CALL, "Texture Detail:", NULL, M_NONE, 0, "r_picmip", &cr_pimip },
+	{ MIF_CALL, "Texture Quality:", NULL, M_NONE, 0, "r_texturebits", &cr_textureQuality },
+	{ MIF_CALL, "Texture Filter:", NULL, M_NONE, 0, "r_textureMode", NULL }, // ZTM: TODO: Cvar pairs with string value
+
+	// missing driver info button
+
+	{ MIF_BIGTEXT|MIF_PANEL, "Display", NULL, M_NONE, 0 },
+	{ MIF_CALL, "Brightness:", NULL, M_NONE, 0, "r_gamma", &cr_gamma },
+	{ MIF_CALL, "Screen Size:", NULL, M_NONE, 0, "cg_viewsize", &cr_viewsize },
+	{ MIF_CALL, "Anaglyph Mode:", NULL, M_NONE, 0, "r_anaglyphMode", &cr_anaglyphMode },
+	{ MIF_CALL, "Grey Scale:", NULL, M_NONE, 0, "r_greyscale", &cr_zeroToOne },
+
+	{ MIF_BIGTEXT|MIF_PANEL, "Sound", NULL, M_NONE, 0 },
+	{ MIF_CALL, "Effects Volume:", NULL, M_NONE, 0, "s_volume", &cr_zeroToOne },
+	{ MIF_CALL, "Music Volume:", NULL, M_NONE, 0, "s_musicVolume", &cr_zeroToOne },
+	{ MIF_CALL, "Sound System:", NULL, M_NONE, 0, "s_useOpenAL", &cr_soundSystem },
+	{ MIF_CALL, "SDL Sound Quality:", NULL, M_NONE, 0, "s_sdlSpeed", &cr_sdlSpeed }, // TODO: disable when sound system is not SDL
+
+	{ MIF_BIGTEXT|MIF_PANEL, "Network", NULL, M_NONE, 0 },
+	{ MIF_CALL, "Data Rate:", NULL, M_NONE, 0, "rate", &cr_networkRate },
+	{ MIF_CALL, "Voice Chat (VoIP):", NULL, M_NONE, 0, "cl_voip", &cr_bool }, // TODO: disable when rate < 25000
+	{ MIF_CALL, "Lag Compensation:", NULL, M_NONE, 0, "cg_antiLag", &cr_lagComp },
+};
+
+
 #ifndef MISSIONPACK_HUD
 static cvarRangePair_t cr_teamoverlayPairs[] = { { 0, "off" }, { 1, "upper right" }, { 2, "lower right" }, { 3, "lower left" } };
 static cvarRange_t cr_teamoverlay = { 0, 3, 1, cr_teamoverlayPairs, ARRAY_LEN(cr_teamoverlayPairs) };
@@ -210,18 +401,13 @@ static cvarRange_t cr_splitvertical = { 0, 1, 1, cr_splitverticalPairs, ARRAY_LE
 static cvarRangePair_t cr_atmeffectsPairs[] = { { 0, "off" }, { 0.5f, "low" }, { 1, "high" } };
 static cvarRange_t cr_atmeffects = { 0, 1, 0.5, cr_atmeffectsPairs, ARRAY_LEN(cr_atmeffectsPairs) };
 
-static cvarRangePair_t cr_boolPairs[] = { { 0, "off" }, { 1, "on" } };
-static cvarRange_t cr_bool = { 0, 1, 1, cr_boolPairs, ARRAY_LEN(cr_boolPairs) };
-
-static cvarRangePair_t cr_boolInvertPairs[] = { { 0, "on" }, { 1, "off" } };
-static cvarRange_t cr_boolInvert = { 0, 1, 1, cr_boolInvertPairs, ARRAY_LEN(cr_boolInvertPairs) };
-
 static cvarRangePair_t cr_brassTimePairs[] = { { 0, "off" }, { 1250, "short" }, { 2500, "long" } };
 static cvarRange_t cr_brassTime = { 0, 2500, 1250, cr_brassTimePairs, ARRAY_LEN(cr_brassTimePairs) };
 
 static cvarRangePair_t cr_drawGunPairs[] = { { 0, "off" }, { 1, "right-handed" }, { 3, "centered" }, { 2, "left-handed" } };
 static cvarRange_t cr_drawGun = { 0, 3, 1, cr_drawGunPairs, ARRAY_LEN(cr_drawGunPairs) };
 
+// ZTM: TODO: remove the MIF_CALL? I think it's next so they are selectable...
 menuitem_t gameoptionsmenu_items[] =
 {
 	//{ MIF_CALL, "Crosshair:",				NULL, M_NONE, 0, "cg_drawCrosshair", NULL }, // ZTM: TODO: draw crosshair shaders
@@ -314,7 +500,7 @@ menudef_t ui_menus[M_NUM_MENUS] = {
 	// Setup menus
 	QMENUSTUB( playermenu, 0, "Player Setup" ),			// M_PLAYER
 	QMENUSTUB( controlsmenu, 0, "Controls" ),			// M_CONTROLS
-	QMENUSTUB( systemmenu, 0, "System" ),				// M_SYSTEM
+	QMENUDEF( systemmenu, 0, "System" ),				// M_SYSTEM
 	QMENUDEF( gameoptionsmenu, 0, "Game Options" ),	// M_GAME_OPTIONS
 	QMENUDEF( defaultsmenu, MF_DIALOG|MF_NOBACK, "Set to defaults?" ),	// M_DEFAULTS
 

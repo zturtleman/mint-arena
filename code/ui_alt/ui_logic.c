@@ -134,7 +134,8 @@ void UI_MenuAdjustCursor( currentMenu_t *current, int dir ) {
 	int original;
 
 	if ( dir == 2 || dir == 4 ) {
-		UI_MenuItemChangeValue( current, current->selectedItem, dir - 3 );
+		// was UI_MenuItemChangeValue, but want the action function to get run
+		UI_MenuAction( current, current->selectedItem, dir - 3 );
 		return;
 	}
 
@@ -250,17 +251,23 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 
 	// FIXME: What about cases when it should not take affect until 'Apply' is clicked?
 	trap_Cvar_SetValue( item->cvarName, value );
+#if 0 // ZTM: Old code. Now the cvar will automatically update to latched value each frame.
 	trap_Cvar_Update( &item->vmCvar );
 
-	trap_S_StartLocalSound( uis.itemActionSound, CHAN_LOCAL_SOUND );
+	// might be a latched cvar
+	item->vmCvar.value = value;
+#endif
+
+	// gets played in UI_MenuAction
+	//trap_S_StartLocalSound( uis.itemActionSound, CHAN_LOCAL_SOUND );
 
 	return qtrue;
 }
 
-void UI_MenuAction( currentMenu_t *current, int itemNum ) {
+void UI_MenuAction( currentMenu_t *current, int itemNum, int dir ) {
 	currentMenuItem_t item;
 
-	if ( !UI_MenuItemChangeValue( current, itemNum, 1 ) ) {
+	if ( !UI_MenuItemChangeValue( current, itemNum, dir ) ) {
 		return;
 	}
 
@@ -344,9 +351,14 @@ qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, 
 			value = Com_Clamp( min, max, value );
 			trap_Cvar_SetValue( item->cvarName, value );
 
+#if 0 // ZTM: Old code. Now the cvar will automatically update to latched value each frame.
 			// force update because dragging changes the vmCvar directly
 			item->vmCvar.modificationCount = -1;
 			trap_Cvar_Update( &item->vmCvar );
+
+			// might be a latched cvar
+			item->vmCvar.value = value;
+#endif
 		} else {
 			// change the value shown to the user
 			item->vmCvar.value = targetValue;
@@ -359,5 +371,84 @@ qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, 
 
 qboolean UI_ItemIsSlider( currentMenuItem_t *item ) {
 	return ( item->cvarRange && item->cvarRange->numPairs == 0 );
+}
+
+static void UI_SetMenuCvarValue( currentMenuItem_t *item ) {
+	float dist, bestDist = 10000;
+	int closestPair = 0;
+	int pair;
+
+	if ( !item->cvarName || !item->cvarRange ) {
+		return;
+	}
+
+	for ( pair = 0; pair < item->cvarRange->numPairs; pair++ ) {
+		dist = fabs( item->vmCvar.value - item->cvarRange->pairs[ pair ].value );
+		if ( dist < bestDist ) {
+			bestDist = dist;
+			closestPair = pair;
+		}
+	}
+
+	item->cvarPair = closestPair;
+}
+
+void UI_RegisterMenuCvars( currentMenu_t *current ) {
+	currentMenuItem_t *item;
+	int i;
+
+	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
+		item->cvarPair = 0;
+
+		if ( !item->cvarName )
+			continue;
+
+		trap_Cvar_Register( &item->vmCvar, item->cvarName, "", 0 );
+
+		// get latched value, if not latched gets current value
+		trap_Cvar_LatchedVariableStringBuffer( item->cvarName, item->vmCvar.string, sizeof(item->vmCvar.string) );
+		item->vmCvar.value = atof( item->vmCvar.string );
+		item->vmCvar.integer = atoi( item->vmCvar.string );
+
+		UI_SetMenuCvarValue( item );
+	}
+}
+
+// check if cvar have been modified via console or menu action function
+void UI_UpdateMenuCvars( currentMenu_t *current ) {
+	currentMenuItem_t *item;
+	int i;
+	int modCount;
+	float oldValue;
+	char oldString[32]; // FIXME use macro from vmCvar_t
+
+	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
+		if ( !item->cvarName )
+			continue;
+
+		modCount = item->vmCvar.modificationCount;
+		oldValue = item->vmCvar.value;
+		Q_strncpyz( oldString, item->vmCvar.string, sizeof (oldString) );
+		trap_Cvar_Update( &item->vmCvar );
+
+		// get latched value, if not latched gets current value
+		trap_Cvar_LatchedVariableStringBuffer( item->cvarName, item->vmCvar.string, sizeof(item->vmCvar.string) );
+
+		// The vmCvar.value is overriden for display while dragging sliders, so only update if needed
+		if ( strcmp( item->vmCvar.string, oldString ) != 0 ) {
+			item->vmCvar.value = atof( item->vmCvar.string );
+			item->vmCvar.integer = atoi( item->vmCvar.string );
+
+			Com_Printf("Cvar changed! %s: %s -> %s. %f -> %f.\n", item->cvarName, oldString, item->vmCvar.string, oldValue, item->vmCvar.value );
+			UI_SetMenuCvarValue( item );
+			// should action function get run?
+		}
+
+		// should there just a string compare? could get rid of the trap_Cvar_Update call.
+		// also, why does this not always get changed?
+		if ( modCount != item->vmCvar.modificationCount ) {
+			Com_Printf("Cvar mod cound changed! %s: %s -> %s. %f -> %f.\n", item->cvarName, oldString, item->vmCvar.string, oldValue, item->vmCvar.value );
+		}
+	}
 }
 

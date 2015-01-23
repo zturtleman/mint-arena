@@ -208,7 +208,7 @@ void	UI_KeyEvent( int key, qboolean down ) {
 		case K_AUX16:
 		case K_KP_ENTER:
 		case K_ENTER:
-			UI_MenuAction( &currentMenu, currentMenu.selectedItem );
+			UI_MenuAction( &currentMenu, currentMenu.selectedItem, 1 );
 			break;
 
 		case K_MOUSE1:
@@ -217,7 +217,7 @@ void	UI_KeyEvent( int key, qboolean down ) {
 				if ( UI_MenuMouseAction( &currentMenu, currentMenu.mouseItem, uis.cursors[0].x, uis.cursors[0].y, MACTION_PRESS ) ) {
 					currentMenu.mouseClickDown = qtrue;
 				} else {
-					UI_MenuAction( &currentMenu, currentMenu.mouseItem );
+					UI_MenuAction( &currentMenu, currentMenu.mouseItem, 1 );
 				}
 			}
 			break;

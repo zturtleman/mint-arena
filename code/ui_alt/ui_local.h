@@ -278,10 +278,12 @@ void UI_PushMenu( currentMenu_t *current, menuId_t menu );
 void UI_PopMenu( currentMenu_t *current );
 void UI_MenuAdjustCursor( currentMenu_t *current, int dir );
 void UI_MenuCursorPoint( currentMenu_t *current, int x, int y );
-void UI_MenuAction( currentMenu_t *current, int itemNum );
+void UI_MenuAction( currentMenu_t *current, int itemNum, int dir );
 qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, mouseActionState_t state );
 qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir );
 qboolean UI_ItemIsSlider( currentMenuItem_t *item );
+void UI_RegisterMenuCvars( currentMenu_t *current );
+void UI_UpdateMenuCvars( currentMenu_t *current );
 
 
 // ui_fonts.c

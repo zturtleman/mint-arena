@@ -236,6 +236,8 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 		return;
 	}
 
+	UI_UpdateMenuCvars( current );
+
 	menuInfo = &ui_menus[current->menu];
 
 	if ( cg.connected ) {
@@ -629,28 +631,6 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 	//
 	// setup cvar value name indexes
 	//
-	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
-		item->cvarPair = 0;
-
-		if ( item->cvarName ) {
-			trap_Cvar_Register( &item->vmCvar, item->cvarName, "", 0 );
-
-			if ( item->cvarRange ) {
-				float dist, bestDist = 10000;
-				int closestPair = 0;
-				int pair;
-
-				for ( pair = 0; pair < item->cvarRange->numPairs; pair++ ) {
-					dist = fabs( item->vmCvar.value - item->cvarRange->pairs[ pair ].value );
-					if ( dist < bestDist ) {
-						bestDist = dist;
-						closestPair = pair;
-					}
-				}
-
-				item->cvarPair = closestPair;
-			}
-		}
-	}
+	UI_RegisterMenuCvars( current );
 }
 

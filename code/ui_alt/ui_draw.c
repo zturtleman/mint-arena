@@ -269,7 +269,11 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 	// doesn't have a special header handling, use generic
 	if ( menuInfo->header ) {
 #ifdef Q3UIFONTS
-		UI_DrawBannerString( current->header.captionPos.x, current->header.captionPos.y, menuInfo->header, 0, color_header );
+		if ( menuInfo->menuFlags & MF_DIALOG ) {
+			UI_DrawProportionalString( current->header.captionPos.x, current->header.captionPos.y, menuInfo->header, UI_DROPSHADOW|UI_GIANTFONT, color_bigtext );
+		} else {
+			UI_DrawBannerString( current->header.captionPos.x, current->header.captionPos.y, menuInfo->header, 0, color_header );
+		}
 #else
 		CG_DrawString( current->header.captionPos.x, current->header.captionPos.y, menuInfo->header, UI_DROPSHADOW|UI_GIANTFONT, color_header );
 #endif
@@ -316,7 +320,7 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 
 #ifdef Q3UIFONTS
 		if ( item->flags & MIF_BIGTEXT ) {
-			UI_DrawProportionalString( item->captionPos.x, item->captionPos.y, item->caption, style, drawcolor );
+			UI_DrawProportionalString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|style, drawcolor );
 		} else
 #endif
 		{
@@ -362,7 +366,7 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 
 #ifdef Q3UIFONTS
 			if ( item->flags & MIF_BIGTEXT ) {
-				UI_DrawProportionalString( x, item->captionPos.y, string, style, drawcolor );
+				UI_DrawProportionalString( x, item->captionPos.y, string, UI_DROPSHADOW|style, drawcolor );
 			} else
 #endif
 			{
@@ -394,13 +398,19 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 
 	if ( menuInfo->header ) {
 #ifdef Q3UIFONTS // ug, dialogs need to use prop font
-		current->header.captionPos.width = UI_BannerStringWidth( menuInfo->header );
+		if ( menuInfo->menuFlags & MF_DIALOG ) {
+			current->header.captionPos.width = UI_ProportionalStringWidth( menuInfo->header );
+			current->header.captionPos.height = PROP_HEIGHT;
+		} else {
+			current->header.captionPos.width = UI_BannerStringWidth( menuInfo->header );
+			current->header.captionPos.height = 36; // ZTM: FIXME: Put PROPB_HEIGHT in a header
+		}
 #else
 		current->header.captionPos.width = CG_DrawStrlen( menuInfo->header, UI_GIANTFONT );
+		current->header.captionPos.height = BIGCHAR_HEIGHT;
 #endif
 		current->header.captionPos.x = ( SCREEN_WIDTH - current->header.captionPos.width ) / 2;
 		current->header.captionPos.y = 10;
-		current->header.captionPos.height = BIGCHAR_HEIGHT;
 
 		headerBottom = current->header.captionPos.y + current->header.captionPos.height;
 	} else {

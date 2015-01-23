@@ -210,21 +210,35 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 	else
 	{
 		float min, max;
+		qboolean reversed;
 		//qboolean ratioButton;
 
-		value = trap_Cvar_VariableValue( item->cvarName ) + dir * item->cvarRange->stepSize;
+		reversed = ( item->cvarRange->min > item->cvarRange->max );
+		if ( reversed ) {
+			min = item->cvarRange->max;
+			max = item->cvarRange->min;
+		} else {
+			min = item->cvarRange->min;
+			max = item->cvarRange->max;
+		}
 
-		min = item->cvarRange->min;
-		max = item->cvarRange->max;
+		// trap_Cvar_VariableValue( item->cvarName ) doesn't work with latched cvars
+		value = item->vmCvar.value + dir * item->cvarRange->stepSize;
+
+		if ( reversed ) {
+			value = max - value;
+		}
 
 		//ratioButton = item->cvarRange->stepSize == 1 && max == 1 && min == 0;
 
 		if ( UI_ItemIsSlider( item ) ) {
-			if ( value < min || value > max ) {
+			// added elipse for min=0, max=1, step=0.1 not being able to go to max
+			if ( value < min - 0.001f || value > max + 0.001f ) {
 				// play buzz sound
 				trap_S_StartLocalSound( uis.itemWarnSound, CHAN_LOCAL_SOUND );
 				return qfalse;
 			}
+			value = Com_Clamp( min, max, value );
 		}
 		// ratio button, ..erm or any wrapping value
 		else if ( min != max ) {
@@ -282,13 +296,23 @@ qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, 
 	item = &current->items[itemNum];
 
 	if ( UI_ItemIsSlider( item ) ) {
-		float frac, sliderx, targetStep, targetValue;
+		float frac, sliderx, targetStep, targetValue, min, max;
+		qboolean reversed;
 
 		// clicked slider caption, ignore -- still allow clicking it to run an action
 		//if ( x < item->captionPos.x + item->captionPos.width && state == MACTION_PRESS )
 		//	return qfalse;
 
 		sliderx = item->captionPos.x + item->captionPos.width + BIGCHAR_WIDTH;
+
+		reversed = ( item->cvarRange->min > item->cvarRange->max );
+		if ( reversed ) {
+			min = item->cvarRange->max;
+			max = item->cvarRange->min;
+		} else {
+			min = item->cvarRange->min;
+			max = item->cvarRange->max;
+		}
 
 		// click slider item outside of slider bar... eat action
 		if ( ( x < sliderx || x > sliderx + 96 ) && state == MACTION_PRESS ) {
@@ -297,23 +321,27 @@ qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, 
 			sliderx += 8;
 			frac = Com_Clamp( 0, 1, ( x - 6 - sliderx ) / ( 96 - 16 ) );
 
-			targetStep = frac * ( item->cvarRange->max - item->cvarRange->min );
-			targetValue = targetStep + item->cvarRange->min;
+			if ( reversed ) {
+				frac = 1.0f - frac;
+			}
+
+			targetStep = frac * ( max - min );
+			targetValue = targetStep + min;
 		}
 
 		if ( state == MACTION_RELEASE ) {
 			float value, halfStep;
 
-			halfStep = item->cvarRange->stepSize / 2;
+			halfStep = item->cvarRange->stepSize / 2.0f;
 
 			// snap to step
 			value = 0;
 			while ( value + halfStep <= targetStep ) {
 				value += item->cvarRange->stepSize;
 			}
-			value += item->cvarRange->min;
+			value += min;
 
-			value = Com_Clamp( item->cvarRange->min, item->cvarRange->max, value );
+			value = Com_Clamp( min, max, value );
 			trap_Cvar_SetValue( item->cvarName, value );
 
 			// force update because dragging changes the vmCvar directly

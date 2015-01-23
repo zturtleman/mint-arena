@@ -184,7 +184,7 @@ void UI_DrawMainMenuBackground( void ) {
 }
 
 void UI_DrawSlider( float x, float y, float min, float max, float value, int style, float *drawcolor ) {
-	float frac;
+	float frac, sliderValue;
 	qhandle_t hShader;
 
 	trap_R_SetColor( drawcolor );
@@ -198,8 +198,16 @@ void UI_DrawSlider( float x, float y, float min, float max, float value, int sty
 	else
 		hShader = uiAssets.sliderButton;
 
+	// clamp slider value so it doesn't go off when value is out of range
+	// but still display the real value
+	if ( min > max ) {
+		sliderValue = Com_Clamp( max, min, value );
+	} else {
+		sliderValue = Com_Clamp( min, max, value );
+	}
+
 	// position of slider button
-	frac = ( value - min ) / ( max - min );
+	frac = ( sliderValue - min ) / ( max - min );
 
 	CG_DrawPic( x + 8 + ( 96 - 16 ) * frac - 2, y - 2, 12, 20, hShader );
 

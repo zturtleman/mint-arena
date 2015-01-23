@@ -602,7 +602,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		item->clickPos.y += curY;
 
 		// move draw point for next item
-		if ( horizontalMenu || ( numHeaders && !( item->flags & MIF_HEADER ) ) ) {
+		if ( ( horizontalMenu && !numHeaders ) || ( numHeaders && !( item->flags & MIF_HEADER ) ) ) {
 			curX += item->captionPos.width + horizontalGap;
 		} else {
 			curY += item->captionPos.height + verticalGap;

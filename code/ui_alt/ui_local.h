@@ -125,11 +125,12 @@ typedef enum {
 #define		MIF_BIGTEXT		0x0080	// use a larger font for this item
 #define		MIF_NEXTBUTTON	0x0100	// this itemshould have 'next' button graphic and placement. It should be the last item in list, so arrow keys work correct.
 #define		MIF_HEADER		0x0200	// A Team Arena main menu header
+#define		MIF_PANEL		0x0400	// Begin a 'tab' aka 'panel' of a menu
 
 //#define		MIF_CVAR		0x1000
 //#define		MIF_CONTROL		0x2000	// y is PC_* (PlayerControl Index)
 
-#define		MIF_SELECTABLE (MIF_SUBMENU|MIF_CALL|MIF_POPMENU|MIF_SWAPMENU)
+#define		MIF_SELECTABLE (MIF_SUBMENU|MIF_CALL|MIF_POPMENU|MIF_SWAPMENU|MIF_PANEL)
 
 typedef struct {
 	float value;
@@ -218,6 +219,7 @@ typedef struct {
 	int			numStacked;
 
 	menuId_t	menu;
+	int			panel;
 	int			selectedItem;
 	int			mouseItem; // item mouse points to. -1 if none.
 	qboolean	mouseClickDown; // for click and drag sliders, mouseItem will be set to item

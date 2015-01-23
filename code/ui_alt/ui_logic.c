@@ -51,6 +51,7 @@ static void UI_SetInitalSelection( currentMenu_t *current ) {
 void UI_SetMenu( currentMenu_t *current, menuId_t menu ) {
 	current->numStacked = 0;
 	current->menu = menu;
+	current->panel = 1;
 	current->selectedItem = 0;
 	current->mouseItem = -1;
 	current->mouseClickDown = qfalse;
@@ -75,6 +76,7 @@ void UI_SwapMenu( currentMenu_t *current, menuId_t menu ) {
 		return;
 
 	current->menu = menu;
+	current->panel = 1;
 	current->selectedItem = 0;
 	current->mouseItem = -1;
 	current->mouseClickDown = qfalse;
@@ -94,11 +96,13 @@ void UI_PushMenu( currentMenu_t *current, menuId_t menu ) {
 	if ( current->menu ) {
 		// push stack
 		current->stack[current->numStacked].menu = current->menu;
+		// panel
 		current->stack[current->numStacked].selectedItem = current->selectedItem;
 		current->numStacked++;
 	}
 
 	current->menu = menu;
+	current->panel = 1;
 	current->selectedItem = 0;
 	current->mouseItem = -1;
 	current->mouseClickDown = qfalse;
@@ -119,6 +123,7 @@ void UI_PopMenu( currentMenu_t *current ) {
 	// pop stack
 	current->numStacked--;
 	current->menu = current->stack[current->numStacked].menu;
+	current->panel = 1;
 	current->selectedItem = current->stack[current->numStacked].selectedItem;
 	current->mouseItem = -1;
 	current->mouseClickDown = qfalse;
@@ -127,6 +132,37 @@ void UI_PopMenu( currentMenu_t *current ) {
 
 	UI_BuildCurrentMenu( current );
 	UI_SetInitalSelection( current );
+}
+
+void UI_SetMenuPanel( currentMenu_t *current, int itemNum ) {
+	int i;
+	currentMenuItem_t *item;
+	int panelNum = 0;
+
+	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
+		if ( item->flags & MIF_PANEL )
+			panelNum++;
+		if ( i == itemNum )
+			break;
+	}
+
+	if ( current->panel == panelNum )
+		return;
+
+	current->panel = panelNum;
+	UI_BuildCurrentMenu( current );
+	UI_SetInitalSelection( current );
+
+	// select the panel button
+	panelNum = 0;
+	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
+		if ( item->flags & MIF_PANEL )
+			panelNum++;
+		if ( panelNum == current->panel )
+			break;
+	}
+
+	current->selectedItem = i;
 }
 
 // dir -1 = up, 1 = down, 2 = left, 4 = right
@@ -278,6 +314,11 @@ void UI_MenuAction( currentMenu_t *current, int itemNum, int dir ) {
 		if ( item.action ) {
 			item.action( itemNum );
 		}
+	}
+
+	if ( item.flags & MIF_PANEL ) {
+		// switch to panel
+		UI_SetMenuPanel( current, itemNum );
 	}
 
 	if ( item.flags & MIF_SWAPMENU ) {

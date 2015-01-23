@@ -228,7 +228,7 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 	int i;
 	qboolean drawFramePics = qtrue;
 	vec4_t drawcolor;
-	int style;
+	int style, panelNum;
 	menudef_t	*menuInfo;
 	currentMenuItem_t *item;
 
@@ -298,6 +298,22 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 			}
 		}
 
+		if ( item->flags & MIF_PANEL ) {
+			panelNum++;
+
+			if ( panelNum == current->panel ) {
+				// highlight button for displayed tab
+				if ( item->flags & MIF_BIGTEXT ) {
+					Vector4Copy( color_bigSelected, drawcolor );
+				} else {
+					Vector4Copy( color_smallSelected, drawcolor );
+				}
+
+				// don't have button for displayed tab pulse
+				style &= ~UI_PULSE;
+			}
+		}
+
 #ifdef Q3UIFONTS
 		if ( item->flags & MIF_BIGTEXT ) {
 			UI_DrawProportionalString( item->captionPos.x, item->captionPos.y, item->caption, style, drawcolor );
@@ -360,13 +376,15 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 #define MAX_MENU_HEADERS	8
 // this is used for drawing and logic. it's closely related to UI_DrawCurrentMenu.
 void UI_BuildCurrentMenu( currentMenu_t *current ) {
-	int i, x, y = 0, horizontalGap = BIGCHAR_WIDTH, verticalGap = 2;
-	int	numHeaders = 0, totalWidth[MAX_MENU_HEADERS] = {0}, totalHeight = 0;
+	int i, horizontalGap = BIGCHAR_WIDTH, verticalGap = 2;
+	int	numHeaders = 0, totalWidth[MAX_MENU_HEADERS] = {0}, totalHeight = 0, totalPanelHeight = 0;
+	int panelItemX, panelItemY, itemX, itemY, curX, curY;
 	int headerBottom = -1;
 	qboolean horizontalMenu = qfalse;
 	menudef_t	*menuInfo;
 	menuitem_t	*itemInfo;
 	currentMenuItem_t *item;
+	int panelNum;
 
 	if ( !current->menu ) {
 		return;
@@ -415,7 +433,8 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 	//
 	item = current->items;
 	itemInfo = menuInfo->items;
-	for ( i = 0; i < menuInfo->numItems; i++, itemInfo++, item++ ) {
+	panelNum = 0;
+	for ( i = 0, current->numItems = 0; i < menuInfo->numItems; i++, itemInfo++ ) {
 		item->flags = itemInfo->flags;
 		item->action = itemInfo->action;
 		item->menuid = itemInfo->menuid;
@@ -424,6 +443,16 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		item->caption = itemInfo->caption;
 		item->captionPos.y = itemInfo->y;
 		item->captionPos.x = 0;
+
+		if ( item->flags & MIF_PANEL ) {
+			panelNum++;
+		} else {
+			// if not part of current panel, don't show it
+			if ( panelNum > 0 && panelNum != current->panel )
+			{
+				continue;
+			}
+		}
 
 		if ( item->flags & MIF_BIGTEXT ) {
 #ifdef Q3UIFONTS
@@ -458,12 +487,13 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			item->clickPos.x = item->captionPos.x;
 			item->clickPos.y = item->captionPos.y;
 		}
+
+		item++;
+		current->numItems++;
 	}
 
-	current->numItems = i;
-
 	//
-	//  Calculate total width/height
+	// Calculate total width/height
 	//
 	numHeaders = 0;
 	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
@@ -480,107 +510,111 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			totalWidth[numHeaders] += horizontalGap;
 		}
 
-		totalHeight += item->captionPos.height + verticalGap;
+		if ( item->flags & MIF_PANEL ) {
+			totalPanelHeight += item->captionPos.height + verticalGap;
+		} else {
+			totalHeight += item->captionPos.height + verticalGap;
+		}
 	}
 
 	//
 	// Set item x and y
 	//
-	// FIXME: this section is really ugly
 	numHeaders = 0;
+	panelItemX = -1;
+	panelItemY = -1;
+	itemX = -1;
+	itemY = -1;
 	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
+		int sectionHeight;
+		qboolean centerX;
+
 		if ( item->flags & MIF_NEXTBUTTON ) {
 			// Fixed place in lower right
 			continue;
 		}
 
-		if ( item->flags & MIF_HEADER ) {
-			numHeaders++;
-			x = (SCREEN_WIDTH - totalWidth[numHeaders]) / 2;
+		centerX = !horizontalMenu;
 
-			if ( item->captionPos.y != 0 ) {
-				y = item->captionPos.y;
-			} else if ( i == 0 ) {
-				y = headerBottom;
-			} else {
-				y += current->items[i-1].captionPos.height + verticalGap;
-			}
-
-			// uses absolute position because y might already be set to absolute
-			item->captionPos.y = y;
-			item->captionPos.x = (SCREEN_WIDTH - item->captionPos.width) / 2;
-
-			// clickable position is relative
-			item->clickPos.x += x;
-			item->clickPos.y += y;
-
-			// put items below header
-			y += item->captionPos.height + verticalGap;
-
-			continue;
-		} else if ( numHeaders ) {
-			if ( i > 0 && !( current->items[i-1].flags & MIF_HEADER ) )
-				x += current->items[i-1].captionPos.width + horizontalGap;
-
-			if ( item->captionPos.y != 0 ) {
-				y = item->captionPos.y;
-			}
-
-			// uses absolute position because y might already be set to absolute
-			item->captionPos.x = x;
-			item->captionPos.y = y;
-
-			// clickable position is relative
-			item->clickPos.x += x;
-			item->clickPos.y += y;
-			continue;
+		// panel tabs/buttons are separate from list items
+		if ( item->flags & MIF_PANEL ) {
+			curX = panelItemX;
+			curY = panelItemY;
+			sectionHeight = totalPanelHeight;
+			centerX = qfalse; // left aligned
+		} else {
+			curX = itemX;
+			curY = itemY;
+			sectionHeight = totalHeight;
 		}
 
-		if ( horizontalMenu ) {
-			if ( i == 0 ) {
-				// center x
-				x = (SCREEN_WIDTH - totalWidth[numHeaders]) / 2;
+		if ( item->flags & MIF_HEADER ) {
+			numHeaders++;
+			centerX = qtrue;
+		} else if ( numHeaders ) {
+			centerX = qfalse;
+		}
 
-				//if ( menuInfo->menuFlags & MF_DIALOG ) {
-					y = headerBottom;
-				/*} else if ( item->captionPos.y != 0 ) {
-					y = item->captionPos.y;
-				} else {
-					// center y
-					y = headerBottom + (SCREEN_HEIGHT - headerBottom - totalHeight) / 2;
-				}*/
-			} else {
-				x += current->items[i-1].captionPos.width + horizontalGap;
-				if ( item->captionPos.y != 0 ) {
-					y = item->captionPos.y;
-				}
-			}
-		} else {
-			if ( item->captionPos.y != 0 ) {
-				y = item->captionPos.y;
-			} else if ( i == 0 ) {
-				// center Y
-				y = headerBottom + (SCREEN_HEIGHT - headerBottom - totalHeight) / 2;
-			} else {
-				y += current->items[i-1].captionPos.height + verticalGap;
-			}
+		if ( item->captionPos.y != 0 ) {
+			curY = item->captionPos.y;
+		} else if ( item->flags & MIF_HEADER ) {
+			if ( curY == -1 )
+				curY = headerBottom;
+			else
+				curY += item->captionPos.height + verticalGap;
+		} else if ( horizontalMenu && curY == -1 ) {
+			curY = headerBottom;
+		} else if ( curY == -1 ) {
+			// center Y
+			curY = headerBottom + (SCREEN_HEIGHT - headerBottom - sectionHeight) / 2;
+		}
 
-			if ( item->cvarName ) {
-				// right align HACK for M_GAME_OPTIONS
-				x = SCREEN_WIDTH / 2 + totalWidth[0] / menuInfo->numItems / 6 - item->captionPos.width;
-			} else {
-				// center
-				x = (SCREEN_WIDTH - item->captionPos.width) / 2;
+		if ( item->flags & MIF_PANEL ) {
+			// right align
+			curX = 216 - item->captionPos.width;
+		} if ( !panelNum && item->cvarName && centerX ) {
+			// right align HACK for M_GAME_OPTIONS
+			curX = SCREEN_WIDTH / 2 + totalWidth[0] / menuInfo->numItems / 6 - item->captionPos.width;
+		} else if ( horizontalMenu && curX == -1 ) {
+			// center line
+			curX = (SCREEN_WIDTH - totalWidth[numHeaders]) / 2;
+		} else if ( centerX ) {
+			// center item
+			curX = (SCREEN_WIDTH - item->captionPos.width) / 2;
+
+			// ZTM: TODO: properly deal with changing the center x?
+			if ( panelNum ) {
+				curX = 216 + 12;
 			}
 		}
 
 		// uses absolute position because y might already be set to absolute
-		item->captionPos.x = x;
-		item->captionPos.y = y;
+		item->captionPos.x = curX;
+		item->captionPos.y = curY;
 
 		// clickable position is relative
-		item->clickPos.x += x;
-		item->clickPos.y += y;
+		item->clickPos.x += curX;
+		item->clickPos.y += curY;
+
+		// move draw point for next item
+		if ( horizontalMenu || ( numHeaders && !( item->flags & MIF_HEADER ) ) ) {
+			curX += item->captionPos.width + horizontalGap;
+		} else {
+			curY += item->captionPos.height + verticalGap;
+		}
+
+		if ( item->flags & MIF_HEADER ) {
+			// center next line
+			curX = (SCREEN_WIDTH - totalWidth[numHeaders]) / 2;
+		}
+
+		if ( item->flags & MIF_PANEL ) {
+			panelItemX = curX;
+			panelItemY = curY;
+		} else {
+			itemX = curX;
+			itemY = curY;
+		}
 	}
 
 	// add back button

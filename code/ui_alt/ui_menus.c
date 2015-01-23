@@ -216,7 +216,6 @@ menuitem_t defaultsmenu_items[] =
 };
 
 
-#define MIF_PANEL 0 //MIF_HEADER
 // From Team Arena's ui_main.c
 void graphicsPresetUpdate( int item ) {
 	int val;

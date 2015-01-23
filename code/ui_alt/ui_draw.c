@@ -497,6 +497,11 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 	//
 	numHeaders = 0;
 	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
+		if ( item->flags & MIF_NEXTBUTTON ) {
+			// Fixed place in lower right
+			continue;
+		}
+
 		if ( item->flags & MIF_HEADER ) {
 			numHeaders++;
 

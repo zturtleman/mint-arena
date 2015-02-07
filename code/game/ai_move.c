@@ -1437,7 +1437,6 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach)
 	{
 		if (dist > 0) speed = 200 - (180 - 1 * dist);
 		else speed = 200;
-		EA_Walk(ms->playernum);
 	} //end if
 	else
 	{
@@ -1678,11 +1677,20 @@ bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t 
 		if (reachhordist < 20)
 		{
 			if (dist > 64) dist = 64;
-			speed = 400 - (256 - 4 * dist);
+
+			if (ms->moveflags & MFL_WALK) {
+				speed = 200 - (128 - 2 * dist);
+			} else {
+				speed = 400 - (256 - 4 * dist);
+			}
 		} //end if
 		else
 		{
-			speed = 400;
+			if (ms->moveflags & MFL_WALK) {
+				speed = 200;
+			} else {
+				speed = 400;
+			}
 		} //end else
 	} //end else
 	//
@@ -3023,7 +3031,11 @@ bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal)
 	//
 	dist = VectorNormalize(dir);
 	if (dist > 100) dist = 100;
-	speed = 400 - (400 - 4 * dist);
+	if (ms->moveflags & MFL_WALK) {
+		speed = 200 - (200 - 2 * dist);
+	} else {
+		speed = 400 - (400 - 4 * dist);
+	}
 	if (speed < 10) speed = 0;
 	//
 	BotCheckBlocked(ms, dir, qtrue, &result);

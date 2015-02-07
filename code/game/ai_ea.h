@@ -83,7 +83,6 @@ void EA_Command(int playerNum, char *command );
 
 void EA_Action(int playerNum, int action);
 void EA_Crouch(int playerNum);
-void EA_Walk(int playerNum);
 void EA_MoveUp(int playerNum);
 void EA_MoveDown(int playerNum);
 void EA_MoveForward(int playerNum);

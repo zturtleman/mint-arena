@@ -1647,6 +1647,10 @@ void BotSetupForMovement(bot_state_t *bs) {
 	if (BotWantsToWalk(bs)) {
 		initmove.or_moveflags |= MFL_WALK;
 	}
+	//make walker bots run to items
+	if (bs->walker > 0.5f && (initmove.or_moveflags & MFL_WALK)) {
+		initmove.or_moveflags |= MFL_SPRINT;
+	}
 	//
 	VectorCopy(bs->viewangles, initmove.viewangles);
 	//

@@ -279,6 +279,7 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 #endif
 	}
 
+	panelNum = 0;
 	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
 		style = 0;
 

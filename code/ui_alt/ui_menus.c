@@ -104,10 +104,15 @@ void restartMap( int item ) {
 
 */
 
-static cvarRangePair_t cr_boolPairs[] = { { 0, "off" }, { 1, "on" } };
+#define VINT( x, str ) { CVT_INT, #x, str }
+#define VFLOAT( x, str ) { CVT_FLOAT, #x, str }
+#define VSTRING( x, str ) { CVT_STRING, x, str }
+#define VEND { CVT_NONE, NULL, NULL }
+
+static cvarRangePair_t cr_boolPairs[] = { VINT( 0, "off" ), VINT( 1, "on" ), VEND };
 static cvarRange_t cr_bool = { 0, 1, 1, cr_boolPairs, ARRAY_LEN(cr_boolPairs) };
 
-static cvarRangePair_t cr_boolInvertPairs[] = { { 0, "on" }, { 1, "off" } };
+static cvarRangePair_t cr_boolInvertPairs[] = { VINT( 0, "on" ), VINT( 1, "off" ), VEND };
 static cvarRange_t cr_boolInvert = { 0, 1, 1, cr_boolInvertPairs, ARRAY_LEN(cr_boolInvertPairs) };
 
 // 0.0 to 1.0 slider
@@ -156,11 +161,12 @@ menuitem_t mainmenu_items[] =
 #endif
 
 cvarRangePair_t cr_skillPairs[] = {
-{ 1, "I Can Win" },
-{ 2, "Bring It On" },
-{ 3, "Hurt Me Plenty" },
-{ 4, "Hardcore" },
-{ 5, "Nightmare!" }
+	VINT( 1, "I Can Win" ),
+	VINT( 2, "Bring It On" ),
+	VINT( 3, "Hurt Me Plenty" ),
+	VINT( 4, "Hardcore" ),
+	VINT( 5, "Nightmare!" ),
+	VEND
 };
 cvarRange_t cr_skill = { 1, 5, 1, cr_skillPairs, ARRAY_LEN(cr_skillPairs) };
 
@@ -314,15 +320,18 @@ void graphicsPresetUpdate( int item ) {
 	}
 }
 
-static cvarRangePair_t cr_glCustomPairs[] = { { 0, "Very High" }, { 1, "High" }, { 2, "Medium" }, { 3, "Fast" }, { 4, "Fastest" }, { 5, "Custom" } };
+static cvarRangePair_t cr_glCustomPairs[] = { VINT( 0, "Very High" ), VINT( 1, "High" ), VINT( 2, "Medium" ), VINT( 3, "Fast" ), VINT( 4, "Fastest" ), VINT( 5, "Custom" ), VEND };
 static cvarRange_t cr_glCustom = { 0, 32, 16, cr_glCustomPairs, ARRAY_LEN(cr_glCustomPairs) };
 
 static cvarRange_t cr_pimip = { 3, 0, 1, NULL, 0 };
 
-static cvarRangePair_t cr_textureQualityPairs[] = { { 0, "default" }, { 16, "16 bit" }, { 32, "32 bit" } };
+static cvarRangePair_t cr_textureQualityPairs[] = { VINT( 0, "default" ), VINT( 16, "16 bit" ), VINT( 32, "32 bit" ), VEND };
 static cvarRange_t cr_textureQuality = { 0, 32, 16, cr_textureQualityPairs, ARRAY_LEN(cr_textureQualityPairs) };
 
-static cvarRangePair_t cr_lightingPairs[] = { { 0, "Lightmap (High)" }, { 1, "Vertex (Low)" } };
+static cvarRangePair_t cr_textureFilterPairs[] = { VSTRING( "GL_LINEAR_MIPMAP_NEAREST", "Bilinear" ), VSTRING( "GL_LINEAR_MIPMAP_LINEAR", "Trilinear" ), VEND };
+static cvarRange_t cr_textureFilter = { 0, 0, 0, cr_textureFilterPairs, ARRAY_LEN(cr_textureFilterPairs) };
+
+static cvarRangePair_t cr_lightingPairs[] = { VINT( 0, "Lightmap (High)" ), VINT( 1, "Vertex (Low)" ), VEND };
 static cvarRange_t cr_lighting = { 0, 1, 1, cr_lightingPairs, ARRAY_LEN(cr_lightingPairs) };
 
 static cvarRange_t cr_gamma = { 0.5, 2.0, 0.1, NULL, 0 };
@@ -330,28 +339,29 @@ static cvarRange_t cr_viewsize = { 30, 100, 10, NULL, 0 };
 
 static cvarRangePair_t cr_anaglyphModePairs[] =
 {
-	{ 0, "off" },
-	{ 1, "red-cyan" },
-	{ 2, "red-blue" },
-	{ 3, "red-green" },
-	{ 4, "green-magenta" },
-	{ 5, "cyan-red" },
-	{ 6, "blue-red" },
-	{ 7, "green-red" },
-	{ 8, "magenta-green" }
+	VINT( 0, "off" ),
+	VINT( 1, "red-cyan" ),
+	VINT( 2, "red-blue" ),
+	VINT( 3, "red-green" ),
+	VINT( 4, "green-magenta" ),
+	VINT( 5, "cyan-red" ),
+	VINT( 6, "blue-red" ),
+	VINT( 7, "green-red" ),
+	VINT( 8, "magenta-green" ),
+	VEND
 };
 static cvarRange_t cr_anaglyphMode = { 0, 8, 1, cr_anaglyphModePairs, ARRAY_LEN(cr_anaglyphModePairs) };
 
-static cvarRangePair_t cr_soundSystemPairs[] = { { 0, "SDL" }, { 1, "OpenAL" } };
+static cvarRangePair_t cr_soundSystemPairs[] = { VINT( 0, "SDL" ), VINT( 1, "OpenAL" ), VEND };
 static cvarRange_t cr_soundSystem = { 0, 1, 1, cr_soundSystemPairs, ARRAY_LEN(cr_soundSystemPairs) };
 
-static cvarRangePair_t cr_sdlSpeedPairs[] = { { 11025, "Low (11k)" }, { 22050, "Medium (22k)" }, { 44100, "High (44.1k)" }, { 0, "Very High (48k)" } }; // spearmint default 0 is 48k, ioq3 0 is 44.1k
+static cvarRangePair_t cr_sdlSpeedPairs[] = { VINT( 11025, "Low (11k)" ), VINT( 22050, "Medium (22k)" ), VINT( 44100, "High (44.1k)" ), VINT( 0, "Very High (48k)" ), VEND }; // spearmint default 0 is 48k, ioq3 0 is 44.1k
 static cvarRange_t cr_sdlSpeed = { 0, 1, 1, cr_sdlSpeedPairs, ARRAY_LEN(cr_sdlSpeedPairs) };
 
-static cvarRangePair_t cr_networkRatePairs[] = { { 2500, "<= 28.8K" }, { 3000, "33.6K" }, { 4000, "56K" }, { 5000, "ISDN" }, { 25000, "LAN/Cable/xDSL" } };
+static cvarRangePair_t cr_networkRatePairs[] = { VINT( 2500, "<= 28.8K" ), VINT( 3000, "33.6K" ), VINT( 4000, "56K" ), VINT( 5000, "ISDN" ), VINT( 25000, "LAN/Cable/xDSL" ), VEND };
 static cvarRange_t cr_networkRate = { 2500, 25000, 500, cr_networkRatePairs, ARRAY_LEN(cr_networkRatePairs) };
 
-static cvarRangePair_t cr_lagCompPairs[] = { { 0, "None" }, { 1, "One Server Frame" }, { 2, "Full" } };
+static cvarRangePair_t cr_lagCompPairs[] = { VINT( 0, "None" ), VINT( 1, "One Server Frame" ), VINT( 2, "Full" ), VEND };
 static cvarRange_t cr_lagComp = { 2500, 25000, 500, cr_lagCompPairs, ARRAY_LEN(cr_lagCompPairs) };
 
 menuitem_t systemmenu_items[] = {
@@ -366,7 +376,7 @@ menuitem_t systemmenu_items[] = {
 	{ MIF_CALL, "Geometric Detail:", NULL, M_NONE, 0 }, // TODO: modifies both "r_lodBias" and "r_subdivisions"
 	{ MIF_CALL, "Texture Detail:", NULL, M_NONE, 0, "r_picmip", &cr_pimip },
 	{ MIF_CALL, "Texture Quality:", NULL, M_NONE, 0, "r_texturebits", &cr_textureQuality },
-	{ MIF_CALL, "Texture Filter:", NULL, M_NONE, 0, "r_textureMode", NULL }, // ZTM: TODO: Cvar pairs with string value
+	{ MIF_CALL, "Texture Filter:", NULL, M_NONE, 0, "r_textureMode", &cr_textureFilter },
 
 	// missing driver info button
 
@@ -390,20 +400,20 @@ menuitem_t systemmenu_items[] = {
 
 
 #ifndef MISSIONPACK_HUD
-static cvarRangePair_t cr_teamoverlayPairs[] = { { 0, "off" }, { 1, "upper right" }, { 2, "lower right" }, { 3, "lower left" } };
+static cvarRangePair_t cr_teamoverlayPairs[] = { VINT( 0, "off" ), VINT( 1, "upper right" ), VINT( 2, "lower right" ), VINT( 3, "lower left" ), VEND };
 static cvarRange_t cr_teamoverlay = { 0, 3, 1, cr_teamoverlayPairs, ARRAY_LEN(cr_teamoverlayPairs) };
 #endif
 
-static cvarRangePair_t cr_splitverticalPairs[] = { { 0, "horizontal" }, { 1, "vertical" } };
+static cvarRangePair_t cr_splitverticalPairs[] = { VINT( 0, "horizontal" ), VINT( 1, "vertical" ), VEND };
 static cvarRange_t cr_splitvertical = { 0, 1, 1, cr_splitverticalPairs, ARRAY_LEN(cr_splitverticalPairs) };
 
-static cvarRangePair_t cr_atmeffectsPairs[] = { { 0, "off" }, { 0.5f, "low" }, { 1, "high" } };
+static cvarRangePair_t cr_atmeffectsPairs[] = { VINT( 0, "off" ), VFLOAT( 0.5f, "low" ), VINT( 1, "high" ), VEND };
 static cvarRange_t cr_atmeffects = { 0, 1, 0.5, cr_atmeffectsPairs, ARRAY_LEN(cr_atmeffectsPairs) };
 
-static cvarRangePair_t cr_brassTimePairs[] = { { 0, "off" }, { 1250, "short" }, { 2500, "long" } };
+static cvarRangePair_t cr_brassTimePairs[] = { VINT( 0, "off" ), VINT( 1250, "short" ), VINT( 2500, "long" ), VEND };
 static cvarRange_t cr_brassTime = { 0, 2500, 1250, cr_brassTimePairs, ARRAY_LEN(cr_brassTimePairs) };
 
-static cvarRangePair_t cr_drawGunPairs[] = { { 0, "off" }, { 1, "right-handed" }, { 3, "centered" }, { 2, "left-handed" } };
+static cvarRangePair_t cr_drawGunPairs[] = { VINT( 0, "off" ), VINT( 1, "right-handed" ), VINT( 3, "centered" ), VINT( 2, "left-handed" ), VEND };
 static cvarRange_t cr_drawGun = { 0, 3, 1, cr_drawGunPairs, ARRAY_LEN(cr_drawGunPairs) };
 
 // ZTM: TODO: remove the MIF_CALL? I think it's next so they are selectable...

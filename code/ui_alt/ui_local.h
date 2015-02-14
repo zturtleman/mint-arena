@@ -132,10 +132,18 @@ typedef enum {
 
 #define		MIF_SELECTABLE (MIF_SUBMENU|MIF_CALL|MIF_POPMENU|MIF_SWAPMENU|MIF_PANEL)
 
-typedef struct {
-	float value;
-	const char *string;
+// cvar value type
+typedef enum {
+	CVT_NONE,
+	CVT_INT,
+	CVT_FLOAT,
+	CVT_STRING
+} cvarValueType_e;
 
+typedef struct {
+	cvarValueType_e	type;
+	const char *value;
+	const char *string;
 } cvarRangePair_t;
 
 // if pairs is set, item will loop through values and display text from pairs
@@ -159,7 +167,7 @@ typedef struct {
 	int y;
 
 	const char	*cvarName;
-	cvarRange_t *cvarRange;
+	cvarRange_t	*cvarRange;
 
 } menuitem_t;
 
@@ -205,6 +213,7 @@ typedef struct {
 	//float			cvarValue;	// if cvarRange->numPairs > 0 it's an index, otherwise it's the clamped value for slider
 	vmCvar_t		vmCvar;
 	int				cvarPair;
+	int				numPairs;
 
 } currentMenuItem_t;
 

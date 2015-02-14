@@ -450,6 +450,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		item->menuid = itemInfo->menuid;
 		item->cvarName = itemInfo->cvarName;
 		item->cvarRange = itemInfo->cvarRange;
+		item->numPairs = 0;
 		item->caption = itemInfo->caption;
 		item->captionPos.y = itemInfo->y;
 		item->captionPos.x = 0;
@@ -640,6 +641,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		item->menuid = M_NONE;
 		item->cvarName = NULL;
 		item->cvarRange = NULL;
+		item->numPairs = 0;
 
 #ifdef MISSIONPACK
 		if ( current->numStacked == 1 )

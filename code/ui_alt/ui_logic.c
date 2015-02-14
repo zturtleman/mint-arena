@@ -226,7 +226,6 @@ void UI_MenuCursorPoint( currentMenu_t *current, int x, int y ) {
 // returns qfalse if item is a cvar and did not change value
 qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) {
 	currentMenuItem_t *item;
-	float value;
 
 	item = &current->items[itemNum];
 
@@ -234,19 +233,24 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 		return qtrue;
 	}
 
-	if ( item->cvarRange->numPairs > 0 ) {
+	if ( item->numPairs > 0 ) {
+		const char *value;
+
 		item->cvarPair += dir;
 
-		if ( item->cvarPair >= item->cvarRange->numPairs )
+		if ( item->cvarPair >= item->numPairs )
 			item->cvarPair = 0;
 		else if ( item->cvarPair < 0 )
-			item->cvarPair = item->cvarRange->numPairs - 1;
+			item->cvarPair = item->numPairs - 1;
 
 		value = item->cvarRange->pairs[ item->cvarPair ].value;
+
+		// FIXME: What about cases when it should not take affect until 'Apply' is clicked?
+		trap_Cvar_Set( item->cvarName, value );
 	}
 	else
 	{
-		float min, max;
+		float min, max, value;
 		qboolean reversed;
 		//qboolean ratioButton;
 
@@ -283,16 +287,16 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 			if ( value < min ) value = max;
 			if ( value > max ) value = min;
 		}
-	}
 
-	// FIXME: What about cases when it should not take affect until 'Apply' is clicked?
-	trap_Cvar_SetValue( item->cvarName, value );
+		// FIXME: What about cases when it should not take affect until 'Apply' is clicked?
+		trap_Cvar_SetValue( item->cvarName, value );
 #if 0 // ZTM: Old code. Now the cvar will automatically update to latched value each frame.
-	trap_Cvar_Update( &item->vmCvar );
+		trap_Cvar_Update( &item->vmCvar );
 
-	// might be a latched cvar
-	item->vmCvar.value = value;
+		// might be a latched cvar
+		item->vmCvar.value = value;
 #endif
+	}
 
 	// gets played in UI_MenuAction
 	//trap_S_StartLocalSound( uis.itemActionSound, CHAN_LOCAL_SOUND );
@@ -411,7 +415,23 @@ qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, 
 }
 
 qboolean UI_ItemIsSlider( currentMenuItem_t *item ) {
-	return ( item->cvarRange && item->cvarRange->numPairs == 0 );
+	return ( item->cvarRange && item->numPairs == 0 );
+}
+
+static int UI_NumCvarPairs( cvarRange_t *cvarRange ) {
+	int pair;
+	cvarRangePair_t *cvarPairs;
+
+	if ( !cvarRange || !cvarRange->pairs )
+		return 0;
+
+	cvarPairs = cvarRange->pairs;
+
+	for ( pair = 0; cvarPairs[pair].type != CVT_NONE; pair++ ) {
+		// count
+	}
+
+	return pair;
 }
 
 static void UI_SetMenuCvarValue( currentMenuItem_t *item ) {
@@ -423,11 +443,18 @@ static void UI_SetMenuCvarValue( currentMenuItem_t *item ) {
 		return;
 	}
 
-	for ( pair = 0; pair < item->cvarRange->numPairs; pair++ ) {
-		dist = fabs( item->vmCvar.value - item->cvarRange->pairs[ pair ].value );
-		if ( dist < bestDist ) {
-			bestDist = dist;
-			closestPair = pair;
+	for ( pair = 0; pair < item->numPairs; pair++ ) {
+		if ( item->cvarRange->pairs[ pair ].type == CVT_STRING ) {
+			if ( Q_stricmp( item->vmCvar.string, item->cvarRange->pairs[ pair ].value ) == 0 ) {
+				closestPair = pair;
+				break;
+			}
+		} else {
+			dist = fabs( item->vmCvar.value - atof( item->cvarRange->pairs[ pair ].value ) );
+			if ( dist < bestDist ) {
+				bestDist = dist;
+				closestPair = pair;
+			}
 		}
 	}
 
@@ -451,6 +478,7 @@ void UI_RegisterMenuCvars( currentMenu_t *current ) {
 		item->vmCvar.value = atof( item->vmCvar.string );
 		item->vmCvar.integer = atoi( item->vmCvar.string );
 
+		item->numPairs = UI_NumCvarPairs( item->cvarRange );
 		UI_SetMenuCvarValue( item );
 	}
 }

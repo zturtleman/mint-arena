@@ -194,7 +194,7 @@ void UI_InitBannerFont( fontInfo_t *font ) {
 	qhandle_t	hShader;
 
 	shaderName = "menu/art/font2_prop";
-	hShader = trap_R_RegisterShader( shaderName );
+	hShader = trap_R_RegisterShaderNoMip( shaderName );
 
 	Q_strncpyz( font->name, "bitmapbannerfont", sizeof ( font->name ) );
 	font->glyphScale = 48.0f / PROPB_HEIGHT;
@@ -288,7 +288,7 @@ void UI_InitPropFont( fontInfo_t *font, qboolean glow ) {
 	} else {
 		shaderName = "menu/art/font1_prop";
 	}
-	hShader = trap_R_RegisterShader( shaderName );
+	hShader = trap_R_RegisterShaderNoMip( shaderName );
 
 	Q_strncpyz( font->name, "bitmappropfont", sizeof ( font->name ) );
 	font->glyphScale = 48.0f / PROP_HEIGHT;

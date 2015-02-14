@@ -500,41 +500,41 @@ menuitem_t stubmenu_items[] =
 */
 
 // quick menu definitions
-#define QMENUDEF( name, flags, header ) { flags, header, name##_items, ARRAY_LEN( name##_items ) }
-#define QMENUSTUB( name, flags, header ) { flags, header, stubmenu_items, ARRAY_LEN( stubmenu_items ) }
+#define QMENUDEF( items, flags, header ) { flags, header, items, ARRAY_LEN( items ) }
+#define QMENUSTUB( items, flags, header ) { flags, header, stubmenu_items, ARRAY_LEN( stubmenu_items ) }
 
 menudef_t ui_menus[M_NUM_MENUS] = {
-	{ 0, NULL, NULL, 0 },								// M_NONE
+	{ 0, NULL, NULL, 0 },										// M_NONE
 
-	QMENUDEF( mainmenu, MF_MAINMENU, NULL ),			// M_MAIN
-	QMENUDEF( singleplayermenu, 0, "Single Player" ),	// M_SINGLEPLAYER
-	QMENUSTUB( multiplayermenu, 0, "Multiplayer" ),		// M_MULTIPLAYER
-	QMENUDEF( setupmenu, 0, "Setup" ),					// M_SETUP
+	QMENUDEF( mainmenu_items, MF_MAINMENU, NULL ),				// M_MAIN
+	QMENUDEF( singleplayermenu_items, 0, "Single Player" ),		// M_SINGLEPLAYER
+	QMENUSTUB( multiplayermenu_items, 0, "Multiplayer" ),		// M_MULTIPLAYER
+	QMENUDEF( setupmenu_items, 0, "Setup" ),					// M_SETUP
 #ifdef MISSIONPACK
-	QMENUDEF( demosmenu, 0, "Team Arena Demos" ),					// M_DEMOS
-	QMENUDEF( cinematicsmenu, 0, "Team Arena Cinematics" ),			// M_CINEMATICS
-	QMENUDEF( modsmenu, 0, "Team Arena Mods" ),						// M_MODS
-	QMENUDEF( exitmenu, MF_DIALOG|MF_NOBACK, "Quit Team Arena?" ),	// M_EXIT
+	QMENUDEF( demosmenu_items, 0, "Team Arena Demos" ),						// M_DEMOS
+	QMENUDEF( cinematicsmenu_items, 0, "Team Arena Cinematics" ),			// M_CINEMATICS
+	QMENUDEF( modsmenu_items, 0, "Team Arena Mods" ),						// M_MODS
+	QMENUDEF( exitmenu_items, MF_DIALOG|MF_NOBACK, "Quit Team Arena?" ),	// M_EXIT
 #else
-	QMENUDEF( demosmenu, 0, "Demos" ),						// M_DEMOS
-	QMENUDEF( cinematicsmenu, 0, "Cinematics" ),			// M_CINEMATICS
-	QMENUDEF( modsmenu, 0, "Mods" ),						// M_MODS
-	QMENUDEF( exitmenu, MF_DIALOG|MF_NOBACK, "Exit?" ),		// M_EXIT
+	QMENUDEF( demosmenu_items, 0, "Demos" ),						// M_DEMOS
+	QMENUDEF( cinematicsmenu_items, 0, "Cinematics" ),				// M_CINEMATICS
+	QMENUDEF( modsmenu_items, 0, "Mods" ),							// M_MODS
+	QMENUDEF( exitmenu_items, MF_DIALOG|MF_NOBACK, "Exit game?" ),	// M_EXIT
 #endif
 
 	// Setup menus
-	QMENUSTUB( playermenu, 0, "Player Setup" ),			// M_PLAYER
-	QMENUSTUB( controlsmenu, 0, "Controls" ),			// M_CONTROLS
-	QMENUDEF( systemmenu, 0, "System" ),				// M_SYSTEM
-	QMENUDEF( gameoptionsmenu, 0, "Game Options" ),	// M_GAME_OPTIONS
-	QMENUDEF( creditsmenu, 0, "Credits" ),				// M_CREDITS
-	QMENUDEF( defaultsmenu, MF_DIALOG|MF_NOBACK, "Set to defaults?" ),	// M_DEFAULTS
+	QMENUSTUB( playermenu_items, 0, "Player Setup" ),		// M_PLAYER
+	QMENUSTUB( controlsmenu_items, 0, "Controls" ),			// M_CONTROLS
+	QMENUDEF( systemmenu_items, 0, "System" ),				// M_SYSTEM
+	QMENUDEF( gameoptionsmenu_items, 0, "Game Options" ),	// M_GAME_OPTIONS
+	QMENUDEF( creditsmenu_items, 0, "Credits" ),			// M_CREDITS
+	QMENUDEF( defaultsmenu_items, MF_DIALOG|MF_NOBACK, "Set to defaults?" ),	// M_DEFAULTS
 
 	// Team Arena stubs
-	QMENUSTUB( rulesmenu, 0, "Rules" ),					// M_RULES
-	QMENUSTUB( startservermenu, 0, "Start Server" ),	// M_START_SERVER
+	QMENUSTUB( rulesmenu_items, 0, "Rules" ),					// M_RULES
+	QMENUSTUB( startservermenu_items, 0, "Start Server" ),		// M_START_SERVER
 
 	// in game menus
-	QMENUDEF( postgamemenu, MF_POSTGAME|MF_NOESCAPE|MF_NOBACK, NULL ), // M_POSTGAME
+	QMENUDEF( postgamemenu_items, MF_POSTGAME|MF_NOESCAPE|MF_NOBACK, NULL ),	// M_POSTGAME
 };
 

@@ -127,7 +127,7 @@ menuitem_t mainmenu_items[] =
 	{ MIF_BIGTEXT|MIF_HEADER, "TEAM ARENA", NULL, M_NONE, 20 },
 	{ MIF_BIGTEXT|MIF_CALL, "Quake3", launchQ3, M_NONE, 0 },
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Rules", NULL, M_RULES, 0 },
-	{ MIF_BIGTEXT|MIF_SUBMENU, "Credits", NULL, M_CREDITS_PAGE1, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Credits", NULL, M_CREDITS, 0 },
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Mods", NULL, M_MODS, 0 },
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Cinematics", NULL, M_CINEMATICS, 0 },
 
@@ -182,6 +182,9 @@ menuitem_t setupmenu_items[] =
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Controls", NULL, M_CONTROLS, 0 },
 	{ MIF_BIGTEXT|MIF_SUBMENU, "System", NULL, M_SYSTEM, 0 },
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Game Options", NULL, M_GAME_OPTIONS, 0 },
+#ifndef MISSIONPACK
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Credits", NULL, M_CREDITS, 0 },
+#endif
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Defaults", NULL, M_DEFAULTS, 0 }, // TODO: only show if not in-game?
 };
 
@@ -422,16 +425,58 @@ menuitem_t gameoptionsmenu_items[] =
 	{ MIF_CALL, "Snow/Rain:",				NULL, M_NONE, 0, "cg_atmosphericEffects", cp_atmeffects },
 };
 
+// ZTM: TODO: Include Team Arena 'additional credits'?
 menuitem_t creditsmenu_items[] =
 {
-	{ 0, "Programming: John Carmack", NULL, M_NONE, 0 },
-	{ MIF_SWAPMENU|MIF_NEXTBUTTON, "Additional Credit", NULL, M_CREDITS_PAGE2, 0 },
-};
+	{ MIF_BIGTEXT|MIF_PANEL, "Quake 3", NULL, M_NONE, 0 },
+	{ 0, "id Software is:", NULL, M_NONE, 0 },
+	{ 0, "", NULL, M_NONE, 0 },
+	{ 0, "Programming:", NULL, M_NONE, 0 },
+	{ 0, "    John Carmack, Robert A. Duffy, Jim Dose'", NULL, M_NONE, 0 },
+	{ 0, "Art:", NULL, M_NONE, 0 },
+	{ 0, "    Adrian Carmack, Kevin Cloud, Kenneth Scott,", NULL, M_NONE, 0 },
+	{ 0, "    Seneca Menard, Fred Nilsson", NULL, M_NONE, 0 },
+	{ 0, "Game Designer:", NULL, M_NONE, 0 },
+	{ 0, "    Graeme Devine", NULL, M_NONE, 0 },
+	{ 0, "Level Design:", NULL, M_NONE, 0 },
+	{ 0, "    Tim Willits, Christian Antkow, Paul Jaquays", NULL, M_NONE, 0 },
+	{ 0, "CEO:", NULL, M_NONE, 0 },
+	{ 0, "    Todd Hollenshead", NULL, M_NONE, 0 },
+	{ 0, "Director of Business Development:", NULL, M_NONE, 0 },
+	{ 0, "    Marty Stratton", NULL, M_NONE, 0 },
+	{ 0, "Office Manager and id Mom:", NULL, M_NONE, 0 }, // Listed as Biz Assist and id Mom in Q3A
+	{ 0, "    Donna Jackson", NULL, M_NONE, 0 },
+	{ 0, "Development Assistance:", NULL, M_NONE, 0 },
+	{ 0, "    Eric Webb", NULL, M_NONE, 0 },
+	{ 0, "Bot AI and Programming Assistance:", NULL, M_NONE, 0 },
+	{ 0, "    Jan Paul van Waveren", NULL, M_NONE, 0 },
 
-menuitem_t credits2menu_items[] =
-{
-	{ 0, "SDL, jpeg, etc", NULL, M_NONE, 0 },
-	{ MIF_SWAPMENU|MIF_NEXTBUTTON, "id Credit", NULL, M_CREDITS_PAGE1, 0 },
+	// These are all people that have made commits to Subversion, and thus
+	//  probably incomplete.
+	// (These are in alphabetical order, for the defense of everyone's egos.)
+	{ MIF_BIGTEXT|MIF_PANEL, "ioquake3", NULL, M_NONE, 0 },
+	{ 0, "ioquake3 contributors", NULL, M_NONE, 0 },
+	{ 0, "", NULL, M_NONE, 0 },
+	{ 0, "Tim Angus", NULL, M_NONE, 0 },
+	{ 0, "James Canete", NULL, M_NONE, 0 },
+	{ 0, "Vincent Cojot", NULL, M_NONE, 0 },
+	{ 0, "Ryan C. Gordon", NULL, M_NONE, 0 },
+	{ 0, "Aaron Gyes", NULL, M_NONE, 0 },
+	{ 0, "Zack Middleton", NULL, M_NONE, 0 },
+	{ 0, "Ludwig Nussel", NULL, M_NONE, 0 },
+	{ 0, "Julian Priestley", NULL, M_NONE, 0 },
+	{ 0, "Scirocco Six", NULL, M_NONE, 0 },
+	{ 0, "Thilo Schulz", NULL, M_NONE, 0 },
+	{ 0, "Zachary J. Slater", NULL, M_NONE, 0 },
+	{ 0, "Tony J. White", NULL, M_NONE, 0 },
+	{ 0, "...and many, many others!", NULL, M_NONE, 0 }, // keep this one last.
+
+	{ MIF_BIGTEXT|MIF_PANEL, "Spearmint", NULL, M_NONE, 0 },
+	{ 0, "Spearmint contributors", NULL, M_NONE, 0 },
+	{ 0, "", NULL, M_NONE, 0 },
+	{ 0, "Zack Middleton - main developer", NULL, M_NONE, 0 },
+	{ 0, "Tobias Kuehnhammer & friends - Bot AI, bug reports", NULL, M_NONE, 0 },
+	{ 0, "...and other contributors", NULL, M_NONE, 0 },
 };
 
 // Team Arena uses; Replay, Demo, Menu, Next
@@ -482,15 +527,12 @@ menudef_t ui_menus[M_NUM_MENUS] = {
 	QMENUSTUB( controlsmenu, 0, "Controls" ),			// M_CONTROLS
 	QMENUDEF( systemmenu, 0, "System" ),				// M_SYSTEM
 	QMENUDEF( gameoptionsmenu, 0, "Game Options" ),	// M_GAME_OPTIONS
+	QMENUDEF( creditsmenu, 0, "Credits" ),				// M_CREDITS
 	QMENUDEF( defaultsmenu, MF_DIALOG|MF_NOBACK, "Set to defaults?" ),	// M_DEFAULTS
 
 	// Team Arena stubs
 	QMENUSTUB( rulesmenu, 0, "Rules" ),					// M_RULES
 	QMENUSTUB( startservermenu, 0, "Start Server" ),	// M_START_SERVER
-
-	// Team Arena credit menu
-	QMENUDEF( creditsmenu, 0, "id Credit" ),				// M_CREDITS_PAGE1
-	QMENUDEF( credits2menu,  0, "Additional Credit" ),		// M_CREDITS_PAGE2
 
 	// in game menus
 	QMENUDEF( postgamemenu, MF_POSTGAME|MF_NOESCAPE|MF_NOBACK, NULL ), // M_POSTGAME

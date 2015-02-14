@@ -93,14 +93,12 @@ typedef enum {
 	M_CONTROLS,
 	M_SYSTEM,
 	M_GAME_OPTIONS,
+	M_CREDITS,
 	M_DEFAULTS,
 
 	// only referenced by team arena right now
 	M_RULES,
 	M_START_SERVER,
-
-	M_CREDITS_PAGE1,
-	M_CREDITS_PAGE2,
 
 	M_POSTGAME,
 

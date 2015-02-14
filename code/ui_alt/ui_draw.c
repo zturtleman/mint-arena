@@ -377,14 +377,23 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 	}
 }
 
+// big text menu items (q3 main menu / setup menu) have extra vertical gap
+static int UI_ItemVerticalGap( currentMenuItem_t *item ) {
+	if ( ( item->flags & MIF_BIGTEXT ) && !( item->flags & (MIF_PANEL|MIF_HEADER) ) ) {
+		return 7;
+	} else {
+		return 2;
+	}
+}
+
 // TODO: Fix font heights in UI_BuildCurrentMenu with Q3UIFONTS defined
 #define MAX_MENU_HEADERS	8
 // this is used for drawing and logic. it's closely related to UI_DrawCurrentMenu.
 void UI_BuildCurrentMenu( currentMenu_t *current ) {
-	int i, horizontalGap = BIGCHAR_WIDTH, verticalGap = 2;
+	int i, horizontalGap = BIGCHAR_WIDTH;
 	int	numHeaders = 0, totalWidth[MAX_MENU_HEADERS] = {0}, totalHeight = 0, totalPanelHeight = 0;
 	int panelItemX, panelItemY, itemX, itemY, curX, curY;
-	int headerBottom = -1;
+	int headerBottom = 0;
 	qboolean horizontalMenu = qfalse;
 	menudef_t	*menuInfo;
 	menuitem_t	*itemInfo;
@@ -411,20 +420,22 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		current->header.captionPos.height = BIGCHAR_HEIGHT;
 #endif
 		current->header.captionPos.x = ( SCREEN_WIDTH - current->header.captionPos.width ) / 2;
-		current->header.captionPos.y = 10;
+		current->header.captionPos.y = 16; // ZTM: banner.generic.y is always 16
 
-		headerBottom = current->header.captionPos.y + current->header.captionPos.height;
+		// ZTM: Disabled, verticial center in Q3A ignores header
+		//headerBottom = current->header.captionPos.y + current->header.captionPos.height;
 	} else {
 		Com_Memset( &current->header, 0, sizeof ( current->header ) );
-		headerBottom = 0;
 	}
 
+/* ZTM: Using fixed Y in main menu item def now
 #ifndef MISSIONPACK
 	if ( !cg.connected && ( menuInfo->menuFlags & MF_MAINMENU ) ) {
 		// Q3 banner model
 		headerBottom = 120;
 	}
 #endif
+*/
 
 	if ( menuInfo->menuFlags & MF_DIALOG ) {
 		current->header.captionPos.y = 204;
@@ -529,9 +540,9 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		}
 
 		if ( item->flags & MIF_PANEL ) {
-			totalPanelHeight += item->captionPos.height + verticalGap;
+			totalPanelHeight += item->captionPos.height + UI_ItemVerticalGap( item );
 		} else {
-			totalHeight += item->captionPos.height + verticalGap;
+			totalHeight += item->captionPos.height + UI_ItemVerticalGap( item );
 		}
 	}
 
@@ -579,7 +590,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			if ( curY == -1 )
 				curY = headerBottom;
 			else
-				curY += item->captionPos.height + verticalGap;
+				curY += item->captionPos.height + UI_ItemVerticalGap( item );
 		} else if ( horizontalMenu && curY == -1 ) {
 			curY = headerBottom;
 		} else if ( curY == -1 ) {
@@ -618,7 +629,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		if ( ( horizontalMenu && !numHeaders ) || ( numHeaders && !( item->flags & MIF_HEADER ) ) ) {
 			curX += item->captionPos.width + horizontalGap;
 		} else {
-			curY += item->captionPos.height + verticalGap;
+			curY += item->captionPos.height + UI_ItemVerticalGap( item );
 		}
 
 		if ( item->flags & MIF_HEADER ) {
@@ -667,7 +678,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		item->captionPos.x = 10;
 #else // fake next of menu item (though it's not vertically centered by the above numItems code)
 		if ( i > 0 ) {
-			y += current->items[i-1].captionPos.height + verticalGap;
+			y += current->items[i-1].captionPos.height + UI_ItemVerticalGap( &current->items[i-1] );
 		}
 		item->captionPos.y = y;
 		item->captionPos.x = (SCREEN_WIDTH - item->captionPos.width) / 2;

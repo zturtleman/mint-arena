@@ -134,7 +134,7 @@ typedef enum {
 
 // cvar value type
 typedef enum {
-	CVT_NONE,
+	CVT_NONE,		// terminates list of cvar value pairs
 	CVT_INT,
 	CVT_FLOAT,
 	CVT_STRING
@@ -142,21 +142,14 @@ typedef enum {
 
 typedef struct {
 	cvarValueType_e	type;
-	const char *value;
-	const char *string;
-} cvarRangePair_t;
+	const char *value;		// cvar value
+	const char *string;		// display text
+} cvarValuePair_t;
 
-// if pairs is set, item will loop through values and display text from pairs
-// otherwise it's treated as a slider (min, max, stepSize)
-// ZTM: FIXME:? Either min/max/stepSize or pairs/numPairs is used.
-// So... having there together seems like it might be confusing/waste of code in ui_menus.c.
 typedef struct {
 	float min;
 	float max;
 	float stepSize;
-
-	cvarRangePair_t *pairs;
-	int numPairs;
 } cvarRange_t;
 
 typedef struct {
@@ -167,7 +160,11 @@ typedef struct {
 	int y;
 
 	const char	*cvarName;
-	cvarRange_t	*cvarRange;
+
+	// if cvarPairs is set, item will loop through values and display text from cvarPairs
+	// otherwise if cvarRange, it's treated as a slider (min, max, stepSize)
+	cvarValuePair_t	*cvarPairs;
+	cvarRange_t		*cvarRange;
 
 } menuitem_t;
 
@@ -205,6 +202,7 @@ typedef struct {
 	menuId_t		menuid;
 	const char		*cvarName;
 	cvarRange_t		*cvarRange;
+	cvarValuePair_t *cvarPairs;
 
 	// unique
 	region_t		captionPos;

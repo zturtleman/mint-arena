@@ -109,14 +109,11 @@ void restartMap( int item ) {
 #define VSTRING( x, str ) { CVT_STRING, x, str }
 #define VEND { CVT_NONE, NULL, NULL }
 
-static cvarRangePair_t cr_boolPairs[] = { VINT( 0, "off" ), VINT( 1, "on" ), VEND };
-static cvarRange_t cr_bool = { 0, 1, 1, cr_boolPairs, ARRAY_LEN(cr_boolPairs) };
-
-static cvarRangePair_t cr_boolInvertPairs[] = { VINT( 0, "on" ), VINT( 1, "off" ), VEND };
-static cvarRange_t cr_boolInvert = { 0, 1, 1, cr_boolInvertPairs, ARRAY_LEN(cr_boolInvertPairs) };
+static cvarValuePair_t cp_bool[] = { VINT( 0, "off" ), VINT( 1, "on" ), VEND };
+static cvarValuePair_t cp_boolInvert[] = { VINT( 0, "on" ), VINT( 1, "off" ), VEND };
 
 // 0.0 to 1.0 slider
-static cvarRange_t cr_zeroToOne = { 0, 1, 0.05f, NULL, 0 };
+static cvarRange_t cr_zeroToOne = { 0, 1, 0.05f };
 
 /*
 
@@ -160,7 +157,7 @@ menuitem_t mainmenu_items[] =
 };
 #endif
 
-cvarRangePair_t cr_skillPairs[] = {
+cvarValuePair_t cp_skill[] = {
 	VINT( 1, "I Can Win" ),
 	VINT( 2, "Bring It On" ),
 	VINT( 3, "Hurt Me Plenty" ),
@@ -168,11 +165,10 @@ cvarRangePair_t cr_skillPairs[] = {
 	VINT( 5, "Nightmare!" ),
 	VEND
 };
-cvarRange_t cr_skill = { 1, 5, 1, cr_skillPairs, ARRAY_LEN(cr_skillPairs) };
 
 menuitem_t singleplayermenu_items[] =
 {
-	{ MIF_BIGTEXT|MIF_CALL, "Bot skill:", NULL, M_NONE, 0, "g_spSkill", &cr_skill },
+	{ MIF_BIGTEXT|MIF_CALL, "Bot skill:", NULL, M_NONE, 0, "g_spSkill", cp_skill },
 	{ MIF_BIGTEXT|MIF_CALL, "New Game", newGame, M_NONE, 0 },
 	{ MIF_BIGTEXT|MIF_CALL, "End Game", endGame, M_NONE, 0 },
 	//{ MIF_BIGTEXT, "Level Select...", NULL, M_NONE, 0 },
@@ -320,24 +316,16 @@ void graphicsPresetUpdate( int item ) {
 	}
 }
 
-static cvarRangePair_t cr_glCustomPairs[] = { VINT( 0, "Very High" ), VINT( 1, "High" ), VINT( 2, "Medium" ), VINT( 3, "Fast" ), VINT( 4, "Fastest" ), VINT( 5, "Custom" ), VEND };
-static cvarRange_t cr_glCustom = { 0, 32, 16, cr_glCustomPairs, ARRAY_LEN(cr_glCustomPairs) };
+static cvarValuePair_t cp_glCustom[] = { VINT( 0, "Very High" ), VINT( 1, "High" ), VINT( 2, "Medium" ), VINT( 3, "Fast" ), VINT( 4, "Fastest" ), VINT( 5, "Custom" ), VEND };
+static cvarValuePair_t cp_textureQuality[] = { VINT( 0, "default" ), VINT( 16, "16 bit" ), VINT( 32, "32 bit" ), VEND };
+static cvarValuePair_t cp_textureFilter[] = { VSTRING( "GL_LINEAR_MIPMAP_NEAREST", "Bilinear" ), VSTRING( "GL_LINEAR_MIPMAP_LINEAR", "Trilinear" ), VEND };
+static cvarValuePair_t cp_lighting[] = { VINT( 0, "Lightmap (High)" ), VINT( 1, "Vertex (Low)" ), VEND };
 
-static cvarRange_t cr_pimip = { 3, 0, 1, NULL, 0 };
+static cvarRange_t cr_pimip = { 3, 0, 1 };
+static cvarRange_t cr_gamma = { 0.5, 2.0, 0.1 };
+static cvarRange_t cr_viewsize = { 30, 100, 10 };
 
-static cvarRangePair_t cr_textureQualityPairs[] = { VINT( 0, "default" ), VINT( 16, "16 bit" ), VINT( 32, "32 bit" ), VEND };
-static cvarRange_t cr_textureQuality = { 0, 32, 16, cr_textureQualityPairs, ARRAY_LEN(cr_textureQualityPairs) };
-
-static cvarRangePair_t cr_textureFilterPairs[] = { VSTRING( "GL_LINEAR_MIPMAP_NEAREST", "Bilinear" ), VSTRING( "GL_LINEAR_MIPMAP_LINEAR", "Trilinear" ), VEND };
-static cvarRange_t cr_textureFilter = { 0, 0, 0, cr_textureFilterPairs, ARRAY_LEN(cr_textureFilterPairs) };
-
-static cvarRangePair_t cr_lightingPairs[] = { VINT( 0, "Lightmap (High)" ), VINT( 1, "Vertex (Low)" ), VEND };
-static cvarRange_t cr_lighting = { 0, 1, 1, cr_lightingPairs, ARRAY_LEN(cr_lightingPairs) };
-
-static cvarRange_t cr_gamma = { 0.5, 2.0, 0.1, NULL, 0 };
-static cvarRange_t cr_viewsize = { 30, 100, 10, NULL, 0 };
-
-static cvarRangePair_t cr_anaglyphModePairs[] =
+static cvarValuePair_t cp_anaglyphMode[] =
 {
 	VINT( 0, "off" ),
 	VINT( 1, "red-cyan" ),
@@ -350,105 +338,88 @@ static cvarRangePair_t cr_anaglyphModePairs[] =
 	VINT( 8, "magenta-green" ),
 	VEND
 };
-static cvarRange_t cr_anaglyphMode = { 0, 8, 1, cr_anaglyphModePairs, ARRAY_LEN(cr_anaglyphModePairs) };
 
-static cvarRangePair_t cr_soundSystemPairs[] = { VINT( 0, "SDL" ), VINT( 1, "OpenAL" ), VEND };
-static cvarRange_t cr_soundSystem = { 0, 1, 1, cr_soundSystemPairs, ARRAY_LEN(cr_soundSystemPairs) };
-
-static cvarRangePair_t cr_sdlSpeedPairs[] = { VINT( 11025, "Low (11k)" ), VINT( 22050, "Medium (22k)" ), VINT( 44100, "High (44.1k)" ), VINT( 0, "Very High (48k)" ), VEND }; // spearmint default 0 is 48k, ioq3 0 is 44.1k
-static cvarRange_t cr_sdlSpeed = { 0, 1, 1, cr_sdlSpeedPairs, ARRAY_LEN(cr_sdlSpeedPairs) };
-
-static cvarRangePair_t cr_networkRatePairs[] = { VINT( 2500, "<= 28.8K" ), VINT( 3000, "33.6K" ), VINT( 4000, "56K" ), VINT( 5000, "ISDN" ), VINT( 25000, "LAN/Cable/xDSL" ), VEND };
-static cvarRange_t cr_networkRate = { 2500, 25000, 500, cr_networkRatePairs, ARRAY_LEN(cr_networkRatePairs) };
-
-static cvarRangePair_t cr_lagCompPairs[] = { VINT( 0, "None" ), VINT( 1, "One Server Frame" ), VINT( 2, "Full" ), VEND };
-static cvarRange_t cr_lagComp = { 2500, 25000, 500, cr_lagCompPairs, ARRAY_LEN(cr_lagCompPairs) };
+static cvarValuePair_t cp_soundSystem[] = { VINT( 0, "SDL" ), VINT( 1, "OpenAL" ), VEND };
+static cvarValuePair_t cp_sdlSpeed[] = { VINT( 11025, "Low (11k)" ), VINT( 22050, "Medium (22k)" ), VINT( 44100, "High (44.1k)" ), VINT( 0, "Very High (48k)" ), VEND }; // spearmint default 0 is 48k, ioq3 0 is 44.1k
+static cvarValuePair_t cp_networkRate[] = { VINT( 2500, "<= 28.8K" ), VINT( 3000, "33.6K" ), VINT( 4000, "56K" ), VINT( 5000, "ISDN" ), VINT( 25000, "LAN/Cable/xDSL" ), VEND };
+static cvarValuePair_t cp_lagComp[] = { VINT( 0, "None" ), VINT( 1, "One Server Frame" ), VINT( 2, "Full" ), VEND };
 
 menuitem_t systemmenu_items[] = {
 	{ MIF_BIGTEXT|MIF_PANEL, "Graphics", NULL, M_NONE, 0 },
-	{ MIF_CALL, "Graphics Settings:", graphicsPresetUpdate, M_NONE, 0, "ui_glCustom", &cr_glCustom }, // Custom, Very High, High, etc
-	{ MIF_CALL, "GL Extensions:", NULL, M_NONE, 0, "r_allowExtensions", &cr_bool },
-	{ MIF_CALL, "Aspect Ratio:", NULL, M_NONE, 0 }, // 4:3, ...
-	{ MIF_CALL, "Resolution:", NULL, M_NONE, 0, "r_mode", NULL }, // 1024x768, ...
-	{ MIF_CALL, "Fullscreen:", NULL, M_NONE, 0, "r_fullscreen", &cr_bool },
-	{ MIF_CALL, "Lighting:", NULL, M_NONE, 0, "r_vertexLight", &cr_lighting },
-	{ MIF_CALL, "Flares:", NULL, M_NONE, 0, "r_flares", &cr_bool },
-	{ MIF_CALL, "Geometric Detail:", NULL, M_NONE, 0 }, // TODO: modifies both "r_lodBias" and "r_subdivisions"
-	{ MIF_CALL, "Texture Detail:", NULL, M_NONE, 0, "r_picmip", &cr_pimip },
-	{ MIF_CALL, "Texture Quality:", NULL, M_NONE, 0, "r_texturebits", &cr_textureQuality },
-	{ MIF_CALL, "Texture Filter:", NULL, M_NONE, 0, "r_textureMode", &cr_textureFilter },
+	{ MIF_CALL, "Graphics Settings:", graphicsPresetUpdate, M_NONE, 0, "ui_glCustom", cp_glCustom }, // Custom, Very High, High, etc
+	{ MIF_CALL, "GL Extensions:",		NULL, M_NONE, 0, "r_allowExtensions", cp_bool },
+	{ MIF_CALL, "Aspect Ratio:",		NULL, M_NONE, 0 }, // 4:3, ...
+	{ MIF_CALL, "Resolution:",			NULL, M_NONE, 0, "r_mode", NULL }, // 1024x768, ...
+	{ MIF_CALL, "Fullscreen:",			NULL, M_NONE, 0, "r_fullscreen", cp_bool },
+	{ MIF_CALL, "Lighting:",			NULL, M_NONE, 0, "r_vertexLight", cp_lighting },
+	{ MIF_CALL, "Flares:",				NULL, M_NONE, 0, "r_flares", cp_bool },
+	{ MIF_CALL, "Geometric Detail:",	NULL, M_NONE, 0 }, // TODO: modifies both "r_lodBias" and "r_subdivisions"
+	{ MIF_CALL, "Texture Detail:",		NULL, M_NONE, 0, "r_picmip", NULL, &cr_pimip },
+	{ MIF_CALL, "Texture Quality:",		NULL, M_NONE, 0, "r_texturebits", cp_textureQuality },
+	{ MIF_CALL, "Texture Filter:",		NULL, M_NONE, 0, "r_textureMode", cp_textureFilter },
 
 	// missing driver info button
 
 	{ MIF_BIGTEXT|MIF_PANEL, "Display", NULL, M_NONE, 0 },
-	{ MIF_CALL, "Brightness:", NULL, M_NONE, 0, "r_gamma", &cr_gamma },
-	{ MIF_CALL, "Screen Size:", NULL, M_NONE, 0, "cg_viewsize", &cr_viewsize },
-	{ MIF_CALL, "Anaglyph Mode:", NULL, M_NONE, 0, "r_anaglyphMode", &cr_anaglyphMode },
-	{ MIF_CALL, "Grey Scale:", NULL, M_NONE, 0, "r_greyscale", &cr_zeroToOne },
+	{ MIF_CALL, "Brightness:",			NULL, M_NONE, 0, "r_gamma", NULL, &cr_gamma },
+	{ MIF_CALL, "Screen Size:",			NULL, M_NONE, 0, "cg_viewsize", NULL, &cr_viewsize },
+	{ MIF_CALL, "Anaglyph Mode:",		NULL, M_NONE, 0, "r_anaglyphMode", cp_anaglyphMode },
+	{ MIF_CALL, "Grey Scale:",			NULL, M_NONE, 0, "r_greyscale", NULL, &cr_zeroToOne },
 
 	{ MIF_BIGTEXT|MIF_PANEL, "Sound", NULL, M_NONE, 0 },
-	{ MIF_CALL, "Effects Volume:", NULL, M_NONE, 0, "s_volume", &cr_zeroToOne },
-	{ MIF_CALL, "Music Volume:", NULL, M_NONE, 0, "s_musicVolume", &cr_zeroToOne },
-	{ MIF_CALL, "Sound System:", NULL, M_NONE, 0, "s_useOpenAL", &cr_soundSystem },
-	{ MIF_CALL, "SDL Sound Quality:", NULL, M_NONE, 0, "s_sdlSpeed", &cr_sdlSpeed }, // TODO: disable when sound system is not SDL
+	{ MIF_CALL, "Effects Volume:",		NULL, M_NONE, 0, "s_volume", NULL, &cr_zeroToOne },
+	{ MIF_CALL, "Music Volume:",		NULL, M_NONE, 0, "s_musicVolume", NULL, &cr_zeroToOne },
+	{ MIF_CALL, "Sound System:",		NULL, M_NONE, 0, "s_useOpenAL", cp_soundSystem },
+	{ MIF_CALL, "SDL Sound Quality:",	NULL, M_NONE, 0, "s_sdlSpeed", cp_sdlSpeed }, // TODO: disable when sound system is not SDL
 
 	{ MIF_BIGTEXT|MIF_PANEL, "Network", NULL, M_NONE, 0 },
-	{ MIF_CALL, "Data Rate:", NULL, M_NONE, 0, "rate", &cr_networkRate },
-	{ MIF_CALL, "Voice Chat (VoIP):", NULL, M_NONE, 0, "cl_voip", &cr_bool }, // TODO: disable when rate < 25000
-	{ MIF_CALL, "Lag Compensation:", NULL, M_NONE, 0, "cg_antiLag", &cr_lagComp },
+	{ MIF_CALL, "Data Rate:",			NULL, M_NONE, 0, "rate", cp_networkRate },
+	{ MIF_CALL, "Voice Chat (VoIP):",	NULL, M_NONE, 0, "cl_voip", cp_bool }, // TODO: disable when rate < 25000
+	{ MIF_CALL, "Lag Compensation:",	NULL, M_NONE, 0, "cg_antiLag", cp_lagComp },
 };
 
 
 #ifndef MISSIONPACK_HUD
-static cvarRangePair_t cr_teamoverlayPairs[] = { VINT( 0, "off" ), VINT( 1, "upper right" ), VINT( 2, "lower right" ), VINT( 3, "lower left" ), VEND };
-static cvarRange_t cr_teamoverlay = { 0, 3, 1, cr_teamoverlayPairs, ARRAY_LEN(cr_teamoverlayPairs) };
+static cvarValuePair_t cp_teamoverlay[] = { VINT( 0, "off" ), VINT( 1, "upper right" ), VINT( 2, "lower right" ), VINT( 3, "lower left" ), VEND };
 #endif
+static cvarValuePair_t cp_splitvertical[] = { VINT( 0, "horizontal" ), VINT( 1, "vertical" ), VEND };
+static cvarValuePair_t cp_atmeffects[] = { VINT( 0, "off" ), VFLOAT( 0.5, "low" ), VINT( 1, "high" ), VEND };
+static cvarValuePair_t cp_brassTime[] = { VINT( 0, "off" ), VINT( 1250, "short" ), VINT( 2500, "long" ), VEND };
+static cvarValuePair_t cp_drawGun[] = { VINT( 0, "off" ), VINT( 1, "right-handed" ), VINT( 3, "centered" ), VINT( 2, "left-handed" ), VEND };
 
-static cvarRangePair_t cr_splitverticalPairs[] = { VINT( 0, "horizontal" ), VINT( 1, "vertical" ), VEND };
-static cvarRange_t cr_splitvertical = { 0, 1, 1, cr_splitverticalPairs, ARRAY_LEN(cr_splitverticalPairs) };
-
-static cvarRangePair_t cr_atmeffectsPairs[] = { VINT( 0, "off" ), VFLOAT( 0.5f, "low" ), VINT( 1, "high" ), VEND };
-static cvarRange_t cr_atmeffects = { 0, 1, 0.5, cr_atmeffectsPairs, ARRAY_LEN(cr_atmeffectsPairs) };
-
-static cvarRangePair_t cr_brassTimePairs[] = { VINT( 0, "off" ), VINT( 1250, "short" ), VINT( 2500, "long" ), VEND };
-static cvarRange_t cr_brassTime = { 0, 2500, 1250, cr_brassTimePairs, ARRAY_LEN(cr_brassTimePairs) };
-
-static cvarRangePair_t cr_drawGunPairs[] = { VINT( 0, "off" ), VINT( 1, "right-handed" ), VINT( 3, "centered" ), VINT( 2, "left-handed" ), VEND };
-static cvarRange_t cr_drawGun = { 0, 3, 1, cr_drawGunPairs, ARRAY_LEN(cr_drawGunPairs) };
-
-// ZTM: TODO: remove the MIF_CALL? I think it's next so they are selectable...
+// ZTM: TODO: remove the MIF_CALL? I think it's there so they are selectable...
 menuitem_t gameoptionsmenu_items[] =
 {
 	//{ MIF_CALL, "Crosshair:",				NULL, M_NONE, 0, "cg_drawCrosshair", NULL }, // ZTM: TODO: draw crosshair shaders
-	{ MIF_CALL, "View Bobbing:",			NULL, M_NONE, 0, "cg_viewbob", &cr_bool },
-	{ MIF_CALL, "Simple Items:",			NULL, M_NONE, 0, "cg_simpleItems", &cr_bool },
-	{ MIF_CALL, "Marks on Walls:",			NULL, M_NONE, 0, "cg_marks", &cr_bool },
-	{ MIF_CALL, "Show Floating Scores:",	NULL, M_NONE, 0, "cg_scorePlums", &cr_bool }, // Note: From Q3TA
-	{ MIF_CALL, "Show Empty Shells:",		NULL, M_NONE, 0, "cg_brassTime", &cr_brassTime }, // was Ejecting Brass
-	{ MIF_CALL, "Dynamic Lights:",			NULL, M_NONE, 0, "r_dynamiclight", &cr_bool },
-	{ MIF_CALL, "Identify Target:",			NULL, M_NONE, 0, "cg_drawCrosshairNames", &cr_bool },
-	{ MIF_CALL, "Draw Gun:",				NULL, M_NONE, 0, "cg_drawGun", &cr_drawGun }, // Note: From Q3TA
-	{ MIF_CALL, "High Quality Sky:",		NULL, M_NONE, 0, "r_fastsky", &cr_boolInvert }, // Note: Q3TA changed this from High Quality Sky to Low Quality Sky (and flip logic)
-	{ MIF_CALL, "Sync Every Frame:",		NULL, M_NONE, 0, "r_finish", &cr_bool },
-	{ MIF_CALL, "Force Player Models:",		NULL, M_NONE, 0, "cg_forcemodel", &cr_bool },
+	{ MIF_CALL, "View Bobbing:",			NULL, M_NONE, 0, "cg_viewbob", cp_bool },
+	{ MIF_CALL, "Simple Items:",			NULL, M_NONE, 0, "cg_simpleItems", cp_bool },
+	{ MIF_CALL, "Marks on Walls:",			NULL, M_NONE, 0, "cg_marks", cp_bool },
+	{ MIF_CALL, "Show Floating Scores:",	NULL, M_NONE, 0, "cg_scorePlums", cp_bool }, // Note: From Q3TA
+	{ MIF_CALL, "Show Empty Shells:",		NULL, M_NONE, 0, "cg_brassTime", cp_brassTime }, // was Ejecting Brass
+	{ MIF_CALL, "Dynamic Lights:",			NULL, M_NONE, 0, "r_dynamiclight", cp_bool },
+	{ MIF_CALL, "Identify Target:",			NULL, M_NONE, 0, "cg_drawCrosshairNames", cp_bool },
+	{ MIF_CALL, "Draw Gun:",				NULL, M_NONE, 0, "cg_drawGun", cp_drawGun }, // Note: From Q3TA
+	{ MIF_CALL, "High Quality Sky:",		NULL, M_NONE, 0, "r_fastsky", cp_boolInvert }, // Note: Q3TA changed this from High Quality Sky to Low Quality Sky (and flip logic)
+	{ MIF_CALL, "Sync Every Frame:",		NULL, M_NONE, 0, "r_finish", cp_bool },
+	{ MIF_CALL, "Force Player Models:",		NULL, M_NONE, 0, "cg_forcemodel", cp_bool },
 #ifdef MISSIONPACK_HUD // TA hud only have on/off
-	{ MIF_CALL, "Draw Team Overlay:",		NULL, M_NONE, 0, "cg_drawTeamOverlay", &cr_bool },
+	{ MIF_CALL, "Draw Team Overlay:",		NULL, M_NONE, 0, "cg_drawTeamOverlay", cp_bool },
 #else
-	{ MIF_CALL, "Draw Team Overlay:",		NULL, M_NONE, 0, "cg_drawTeamOverlay", &cr_teamoverlay },
+	{ MIF_CALL, "Draw Team Overlay:",		NULL, M_NONE, 0, "cg_drawTeamOverlay", cp_teamoverlay },
 #endif
-	{ MIF_CALL, "Automatic Downloading:",	NULL, M_NONE, 0, "cl_allowDownload", &cr_bool }, // Note: Q3TA renamed to Auto Download
-	{ MIF_CALL, "Show Time:",				NULL, M_NONE, 0, "cg_drawTimer", &cr_bool }, // Note: From Q3TA
+	{ MIF_CALL, "Automatic Downloading:",	NULL, M_NONE, 0, "cl_allowDownload", cp_bool }, // Note: Q3TA renamed to Auto Download
+	{ MIF_CALL, "Show Time:",				NULL, M_NONE, 0, "cg_drawTimer", cp_bool }, // Note: From Q3TA
 #ifdef MISSIONPACK // Q3 doesn't have voice chats
-	{ MIF_CALL, "Voice Chat (audio):",		NULL, M_NONE, 0, "cg_noVoiceChats", &cr_boolInvert }, // was Voices Off, might be confused with VoIP
-	{ MIF_CALL, "Voice Chat (text):",		NULL, M_NONE, 0, "cg_noVoiceText", &cr_boolInvert }, // was Voice Text Off
-	{ MIF_CALL, "Voice Chat (taunts):",		NULL, M_NONE, 0, "cg_noTaunt", &cr_boolInvert }, // was Taunts Off
+	{ MIF_CALL, "Voice Chat (audio):",		NULL, M_NONE, 0, "cg_noVoiceChats", cp_boolInvert }, // was Voices Off, might be confused with VoIP
+	{ MIF_CALL, "Voice Chat (text):",		NULL, M_NONE, 0, "cg_noVoiceText", cp_boolInvert }, // was Voice Text Off
+	{ MIF_CALL, "Voice Chat (taunts):",		NULL, M_NONE, 0, "cg_noTaunt", cp_boolInvert }, // was Taunts Off
 #endif
-	{ MIF_CALL, "Team Chats Only:",			NULL, M_NONE, 0, "cg_teamChatsOnly", &cr_bool }, // Note: From Q3TA
+	{ MIF_CALL, "Team Chats Only:",			NULL, M_NONE, 0, "cg_teamChatsOnly", cp_bool }, // Note: From Q3TA
 #ifdef MISSIONPACK // vanilla Q3 doesn't have videos in level shaders
-	{ MIF_CALL, "In Game Video:",			NULL, M_NONE, 0, "r_inGameVideo", &cr_bool }, // Note: From Q3TA
+	{ MIF_CALL, "In Game Video:",			NULL, M_NONE, 0, "r_inGameVideo", cp_bool }, // Note: From Q3TA
 #endif
-	{ MIF_CALL, "Splitscreen Mode:",		NULL, M_NONE, 0, "cg_splitviewVertical", &cr_splitvertical },
-	{ MIF_CALL, "Snow/Rain:",				NULL, M_NONE, 0, "cg_atmosphericEffects", &cr_atmeffects },
+	{ MIF_CALL, "Splitscreen Mode:",		NULL, M_NONE, 0, "cg_splitviewVertical", cp_splitvertical },
+	{ MIF_CALL, "Snow/Rain:",				NULL, M_NONE, 0, "cg_atmosphericEffects", cp_atmeffects },
 };
 
 menuitem_t creditsmenu_items[] =

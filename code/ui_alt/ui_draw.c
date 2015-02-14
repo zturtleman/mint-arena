@@ -358,8 +358,8 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 				continue;
 			}
 
-			if ( item->cvarRange && item->cvarRange->numPairs > 0 ) {
-				string = item->cvarRange->pairs[ item->cvarPair ].string;
+			if ( item->cvarPairs && item->numPairs > 0 ) {
+				string = item->cvarPairs[ item->cvarPair ].string;
 			} else {
 				string = item->vmCvar.string;
 			}
@@ -450,7 +450,8 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		item->menuid = itemInfo->menuid;
 		item->cvarName = itemInfo->cvarName;
 		item->cvarRange = itemInfo->cvarRange;
-		item->numPairs = 0;
+		item->cvarPairs = itemInfo->cvarPairs;
+		item->numPairs = 0; // this is set later
 		item->caption = itemInfo->caption;
 		item->captionPos.y = itemInfo->y;
 		item->captionPos.x = 0;
@@ -641,6 +642,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		item->menuid = M_NONE;
 		item->cvarName = NULL;
 		item->cvarRange = NULL;
+		item->cvarPairs = NULL;
 		item->numPairs = 0;
 
 #ifdef MISSIONPACK

@@ -229,11 +229,11 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 
 	item = &current->items[itemNum];
 
-	if ( !item->cvarName || !item->cvarRange ) {
+	if ( !item->cvarName ) {
 		return qtrue;
 	}
 
-	if ( item->numPairs > 0 ) {
+	if ( item->cvarPairs && item->numPairs > 0 ) {
 		const char *value;
 
 		item->cvarPair += dir;
@@ -243,12 +243,12 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 		else if ( item->cvarPair < 0 )
 			item->cvarPair = item->numPairs - 1;
 
-		value = item->cvarRange->pairs[ item->cvarPair ].value;
+		value = item->cvarPairs[ item->cvarPair ].value;
 
 		// FIXME: What about cases when it should not take affect until 'Apply' is clicked?
 		trap_Cvar_Set( item->cvarName, value );
 	}
-	else
+	else if ( item->cvarRange )
 	{
 		float min, max, value;
 		qboolean reversed;
@@ -418,14 +418,11 @@ qboolean UI_ItemIsSlider( currentMenuItem_t *item ) {
 	return ( item->cvarRange && item->numPairs == 0 );
 }
 
-static int UI_NumCvarPairs( cvarRange_t *cvarRange ) {
+static int UI_NumCvarPairs( cvarValuePair_t *cvarPairs ) {
 	int pair;
-	cvarRangePair_t *cvarPairs;
 
-	if ( !cvarRange || !cvarRange->pairs )
+	if ( !cvarPairs )
 		return 0;
-
-	cvarPairs = cvarRange->pairs;
 
 	for ( pair = 0; cvarPairs[pair].type != CVT_NONE; pair++ ) {
 		// count
@@ -439,18 +436,18 @@ static void UI_SetMenuCvarValue( currentMenuItem_t *item ) {
 	int closestPair = 0;
 	int pair;
 
-	if ( !item->cvarName || !item->cvarRange ) {
+	if ( !item->cvarName || !item->cvarPairs ) {
 		return;
 	}
 
 	for ( pair = 0; pair < item->numPairs; pair++ ) {
-		if ( item->cvarRange->pairs[ pair ].type == CVT_STRING ) {
-			if ( Q_stricmp( item->vmCvar.string, item->cvarRange->pairs[ pair ].value ) == 0 ) {
+		if ( item->cvarPairs[ pair ].type == CVT_STRING ) {
+			if ( Q_stricmp( item->vmCvar.string, item->cvarPairs[ pair ].value ) == 0 ) {
 				closestPair = pair;
 				break;
 			}
 		} else {
-			dist = fabs( item->vmCvar.value - atof( item->cvarRange->pairs[ pair ].value ) );
+			dist = fabs( item->vmCvar.value - atof( item->cvarPairs[ pair ].value ) );
 			if ( dist < bestDist ) {
 				bestDist = dist;
 				closestPair = pair;
@@ -478,7 +475,7 @@ void UI_RegisterMenuCvars( currentMenu_t *current ) {
 		item->vmCvar.value = atof( item->vmCvar.string );
 		item->vmCvar.integer = atoi( item->vmCvar.string );
 
-		item->numPairs = UI_NumCvarPairs( item->cvarRange );
+		item->numPairs = UI_NumCvarPairs( item->cvarPairs );
 		UI_SetMenuCvarValue( item );
 	}
 }

@@ -313,7 +313,10 @@ qboolean UI_WantsBindKeys( void ) {
 void	UI_DrawConnectScreen( qboolean overlay ) {
 	if ( !overlay ) {
 		CG_ClearViewport();
+		UI_DrawConnectBackground();
 	}
+
+	// ZTM: TODO: draw status
 }
 
 #ifndef Q3UIFONTS

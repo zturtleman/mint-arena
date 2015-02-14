@@ -523,9 +523,9 @@ menudef_t ui_menus[M_NUM_MENUS] = {
 #endif
 
 	// Setup menus
-	QMENUSTUB( playermenu_items, 0, "Player Setup" ),		// M_PLAYER
+	QMENUSTUB( playermenu_items, 0, "Player Settings" ),	// M_PLAYER
 	QMENUSTUB( controlsmenu_items, 0, "Controls" ),			// M_CONTROLS
-	QMENUDEF( systemmenu_items, 0, "System" ),				// M_SYSTEM
+	QMENUDEF( systemmenu_items, 0, "System Setup" ),		// M_SYSTEM
 	QMENUDEF( gameoptionsmenu_items, 0, "Game Options" ),	// M_GAME_OPTIONS
 	QMENUDEF( creditsmenu_items, 0, "Credits" ),			// M_CREDITS
 	QMENUDEF( defaultsmenu_items, MF_DIALOG|MF_NOBACK, "Set to defaults?" ),	// M_DEFAULTS

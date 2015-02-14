@@ -31,7 +31,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "ui_local.h"
 
 vec4_t color_header           = {1.00f, 1.00f, 1.00f, 1.00f};	// bright white
-vec4_t color_copyright        = {1.00f, 0.00f, 0.00f, 1.00f};	// bright red
+vec4_t color_copyright        = {0.50f, 0.00f, 0.00f, 1.00f};	// dim red
 #ifdef MISSIONPACK
 vec4_t color_smalltext        = {1.00f, 1.00f, 1.00f, 1.00f};
 vec4_t color_smallSelected    = {1.00f, 0.75f, 0.00f, 1.00f};
@@ -41,13 +41,14 @@ vec4_t color_bigSelected      = {1.00f, 0.75f, 0.00f, 1.00f};
 //vec4_t text_color_disabled  = {0.50f, 0.50f, 0.50f, 1.00f};	// light gray
 vec4_t color_smalltext        = {1.00f, 0.43f, 0.00f, 1.00f};	// light orange // text_color_normal
 vec4_t color_smallSelected    = {1.00f, 1.00f, 0.00f, 1.00f};	// bright yellow // text_color_highlight
-vec4_t color_bigtext          = {0.80f, 0.00f, 0.00f, 1.00f};	// ZTM: FIXME: is this suppose to be bright red?
+vec4_t color_bigtext          = {0.70f, 0.00f, 0.00f, 1.00f};	// bright red with UI_INVERSE effect already applied
 vec4_t color_bigSelected      = {1.00f, 0.00f, 0.00f, 1.00f};	// bright red // text_big_color
 #endif
 
 typedef struct {
 	qhandle_t menuBackground;
 	qhandle_t menuBackgroundNoLogo;
+	qhandle_t connectBackground;
 
 #ifdef MISSIONPACK
 	qhandle_t menuBackgroundB;
@@ -55,6 +56,8 @@ typedef struct {
 	qhandle_t menuBackgroundD;
 	qhandle_t menuBackgroundE;
 	qhandle_t levelShotDetail;
+
+	qhandle_t lightningShader;
 #else
 	qhandle_t bannerModel;
 
@@ -72,9 +75,60 @@ typedef struct {
 
 } uiAssets_t;
 
+// Bitmap buttons
+struct ui_bitmap_s {
+	const char	*text;
+
+	// only used for back and next buttons
+	int			horizontalPad;
+	int			verticialPad;
+
+	const char	*offName;
+	int			offWidth;
+	int			offHeight;
+
+	const char	*onName;
+	int			onWidth;
+	int			onHeight;
+
+	// filled in at run time
+	qhandle_t	offShader;
+	qhandle_t	onShader;
+} ui_bitmaps[] = {
+#ifdef MISSIONPACK
+	{ "Back", 16, 6, "ui/assets/backarrow", 50, 50, "ui/assets/backarrow_alt", 54, 54 },
+	{ "Next", 16, 6, "ui/assets/forwardarrow", 50, 50, "ui/assets/forwardarrow_alt", 54, 54 },
+#else
+	{ "Accept", 0, 0, "menu/art/accept_0", 128, 64, "menu/art/accept_1", 128, 64 },
+	{ "Back", 0, 0, "menu/art/back_0", 128, 64, "menu/art/back_1", 128, 64 },
+	{ "Create", 0, 0, "menu/art/create_0", 128, 64, "menu/art/create_1", 128, 64 },
+	{ "Delete", 0, 0, "menu/art/delete_0", 128, 64, "menu/art/delete_1", 128, 64 },
+	{ "Fight", 0, 0, "menu/art/fight_0", 128, 64, "menu/art/fight_1", 128, 64 },
+	{ "Load", 0, 0, "menu/art/load_0", 128, 64, "menu/art/load_1", 128, 64 },
+	{ "Menu", 0, 0, "menu/art/menu_0", 128, 64, "menu/art/menu_1", 128, 64 },
+	{ "Model", 0, 0, "menu/art/model_0", 128, 64, "menu/art/model_1", 128, 64 },
+	{ "Next", 0, 0, "menu/art/next_0", 128, 64, "menu/art/next_1", 128, 64 },
+	{ "Play", 0, 0, "menu/art/play_0", 128, 64, "menu/art/play_1", 128, 64 },
+	{ "Refresh", 0, 0, "menu/art/refresh_0", 128, 64, "menu/art/refresh_1", 128, 64 },
+	{ "Replay", 0, 0, "menu/art/replay_0", 128, 64, "menu/art/replay_1", 128, 64 },
+	{ "Reset", 0, 0, "menu/art/reset_0", 128, 64, "menu/art/reset_1", 128, 64 },
+	{ "Save", 0, 0, "menu/art/save_0", 128, 64, "menu/art/save_1", 128, 64 },
+	{ "Skirmish", 0, 0, "menu/art/skirmish_0", 128, 64, "menu/art/skirmish_1", 128, 64 },
+	{ "Specify", 0, 0, "menu/art/specify_0", 128, 64, "menu/art/specify_1", 128, 64 },
+
+	// duplicate buttons with different text...
+	{ "Play Cinematic", 0, 0, "menu/art/play_0", 128, 64, "menu/art/play_1", 128, 64 },
+	{ "Play Demo", 0, 0, "menu/art/play_0", 128, 64, "menu/art/play_1", 128, 64 },
+	{ "Load Mod", 0, 0, "menu/art/load_0", 128, 64, "menu/art/load_1", 128, 64 },
+#endif
+	{ NULL, 0, 0, NULL, 0, 0, NULL, 0, 0 }
+};
+
 uiAssets_t uiAssets;
 
 void UI_LoadAssets( void ) {
+	int i;
+
 	Com_Memset( &uiAssets, 0, sizeof ( uiAssets ) );
 
 #ifdef MISSIONPACK
@@ -85,12 +139,15 @@ void UI_LoadAssets( void ) {
 	uiAssets.menuBackgroundE = trap_R_RegisterShaderNoMip( "menuback_e" );
 	uiAssets.levelShotDetail = trap_R_RegisterShaderNoMip( "levelshotdetail" );
 	uiAssets.menuBackgroundNoLogo = uiAssets.menuBackground;
+	uiAssets.connectBackground = trap_R_RegisterShaderNoMip( "ui/assets/backscreen" );
 	uiAssets.sliderBar = trap_R_RegisterShaderNoMip( "ui/assets/slider2" );
 	uiAssets.sliderButton = trap_R_RegisterShaderNoMip( "ui/assets/sliderbutt_1" );
 	uiAssets.sliderButtonSelected = uiAssets.sliderButton;
+	uiAssets.lightningShader = trap_R_RegisterShaderNoMip( "lightningkc" );
 #else
 	uiAssets.bannerModel = trap_R_RegisterModel( "models/mapobjects/banner/banner5.md3" );
 	uiAssets.menuBackground = trap_R_RegisterShaderNoMip( "menuback" );
+	uiAssets.connectBackground = uiAssets.menuBackground;
 	uiAssets.menuBackgroundNoLogo = trap_R_RegisterShaderNoMip( "menubacknologo" );
 
 	uiAssets.frameLeft = trap_R_RegisterShaderNoMip( "menu/art/frame2_l" );
@@ -103,6 +160,38 @@ void UI_LoadAssets( void ) {
 
 	uiAssets.dialogSmallBackground = trap_R_RegisterShaderNoMip( "menu/art/cut_frame" );
 	uiAssets.dialogLargeBackground = trap_R_RegisterShaderNoMip( "menu/art/addbotframe" );
+
+	for ( i = 0; ui_bitmaps[i].text; ++i ) {
+		ui_bitmaps[i].offShader = trap_R_RegisterShaderNoMip( ui_bitmaps[i].offName );
+		ui_bitmaps[i].onShader = trap_R_RegisterShaderNoMip( ui_bitmaps[i].onName );
+	}
+}
+
+int UI_FindBitmap( const currentMenuItem_t *item, const char *bitmapName ) {
+	int i;
+
+	if ( !item || !bitmapName || !( item->flags & MIF_BIGTEXT ) ) {
+		return -1;
+	}
+
+	for ( i = 0; ui_bitmaps[i].text; ++i ) {
+		if ( Q_stricmp( ui_bitmaps[i].text, bitmapName ) ) {
+			continue;
+		}
+
+		if ( ui_bitmaps[i].offShader && ui_bitmaps[i].onShader ) {
+			return i;
+		} else {
+			// just fall back to text rendering
+			return -1;
+		}
+	}
+
+	return -1;
+}
+
+void UI_DrawConnectBackground( void ) {
+	CG_DrawPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, uiAssets.connectBackground );
 }
 
 void UI_DrawMainMenuBackground( void ) {
@@ -319,6 +408,58 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 			}
 		}
 
+		if ( item->bitmapIndex != -1 ) {
+			CG_DrawPic( item->captionPos.x, item->captionPos.y, item->captionPos.width, item->captionPos.height, ui_bitmaps[item->bitmapIndex].offShader );
+
+			// if selected draw 'on' image over the top
+			// ZTM: FIXME? Team Arena back/next don't need the offShader drawn.
+			if ( style & UI_PULSE ) {
+				vec4_t color = {1,1,1,1};
+				region_t	onImage;
+
+				onImage.width = ui_bitmaps[item->bitmapIndex].onWidth;
+				onImage.height = ui_bitmaps[item->bitmapIndex].onHeight;
+
+				// center selected image over the top of unselected image
+				// FIXME?: this assumes 'on' image size is >= to 'off' image size
+				onImage.x = item->captionPos.x - ( onImage.width - item->captionPos.width ) / 2.0f;
+				onImage.y = item->captionPos.y - ( onImage.height - item->captionPos.height ) / 2.0f;
+
+#ifdef MISSIONPACK
+				// back and next don't pulse in Team Arena
+				// ZTM: FIXME: I don't think there are another bitmap buttons in Team Arena, so could just disable it always in Team Arena?
+				if ( !(item->flags & (MIF_BACKBUTTON|MIF_NEXTBUTTON) ) ) {
+#endif
+					color[3] = 0.5+0.5*sin(cg.realTime/PULSE_DIVISOR);
+#ifdef MISSIONPACK
+				}
+#endif
+
+				trap_R_SetColor( color );
+				CG_DrawPic( onImage.x, onImage.y, onImage.width, onImage.height, ui_bitmaps[item->bitmapIndex].onShader );
+				trap_R_SetColor( NULL );
+
+#ifdef MISSIONPACK
+				// if next button is selected draw lightning between back button and caption, and caption and next button
+				if ( item->flags & MIF_NEXTBUTTON ) {
+					int captionWidth = CG_DrawStrlen( item->caption, style );
+					int lightningOverlap = 16; // lightning doesn't do to the edge of the image so overlay onto buttons and caption
+					int padSize = ui_bitmaps[item->bitmapIndex].offWidth + ui_bitmaps[item->bitmapIndex].horizontalPad - lightningOverlap;
+					int lightningWidth = ( SCREEN_WIDTH - captionWidth ) / 2 - padSize + lightningOverlap;
+
+					CG_DrawPic( padSize, 385, lightningWidth, 128, uiAssets.lightningShader );
+					CG_DrawPic( SCREEN_WIDTH - lightningWidth - padSize, 385, lightningWidth, 128, uiAssets.lightningShader );
+				}
+
+				// if it's a back or next button, display the caption
+				if ( item->flags & (MIF_BACKBUTTON|MIF_NEXTBUTTON) ) {
+					// this has white text, instead of selected color
+					// TODO: use unselected small/big color?
+					CG_DrawString( SCREEN_WIDTH / 2, onImage.y + onImage.height / 2 - GIANTCHAR_HEIGHT / 2, item->caption, UI_CENTER|UI_DROPSHADOW|style, colorWhite );
+				}
+#endif
+			}
+		} else
 #ifdef Q3UIFONTS
 		if ( item->flags & MIF_BIGTEXT ) {
 			UI_DrawProportionalString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|style, drawcolor );
@@ -468,6 +609,16 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		item->captionPos.y = itemInfo->y;
 		item->captionPos.x = 0;
 
+#ifdef MISSIONPACK
+		if ( item->flags & MIF_NEXTBUTTON ) {
+			item->bitmapIndex = UI_FindBitmap( item, "Next" );
+		} else
+#endif
+		{
+			item->bitmapIndex = UI_FindBitmap( item, item->caption );
+		}
+
+
 		if ( item->flags & MIF_PANEL ) {
 			panelNum++;
 		} else {
@@ -478,7 +629,10 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			}
 		}
 
-		if ( item->flags & MIF_BIGTEXT ) {
+		if ( item->bitmapIndex != -1 ) {
+			item->captionPos.width = ui_bitmaps[item->bitmapIndex].offWidth;
+			item->captionPos.height = ui_bitmaps[item->bitmapIndex].offHeight;
+		} else if ( item->flags & MIF_BIGTEXT ) {
 #ifdef Q3UIFONTS
 			item->captionPos.width = UI_ProportionalStringWidth( item->caption );
 			item->captionPos.height = PROP_HEIGHT;
@@ -505,8 +659,17 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 
 		if ( item->flags & MIF_NEXTBUTTON ) {
 			// Fixed place in lower right
-			item->captionPos.x = SCREEN_WIDTH - item->captionPos.width - 10;
-			item->captionPos.y = SCREEN_HEIGHT - item->captionPos.height - 10;
+			item->captionPos.x = SCREEN_WIDTH - item->captionPos.width;
+			item->captionPos.y = SCREEN_HEIGHT - item->captionPos.height;
+
+			if ( item->bitmapIndex != -1 ) {
+				item->captionPos.y -= ui_bitmaps[item->bitmapIndex].verticialPad;
+				item->captionPos.x -= ui_bitmaps[item->bitmapIndex].horizontalPad;
+			} else {
+				// move away from the screen edges
+				item->captionPos.x -= 10;
+				item->captionPos.y -= 10;
+			}
 
 			item->clickPos.x = item->captionPos.x;
 			item->clickPos.y = item->captionPos.y;
@@ -649,13 +812,14 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 	// add back button
 	if ( current->numStacked && !( menuInfo->menuFlags & MF_NOBACK ) ) {
 		item = &current->items[current->numItems];
-		item->flags = MIF_BIGTEXT|MIF_POPMENU;
+		item->flags = MIF_BIGTEXT|MIF_POPMENU|MIF_BACKBUTTON;
 		item->action = NULL;
 		item->menuid = M_NONE;
 		item->cvarName = NULL;
 		item->cvarRange = NULL;
 		item->cvarPairs = NULL;
 		item->numPairs = 0;
+		item->bitmapIndex = UI_FindBitmap( item, "Back" );
 
 #ifdef MISSIONPACK
 		if ( current->numStacked == 1 )
@@ -664,25 +828,25 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 #endif
 		item->caption = "Back";
 
-		// note: assumes MIF_BIGTEXT
+		if ( item->bitmapIndex != -1 ) {
+			item->captionPos.width = ui_bitmaps[item->bitmapIndex].offWidth;
+			item->captionPos.height = ui_bitmaps[item->bitmapIndex].offHeight;
+
+			item->captionPos.y = SCREEN_HEIGHT - item->captionPos.height - ui_bitmaps[item->bitmapIndex].verticialPad;
+			item->captionPos.x = ui_bitmaps[item->bitmapIndex].horizontalPad;
+		} else {
+			// note: assumes MIF_BIGTEXT
 #ifdef Q3UIFONTS
-		item->captionPos.width = UI_ProportionalStringWidth( item->caption );
-		item->captionPos.height = PROP_HEIGHT;
+			item->captionPos.width = UI_ProportionalStringWidth( item->caption );
+			item->captionPos.height = PROP_HEIGHT;
 #else
-		item->captionPos.width = CG_DrawStrlen( item->caption, UI_GIANTFONT );
-		item->captionPos.height = GIANTCHAR_HEIGHT;
+			item->captionPos.width = CG_DrawStrlen( item->caption, UI_GIANTFONT );
+			item->captionPos.height = GIANTCHAR_HEIGHT;
 #endif
 
-#if 1 // Fixed place in lower left
-		item->captionPos.y = SCREEN_HEIGHT - item->captionPos.height - 10;
-		item->captionPos.x = 10;
-#else // fake next of menu item (though it's not vertically centered by the above numItems code)
-		if ( i > 0 ) {
-			y += current->items[i-1].captionPos.height + UI_ItemVerticalGap( &current->items[i-1] );
+			item->captionPos.y = SCREEN_HEIGHT - item->captionPos.height - 10;
+			item->captionPos.x = 10;
 		}
-		item->captionPos.y = y;
-		item->captionPos.x = (SCREEN_WIDTH - item->captionPos.width) / 2;
-#endif
 
 		item->clickPos.x = item->captionPos.x;
 		item->clickPos.y = item->captionPos.y;

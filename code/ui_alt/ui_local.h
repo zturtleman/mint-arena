@@ -124,6 +124,7 @@ typedef enum {
 #define		MIF_NEXTBUTTON	0x0100	// this itemshould have 'next' button graphic and placement. It should be the last item in list, so arrow keys work correct.
 #define		MIF_HEADER		0x0200	// A Team Arena main menu header
 #define		MIF_PANEL		0x0400	// Begin a 'tab' aka 'panel' of a menu
+#define		MIF_BACKBUTTON	0x0800	// automatically set on back button
 
 //#define		MIF_CVAR		0x1000
 //#define		MIF_CONTROL		0x2000	// y is PC_* (PlayerControl Index)
@@ -210,6 +211,7 @@ typedef struct {
 	vmCvar_t		vmCvar;
 	int				cvarPair;
 	int				numPairs;
+	int				bitmapIndex;
 
 } currentMenuItem_t;
 
@@ -271,6 +273,7 @@ extern menudef_t ui_menus[M_NUM_MENUS];
 void UI_LoadAssets( void );
 void UI_BuildCurrentMenu( currentMenu_t *current );
 void UI_DrawCurrentMenu( currentMenu_t *current );
+void UI_DrawConnectBackground( void );
 
 // ui_logic.c
 typedef enum {

@@ -141,6 +141,8 @@ void BotInitMoveState(int handle, bot_initmove_t *initmove)
 	if (initmove->or_moveflags & MFL_WATERJUMP) ms->moveflags |= MFL_WATERJUMP;
 	ms->moveflags &= ~MFL_WALK;
 	if (initmove->or_moveflags & MFL_WALK) ms->moveflags |= MFL_WALK;
+	ms->moveflags &= ~MFL_SPRINT;
+	if (initmove->or_moveflags & MFL_SPRINT) ms->moveflags |= MFL_SPRINT;
 	ms->moveflags &= ~MFL_GRAPPLEPULL;
 	if (initmove->or_moveflags & MFL_GRAPPLEPULL) ms->moveflags |= MFL_GRAPPLEPULL;
 	ms->moveflags &= ~MFL_GRAPPLEEXISTS;
@@ -1154,6 +1156,47 @@ int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean d
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
+qboolean BotCheckRunToGoal( bot_movestate_t *ms, bot_goal_t *goal ) {
+	float dist;
+	vec3_t dir;
+
+	if ( !( ms->moveflags & MFL_WALK ) ) {
+		return qtrue;
+	}
+
+	if ( !( ms->moveflags & MFL_SPRINT ) ) {
+		return qfalse;
+	}
+
+	// check if it's an item and not a roam point
+	if ( !( goal->flags & GFL_ITEM ) || ( goal->flags & GFL_ROAM ) ) {
+		return qfalse;
+	}
+
+	// check distance to item
+	dir[0] = goal->origin[0] - ms->origin[0];
+	dir[1] = goal->origin[1] - ms->origin[1];
+	if ( ms->moveflags & MFL_SWIMMING ) {
+		dir[2] = goal->origin[2] - ms->origin[2];
+	} else {
+		dir[2] = 0;
+	}
+	dist = VectorNormalize( dir );
+
+	if ( dist >= 256 ) {
+		// walk until closer to item
+		return qfalse;
+	}
+
+	// run to item
+	return qtrue;
+} //end of the function BotCheckRunToGoal
+//===========================================================================
+//
+// Parameter:			-
+// Returns:				-
+// Changes Globals:		-
+//===========================================================================
 int BotSwimInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 {
 	vec3_t normdir;
@@ -1402,7 +1445,7 @@ int BotMoveInDirection(int movestate, vec3_t dir, float speed, int type)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach)
+bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach, bot_goal_t *goal)
 {
 	float dist, speed;
 	vec3_t hordir;
@@ -1433,11 +1476,10 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach)
 	//
 	dist = BotGapDistance(ms->origin, hordir, ms->entitynum);
 	//
-	if (ms->moveflags & MFL_WALK)
+	if (!BotCheckRunToGoal(ms, goal))
 	{
 		if (dist > 0) speed = 200 - (180 - 1 * dist);
 		else speed = 200;
-		EA_Walk(ms->playernum);
 	} //end if
 	else
 	{
@@ -1637,7 +1679,7 @@ bot_moveresult_t BotFinishTravel_WaterJump(bot_movestate_t *ms, aas_reachability
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t *reach)
+bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t *reach, bot_goal_t *goal)
 {
 	vec3_t hordir, dir;
 	float dist, speed, reachhordist;
@@ -1678,11 +1720,20 @@ bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t *ms, aas_reachability_t 
 		if (reachhordist < 20)
 		{
 			if (dist > 64) dist = 64;
-			speed = 400 - (256 - 4 * dist);
+
+			if (!BotCheckRunToGoal(ms, goal)) {
+				speed = 200 - (128 - 2 * dist);
+			} else {
+				speed = 400 - (256 - 4 * dist);
+			}
 		} //end if
 		else
 		{
-			speed = 400;
+			if (!BotCheckRunToGoal(ms, goal)) {
+				speed = 200;
+			} else {
+				speed = 400;
+			}
 		} //end else
 	} //end else
 	//
@@ -3023,7 +3074,11 @@ bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal)
 	//
 	dist = VectorNormalize(dir);
 	if (dist > 100) dist = 100;
-	speed = 400 - (400 - 4 * dist);
+	if (!BotCheckRunToGoal(ms, goal)) {
+		speed = 200 - (200 - 2 * dist);
+	} else {
+		speed = 400 - (400 - 4 * dist);
+	}
 	if (speed < 10) speed = 0;
 	//
 	BotCheckBlocked(ms, dir, qtrue, &result);
@@ -3347,11 +3402,11 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 #endif
 			switch(reach.traveltype & TRAVELTYPE_MASK)
 			{
-				case TRAVEL_WALK: *result = BotTravel_Walk(ms, &reach); break;
+				case TRAVEL_WALK: *result = BotTravel_Walk(ms, &reach, goal); break;
 				case TRAVEL_CROUCH: *result = BotTravel_Crouch(ms, &reach); break;
 				case TRAVEL_BARRIERJUMP: *result = BotTravel_BarrierJump(ms, &reach); break;
 				case TRAVEL_LADDER: *result = BotTravel_Ladder(ms, &reach); break;
-				case TRAVEL_WALKOFFLEDGE: *result = BotTravel_WalkOffLedge(ms, &reach); break;
+				case TRAVEL_WALKOFFLEDGE: *result = BotTravel_WalkOffLedge(ms, &reach, goal); break;
 				case TRAVEL_JUMP: *result = BotTravel_Jump(ms, &reach); break;
 				case TRAVEL_SWIM: *result = BotTravel_Swim(ms, &reach); break;
 				case TRAVEL_WATERJUMP: *result = BotTravel_WaterJump(ms, &reach); break;
@@ -3457,7 +3512,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 			//
 			switch(reach.traveltype & TRAVELTYPE_MASK)
 			{
-				case TRAVEL_WALK: *result = BotTravel_Walk(ms, &reach); break;
+				case TRAVEL_WALK: *result = BotTravel_Walk(ms, &reach, goal); break;
 				case TRAVEL_CROUCH: /*do nothing*/ break;
 				case TRAVEL_BARRIERJUMP: *result = BotFinishTravel_BarrierJump(ms, &reach); break;
 				case TRAVEL_LADDER: *result = BotTravel_Ladder(ms, &reach); break;

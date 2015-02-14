@@ -57,6 +57,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define MFL_ACTIVEGRAPPLE				256		//bot is using the grapple hook
 #define MFL_GRAPPLERESET				512		//bot has reset the grapple
 #define MFL_WALK						1024	//bot should walk slowly
+#define MFL_SPRINT						2048	//walking bot should run to items
 // move result flags
 #define MOVERESULT_MOVEMENTVIEW			1		//bot uses view for movement
 #define MOVERESULT_SWIMVIEW				2		//bot uses view for swimming

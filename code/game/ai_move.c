@@ -1219,6 +1219,7 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 	int moveflags = 0;
 	aas_clientmove_t move;
 	float dist;
+	qboolean predictSuccess;
 
 	if (trap_AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP)) {
 		ms->moveflags |= MFL_ONGROUND;
@@ -1272,16 +1273,21 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 			}
 			maxframes = 2;
 			cmdframes = 2;
-			stopevent = SE_HITGROUNDDAMAGE|
+			stopevent = SE_HITGROUNDDAMAGE|SE_GAP|
 						SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA;
 		} //end else
 		//trap_AAS_ClearShownDebugLines();
 		//
 		VectorCopy(ms->origin, origin);
 		origin[2] += 0.5;
-		trap_AAS_PredictClientMovement(&move, ms->entitynum, origin, presencetype, qtrue,
+		predictSuccess = trap_AAS_PredictClientMovement(&move, ms->entitynum, origin, presencetype, qtrue,
 									velocity, cmdmove, cmdframes, maxframes, 0.1f,
 									stopevent, 0, qfalse, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+		//check if prediction failed
+		if (!predictSuccess) {
+			//BotAI_Print(PRT_MESSAGE, "player %d: prediction was stuck in loop\n", ms->playernum);
+			return qfalse;
+		}
 		//if prediction time wasn't enough to fully predict the movement
 		if (move.frames >= maxframes && (type & MOVE_JUMP))
 		{
@@ -1291,10 +1297,16 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 		//don't enter slime or lava and don't fall from too high
 		if (move.stopevent & (SE_ENTERSLIME|SE_ENTERLAVA|SE_HITGROUNDDAMAGE))
 		{
-			//BotAI_Print(PRT_MESSAGE, "player %d: would be hurt ", ms->playernum);
+			//BotAI_Print(PRT_MESSAGE, "player %d: predicted frame %d of %d, would be hurt ", ms->playernum, move.frames, maxframes);
 			//if (move.stopevent & SE_ENTERSLIME) BotAI_Print(PRT_MESSAGE, "slime\n");
 			//if (move.stopevent & SE_ENTERLAVA) BotAI_Print(PRT_MESSAGE, "lava\n");
 			//if (move.stopevent & SE_HITGROUNDDAMAGE) BotAI_Print(PRT_MESSAGE, "hitground\n");
+			return qfalse;
+		} //end if
+		//don't fall in gaps
+		if (move.stopevent & SE_GAP)
+		{
+			//BotAI_Print(PRT_MESSAGE, "player %d: predicted frame %d of %d, there is a gap\n", ms->playernum, move.frames, maxframes);
 			return qfalse;
 		} //end if
 		//if ground was hit
@@ -1303,10 +1315,16 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 			//check for nearby gap
 			VectorNormalize2(move.velocity, tmpdir);
 			dist = BotGapDistance(move.endpos, tmpdir, ms->entitynum);
-			if (dist > 0) return qfalse;
+			if (dist > 0) {
+				//BotAI_Print(PRT_MESSAGE, "player %d: predicted frame %d of %d, hit ground near gap (move direction)\n", ms->playernum, move.frames, maxframes);
+				return qfalse;
+			}
 			//
 			dist = BotGapDistance(move.endpos, hordir, ms->entitynum);
-			if (dist > 0) return qfalse;
+			if (dist > 0) {
+				//BotAI_Print(PRT_MESSAGE, "player %d: predicted frame %d of %d, hit ground near gap (desired direction)\n", ms->playernum, move.frames, maxframes);
+				return qfalse;
+			}
 		} //end if
 		//
 		//trap_AAS_DrawCross(move.endpos, 4, LINECOLOR_BLUE);

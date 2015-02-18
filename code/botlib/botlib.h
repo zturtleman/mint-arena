@@ -228,7 +228,7 @@ typedef struct aas_export_s
 	//--------------------------------------------
 	// be_aas_move.c
 	//--------------------------------------------
-	int			(*AAS_PredictClientMovement)(struct aas_clientmove_s *move,
+	int			(*AAS_PredictPlayerMovement)(struct aas_clientmove_s *move,
 											int entnum, vec3_t origin,
 											int presencetype, int onground,
 											vec3_t velocity, vec3_t cmdmove,

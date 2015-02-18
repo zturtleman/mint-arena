@@ -333,7 +333,7 @@ int BotReachabilityArea(vec3_t origin, int passEnt)
 		VectorCopy(origin, org);
 		VectorCopy(org, end);
 		end[2] -= 800;
-		trap_AAS_TraceClientBBox(&trace, org, end, PRESENCE_CROUCH, -1, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+		trap_AAS_TracePlayerBBox(&trace, org, end, PRESENCE_CROUCH, -1, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 		if (!trace.startsolid)
 		{
 			VectorCopy(trace.endpos, org);
@@ -369,7 +369,7 @@ int BotReachabilityArea(vec3_t origin, int testground)
 		{
 			VectorCopy(origin, end);
 			end[2] -= 800;
-			trap_AAS_TraceClientBBox(&trace, origin, end, PRESENCE_CROUCH, -1, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+			trap_AAS_TracePlayerBBox(&trace, origin, end, PRESENCE_CROUCH, -1, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 			if (!trace.startsolid)
 			{
 				VectorCopy(trace.endpos, org);
@@ -1036,7 +1036,7 @@ float BotGapDistance(vec3_t origin, vec3_t hordir, int entnum)
 		VectorCopy(origin, start);
 		VectorCopy(origin, end);
 		end[2] -= 60;
-		trap_AAS_TraceClientBBox(&trace, start, end, PRESENCE_CROUCH, entnum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+		trap_AAS_TracePlayerBBox(&trace, start, end, PRESENCE_CROUCH, entnum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 		if (trace.fraction >= 1) return 1;
 		startz = trace.endpos[2] + 1;
 	}
@@ -1047,7 +1047,7 @@ float BotGapDistance(vec3_t origin, vec3_t hordir, int entnum)
 		start[2] = startz + 24;
 		VectorCopy(start, end);
 		end[2] -= 48 + phys_maxbarrier;
-		trap_AAS_TraceClientBBox(&trace, start, end, PRESENCE_CROUCH, entnum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+		trap_AAS_TracePlayerBBox(&trace, start, end, PRESENCE_CROUCH, entnum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 		//if solid is found the bot can't walk any further and fall into a gap
 		if (!trace.startsolid)
 		{
@@ -1083,13 +1083,13 @@ int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed)
 	VectorNormalize(hordir);
 	VectorMA(ms->origin, ms->thinktime * speed * 0.5, hordir, end);
 	//trace horizontally in the move direction
-	trap_AAS_TraceClientBBox(&trace, ms->origin, end, PRESENCE_NORMAL, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+	trap_AAS_TracePlayerBBox(&trace, ms->origin, end, PRESENCE_NORMAL, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 	//this shouldn't happen... but we check anyway
 	if (trace.startsolid) return qfalse;
 	//if no obstacle at all
 	if (trace.fraction >= 1.0) return qfalse;
 	//trace horizontally in the move direction again
-	trap_AAS_TraceClientBBox(&trace, ms->origin, end, PRESENCE_CROUCH, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+	trap_AAS_TracePlayerBBox(&trace, ms->origin, end, PRESENCE_CROUCH, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 	//again this shouldn't happen
 	if (trace.startsolid) return qfalse;
 	//if something is hit
@@ -1112,7 +1112,7 @@ int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean d
 	VectorCopy(ms->origin, end);
 	end[2] += phys_maxbarrier;
 	//trace right up
-	trap_AAS_TraceClientBBox(&trace, ms->origin, end, PRESENCE_NORMAL, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+	trap_AAS_TracePlayerBBox(&trace, ms->origin, end, PRESENCE_NORMAL, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 	//this shouldn't happen... but we check anyway
 	if (trace.startsolid) return qfalse;
 	//if very low ceiling it isn't possible to jump up to a barrier
@@ -1126,7 +1126,7 @@ int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean d
 	VectorCopy(trace.endpos, start);
 	end[2] = trace.endpos[2];
 	//trace from previous trace end pos horizontally in the move direction
-	trap_AAS_TraceClientBBox(&trace, start, end, PRESENCE_NORMAL, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+	trap_AAS_TracePlayerBBox(&trace, start, end, PRESENCE_NORMAL, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 	//again this shouldn't happen
 	if (trace.startsolid) return qfalse;
 	//
@@ -1134,7 +1134,7 @@ int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed, qboolean d
 	VectorCopy(trace.endpos, end);
 	end[2] = ms->origin[2];
 	//trace down from the previous trace end pos
-	trap_AAS_TraceClientBBox(&trace, start, end, PRESENCE_NORMAL, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+	trap_AAS_TracePlayerBBox(&trace, start, end, PRESENCE_NORMAL, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 	//if solid
 	if (trace.startsolid) return qfalse;
 	//if no obstacle at all
@@ -1280,7 +1280,7 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 		//
 		VectorCopy(ms->origin, origin);
 		origin[2] += 0.5;
-		predictSuccess = trap_AAS_PredictClientMovement(&move, ms->entitynum, origin, presencetype, qtrue,
+		predictSuccess = trap_AAS_PredictPlayerMovement(&move, ms->entitynum, origin, presencetype, qtrue,
 									velocity, cmdmove, cmdframes, maxframes, 0.1f,
 									stopevent, 0, qfalse, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 		//check if prediction failed

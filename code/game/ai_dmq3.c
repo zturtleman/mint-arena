@@ -3538,7 +3538,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 					//
 					VectorClear(cmdmove);
 					//AAS_ClearShownDebugLines();
-					trap_AAS_PredictClientMovement(&move, bs->enemy, origin,
+					trap_AAS_PredictPlayerMovement(&move, bs->enemy, origin,
 														PRESENCE_CROUCH, qfalse,
 														dir, cmdmove, 0,
 														dist * 10 / wi.speed, 0.1f, 0, 0, qfalse,

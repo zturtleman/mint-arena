@@ -396,7 +396,7 @@ int trap_AAS_PointReachabilityAreaIndex(vec3_t point) {
 	return syscall( BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX, point );
 }
 
-void trap_AAS_TraceClientBBox(void /* aas_trace_t */ *trace, vec3_t start, vec3_t end, int presencetype, int passent, int contentmask) {
+void trap_AAS_TracePlayerBBox(void /* aas_trace_t */ *trace, vec3_t start, vec3_t end, int presencetype, int passent, int contentmask) {
 	syscall( BOTLIB_AAS_TRACE_PLAYER_BBOX, trace, start, end, presencetype, passent, contentmask );
 }
 
@@ -540,7 +540,7 @@ int trap_AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, 
 }
 
 
-int trap_AAS_PredictClientMovement(void /* struct aas_clientmove_s */ *move, int entnum, vec3_t origin, int presencetype, int onground, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize, int contentmask) {
+int trap_AAS_PredictPlayerMovement(void /* struct aas_clientmove_s */ *move, int entnum, vec3_t origin, int presencetype, int onground, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize, int contentmask) {
 	return syscall( BOTLIB_AAS_PREDICT_PLAYER_MOVEMENT, move, entnum, origin, presencetype, onground, velocity, cmdmove, cmdframes, maxframes, PASSFLOAT(frametime), stopevent, stopareanum, visualize, contentmask );
 }
 

@@ -2228,7 +2228,7 @@ bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability_t *rea
 			//
 			if ((ms->moveflags & MFL_SWIMMING) || !BotCheckBarrierJump(ms, dir, 50, qtrue))
 			{
-				if (speed > 5) EA_Move(ms->playernum, dir, speed);
+				if (dist > 5) EA_Move(ms->playernum, dir, speed);
 			} //end if
 			VectorCopy(dir, result.movedir);
 			//
@@ -2257,7 +2257,7 @@ bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability_t *rea
 			//
 			if (!(ms->moveflags & MFL_SWIMMING) && !BotCheckBarrierJump(ms, dir, 50, qtrue))
 			{
-				if (speed > 5) EA_Move(ms->playernum, dir, speed);
+				if (dist > 5) EA_Move(ms->playernum, dir, speed);
 			} //end if
 			VectorCopy(dir, result.movedir);
 			//
@@ -2438,7 +2438,7 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 			} //end if
 			VectorCopy(hordir, result.movedir);
 		} //end else
-		//if not really close to the center of the elevator
+		//if not really close to the center of the func_bobbing
 		else
 		{
 			MoverBottomCenter(reach, bottomcenter);
@@ -2451,7 +2451,7 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 #ifdef DEBUG_FUNCBOB
 				BotAI_Print(PRT_MESSAGE, "bot moving to func_bobbing center\n");
 #endif
-				//move to the center of the plat
+				//move to the center of the func_bobbing
 				if (dist > 100) dist = 100;
 				speed = 400 - (400 - 4 * dist);
 				//
@@ -2478,7 +2478,7 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 			//if swimming or no barrier jump
 			if ((ms->moveflags & MFL_SWIMMING) || !BotCheckBarrierJump(ms, dir, 50, qtrue))
 			{
-				if (speed > 5) EA_Move(ms->playernum, dir, speed);
+				if (dist > 5) EA_Move(ms->playernum, dir, speed);
 			} //end if
 			VectorCopy(dir, result.movedir);
 			//
@@ -2508,7 +2508,7 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 			//
 			if (!(ms->moveflags & MFL_SWIMMING) && !BotCheckBarrierJump(ms, dir, 50, qtrue))
 			{
-				if (speed > 5) EA_Move(ms->playernum, dir, speed);
+				if (dist > 5) EA_Move(ms->playernum, dir, speed);
 			} //end if
 			VectorCopy(dir, result.movedir);
 			//
@@ -2518,7 +2518,7 @@ bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachability_t *
 			result.flags |= MOVERESULT_WAITING;
 			return result;
 		} //end if
-		//get direction and distance to func_bob bottom center
+		//get direction and distance to func_bobbing bottom center
 		MoverBottomCenter(reach, bottomcenter);
 		VectorSubtract(bottomcenter, ms->origin, dir2);
 		if (!(ms->moveflags & MFL_SWIMMING)) dir2[2] = 0;
@@ -2588,7 +2588,7 @@ bot_moveresult_t BotFinishTravel_FuncBobbing(bot_movestate_t *ms, aas_reachabili
 		if (dist > 60) dist = 60;
 		speed = 360 - (360 - 6 * dist);
 		//
-		if (speed > 5) EA_Move(ms->playernum, dir, speed);
+		if (dist > 5) EA_Move(ms->playernum, dir, speed);
 		VectorCopy(dir, result.movedir);
 		//
 		if (ms->moveflags & MFL_SWIMMING) result.flags |= MOVERESULT_SWIMVIEW;

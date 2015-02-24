@@ -136,7 +136,8 @@ typedef enum {
 	CVT_NONE,		// terminates list of cvar value pairs
 	CVT_INT,
 	CVT_FLOAT,
-	CVT_STRING
+	CVT_STRING,
+	CVT_CMD			// command string to execute
 } cvarValueType_e;
 
 typedef struct {
@@ -262,9 +263,16 @@ typedef struct {
 
 	qboolean startedMusic;
 
+	int currentResPair; // current index in cp_resolution
+
 } uiStatic_t;
 
 extern uiStatic_t uis;
+
+// ui_main.c
+#define MAX_RESOLUTIONS	32
+extern cvarValuePair_t cp_resolution[MAX_RESOLUTIONS];
+void UI_GetResolutions( void );
 
 // ui_menus.c
 extern menudef_t ui_menus[M_NUM_MENUS];

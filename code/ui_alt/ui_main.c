@@ -32,6 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 uiStatic_t uis;
 currentMenu_t currentMenu;
+cvarValuePair_t cp_resolution[MAX_RESOLUTIONS];
 
 void	UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	int i;
@@ -42,6 +43,7 @@ void	UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	Com_Memset( &uis, 0, sizeof ( uis ) );
 
 	UI_LoadAssets();
+	UI_GetResolutions();
 
 #ifdef Q3UIFONTS
 	if ( !CG_InitTrueTypeFont( "fonts/font1_prop", PROP_HEIGHT, &uis.fontProp ) ) {
@@ -332,4 +334,136 @@ void UI_Load( void ) {
 
 }
 #endif
+
+/*
+=================
+UI_GetResolutions
+
+Based on ioq3 GraphicsOptions_GetResolutions
+
+Build list of available resolutions and save current resolution index
+=================
+*/
+void UI_GetResolutions( void ) {
+	static char resbuf[ MAX_STRING_CHARS ];
+	static char cmdBuf[ MAX_RESOLUTIONS ][ 64 ];
+	static const char *builtinResolutions[ ] =
+	{
+		"320x240",
+		"400x300",
+		"512x384",
+		"640x480",
+		"800x600",
+		"960x720",
+		"1024x768",
+		"1152x864",
+		"1280x1024",
+		"1600x1200",
+		"2048x1536",
+		"856x480",
+		NULL
+	};
+
+	int currentMode = trap_Cvar_VariableIntegerValue( "r_mode" );
+
+	// ZTM: FIXME?: This was added in ioq3, mint-arena can assume it will always be present?
+	Q_strncpyz(resbuf, CG_Cvar_VariableString("r_availableModes"), sizeof(resbuf));
+	if (*resbuf)
+	{
+		char *s = resbuf;
+		unsigned int i = 0;
+		unsigned int builtin;
+		static char displayRes[64];
+
+		if ( currentMode == -2 ) {
+			uis.currentResPair = 0;
+		} else if ( currentMode == -1 ) {
+			uis.currentResPair = 1;
+		}
+
+		// Add display resolution video mode
+		Com_sprintf(displayRes, sizeof(displayRes), "Auto (%dx%d)", cgs.glconfig.displayWidth, cgs.glconfig.displayHeight);
+		cp_resolution[i].type = CVT_INT;
+		cp_resolution[i].value = "-2";
+		cp_resolution[i].string = displayRes;
+		i++;
+
+		cp_resolution[i].type = CVT_INT;
+		cp_resolution[i].value = "-1";
+		cp_resolution[i].string = "Custom";
+		i++;
+
+		// Use display resolution in "Very High Quality" template
+		//s_ivo_templates[0].mode = -2;
+
+		while ( s && i < ARRAY_LEN(cp_resolution)-1 ) {
+			cp_resolution[i].string = s;
+
+			s = strchr(s, ' ');
+			if( s )
+				*s++ = '\0';
+
+			// find built in mode
+			for( builtin = 0; builtinResolutions[ builtin ]; builtin++ )
+			{
+				if( !Q_stricmp( builtinResolutions[ builtin ], cp_resolution[i].string ) )
+					break;
+			}
+
+			if ( builtinResolutions[ builtin ] ) {
+				Com_sprintf( cmdBuf[i], sizeof (cmdBuf[i]), "%d", builtin );
+
+				cp_resolution[i].type = CVT_INT;
+				cp_resolution[i].value = cmdBuf[i];
+
+				if ( currentMode == builtin ) {
+					uis.currentResPair = i;
+				}
+			} else {
+				int width = atoi( cp_resolution[i].string );
+				int height = atoi( strchr(cp_resolution[i].string, 'x')+1 );
+
+				Com_sprintf( cmdBuf[i], sizeof (cmdBuf[i]), "r_mode -1; r_customwidth %d; r_customheight %d;", width, height );
+
+				cp_resolution[i].type = CVT_CMD;
+				cp_resolution[i].value = cmdBuf[i];
+
+				if ( currentMode != -2 && width == cgs.glconfig.vidWidth && height == cgs.glconfig.vidHeight ) {
+					uis.currentResPair = i;
+				}
+			}
+
+			i++;
+		}
+		cp_resolution[i].type = CVT_NONE;
+		cp_resolution[i].value = NULL;
+		cp_resolution[i].string = NULL;
+
+		//Com_Printf("DEBUG: Num modes: %d, current mode pair %d (%s)\n", i, uis.currentResPair, cp_resolution[uis.currentResPair].string );
+	} else {
+		// use built in modes
+		unsigned int i = 0;
+		unsigned int builtin;
+
+		uis.currentResPair = currentMode >= 0 ? currentMode+1 : 0;
+
+		cp_resolution[i].type = CVT_INT;
+		cp_resolution[i].value = "-1";
+		cp_resolution[i].string = "Custom";
+		i++;
+
+		for ( builtin = 0; builtinResolutions[builtin]; builtin++ ) {
+			cp_resolution[i].type = CVT_INT;
+
+			Com_sprintf( cmdBuf[i], sizeof (cmdBuf[i]), "%d", builtin );
+			cp_resolution[i].value = cmdBuf[i];
+
+			cp_resolution[i].string = builtinResolutions[i];
+		}
+
+		cp_resolution[i].type = CVT_NONE;
+		cp_resolution[i].value = NULL;
+		cp_resolution[i].string = NULL;
+	}
+}
 

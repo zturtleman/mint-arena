@@ -107,6 +107,7 @@ void restartMap( int item ) {
 #define VINT( x, str ) { CVT_INT, #x, str }
 #define VFLOAT( x, str ) { CVT_FLOAT, #x, str }
 #define VSTRING( x, str ) { CVT_STRING, x, str }
+#define VCMD( x, str ) { CVT_CMD, x, str }
 #define VEND { CVT_NONE, NULL, NULL }
 
 static cvarValuePair_t cp_bool[] = { VINT( 0, "off" ), VINT( 1, "on" ), VEND };
@@ -320,6 +321,13 @@ void graphicsPresetUpdate( int item ) {
 }
 
 static cvarValuePair_t cp_glCustom[] = { VINT( 0, "Very High" ), VINT( 1, "High" ), VINT( 2, "Medium" ), VINT( 3, "Fast" ), VINT( 4, "Fastest" ), VINT( 5, "Custom" ), VEND };
+static cvarValuePair_t cp_geometricDetail[] = {
+	VCMD( "r_lodBias 1; r_subdivisions 20;", "Low" ),
+	VCMD( "r_lodBias 1; r_subdivisions 12;", "Medium" ),
+	VCMD( "r_lodBias 0; r_subdivisions 4;", "High" ),
+	VCMD( "r_lodBias -2; r_subdivisions 4;", "Very High" ), // ZTM: New option to never use low LOD models
+	VEND
+};
 static cvarValuePair_t cp_textureQuality[] = { VINT( 0, "default" ), VINT( 16, "16 bit" ), VINT( 32, "32 bit" ), VEND };
 static cvarValuePair_t cp_textureFilter[] = { VSTRING( "GL_LINEAR_MIPMAP_NEAREST", "Bilinear" ), VSTRING( "GL_LINEAR_MIPMAP_LINEAR", "Trilinear" ), VEND };
 static cvarValuePair_t cp_lighting[] = { VINT( 0, "Lightmap (High)" ), VINT( 1, "Vertex (Low)" ), VEND };
@@ -351,12 +359,14 @@ menuitem_t systemmenu_items[] = {
 	{ MIF_BIGTEXT|MIF_PANEL, "Graphics", NULL, M_NONE, 0 },
 	{ MIF_CALL, "Graphics Settings:", graphicsPresetUpdate, M_NONE, 0, "ui_glCustom", cp_glCustom }, // Custom, Very High, High, etc
 	{ MIF_CALL, "GL Extensions:",		NULL, M_NONE, 0, "r_allowExtensions", cp_bool },
-	{ MIF_CALL, "Aspect Ratio:",		NULL, M_NONE, 0 }, // 4:3, ...
-	{ MIF_CALL, "Resolution:",			NULL, M_NONE, 0, "r_mode", NULL }, // 1024x768, ...
+	// ZTM: NOTE: I don't really like how Aspect Ratio works in q3_ui and don't feel like implementing it right now. Should aspect just be displayed after resolution size?
+	//{ MIF_CALL, "Aspect Ratio:",		NULL, M_NONE, 0 }, // 4:3, ...
+	{ MIF_CALL, "Resolution:",			NULL, M_NONE, 0, "r_mode", cp_resolution }, // 1024x768 ...
 	{ MIF_CALL, "Fullscreen:",			NULL, M_NONE, 0, "r_fullscreen", cp_bool },
 	{ MIF_CALL, "Lighting:",			NULL, M_NONE, 0, "r_vertexLight", cp_lighting },
 	{ MIF_CALL, "Flares:",				NULL, M_NONE, 0, "r_flares", cp_bool },
-	{ MIF_CALL, "Geometric Detail:",	NULL, M_NONE, 0 }, // TODO: modifies both "r_lodBias" and "r_subdivisions"
+	// ZTM: FIXME: Geometric Detail always defaults to 'low' when opening menu
+	{ MIF_CALL, "Geometric Detail:",	NULL, M_NONE, 0, "r_lodBias", cp_geometricDetail }, // modifies both "r_lodBias" and "r_subdivisions" cvars
 	{ MIF_CALL, "Texture Detail:",		NULL, M_NONE, 0, "r_picmip", NULL, &cr_pimip },
 	{ MIF_CALL, "Texture Quality:",		NULL, M_NONE, 0, "r_texturebits", cp_textureQuality },
 	{ MIF_CALL, "Texture Filter:",		NULL, M_NONE, 0, "r_textureMode", cp_textureFilter },

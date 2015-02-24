@@ -246,7 +246,12 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 		value = item->cvarPairs[ item->cvarPair ].value;
 
 		// FIXME: What about cases when it should not take affect until 'Apply' is clicked?
-		trap_Cvar_Set( item->cvarName, value );
+		//Com_Printf("DEBUG: Item with %s set to pair %d (value %s, caption %s)\n", item->cvarName, item->cvarPair, value, item->cvarPairs[ item->cvarPair ].string );
+		if ( item->cvarPairs[ item->cvarPair ].type == CVT_CMD ) {
+			trap_Cmd_ExecuteText( EXEC_APPEND, value );
+		} else {
+			trap_Cvar_Set( item->cvarName, value );
+		}
 	}
 	else if ( item->cvarRange )
 	{
@@ -440,13 +445,31 @@ static void UI_SetMenuCvarValue( currentMenuItem_t *item ) {
 		return;
 	}
 
+	// HACK: need to override this for resolution (r_mode)
+	if ( item->cvarPairs == cp_resolution ) {
+		item->cvarPair = uis.currentResPair;
+		return;
+	}
+
+	// HACK: TODO: need to override this for Geometric Detail
+	if ( !Q_stricmp( item->cvarName, "r_lodBias" ) ) {
+		item->cvarPair = 0;
+		return;
+	}
+
+	// HACK: TODO: need to override this for Graphics Settings
+	if ( !Q_stricmp( item->cvarName, "ui_glCustom" ) ) {
+		item->cvarPair = 0;
+		return;
+	}
+
 	for ( pair = 0; pair < item->numPairs; pair++ ) {
 		if ( item->cvarPairs[ pair ].type == CVT_STRING ) {
 			if ( Q_stricmp( item->vmCvar.string, item->cvarPairs[ pair ].value ) == 0 ) {
 				closestPair = pair;
 				break;
 			}
-		} else {
+		} else if ( item->cvarPairs[ pair ].type == CVT_INT || item->cvarPairs[ pair ].type == CVT_FLOAT ) {
 			dist = fabs( item->vmCvar.value - atof( item->cvarPairs[ pair ].value ) );
 			if ( dist < bestDist ) {
 				bestDist = dist;
@@ -490,6 +513,14 @@ void UI_UpdateMenuCvars( currentMenu_t *current ) {
 
 	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
 		if ( !item->cvarName )
+			continue;
+
+		// HACK: don't update r_mode, it's hard coded to always get set to the initial pair
+		if ( item->cvarPairs == cp_resolution )
+			continue;
+
+		// HACK: Geometric Detail item references two cvars using cvarPairs all as CVT_CMD
+		if ( !Q_stricmp( item->cvarName, "r_lodBias" ) )
 			continue;
 
 		modCount = item->vmCvar.modificationCount;

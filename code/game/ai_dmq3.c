@@ -4616,8 +4616,8 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 	else if (entinfo.modelindex > 0 && entinfo.modelindex <= max_bspmodelindex) {
 		// a closed doors without a targetname will operate automatically
 		if (!strcmp(ent->classname, "func_door") && (ent->moverState == MOVER_POS1)) {
-			// if no targetname
-			if (!ent->targetname) {
+			// if no targetname and not a shootable door
+			if (!ent->targetname && !ent->health) {
 				return;
 			}
 		}

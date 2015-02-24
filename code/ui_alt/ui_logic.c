@@ -522,6 +522,9 @@ void UI_UpdateMenuCvars( currentMenu_t *current ) {
 		// HACK: Geometric Detail item references two cvars using cvarPairs all as CVT_CMD
 		if ( !Q_stricmp( item->cvarName, "r_lodBias" ) )
 			continue;
+		// HACK: same as above
+		if ( !Q_stricmp( item->cvarName, "r_ext_max_anisotropy" ) )
+			continue;
 
 		modCount = item->vmCvar.modificationCount;
 		oldValue = item->vmCvar.value;

@@ -4683,11 +4683,15 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 		}
 	}
 	//
-	if (bs->notblocked_time < FloatTime() - 0.4) {
-		// just reset goals and hope the bot will go into another direction?
-		// is this still needed??
-		if (bs->ainode == AINode_Seek_NBG) bs->nbg_time = 0;
-		else if (bs->ainode == AINode_Seek_LTG) bs->ltg_time = 0;
+	if (!activate) {
+		if (bs->notblocked_time < FloatTime() - 0.4) {
+			// just reset goals and hope the bot will go into another direction
+			if (bs->ainode == AINode_Seek_NBG) {
+				bs->nbg_time = 0;
+			} else if (bs->ainode == AINode_Seek_LTG) {
+				bs->ltg_time = 0;
+			}
+		}
 	}
 }
 

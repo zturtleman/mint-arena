@@ -427,7 +427,7 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 
 #ifdef MISSIONPACK
 				// back and next don't pulse in Team Arena
-				// ZTM: FIXME: I don't think there are another bitmap buttons in Team Arena, so could just disable it always in Team Arena?
+				// ZTM: FIXME: I don't think there are other bitmap buttons in Team Arena, so could just disable it always in Team Arena?
 				if ( !(item->flags & (MIF_BACKBUTTON|MIF_NEXTBUTTON) ) ) {
 #endif
 					color[3] = 0.5+0.5*sin(cg.realTime/PULSE_DIVISOR);

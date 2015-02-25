@@ -72,8 +72,9 @@ void UI_SetMenu( currentMenu_t *current, menuId_t menu ) {
 
 // change current menu, without changing stack
 void UI_SwapMenu( currentMenu_t *current, menuId_t menu ) {
-	if ( current->menu == menu )
+	if ( current->menu == menu ) {
 		return;
+	}
 
 	current->menu = menu;
 	current->panel = 1;
@@ -81,8 +82,9 @@ void UI_SwapMenu( currentMenu_t *current, menuId_t menu ) {
 	current->mouseItem = -1;
 	current->mouseClickDown = qfalse;
 
-	if ( !menu )
+	if ( !menu ) {
 		return;
+	}
 
 	UI_BuildCurrentMenu( current );
 	UI_SetInitalSelection( current );
@@ -90,8 +92,9 @@ void UI_SwapMenu( currentMenu_t *current, menuId_t menu ) {
 
 // add current menu to stask, then change to new menu
 void UI_PushMenu( currentMenu_t *current, menuId_t menu ) {
-	if ( current->menu == menu )
+	if ( current->menu == menu ) {
 		return;
+	}
 
 	if ( current->menu ) {
 		// push stack
@@ -140,14 +143,17 @@ void UI_SetMenuPanel( currentMenu_t *current, int itemNum ) {
 	int panelNum = 0;
 
 	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
-		if ( item->flags & MIF_PANEL )
+		if ( item->flags & MIF_PANEL ) {
 			panelNum++;
-		if ( i == itemNum )
+		}
+		if ( i == itemNum ) {
 			break;
+		}
 	}
 
-	if ( current->panel == panelNum )
+	if ( current->panel == panelNum ) {
 		return;
+	}
 
 	current->panel = panelNum;
 	UI_BuildCurrentMenu( current );
@@ -156,10 +162,12 @@ void UI_SetMenuPanel( currentMenu_t *current, int itemNum ) {
 	// select the panel button
 	panelNum = 0;
 	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
-		if ( item->flags & MIF_PANEL )
+		if ( item->flags & MIF_PANEL ) {
 			panelNum++;
-		if ( panelNum == current->panel )
+		}
+		if ( panelNum == current->panel ) {
 			break;
+		}
 	}
 
 	current->selectedItem = i;
@@ -171,6 +179,7 @@ void UI_MenuAdjustCursor( currentMenu_t *current, int dir ) {
 
 	if ( dir == 2 || dir == 4 ) {
 		// was UI_MenuItemChangeValue, but want the action function to get run
+		// ZTM: FIXME: causes button action to run, only meant to affect lists / sliders
 		UI_MenuAction( current, current->selectedItem, dir - 3 );
 		return;
 	}
@@ -180,14 +189,16 @@ void UI_MenuAdjustCursor( currentMenu_t *current, int dir ) {
 	do {
 		current->selectedItem += dir;
 
-		if ( current->selectedItem >= current->numItems )
+		if ( current->selectedItem >= current->numItems ) {
 			current->selectedItem = 0;
-		else if ( current->selectedItem < 0 )
+		} else if ( current->selectedItem < 0 ) {
 			current->selectedItem = current->numItems - 1;
+		}
 
 		// nothing was selectable...
-		if ( current->selectedItem == original )
+		if ( current->selectedItem == original ) {
 			break;
+		}
 
 	} while ( !( current->items[ current->selectedItem ].flags & MIF_SELECTABLE ) );
 
@@ -224,6 +235,7 @@ void UI_MenuCursorPoint( currentMenu_t *current, int x, int y ) {
 }
 
 // returns qfalse if item is a cvar and did not change value
+// FIXME: What about cases when it should not take affect until 'Apply' is clicked?
 qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) {
 	currentMenuItem_t *item;
 
@@ -238,15 +250,14 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 
 		item->cvarPair += dir;
 
-		if ( item->cvarPair >= item->numPairs )
+		if ( item->cvarPair >= item->numPairs ) {
 			item->cvarPair = 0;
-		else if ( item->cvarPair < 0 )
+		} else if ( item->cvarPair < 0 ) {
 			item->cvarPair = item->numPairs - 1;
+		}
 
 		value = item->cvarPairs[ item->cvarPair ].value;
 
-		// FIXME: What about cases when it should not take affect until 'Apply' is clicked?
-		//Com_Printf("DEBUG: Item with %s set to pair %d (value %s, caption %s)\n", item->cvarName, item->cvarPair, value, item->cvarPairs[ item->cvarPair ].string );
 		if ( item->cvarPairs[ item->cvarPair ].type == CVT_CMD ) {
 			trap_Cmd_ExecuteText( EXEC_APPEND, value );
 		} else {
@@ -257,7 +268,6 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 	{
 		float min, max, value;
 		qboolean reversed;
-		//qboolean ratioButton;
 
 		reversed = ( item->cvarRange->min > item->cvarRange->max );
 		if ( reversed ) {
@@ -268,15 +278,14 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 			max = item->cvarRange->max;
 		}
 
-		// trap_Cvar_VariableValue( item->cvarName ) doesn't work with latched cvars
+		// NOTE: trap_Cvar_VariableValue( item->cvarName ) doesn't work with latched cvars
 		value = item->vmCvar.value + dir * item->cvarRange->stepSize;
 
 		if ( reversed ) {
 			value = max - value;
 		}
 
-		//ratioButton = item->cvarRange->stepSize == 1 && max == 1 && min == 0;
-
+		// FIXME: slider will always be true here .. is the other case going to be needed? ratio buttons will use cvarPairs.
 		if ( UI_ItemIsSlider( item ) ) {
 			// added elipse for min=0, max=1, step=0.1 not being able to go to max
 			if ( value < min - 0.001f || value > max + 0.001f ) {
@@ -289,22 +298,15 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 		// ratio button, ..erm or any wrapping value
 		else if ( min != max ) {
 			// if cvar has min and max and out of range, wrap around
-			if ( value < min ) value = max;
-			if ( value > max ) value = min;
+			if ( value < min ) {
+				value = max;
+			} else if ( value > max ) {
+				value = min;
+			}
 		}
 
-		// FIXME: What about cases when it should not take affect until 'Apply' is clicked?
 		trap_Cvar_SetValue( item->cvarName, value );
-#if 0 // ZTM: Old code. Now the cvar will automatically update to latched value each frame.
-		trap_Cvar_Update( &item->vmCvar );
-
-		// might be a latched cvar
-		item->vmCvar.value = value;
-#endif
 	}
-
-	// gets played in UI_MenuAction
-	//trap_S_StartLocalSound( uis.itemActionSound, CHAN_LOCAL_SOUND );
 
 	return qtrue;
 }
@@ -426,8 +428,9 @@ qboolean UI_ItemIsSlider( currentMenuItem_t *item ) {
 static int UI_NumCvarPairs( cvarValuePair_t *cvarPairs ) {
 	int pair;
 
-	if ( !cvarPairs )
+	if ( !cvarPairs ) {
 		return 0;
+	}
 
 	for ( pair = 0; cvarPairs[pair].type != CVT_NONE; pair++ ) {
 		// count
@@ -488,8 +491,9 @@ void UI_RegisterMenuCvars( currentMenu_t *current ) {
 	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
 		item->cvarPair = 0;
 
-		if ( !item->cvarName )
+		if ( !item->cvarName ) {
 			continue;
+		}
 
 		trap_Cvar_Register( &item->vmCvar, item->cvarName, "", 0 );
 
@@ -512,19 +516,23 @@ void UI_UpdateMenuCvars( currentMenu_t *current ) {
 	char oldString[32]; // FIXME use macro from vmCvar_t
 
 	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
-		if ( !item->cvarName )
+		if ( !item->cvarName ) {
 			continue;
+		}
 
 		// HACK: don't update r_mode, it's hard coded to always get set to the initial pair
-		if ( item->cvarPairs == cp_resolution )
+		if ( item->cvarPairs == cp_resolution ) {
 			continue;
+		}
 
 		// HACK: Geometric Detail item references two cvars using cvarPairs all as CVT_CMD
-		if ( !Q_stricmp( item->cvarName, "r_lodBias" ) )
+		if ( !Q_stricmp( item->cvarName, "r_lodBias" ) ) {
 			continue;
+		}
 		// HACK: same as above
-		if ( !Q_stricmp( item->cvarName, "r_ext_max_anisotropy" ) )
+		if ( !Q_stricmp( item->cvarName, "r_ext_max_anisotropy" ) ) {
 			continue;
+		}
 
 		modCount = item->vmCvar.modificationCount;
 		oldValue = item->vmCvar.value;
@@ -541,7 +549,7 @@ void UI_UpdateMenuCvars( currentMenu_t *current ) {
 
 			Com_Printf("Cvar changed! %s: %s -> %s. %f -> %f.\n", item->cvarName, oldString, item->vmCvar.string, oldValue, item->vmCvar.value );
 			UI_SetMenuCvarValue( item );
-			// should action function get run?
+			// should action function get run? well, if add it here it would run twice. and currently I don't want it _only_ here.
 		}
 
 		// should there just a string compare? could get rid of the trap_Cvar_Update call.

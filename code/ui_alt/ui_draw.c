@@ -853,9 +853,9 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 
 		// move draw point for next item
 		if ( ( horizontalMenu && !numHeaders ) || ( numHeaders && !( item->flags & MIF_HEADER ) ) ) {
-			curX += item->captionPos.width + horizontalGap;
+			curX += MAX( item->captionPos.width, item->clickPos.width ) + horizontalGap;
 		} else {
-			curY += item->captionPos.height + UI_ItemVerticalGap( item );
+			curY += MAX( item->captionPos.height, item->clickPos.height ) + UI_ItemVerticalGap( item );
 		}
 
 		if ( item->flags & MIF_HEADER ) {

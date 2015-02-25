@@ -403,14 +403,15 @@ qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, 
 			value = Com_Clamp( min, max, value );
 			trap_Cvar_SetValue( item->cvarName, value );
 
-#if 0 // ZTM: Old code. Now the cvar will automatically update to latched value each frame.
+#if 0 // ZTM: Old code. Now the cvar will automatically update to latched value each frame (derp, but only if the string changes -- i.e. not when snaps to existing value)
 			// force update because dragging changes the vmCvar directly
 			item->vmCvar.modificationCount = -1;
 			trap_Cvar_Update( &item->vmCvar );
-
-			// might be a latched cvar
-			item->vmCvar.value = value;
 #endif
+
+			// change the value shown to the user
+			// HACK?: this is required because if the value snapped to existing the vm cvar doesn't get updated (for latched r_picmip at least)
+			item->vmCvar.value = value;
 		} else {
 			// change the value shown to the user
 			item->vmCvar.value = targetValue;

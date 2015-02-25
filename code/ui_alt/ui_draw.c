@@ -318,14 +318,103 @@ void UI_DrawGradientBar( int x, int y, int width, int height, qboolean highlight
 }
 #endif
 
+// testing 2D polys API...
+void UI_BuiltinSliderBar( float x, float y, float width, float height, float *drawcolor ) {
+	polyVert_t verts[3];
+
+	CG_AdjustFrom640( &x, &y, &width, &height );
+
+	VectorSet( verts[0].xyz, x, y+height, 0 ); // left lower
+	verts[0].st[0] = 0;
+	verts[0].st[1] = 0;
+
+	VectorSet( verts[1].xyz, x+width, y, 0 ); // right upper
+	verts[1].st[0] = 1;
+	verts[1].st[1] = 0;
+
+	VectorSet( verts[2].xyz, x+width, y+height, 0 ); // right upper
+	verts[2].st[0] = 1;
+	verts[2].st[1] = 1;
+
+	verts[0].modulate[0] = drawcolor[0] * 0xFF;
+	verts[0].modulate[1] = drawcolor[1] * 0xFF;
+	verts[0].modulate[2] = drawcolor[2] * 0xFF;
+	verts[0].modulate[3] = 0;
+
+	verts[1].modulate[0] = drawcolor[0] * 0xFF;
+	verts[1].modulate[1] = drawcolor[1] * 0xFF;
+	verts[1].modulate[2] = drawcolor[2] * 0xFF;
+	verts[1].modulate[3] = 0xE0;
+
+	verts[2].modulate[0] = drawcolor[0] * 0xFF;
+	verts[2].modulate[1] = drawcolor[1] * 0xFF;
+	verts[2].modulate[2] = drawcolor[2] * 0xFF;
+	verts[2].modulate[3] = 0xE0;
+
+	trap_R_Add2dPolys( verts, 3, cgs.media.whiteShader );
+}
+
+void UI_BuiltinCircle( float x, float y, float width, float height, float *drawcolor ) {
+#define CIRCLE_VERTS	21
+	polyVert_t verts[CIRCLE_VERTS];
+	int i;
+	float horizontalRadius, verticialRadius;
+
+	CG_AdjustFrom640( &x, &y, &width, &height );
+
+	horizontalRadius = width * 0.5f;
+	verticialRadius = height * 0.5f;
+
+	// move to center of circle
+	x += horizontalRadius;
+	y += verticialRadius;
+
+	// full bright point at center
+	i = 0;
+	verts[i].xyz[0] = x;
+	verts[i].xyz[1] = y;
+	verts[i].xyz[2] = 0;
+
+	verts[i].st[0] = 0.5f;
+	verts[i].st[1] = 0.5f;
+
+	verts[i].modulate[0] = drawcolor[0] * 0xFF;
+	verts[i].modulate[1] = drawcolor[1] * 0xFF;
+	verts[i].modulate[2] = drawcolor[2] * 0xFF;
+	verts[i].modulate[3] = 0xFF;
+
+	for ( i = 1; i < CIRCLE_VERTS; i++ ) {
+		float theta = 2.0f * M_PI * (float)(i-1) / (float)(CIRCLE_VERTS-2);
+
+		verts[i].xyz[0] = x + cos( theta ) * horizontalRadius;
+		verts[i].xyz[1] = y + sin( theta ) * verticialRadius;
+		verts[i].xyz[2] = 0;
+
+		// these are wrong.. but drawing blank image anyway
+		verts[i].st[0] = 0.5f + ( verts[i].xyz[0] - x ) / horizontalRadius;
+		verts[i].st[1] = 0.5f + ( verts[i].xyz[1] - y ) / verticialRadius;
+
+		verts[i].modulate[0] = drawcolor[0] * 0x40;
+		verts[i].modulate[1] = drawcolor[1] * 0x40;
+		verts[i].modulate[2] = drawcolor[2] * 0x40;
+		verts[i].modulate[3] = 0xFF;
+	}
+
+	trap_R_Add2dPolys( verts, CIRCLE_VERTS, cgs.media.whiteShader );
+}
+
 void UI_DrawSlider( float x, float y, float min, float max, float value, int style, float *drawcolor ) {
-	float frac, sliderValue;
+	float frac, sliderValue, buttonX;
 	qhandle_t hShader;
 
 	trap_R_SetColor( drawcolor );
 
 	// draw the background
-	CG_DrawPic( x, y, 96, 16, uiAssets.sliderBar );
+	if ( uiAssets.sliderBar ) {
+		CG_DrawPic( x, y, 96, 16, uiAssets.sliderBar );
+	} else {
+		UI_BuiltinSliderBar( x, y, 96, 16, drawcolor );
+	}
 
 	// draw the button
 	if ( style & UI_PULSE )
@@ -344,7 +433,13 @@ void UI_DrawSlider( float x, float y, float min, float max, float value, int sty
 	// position of slider button
 	frac = ( sliderValue - min ) / ( max - min );
 
-	CG_DrawPic( x + 8 + ( 96 - 16 ) * frac - 2, y - 2, 12, 20, hShader );
+	// ZTM: NOTE: team arena colorizes it, q3 does not iirc
+	buttonX = x + 8 + ( 96 - 16 ) * frac - 2;
+	if ( hShader ) {
+		CG_DrawPic( buttonX, y - 2, 12, 20, hShader );
+	} else {
+		UI_BuiltinCircle( buttonX, y - 2, 12, 20, drawcolor );
+	}
 
 	trap_R_SetColor( NULL );
 

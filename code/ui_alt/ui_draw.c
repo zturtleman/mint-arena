@@ -57,6 +57,7 @@ typedef struct {
 	qhandle_t menuBackgroundE;
 	qhandle_t levelShotDetail;
 
+	qhandle_t gradientBar;
 	qhandle_t lightningShader;
 #else
 	qhandle_t bannerModel;
@@ -143,6 +144,7 @@ void UI_LoadAssets( void ) {
 	uiAssets.sliderBar = trap_R_RegisterShaderNoMip( "ui/assets/slider2" );
 	uiAssets.sliderButton = trap_R_RegisterShaderNoMip( "ui/assets/sliderbutt_1" );
 	uiAssets.sliderButtonSelected = uiAssets.sliderButton;
+	uiAssets.gradientBar = trap_R_RegisterShaderNoMip( "ui/assets/gradientbar2" );
 	uiAssets.lightningShader = trap_R_RegisterShaderNoMip( "lightningkc" );
 #else
 	uiAssets.bannerModel = trap_R_RegisterModel( "models/mapobjects/banner/banner5.md3" );
@@ -272,6 +274,50 @@ void UI_DrawMainMenuBackground( void ) {
 	CG_DrawString( SCREEN_WIDTH / 2, SCREEN_HEIGHT - SMALLCHAR_HEIGHT*2, MENU_COPYRIGHT, UI_CENTER|UI_SMALLFONT, color_copyright );
 }
 
+#ifdef MISSIONPACK
+// returns qtrue if any visable mouse cursor is in bounds
+qboolean UI_CursorInRect( int x, int y, int width, int height ) {
+	int i;
+
+	for ( i = 0; i < MAX_SPLITVIEW; i++ ) {
+		if ( uis.cursors[i].show
+			&& uis.cursors[i].x >= x && uis.cursors[i].x <= x + width
+			&& uis.cursors[i].y >= y && uis.cursors[i].y <= y + height ) {
+			// inside rectangle
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
+// TODO: highlight if selected item is in bounds? (doesn't need to literally be based on bounds check)
+void UI_DrawGradientBar( int x, int y, int width, int height, qboolean highlight ) {
+	vec4_t	baseColor = { 0, 0, 0.75f, 0.5f };
+	vec4_t	highlightColor = { 0.75f, 0, 0, 0.5f };
+	vec4_t	borderColor = { 0.5f, 0.5f, 0.5f, 0.5f };
+	int		borderSize = 2;
+	float *color;
+
+	if ( highlight && UI_CursorInRect( x, y, width, height ) ) {
+		color = highlightColor;
+	} else {
+		color = baseColor;
+	}
+
+	// draw gradient body
+	trap_R_SetColor( color );
+	CG_DrawPic( x, y, width, height, uiAssets.gradientBar );
+
+	// draw top and bottom border
+	trap_R_SetColor( borderColor );
+	CG_DrawPic( x, y-borderSize, width, borderSize, uiAssets.gradientBar );
+	CG_DrawPic( x, y+height, width, borderSize, uiAssets.gradientBar );
+
+	trap_R_SetColor( NULL );
+}
+#endif
+
 void UI_DrawSlider( float x, float y, float min, float max, float value, int style, float *drawcolor ) {
 	float frac, sliderValue;
 	qhandle_t hShader;
@@ -357,6 +403,10 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 
 	// doesn't have a special header handling, use generic
 	if ( menuInfo->header ) {
+#ifdef MISSIONPACK
+		UI_DrawGradientBar( 0, current->header.captionPos.y - 6, SCREEN_WIDTH, current->header.captionPos.height + 12, qfalse );
+#endif
+
 #ifdef Q3UIFONTS
 		if ( menuInfo->menuFlags & MF_DIALOG ) {
 			UI_DrawProportionalString( current->header.captionPos.x, current->header.captionPos.y, menuInfo->header, UI_DROPSHADOW|UI_GIANTFONT, color_bigtext );
@@ -368,9 +418,22 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 #endif
 	}
 
+#ifdef MISSIONPACK
+	// draw status bar background
+	if ( !( menuInfo->menuFlags & (MF_MAINMENU|MF_DIALOG) ) ) {
+		UI_DrawGradientBar( 0, SCREEN_HEIGHT-46, SCREEN_WIDTH, 30, qtrue );
+	}
+#endif
+
 	panelNum = 0;
 	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
 		style = 0;
+
+#ifdef MISSIONPACK
+		if ( item->flags & MIF_HEADER ) {
+			UI_DrawGradientBar( 0, item->captionPos.y, SCREEN_WIDTH, item->captionPos.height, qtrue );
+		}
+#endif
 
 		if ( item->flags & MIF_BIGTEXT ) {
 			Vector4Copy( color_bigtext, drawcolor );

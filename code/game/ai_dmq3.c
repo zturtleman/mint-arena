@@ -3971,8 +3971,7 @@ int BotFuncButtonActivateGoal(bot_state_t *bs, int bspent, bot_activategoal_t *a
 	VectorAdd(mins, maxs, origin);
 	VectorScale(origin, 0.5, origin);
 	//touch distance of the button
-	dist = fabs(movedir[0]) * size[0] + fabs(movedir[1]) * size[1] + fabs(movedir[2]) * size[2];
-	dist *= 0.5;
+	dist = fabs(movedir[0]) * size[0] + fabs(movedir[1]) * size[1] + fabs(movedir[2]) * size[2] - lip;
 	//
 	trap_AAS_FloatForBSPEpairKey(bspent, "health", &health);
 	//if the button is shootable

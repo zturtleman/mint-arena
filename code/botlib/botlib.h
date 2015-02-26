@@ -47,12 +47,14 @@ struct aas_reachability_s;
 struct aas_predictroute_s;
 
 //debug line colors
-#define LINECOLOR_NONE			-1
-#define LINECOLOR_RED			1//0xf2f2f0f0L
-#define LINECOLOR_GREEN			2//0xd0d1d2d3L
-#define LINECOLOR_BLUE			3//0xf3f3f1f1L
-#define LINECOLOR_YELLOW		4//0xdcdddedfL
-#define LINECOLOR_ORANGE		5//0xe0e1e2e3L
+#define LINECOLOR_NONE			0
+#define LINECOLOR_RED			1
+#define LINECOLOR_GREEN			2
+#define LINECOLOR_YELLOW		3
+#define LINECOLOR_BLUE			4
+#define LINECOLOR_MAGENTA		5
+#define LINECOLOR_CYAN			6
+#define LINECOLOR_WHITE			7
 
 //Print types
 #define PRT_DEVELOPER			0
@@ -77,35 +79,7 @@ struct aas_predictroute_s;
 #define BLERR_CANNOTLOADWEAPONWEIGHTS	11	//cannot load weapon weights
 #define BLERR_CANNOTLOADWEAPONCONFIG	12	//cannot load weapon config
 
-#ifndef BSPTRACE
-
-#define BSPTRACE
-
-//bsp_trace_t hit surface
-typedef struct bsp_surface_s
-{
-	char name[16];
-	int flags;
-	int value;
-} bsp_surface_t;
-
-//remove the bsp_trace_s structure definition l8r on
-//a trace is returned when a box is swept through the world
-typedef struct bsp_trace_s
-{
-	qboolean		allsolid;	// if true, plane is not valid
-	qboolean		startsolid;	// if true, the initial point was in a solid area
-	float			fraction;	// time completed, 1.0 = didn't hit anything
-	vec3_t			endpos;		// final position
-	cplane_t		plane;		// surface normal at impact
-	float			exp_dist;	// expanded plane distance
-	int				sidenum;	// number of the brush side hit
-	bsp_surface_t	surface;	// the hit point surface
-	int				contents;	// contents on other side of surface hit
-	int				ent;		// number of entity hit
-} bsp_trace_t;
-
-#endif	// BSPTRACE
+typedef trace_t bsp_trace_t;
 
 //entity state
 typedef struct bot_entitystate_s
@@ -226,7 +200,7 @@ typedef struct aas_export_s
 	//--------------------------------------------
 	// be_aas_move.c
 	//--------------------------------------------
-	int			(*AAS_PredictClientMovement)(struct aas_clientmove_s *move,
+	int			(*AAS_PredictPlayerMovement)(struct aas_clientmove_s *move,
 											int entnum, vec3_t origin,
 											int presencetype, int onground,
 											vec3_t velocity, vec3_t cmdmove,

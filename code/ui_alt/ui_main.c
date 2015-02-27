@@ -89,8 +89,7 @@ void	UI_SetActiveMenu( uiMenuCommand_t menu ) {
 		if ( menu == UIMENU_MAIN ) {
 			UI_SetMenu( &currentMenu, M_MAIN );
 		} else if ( menu == UIMENU_INGAME ) {
-			// TODO: separate ingame menu
-			UI_SetMenu( &currentMenu, M_MAIN );
+			UI_SetMenu( &currentMenu, M_INGAME );
 		}
 	} else if ( menu == UIMENU_POSTGAME ) {
 		// postgame doesn't pause

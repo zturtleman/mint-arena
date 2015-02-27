@@ -100,6 +100,7 @@ typedef enum {
 	M_RULES,
 	M_START_SERVER,
 
+	M_INGAME,
 	M_POSTGAME,
 
 	M_NUM_MENUS

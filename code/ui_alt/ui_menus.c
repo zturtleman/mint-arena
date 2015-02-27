@@ -89,12 +89,18 @@ void newGame( int item ) {
 	trap_Cmd_ExecuteText( EXEC_APPEND, "map q3dm0\n" );
 }
 
+// used by ingame and postgame menus
 void endGame( int item ) {
 	trap_Cmd_ExecuteText( EXEC_APPEND, "disconnect\n" );
 }
 
+// used by ingame and postgame menus
 void restartMap( int item ) {
-	trap_Cmd_ExecuteText( EXEC_APPEND, "map_restart 0\n" );
+	if ( trap_Cvar_VariableValue( "sv_running" ) ) {
+		trap_Cmd_ExecuteText( EXEC_APPEND, "map_restart 0\n" );
+	} else {
+		trap_Cmd_ExecuteText( EXEC_APPEND, "callvote map_restart\n" );
+	}
 }
 
 
@@ -157,6 +163,22 @@ menuitem_t mainmenu_items[] =
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Exit", NULL, M_EXIT, 0 }
 };
 #endif
+
+menuitem_t ingamemenu_items[] =
+{
+	{ MIF_BIGTEXT, "Start", NULL, M_NONE, 0 }, // TODO add team select dialog, will need to know localPlayerNum for menu
+	{ MIF_BIGTEXT, "Add Bots", NULL, M_NONE, 0 }, // TODO
+	// ZTM: A general player kick menu might be better?
+	{ MIF_BIGTEXT, "Remove Bots", NULL, M_NONE, 0 }, // TODO
+	{ MIF_BIGTEXT, "Team Orders", NULL, M_NONE, 0 }, // TODO
+	{ MIF_BIGTEXT, "Local Players", NULL, M_NONE, 0 }, // TODO
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Setup", NULL, M_SETUP, 0 },
+	{ MIF_BIGTEXT, "Server Info", NULL, M_NONE, 0 }, // TODO add menu for displaying CS_SERVERINFO / adding server to favorites
+	{ MIF_BIGTEXT|MIF_POPMENU|MIF_CALL, "Restart Arena", restartMap, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_POPMENU, "Resume Game", NULL, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_CALL, "Leave Arena", endGame, M_NONE, 0 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Exit Game", NULL, M_EXIT, 0 }
+};
 
 cvarValuePair_t cp_skill[] = {
 	VINT( 1, "I Can Win" ),
@@ -561,6 +583,7 @@ menudef_t ui_menus[M_NUM_MENUS] = {
 	QMENUSTUB( startservermenu_items, 0, "Start Server" ),		// M_START_SERVER
 
 	// in game menus
+	QMENUDEF( ingamemenu_items, 0, NULL ),	// M_INGAME
 	QMENUDEF( postgamemenu_items, MF_POSTGAME|MF_NOESCAPE|MF_NOBACK, NULL ),	// M_POSTGAME
 };
 

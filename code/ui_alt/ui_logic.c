@@ -506,10 +506,12 @@ void UI_RegisterMenuCvars( currentMenu_t *current ) {
 		item->numPairs = UI_NumCvarPairs( item->cvarPairs );
 		UI_SetMenuCvarValue( item );
 
-		// cvar for list box needs to be set initially
+		// cvar for demos/mods/cinematics list box needs to be set initially
 		if ( item->flags & MIF_LISTBOX ) {
-			// FIXME: handle CVT_CMD ?
-			trap_Cvar_Set( item->cvarName, item->cvarPairs[ item->cvarPair ].value );
+			// FIXME: should CVT_CMD be run?
+			if ( item->cvarPairs[ item->cvarPair ].type != CVT_CMD ) {
+				trap_Cvar_Set( item->cvarName, item->cvarPairs[ item->cvarPair ].value );
+			}
 		}
 	}
 }

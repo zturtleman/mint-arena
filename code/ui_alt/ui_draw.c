@@ -458,12 +458,13 @@ int UI_CvarPairsStringCompare( const void *a, const void *b ) {
 	return Q_stricmp( ((const cvarValuePair_t*)a)->string, ((const cvarValuePair_t*)b)->string );
 }
 
-void UI_InitListBox( currentMenuItem_t *item ) {
+void UI_InitListBox( currentMenuItem_t *item, const char *extData ) {
+	// ZTM: FIXME: there can only be one file list displayed at a time. They should probably at least be in currentMenu_t?
 	#define MAX_LB_FILES 1024
 	static cvarValuePair_t filePairs[MAX_LB_FILES];
 	static char	fileNames[4096];
-	char	format[256];
-	char	*dirName, *extension, *defaultMessage;
+	static char	defaultMessage[128];
+	char	dirName[MAX_QPATH], extension[MAX_QPATH];
 	char	*name;
 	int		i, len, numFilenames;
 
@@ -471,26 +472,10 @@ void UI_InitListBox( currentMenuItem_t *item ) {
 		return;
 	}
 
-	// Expect caption to be in the format of "dir;ext;default message for no files"
-	Q_strncpyz( format, item->caption, sizeof ( format ) );
-	dirName = format;
-	extension = strchr( dirName, ';' );
-	if ( extension ) {
-		*extension = '\0';
-		extension++;
-	}
-	defaultMessage = strchr( extension, ';' );
-	if ( defaultMessage ) {
-		*defaultMessage = '\0';
-		defaultMessage++;
-	}
-
-	// skip direction and extension
-	item->caption = item->caption + strlen( dirName ) + 1 + strlen( extension ) + 1;
-
-	if ( !dirName || !extension || !defaultMessage ) {
-		Com_Printf( S_COLOR_YELLOW "WARNING: Programming error for listbox! (dir %s, extention %s, message %s)\n", dirName, extension, defaultMessage );
-	}
+	Q_strncpyz( dirName, Info_ValueForKey( extData, "dir" ), sizeof (dirName) );
+	Q_strncpyz( extension, Info_ValueForKey( extData, "ext" ), sizeof (extension) );
+	// defaultMessage cannot be local memory...
+	Q_strncpyz( defaultMessage, Info_ValueForKey( extData, "empty" ), sizeof (defaultMessage) );
 
 	numFilenames = trap_FS_GetFileList( dirName, extension, fileNames, sizeof ( fileNames ) );
 
@@ -537,7 +522,7 @@ void UI_InitListBox( currentMenuItem_t *item ) {
 	if (!numFilenames) {
 		filePairs[numFilenames].type = CVT_STRING;
 		filePairs[numFilenames].value = "";
-		filePairs[numFilenames].string = item->caption;
+		filePairs[numFilenames].string = defaultMessage;
 		numFilenames++;
 		item->flags &= ~MIF_SELECTABLE;
 	}
@@ -550,13 +535,28 @@ void UI_InitListBox( currentMenuItem_t *item ) {
 }
 
 void UI_DrawListBox( currentMenuItem_t *item, float *drawcolor, int style ) {
-	int i, y;
+	int i, x, y, width, height, starty, edgeSize;
 	const char *string;
 	qboolean selected = ( style & UI_PULSE );
 
-	CG_DrawRect( item->captionPos.x-2, item->captionPos.y-2, item->captionPos.width+4, item->captionPos.height+4, 1, drawcolor );
+	if ( item->caption && *item->caption ) {
+#ifdef Q3UIFONTS
+		if ( item->flags & MIF_BIGTEXT ) {
+			UI_DrawProportionalString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|style, drawcolor );
+		} else
+#endif
+		{
+			CG_DrawString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|style, drawcolor );
+		}
+	}
 
-	y = item->captionPos.y;
+	CG_DrawRect( item->clickPos.x, item->clickPos.y, item->clickPos.width, item->clickPos.height, 1, drawcolor );
+
+	edgeSize = 2;
+	starty = y = item->clickPos.y + edgeSize;
+	x = item->clickPos.x + edgeSize;
+	width = item->clickPos.width - edgeSize * 2;
+	height = item->clickPos.height - edgeSize * 2;
 
 	for ( i = item->cvarPair; i < item->numPairs; i++ ) {
 		// highlight line of selected item in list box
@@ -567,7 +567,7 @@ void UI_DrawListBox( currentMenuItem_t *item, float *drawcolor, int style ) {
 			color[3] = 0.5f;
 
 			trap_R_SetColor( color );
-			CG_DrawPic( item->captionPos.x, y, item->captionPos.width, BIGCHAR_HEIGHT, cgs.media.whiteShader );
+			CG_DrawPic( x, y, width, BIGCHAR_HEIGHT, cgs.media.whiteShader );
 			trap_R_SetColor( NULL );
 		}
 
@@ -585,16 +585,16 @@ void UI_DrawListBox( currentMenuItem_t *item, float *drawcolor, int style ) {
 
 #ifdef Q3UIFONTS
 		if ( item->flags & MIF_BIGTEXT ) {
-			UI_DrawProportionalString( item->captionPos.x, y, string, UI_DROPSHADOW|style, drawcolor );
+			UI_DrawProportionalString( x, y, string, UI_DROPSHADOW|style, drawcolor );
 		} else
 #endif
 		{
-			CG_DrawString( item->captionPos.x, y, string, UI_DROPSHADOW|style, drawcolor );
+			CG_DrawString( x, y, string, UI_DROPSHADOW|style, drawcolor );
 		}
 
 		y += BIGCHAR_HEIGHT+2;
 
-		if ( y + BIGCHAR_HEIGHT > item->captionPos.y + item->captionPos.height ) {
+		if ( y > starty + height ) {
 			break;
 		}
 	}
@@ -915,8 +915,8 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		item->cvarPairs = itemInfo->cvarPairs;
 		item->numPairs = 0; // this is set later
 		item->caption = itemInfo->caption;
-		item->captionPos.y = itemInfo->y;
-		item->captionPos.x = 0;
+		item->captionPos.y = atoi( Info_ValueForKey( itemInfo->extData, "y" ) );
+		item->captionPos.x = atoi( Info_ValueForKey( itemInfo->extData, "x" ) );
 		item->bitmapIndex = -1;
 
 		if ( item->flags & MIF_PANEL ) {
@@ -930,7 +930,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		}
 
 		if ( item->flags & MIF_LISTBOX ) {
-			UI_InitListBox( item );
+			UI_InitListBox( item, itemInfo->extData );
 		}
 #ifdef MISSIONPACK
 		else if ( item->flags & MIF_NEXTBUTTON ) {
@@ -959,13 +959,25 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		}
 
 		if ( item->flags & MIF_LISTBOX ) {
-			// 'captionPos' is listbox size
-			item->captionPos.width = 280;
-			item->captionPos.height = 200;
+#if 0 // caption above list box
 			item->clickPos.x = 0;
+			item->clickPos.y = item->captionPos.height + 2;
+#else // caption left of list box
+			item->clickPos.x = item->captionPos.width + BIGCHAR_WIDTH;
 			item->clickPos.y = 0;
-			item->clickPos.width = SCREEN_WIDTH;
-			item->clickPos.height = 200;
+#endif
+
+			item->clickPos.width = atoi( Info_ValueForKey( itemInfo->extData, "width" ) );
+			if ( item->clickPos.width <= 0 ) {
+				item->clickPos.width = 280;
+			}
+
+			item->clickPos.height = atoi( Info_ValueForKey( itemInfo->extData, "listboxheight" ) );
+			if ( item->clickPos.height > 0 ) {
+				item->clickPos.height *= BIGCHAR_HEIGHT + 2;
+			} else {
+				item->clickPos.height = 8 * ( BIGCHAR_HEIGHT + 2 );
+			}
 		} else if ( UI_ItemIsSlider( item ) ) {
 			item->clickPos.x = 0;
 			item->clickPos.y = 0;
@@ -1018,15 +1030,16 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			}
 		}
 
-		totalWidth[numHeaders] += item->captionPos.width;
+		totalWidth[numHeaders] += MAX( item->captionPos.width, item->clickPos.x + item->clickPos.width );
 		if ( i != current->numItems - 1 && !(current->items[i+1].flags & MIF_HEADER) ) {
 			totalWidth[numHeaders] += horizontalGap;
 		}
 
+		// FIXME: this macro usage is bad (multiple function calls)
 		if ( item->flags & MIF_PANEL ) {
-			totalPanelHeight += item->captionPos.height + UI_ItemVerticalGap( item );
+			totalPanelHeight += MAX( item->captionPos.height + UI_ItemVerticalGap( item ), item->clickPos.y + item->clickPos.height );
 		} else {
-			totalHeight += item->captionPos.height + UI_ItemVerticalGap( item );
+			totalHeight += MAX( item->captionPos.height + UI_ItemVerticalGap( item ), item->clickPos.y + item->clickPos.height );
 		}
 	}
 
@@ -1093,7 +1106,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			curX = (SCREEN_WIDTH - totalWidth[numHeaders]) / 2;
 		} else if ( centerX ) {
 			// center item
-			curX = (SCREEN_WIDTH - item->captionPos.width) / 2;
+			curX = (SCREEN_WIDTH - MAX( item->captionPos.width, item->clickPos.x + item->clickPos.width ) ) / 2;
 
 			// ZTM: TODO: properly deal with changing the center x?
 			if ( panelNum ) {
@@ -1101,7 +1114,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			}
 		}
 
-		// uses absolute position because y might already be set to absolute
+		// uses absolute position because x/y might already be set to absolute
 		item->captionPos.x = curX;
 		item->captionPos.y = curY;
 
@@ -1110,10 +1123,11 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		item->clickPos.y += curY;
 
 		// move draw point for next item
+		// ZTM: FIXME: what the hell have I done.
 		if ( ( horizontalMenu && !numHeaders ) || ( numHeaders && !( item->flags & MIF_HEADER ) ) ) {
-			curX += MAX( item->captionPos.width, item->clickPos.width ) + horizontalGap;
+			curX += MAX( item->captionPos.width, item->clickPos.x - item->captionPos.x + item->clickPos.width ) + horizontalGap;
 		} else {
-			curY += MAX( item->captionPos.height, item->clickPos.height ) + UI_ItemVerticalGap( item );
+			curY += MAX( item->captionPos.height, item->clickPos.y - item->captionPos.y + item->clickPos.height ) + UI_ItemVerticalGap( item );
 		}
 
 		if ( item->flags & MIF_HEADER ) {

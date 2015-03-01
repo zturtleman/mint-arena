@@ -134,7 +134,7 @@ static cvarRange_t cr_zeroToOne = { 0, 1, 0.05f };
 #ifdef MISSIONPACK
 menuitem_t mainmenu_items[] =
 {
-	{ MIF_BIGTEXT|MIF_HEADER, "TEAM ARENA", NULL, M_NONE, 20 },
+	{ MIF_BIGTEXT|MIF_HEADER, "TEAM ARENA", NULL, M_NONE, "\\y\\20" },
 	{ MIF_BIGTEXT|MIF_CALL, "Quake3", launchQ3, M_NONE, 0 },
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Rules", NULL, M_RULES, 0 },
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Credits", NULL, M_CREDITS, 0 },
@@ -146,7 +146,7 @@ menuitem_t mainmenu_items[] =
 	{ MIF_BIGTEXT|MIF_SUBMENU, "MultiPlayer", NULL, M_MULTIPLAYER, 0 },
 	{ MIF_BIGTEXT|MIF_SUBMENU, "StartServer", NULL, M_START_SERVER, 0 },
 
-	{ MIF_BIGTEXT|MIF_HEADER, "OPTIONS", NULL, M_NONE, 340 },
+	{ MIF_BIGTEXT|MIF_HEADER, "OPTIONS", NULL, M_NONE, "\\y\\340" },
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Player", NULL, M_PLAYER, 0 },
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Setup", NULL, M_SETUP, 0 },
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Demos", NULL, M_DEMOS, 0 },
@@ -156,7 +156,7 @@ menuitem_t mainmenu_items[] =
 #else
 menuitem_t mainmenu_items[] =
 {
-	{ MIF_BIGTEXT|MIF_SUBMENU, "Single Player", NULL, M_SINGLEPLAYER, 134 },
+	{ MIF_BIGTEXT|MIF_SUBMENU, "Single Player", NULL, M_SINGLEPLAYER, "\\y\\134" },
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Multiplayer", NULL, M_MULTIPLAYER, 0 },
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Setup", NULL, M_SETUP, 0 },
 	{ MIF_BIGTEXT|MIF_SUBMENU, "Demos", NULL, M_DEMOS, 0 },
@@ -216,19 +216,19 @@ menuitem_t setupmenu_items[] =
 
 menuitem_t demosmenu_items[] =
 {
-	{ MIF_LISTBOX|MIF_CALL, "demos;$demos;No demos found", NULL, M_NONE, 0, "ui_selectedDemo", NULL },
+	{ MIF_LISTBOX|MIF_CALL, NULL, NULL, M_NONE, "\\dir\\demos\\ext\\$demos\\empty\\No demos found", "ui_selectedDemo", NULL },
 	{ MIF_BIGTEXT|MIF_CALL|MIF_NEXTBUTTON, "Play Demo", demoHandler, M_NONE, 0 },
 };
 
 menuitem_t cinematicsmenu_items[] =
 {
-	{ MIF_LISTBOX|MIF_CALL, "video;$videos;No cinematics found", NULL, M_NONE, 0, "ui_selectedCinematic", NULL },
+	{ MIF_LISTBOX|MIF_CALL, NULL, NULL, M_NONE, "\\dir\\video\\ext\\$videos\\empty\\No cinematics found", "ui_selectedCinematic", NULL },
 	{ MIF_BIGTEXT|MIF_CALL|MIF_NEXTBUTTON, "Play Cinematic", cinematicHandler, M_NONE, 0 },
 };
 
 menuitem_t modsmenu_items[] =
 {
-	{ MIF_LISTBOX|MIF_CALL, "$modlist;\"\";No mods found", NULL, M_NONE, 0, "ui_selectedMod", NULL },
+	{ MIF_LISTBOX|MIF_CALL, NULL, NULL, M_NONE, "\\dir\\$modlist\\empty\\No mods found", "ui_selectedMod", NULL },
 	{ MIF_BIGTEXT|MIF_CALL|MIF_NEXTBUTTON, "Load Mod", modHandler, M_NONE, 0 },
 };
 
@@ -245,7 +245,7 @@ menuitem_t defaultsmenu_items[] =
 	{ MIF_BIGTEXT, "/", NULL, M_NONE, 0 },
 	{ MIF_BIGTEXT|MIF_CALL|MIF_POPMENU, "No", defaultsHandler, M_NONE, 0 },
 
-	{ MIF_BIGTEXT|MIF_HEADER, "WARNING: This will reset *ALL*", NULL, M_NONE, 400 },
+	{ MIF_BIGTEXT|MIF_HEADER, "WARNING: This will reset *ALL*", NULL, M_NONE, "\\y\\400" },
 	{ MIF_BIGTEXT, "options to their default values.", NULL, M_NONE, 0 },
 };
 

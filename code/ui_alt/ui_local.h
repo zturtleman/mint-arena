@@ -159,7 +159,9 @@ typedef struct {
 	const char *caption;
 	void (*action)(int item); // used for MIF_CALL
 	menuId_t menuid; // used for MIF_SUBMENU and MIF_SWAPMENU
-	int y;
+	const char *extData; // info string containing extra rarely specified data.
+						 // for everything: "x" and "y" (in pixels)
+						 // for list box: "dir", "ext", "empty", "width" (in pixels), "listboxheight" (in number of text lines)
 
 	const char	*cvarName;
 

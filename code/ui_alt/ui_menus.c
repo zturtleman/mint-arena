@@ -51,17 +51,29 @@ void launchTeamArena( int item ) {
 #endif
 
 void modHandler( int item ) {
-	trap_Cvar_Set( "fs_game", CG_Cvar_VariableString( "ui_selectedMod" ) );
-	trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
+	const char *gameDir = CG_Cvar_VariableString( "ui_selectedMod" );
+
+	if ( *gameDir ) {
+		trap_Cvar_Set( "fs_game", gameDir );
+		trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
+	}
 }
 
 void demoHandler( int item ) {
-	trap_Cmd_ExecuteText( EXEC_APPEND, va( "disconnect\ndemo \"%s\"\n", CG_Cvar_VariableString( "ui_selectedDemo" ) ) );
+	const char *demoName = CG_Cvar_VariableString( "ui_selectedDemo" );
+
+	if ( *demoName ) {
+		trap_Cmd_ExecuteText( EXEC_APPEND, va( "disconnect\ndemo \"%s\"\n", demoName ) );
+	}
 }
 
 void cinematicHandler( int item ) {
+	const char *cinematicName = CG_Cvar_VariableString( "ui_selectedCinematic" );
+
 	// TODO: Don't hard code the video extension here
-	trap_Cmd_ExecuteText( EXEC_APPEND, va( "disconnect\ncinematic \"%s.RoQ\"\n", CG_Cvar_VariableString( "ui_selectedCinematic" ) ) );
+	if ( *cinematicName ) {
+		trap_Cmd_ExecuteText( EXEC_APPEND, va( "disconnect\ncinematic \"%s.RoQ\"\n", cinematicName ) );
+	}
 }
 
 // 0 = yes, 1 = no

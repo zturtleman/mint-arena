@@ -505,6 +505,12 @@ void UI_RegisterMenuCvars( currentMenu_t *current ) {
 
 		item->numPairs = UI_NumCvarPairs( item->cvarPairs );
 		UI_SetMenuCvarValue( item );
+
+		// cvar for list box needs to be set initially
+		if ( item->flags & MIF_LISTBOX ) {
+			// FIXME: handle CVT_CMD ?
+			trap_Cvar_Set( item->cvarName, item->cvarPairs[ item->cvarPair ].value );
+		}
 	}
 }
 
@@ -514,7 +520,7 @@ void UI_UpdateMenuCvars( currentMenu_t *current ) {
 	int i;
 	int modCount;
 	float oldValue;
-	char oldString[32]; // FIXME use macro from vmCvar_t
+	char oldString[MAX_CVAR_VALUE_STRING];
 
 	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
 		if ( !item->cvarName ) {

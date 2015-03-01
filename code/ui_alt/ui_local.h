@@ -126,6 +126,7 @@ typedef enum {
 #define		MIF_HEADER		0x0200	// A Team Arena main menu header
 #define		MIF_PANEL		0x0400	// Begin a 'tab' aka 'panel' of a menu
 #define		MIF_BACKBUTTON	0x0800	// automatically set on back button
+#define		MIF_LISTBOX		0x1000	// display cvarPairs as a list box
 
 //#define		MIF_CVAR		0x1000
 //#define		MIF_CONTROL		0x2000	// y is PC_* (PlayerControl Index)

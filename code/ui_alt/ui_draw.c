@@ -454,6 +454,152 @@ void UI_DrawSlider( float x, float y, float min, float max, float value, int sty
 	}
 }
 
+int UI_CvarPairsStringCompare( const void *a, const void *b ) {
+	return Q_stricmp( ((const cvarValuePair_t*)a)->string, ((const cvarValuePair_t*)b)->string );
+}
+
+void UI_InitListBox( currentMenuItem_t *item ) {
+	#define MAX_LB_FILES 1024
+	static cvarValuePair_t filePairs[MAX_LB_FILES];
+	static char	fileNames[4096];
+	char	format[256];
+	char	*dirName, *extension, *defaultMessage;
+	char	*name;
+	int		i, len, numFilenames;
+
+	if ( item->cvarPairs ) {
+		return;
+	}
+
+	// Expect caption to be in the format of "dir;ext;default message for no files"
+	Q_strncpyz( format, item->caption, sizeof ( format ) );
+	dirName = format;
+	extension = strchr( dirName, ';' );
+	if ( extension ) {
+		*extension = '\0';
+		extension++;
+	}
+	defaultMessage = strchr( extension, ';' );
+	if ( defaultMessage ) {
+		*defaultMessage = '\0';
+		defaultMessage++;
+	}
+
+	// skip direction and extension
+	item->caption = item->caption + strlen( dirName ) + 1 + strlen( extension ) + 1;
+
+	if ( !dirName || !extension || !defaultMessage ) {
+		Com_Printf( S_COLOR_YELLOW "WARNING: Programming error for listbox! (dir %s, extention %s, message %s)\n", dirName, extension, defaultMessage );
+	}
+
+	numFilenames = trap_FS_GetFileList( dirName, extension, fileNames, sizeof ( fileNames ) );
+
+	// mod list is "gamedir\0description\0"
+	if ( !Q_stricmp( dirName, "$modlist" ) ) {
+		numFilenames /= 2;
+		if (numFilenames > MAX_LB_FILES) {
+			numFilenames = MAX_LB_FILES;
+		}
+		name = fileNames;
+		for ( i = 0; i < numFilenames; i++ ) {
+			filePairs[i].type = CVT_STRING;
+
+			// gamedir
+			filePairs[i].value = name;
+			name += strlen( name ) + 1;
+
+			// description
+			filePairs[i].string = name;
+			name += strlen( name ) + 1;
+		}
+
+		// sort list by displayed names
+		qsort( filePairs, numFilenames, sizeof ( filePairs[0] ), UI_CvarPairsStringCompare );
+	} else {
+		if (numFilenames > MAX_LB_FILES) {
+			numFilenames = MAX_LB_FILES;
+		}
+		name = fileNames;
+		for ( i = 0; i < numFilenames; i++ ) {
+			len = strlen( name );
+
+			COM_StripExtension( name, name, len+1 );
+
+			filePairs[i].type = CVT_STRING;
+			filePairs[i].value = name;
+			filePairs[i].string = name;
+
+			name += len + 1;
+		}
+	}
+
+	//
+	if (!numFilenames) {
+		filePairs[numFilenames].type = CVT_STRING;
+		filePairs[numFilenames].value = "";
+		filePairs[numFilenames].string = item->caption;
+		numFilenames++;
+		item->flags &= ~MIF_SELECTABLE;
+	}
+
+	filePairs[numFilenames].type = CVT_NONE;
+	filePairs[numFilenames].value = NULL;
+	filePairs[numFilenames].string = NULL;
+
+	item->cvarPairs = filePairs;
+}
+
+void UI_DrawListBox( currentMenuItem_t *item, float *drawcolor, int style ) {
+	int i, y;
+	const char *string;
+	qboolean selected = ( style & UI_PULSE );
+
+	CG_DrawRect( item->captionPos.x-2, item->captionPos.y-2, item->captionPos.width+4, item->captionPos.height+4, 1, drawcolor );
+
+	y = item->captionPos.y;
+
+	for ( i = item->cvarPair; i < item->numPairs; i++ ) {
+		// highlight line of selected item in list box
+		if ( item->cvarPair == i ) {
+			vec4_t color;
+
+			VectorCopy( drawcolor, color );
+			color[3] = 0.5f;
+
+			trap_R_SetColor( color );
+			CG_DrawPic( item->captionPos.x, y, item->captionPos.width, BIGCHAR_HEIGHT, cgs.media.whiteShader );
+			trap_R_SetColor( NULL );
+		}
+
+		if ( item->cvarPair == i && selected ) {
+			style |= UI_PULSE;
+		} else {
+			style &= ~UI_PULSE;
+		}
+
+		if ( item->cvarPairs && item->numPairs > 0 ) {
+			string = item->cvarPairs[ i ].string;
+		} else {
+			string = item->vmCvar.string;
+		}
+
+#ifdef Q3UIFONTS
+		if ( item->flags & MIF_BIGTEXT ) {
+			UI_DrawProportionalString( item->captionPos.x, y, string, UI_DROPSHADOW|style, drawcolor );
+		} else
+#endif
+		{
+			CG_DrawString( item->captionPos.x, y, string, UI_DROPSHADOW|style, drawcolor );
+		}
+
+		y += BIGCHAR_HEIGHT+2;
+
+		if ( y + BIGCHAR_HEIGHT > item->captionPos.y + item->captionPos.height ) {
+			break;
+		}
+	}
+}
+
 void UI_DrawCurrentMenu( currentMenu_t *current ) {
 	int i;
 	qboolean drawFramePics = qtrue;
@@ -564,6 +710,11 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 				// don't have button for displayed tab pulse
 				style &= ~UI_PULSE;
 			}
+		}
+
+		if ( item->flags & MIF_LISTBOX ) {
+			UI_DrawListBox( item, drawcolor, style );
+			continue;
 		}
 
 		if ( item->bitmapIndex != -1 ) {
@@ -766,16 +917,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		item->caption = itemInfo->caption;
 		item->captionPos.y = itemInfo->y;
 		item->captionPos.x = 0;
-
-#ifdef MISSIONPACK
-		if ( item->flags & MIF_NEXTBUTTON ) {
-			item->bitmapIndex = UI_FindBitmap( item, "Next" );
-		} else
-#endif
-		{
-			item->bitmapIndex = UI_FindBitmap( item, item->caption );
-		}
-
+		item->bitmapIndex = -1;
 
 		if ( item->flags & MIF_PANEL ) {
 			panelNum++;
@@ -785,6 +927,19 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			{
 				continue;
 			}
+		}
+
+		if ( item->flags & MIF_LISTBOX ) {
+			UI_InitListBox( item );
+		}
+#ifdef MISSIONPACK
+		else if ( item->flags & MIF_NEXTBUTTON ) {
+			item->bitmapIndex = UI_FindBitmap( item, "Next" );
+		}
+#endif
+		else
+		{
+			item->bitmapIndex = UI_FindBitmap( item, item->caption );
 		}
 
 		if ( item->bitmapIndex != -1 ) {
@@ -803,7 +958,15 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			item->captionPos.height = SMALLCHAR_HEIGHT;
 		}
 
-		if ( UI_ItemIsSlider( item ) ) {
+		if ( item->flags & MIF_LISTBOX ) {
+			// 'captionPos' is listbox size
+			item->captionPos.width = 280;
+			item->captionPos.height = 200;
+			item->clickPos.x = 0;
+			item->clickPos.y = 0;
+			item->clickPos.width = SCREEN_WIDTH;
+			item->clickPos.height = 200;
+		} else if ( UI_ItemIsSlider( item ) ) {
 			item->clickPos.x = 0;
 			item->clickPos.y = 0;
 			item->clickPos.width = item->captionPos.width + BIGCHAR_WIDTH + 96;
@@ -922,7 +1085,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		if ( item->flags & MIF_PANEL ) {
 			// right align
 			curX = 216 - item->captionPos.width;
-		} if ( !panelNum && item->cvarName && centerX ) {
+		} if ( !panelNum && item->cvarName && centerX && !(item->flags & MIF_LISTBOX) ) {
 			// right align HACK for M_GAME_OPTIONS
 			curX = SCREEN_WIDTH / 2 + totalWidth[0] / menuInfo->numItems / 6 - item->captionPos.width;
 		} else if ( horizontalMenu && curX == -1 ) {

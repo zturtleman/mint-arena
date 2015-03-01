@@ -37,28 +37,31 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 */
 
+// ZTM: TODO: should game_restart command be used? otherwise I think it might not work correct if connected to server :untested:
 #ifdef MISSIONPACK
 void launchQ3( int item ) {
 	trap_Cvar_Set( "fs_game", BASEQ3 );
-	trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart;" );
+	trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
 }
 #else
 void launchTeamArena( int item ) {
 	trap_Cvar_Set( "fs_game", BASETA );
-	trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart;" );
+	trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
 }
 #endif
 
+void modHandler( int item ) {
+	trap_Cvar_Set( "fs_game", CG_Cvar_VariableString( "ui_selectedMod" ) );
+	trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
+}
+
 void demoHandler( int item ) {
-	CG_Printf("DEBUG: TODO: play demo... got %d\n", item);
+	trap_Cmd_ExecuteText( EXEC_APPEND, va( "disconnect\ndemo \"%s\"\n", CG_Cvar_VariableString( "ui_selectedDemo" ) ) );
 }
 
 void cinematicHandler( int item ) {
-	CG_Printf("DEBUG: TODO: play cinematic... got %d\n", item);
-}
-
-void modHandler( int item ) {
-	CG_Printf("DEBUG: TODO: load mod... got %d\n", item);
+	// TODO: Don't hard code the video extension here
+	trap_Cmd_ExecuteText( EXEC_APPEND, va( "disconnect\ncinematic \"%s.RoQ\"\n", CG_Cvar_VariableString( "ui_selectedCinematic" ) ) );
 }
 
 // 0 = yes, 1 = no
@@ -213,16 +216,19 @@ menuitem_t setupmenu_items[] =
 
 menuitem_t demosmenu_items[] =
 {
+	{ MIF_LISTBOX|MIF_CALL, "demos;$demos;No demos found", NULL, M_NONE, 0, "ui_selectedDemo", NULL },
 	{ MIF_BIGTEXT|MIF_CALL|MIF_NEXTBUTTON, "Play Demo", demoHandler, M_NONE, 0 },
 };
 
 menuitem_t cinematicsmenu_items[] =
 {
+	{ MIF_LISTBOX|MIF_CALL, "video;$videos;No cinematics found", NULL, M_NONE, 0, "ui_selectedCinematic", NULL },
 	{ MIF_BIGTEXT|MIF_CALL|MIF_NEXTBUTTON, "Play Cinematic", cinematicHandler, M_NONE, 0 },
 };
 
 menuitem_t modsmenu_items[] =
 {
+	{ MIF_LISTBOX|MIF_CALL, "$modlist;\"\";No mods found", NULL, M_NONE, 0, "ui_selectedMod", NULL },
 	{ MIF_BIGTEXT|MIF_CALL|MIF_NEXTBUTTON, "Load Mod", modHandler, M_NONE, 0 },
 };
 

@@ -79,6 +79,7 @@ void	UI_Shutdown( void ) {
 
 void	UI_SetActiveMenu( uiMenuCommand_t menu ) {
 	if ( menu == UIMENU_NONE ) {
+		trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
 		UI_SetMenu( &currentMenu, M_NONE );
 	}
 	else if ( menu == UIMENU_MAIN || menu == UIMENU_INGAME ) {
@@ -273,13 +274,13 @@ void	UI_SetCursorPos( int localClientNum, int x, int y ) {
 }
 
 qboolean UI_IsFullscreen( void ) {
-	return ( trap_Key_GetCatcher() &  KEYCATCH_UI ) && !cg.connected;
+	return ( trap_Key_GetCatcher() & KEYCATCH_UI ) && !cg.connected;
 }
 
 void	UI_Refresh( int time ) {
 	int i;
 
-	if ( ! ( trap_Key_GetCatcher() &  KEYCATCH_UI ) ) {
+	if ( !( trap_Key_GetCatcher() & KEYCATCH_UI ) ) {
 		return;
 	}
 

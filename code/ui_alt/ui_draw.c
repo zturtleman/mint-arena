@@ -514,8 +514,8 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 	}
 
 #ifdef MISSIONPACK
-	// draw status bar background
-	if ( !( menuInfo->menuFlags & (MF_MAINMENU|MF_DIALOG) ) ) {
+	// draw status bar background if not dialog and there is a back button (i.e. not a top level menu)
+	if ( !( menuInfo->menuFlags & (MF_DIALOG|MF_NOBACK) ) && current->numStacked > 0 ) {
 		UI_DrawGradientBar( 0, SCREEN_HEIGHT-46, SCREEN_WIDTH, 30, qtrue );
 	}
 #endif

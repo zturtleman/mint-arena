@@ -363,40 +363,34 @@ void UI_GetResolutions( void ) {
 		"856x480",
 		NULL
 	};
+	static char displayRes[64];
+	static char customRes[64];
+	unsigned int i = 0;
+	unsigned int builtin;
+	int currentMode;
 
-	int currentMode = trap_Cvar_VariableIntegerValue( "r_mode" );
+	currentMode = trap_Cvar_VariableIntegerValue( "r_mode" );
 
-	// ZTM: FIXME?: This was added in ioq3, mint-arena can assume it will always be present?
+	// set to invalid pair, filled in when mode is found in list
+	uis.currentResPair = -1;
+
+	// Add display resolution video mode
+	Com_sprintf( displayRes, sizeof (displayRes), "Auto (%dx%d)", cgs.glconfig.displayWidth, cgs.glconfig.displayHeight );
+	cp_resolution[i].type = CVT_INT;
+	cp_resolution[i].value = "-2";
+	cp_resolution[i].string = displayRes;
+	if ( currentMode == -2 ) {
+		uis.currentResPair = i;
+	}
+	i++;
+
+	// ZTM: FIXME?: This cvar was added in ioq3, mint-arena can assume it will always be present?
 	Q_strncpyz(resbuf, CG_Cvar_VariableString("r_availableModes"), sizeof(resbuf));
 	if (*resbuf)
 	{
 		char *s = resbuf;
-		unsigned int i = 0;
-		unsigned int builtin;
-		static char displayRes[64];
 
-		if ( currentMode == -2 ) {
-			uis.currentResPair = 0;
-		} else if ( currentMode == -1 ) {
-			uis.currentResPair = 1;
-		}
-
-		// Add display resolution video mode
-		Com_sprintf(displayRes, sizeof(displayRes), "Auto (%dx%d)", cgs.glconfig.displayWidth, cgs.glconfig.displayHeight);
-		cp_resolution[i].type = CVT_INT;
-		cp_resolution[i].value = "-2";
-		cp_resolution[i].string = displayRes;
-		i++;
-
-		cp_resolution[i].type = CVT_INT;
-		cp_resolution[i].value = "-1";
-		cp_resolution[i].string = "Custom";
-		i++;
-
-		// Use display resolution in "Very High Quality" template
-		//s_ivo_templates[0].mode = -2;
-
-		while ( s && i < ARRAY_LEN(cp_resolution)-1 ) {
+		while ( s && i < MAX_RESOLUTIONS-1 ) {
 			cp_resolution[i].string = s;
 
 			s = strchr(s, ' ');
@@ -438,32 +432,37 @@ void UI_GetResolutions( void ) {
 		cp_resolution[i].type = CVT_NONE;
 		cp_resolution[i].value = NULL;
 		cp_resolution[i].string = NULL;
-
-		//Com_Printf("DEBUG: Num modes: %d, current mode pair %d (%s)\n", i, uis.currentResPair, cp_resolution[uis.currentResPair].string );
 	} else {
 		// use built in modes
-		unsigned int i = 0;
-		unsigned int builtin;
-
-		uis.currentResPair = currentMode >= 0 ? currentMode+1 : 0;
-
-		cp_resolution[i].type = CVT_INT;
-		cp_resolution[i].value = "-1";
-		cp_resolution[i].string = "Custom";
-		i++;
-
 		for ( builtin = 0; builtinResolutions[builtin]; builtin++ ) {
-			cp_resolution[i].type = CVT_INT;
+			cp_resolution[i].string = builtinResolutions[i];
 
 			Com_sprintf( cmdBuf[i], sizeof (cmdBuf[i]), "%d", builtin );
+
+			cp_resolution[i].type = CVT_INT;
 			cp_resolution[i].value = cmdBuf[i];
 
-			cp_resolution[i].string = builtinResolutions[i];
+			if ( currentMode == builtin ) {
+				uis.currentResPair = i;
+			}
 		}
 
 		cp_resolution[i].type = CVT_NONE;
 		cp_resolution[i].value = NULL;
 		cp_resolution[i].string = NULL;
 	}
+
+	// if current mode is not listed, add 'custom' option
+	if ( uis.currentResPair < 0 ) {
+		Com_sprintf( cmdBuf[i], sizeof (cmdBuf[i]), "r_mode -1; r_customwidth %d; r_customheight %d;", cgs.glconfig.vidWidth, cgs.glconfig.vidHeight );
+		Com_sprintf( customRes, sizeof (customRes), "Custom (%dx%d)", cgs.glconfig.vidWidth, cgs.glconfig.vidHeight );
+		cp_resolution[i].type = CVT_CMD;
+		cp_resolution[i].value = cmdBuf[i];
+		cp_resolution[i].string = customRes;
+		uis.currentResPair = i;
+		i++;
+	}
+
+	//Com_Printf("DEBUG: Num modes: %d, current mode pair %d (%s)\n", i, uis.currentResPair, cp_resolution[uis.currentResPair].string );
 }
 

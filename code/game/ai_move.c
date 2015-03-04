@@ -83,6 +83,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define MODELTYPE_FUNC_BOB		2
 #define MODELTYPE_FUNC_DOOR		3
 #define MODELTYPE_FUNC_STATIC	4
+#define MODELTYPE_FUNC_BUTTON	5
 
 float phys_maxbarrier;
 //type of model, func_plat or func_bobbing
@@ -554,6 +555,8 @@ void BotSetBrushModelTypes(void)
 			modeltypes[modelnum] = MODELTYPE_FUNC_DOOR;
 		else if (!Q_stricmp(classname, "func_static"))
 			modeltypes[modelnum] = MODELTYPE_FUNC_STATIC;
+		else if (!Q_stricmp(classname, "func_button"))
+			modeltypes[modelnum] = MODELTYPE_FUNC_BUTTON;
 	} //end for
 } //end of the function BotSetBrushModelTypes
 //===========================================================================
@@ -3242,6 +3245,10 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 						result->flags |= MOVERESULT_ONTOPOFOBSTACLE;
 						return;
 					} //end if
+				} //end else if
+				else if (modeltype == MODELTYPE_FUNC_BUTTON)
+				{
+					// don't have standing on button block (mainly for floor buttons)
 				} //end else if
 				else
 				{

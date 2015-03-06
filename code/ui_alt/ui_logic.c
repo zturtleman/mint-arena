@@ -53,10 +53,11 @@ void UI_SetMenu( currentMenu_t *current, menuId_t menu ) {
 	current->menu = menu;
 	current->panel = 1;
 	current->selectedItem = 0;
-	current->mouseItem = -1;
-	current->mouseClickDown = qfalse;
 
-	if ( !menu ) {
+	current->mouseItem = -1;
+	current->mouseClickDown = 0;
+
+	if ( menu == M_NONE ) {
 		if ( cg.connected ) {
 			trap_Mouse_SetState( 0, MOUSE_CLIENT );
 			trap_Key_SetCatcher( 0 );
@@ -79,10 +80,11 @@ void UI_SwapMenu( currentMenu_t *current, menuId_t menu ) {
 	current->menu = menu;
 	current->panel = 1;
 	current->selectedItem = 0;
-	current->mouseItem = -1;
-	current->mouseClickDown = qfalse;
 
-	if ( !menu ) {
+	current->mouseItem = -1;
+	current->mouseClickDown = 0;
+
+	if ( menu == M_NONE ) {
 		return;
 	}
 
@@ -107,8 +109,9 @@ void UI_PushMenu( currentMenu_t *current, menuId_t menu ) {
 	current->menu = menu;
 	current->panel = 1;
 	current->selectedItem = 0;
+
 	current->mouseItem = -1;
-	current->mouseClickDown = qfalse;
+	current->mouseClickDown = 0;
 
 	UI_BuildCurrentMenu( current );
 	UI_SetInitalSelection( current );
@@ -128,8 +131,9 @@ void UI_PopMenu( currentMenu_t *current ) {
 	current->menu = current->stack[current->numStacked].menu;
 	current->panel = current->stack[current->numStacked].panel;
 	current->selectedItem = current->stack[current->numStacked].selectedItem;
+
 	current->mouseItem = -1;
-	current->mouseClickDown = qfalse;
+	current->mouseClickDown = 0;
 
 	trap_S_StartLocalSound( uis.menuPopSound, CHAN_LOCAL_SOUND );
 

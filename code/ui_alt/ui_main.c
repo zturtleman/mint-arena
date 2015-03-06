@@ -109,8 +109,8 @@ void	UI_KeyEvent( int key, qboolean down ) {
 	if ( !currentMenu.menu )
 		return;
 
-	if ( key == K_MOUSE1 && currentMenu.mouseClickDown && !down ) {
-		currentMenu.mouseClickDown = qfalse;
+	if ( currentMenu.mouseClickDown == key && !down ) {
+		currentMenu.mouseClickDown = 0;
 		UI_MenuMouseAction( &currentMenu, currentMenu.mouseItem, uis.cursors[0].x, uis.cursors[0].y, MACTION_RELEASE );
 		UI_MenuCursorPoint( &currentMenu, uis.cursors[0].x, uis.cursors[0].y );
 		return;
@@ -128,7 +128,11 @@ void	UI_KeyEvent( int key, qboolean down ) {
 			trap_Cmd_ExecuteText( EXEC_APPEND, "screenshot\n" );
 			break;
 
-		case K_MOUSE2:
+		case K_JOY_BACK:
+		case K_2JOY_BACK:
+		case K_3JOY_BACK:
+		case K_4JOY_BACK:
+		case K_MOUSE4: // this is typically 'back'
 		case K_ESCAPE:
 			if ( !( ui_menus[currentMenu.menu].menuFlags & MF_NOESCAPE ) ) {
 				UI_PopMenu( &currentMenu );
@@ -213,14 +217,32 @@ void	UI_KeyEvent( int key, qboolean down ) {
 			UI_MenuAction( &currentMenu, currentMenu.selectedItem, 1 );
 			break;
 
-		case K_MOUSE1:
+		case K_MOUSE1: // left click
+		case K_MOUSE3: // middle click
+			// ignore if in the middle of a mouse item operation
+			if ( currentMenu.mouseClickDown ) {
+				break;
+			}
+
 			UI_MenuCursorPoint( &currentMenu, uis.cursors[0].x, uis.cursors[0].y );
 			if ( currentMenu.mouseItem != -1 ) {
 				if ( UI_MenuMouseAction( &currentMenu, currentMenu.mouseItem, uis.cursors[0].x, uis.cursors[0].y, MACTION_PRESS ) ) {
-					currentMenu.mouseClickDown = qtrue;
+					currentMenu.mouseClickDown = key;
 				} else {
 					UI_MenuAction( &currentMenu, currentMenu.mouseItem, 1 );
 				}
+			}
+			break;
+
+		case K_MOUSE2: // right click
+			// ignore if in the middle of a mouse item operation
+			if ( currentMenu.mouseClickDown ) {
+				break;
+			}
+
+			UI_MenuCursorPoint( &currentMenu, uis.cursors[0].x, uis.cursors[0].y );
+			if ( currentMenu.mouseItem != -1 ) {
+				UI_MenuAction( &currentMenu, currentMenu.mouseItem, -1 );
 			}
 			break;
 

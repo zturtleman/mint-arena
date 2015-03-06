@@ -235,7 +235,7 @@ typedef struct {
 	int			panel;
 	int			selectedItem;
 	int			mouseItem; // item mouse points to. -1 if none.
-	qboolean	mouseClickDown; // for click and drag sliders, mouseItem will be set to item
+	keyNum_t	mouseClickDown; // for click and drag sliders, mouseItem will be set to item
 
 	// info generated from menudef_t
 	currentMenuItem_t	header;

@@ -99,7 +99,7 @@ void UI_PushMenu( currentMenu_t *current, menuId_t menu ) {
 	if ( current->menu ) {
 		// push stack
 		current->stack[current->numStacked].menu = current->menu;
-		// panel
+		current->stack[current->numStacked].panel = current->panel;
 		current->stack[current->numStacked].selectedItem = current->selectedItem;
 		current->numStacked++;
 	}
@@ -126,7 +126,7 @@ void UI_PopMenu( currentMenu_t *current ) {
 	// pop stack
 	current->numStacked--;
 	current->menu = current->stack[current->numStacked].menu;
-	current->panel = 1;
+	current->panel = current->stack[current->numStacked].panel;
 	current->selectedItem = current->stack[current->numStacked].selectedItem;
 	current->mouseItem = -1;
 	current->mouseClickDown = qfalse;

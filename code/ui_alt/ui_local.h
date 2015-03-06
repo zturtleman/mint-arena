@@ -225,6 +225,7 @@ typedef struct {
 typedef struct {
 	struct {
 		menuId_t	menu;
+		int			panel;
 		int			selectedItem;
 
 	} stack[MAX_MENU_DEPTH];

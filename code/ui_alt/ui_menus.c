@@ -208,7 +208,6 @@ menuitem_t singleplayermenu_items[] =
 {
 	{ MIF_BIGTEXT|MIF_CALL, "Bot skill:", NULL, M_NONE, 0, "g_spSkill", cp_skill },
 	{ MIF_BIGTEXT|MIF_CALL, "New Game", newGame, M_NONE, 0 },
-	{ MIF_BIGTEXT|MIF_CALL, "End Game", endGame, M_NONE, 0 },
 	//{ MIF_BIGTEXT, "Level Select...", NULL, M_NONE, 0 },
 };
 

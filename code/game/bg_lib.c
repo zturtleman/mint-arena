@@ -1515,6 +1515,7 @@ static int dopr_outch (char *buffer, size_t *currlen, size_t maxlen, char c );
 #define DP_F_ZERO  	(1 << 4)
 #define DP_F_UP    	(1 << 5)
 #define DP_F_UNSIGNED 	(1 << 6)
+#define DP_F_STRIP_TRAILING_ZEROS (1 << 7)
 
 /* Conversion Flags */
 #define DP_C_SHORT   1
@@ -1737,6 +1738,7 @@ static int dopr (char *buffer, size_t maxlen, const char *format, va_list args)
       case 'G':
 	flags |= DP_F_UP;
       case 'g':
+	flags |= DP_F_STRIP_TRAILING_ZEROS;
 	if (cflags == DP_C_LDOUBLE)
 	  fvalue = va_arg (args, LDOUBLE);
 	else
@@ -2047,6 +2049,24 @@ static int fmtfp (char *buffer, size_t *currlen, size_t maxlen,
   } while(fracpart && (fplace < 20));
   if (fplace == 20) fplace--;
   fconvert[fplace] = 0;
+
+  /* Remove trailing zeros from fractional part */
+  if (flags & DP_F_STRIP_TRAILING_ZEROS)
+  {
+    int i;
+
+    /* fconvert is reverse order... */
+    for ( i = 1; i < fplace && i < max; i++ ) {
+      if ( fconvert[fplace-i] == '0' || fconvert[fplace-i] == '\0' ) {
+        break;
+      }
+    }
+    i--;
+    if ( i > 0 ) {
+      memmove( &fconvert[0], &fconvert[fplace-i], sizeof(char) * fplace-i );
+    }
+    max = fplace = i;
+  }
 
   /* -1 for decimal point, another -1 if we are printing a sign */
   padlen = min - iplace - max - 1 - ((signvalue) ? 1 : 0); 

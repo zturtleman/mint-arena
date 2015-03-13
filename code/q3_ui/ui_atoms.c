@@ -83,7 +83,6 @@ void UI_PushMenu( menuframework_s *menu )
 
 	m_entersound = qtrue;
 
-	trap_Mouse_SetState( 0, ( trap_Mouse_GetState( 0 ) & ~MOUSE_CLIENT ) | MOUSE_CGAME );
 	trap_Key_SetCatcher( KEYCATCH_UI );
 
 	// force first available item to have focus
@@ -129,7 +128,6 @@ void UI_ForceMenuOff (void)
 	uis.menusp     = 0;
 	uis.activemenu = NULL;
 
-	trap_Mouse_SetState( 0, ( trap_Mouse_GetState( 0 ) & ~MOUSE_CGAME ) | MOUSE_CLIENT );
 	trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
 	trap_Cvar_SetValue( "cl_paused", 0 );
 }
@@ -292,14 +290,14 @@ void UI_InitBannerFont( fontInfo_t *font ) {
 	qhandle_t	hShader;
 
 	shaderName = "menu/art/font2_prop";
-	hShader = trap_R_RegisterShader( shaderName );
+	hShader = trap_R_RegisterShaderNoMip( shaderName );
 
 	Q_strncpyz( font->name, "bitmapbannerfont", sizeof ( font->name ) );
 	font->glyphScale = 48.0f / PROPB_HEIGHT;
 
 	for ( i = 0; i < GLYPHS_PER_FONT; i++ ) {
-		if ( i >= 'A' && i <= 'Z' ) {
-			int ch = i - 'A';
+		if ( ( i >= 'A' && i <= 'Z' ) || ( i >= 'a' && i <= 'z' ) ) {
+			int ch = toupper( i ) - 'A';
 			fcol = (float)propMapB[ch][0] / 256.0f;
 			frow = (float)propMapB[ch][1] / 256.0f;
 			fwidth = (float)propMapB[ch][2] / 256.0f;
@@ -382,7 +380,7 @@ void UI_InitPropFont( fontInfo_t *font, qboolean glow ) {
 	} else {
 		shaderName = "menu/art/font1_prop";
 	}
-	hShader = trap_R_RegisterShader( shaderName );
+	hShader = trap_R_RegisterShaderNoMip( shaderName );
 
 	Q_strncpyz( font->name, "bitmappropfont", sizeof ( font->name ) );
 	font->glyphScale = 48.0f / PROP_HEIGHT;
@@ -397,7 +395,7 @@ void UI_InitPropFont( fontInfo_t *font, qboolean glow ) {
 			aw = PROP_SPACE_WIDTH;
 			xSkip = PROP_SPACE_WIDTH;
 		}
-		else if ( propMap[ch][2] != -1 ) {
+		else if ( ch < ARRAY_LEN( propMap ) && propMap[ch][2] != -1 ) {
 			fcol = (float)propMap[ch][0] / 256.0f;
 			frow = (float)propMap[ch][1] / 256.0f;
 			fwidth = (float)propMap[ch][2] / 256.0f;

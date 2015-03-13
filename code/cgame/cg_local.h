@@ -652,6 +652,7 @@ typedef struct {
 	qboolean	scoreBoardShowing;
 	int			scoreFadeTime;
 	char		killerName[MAX_NAME_LENGTH];
+	int			selectedScore;
 
 	// console
 	char			consoleText[ MAX_CONSOLE_TEXT ];
@@ -772,7 +773,7 @@ typedef struct {
 	// scoreboard
 	int			scoresRequestTime;
 	int			numScores;
-	int			selectedScore;
+	int			intermissionSelectedScore;
 	int			teamScores[2];
 	score_t		scores[MAX_CLIENTS];
 	clientList_t	readyPlayers;
@@ -1464,7 +1465,6 @@ void CG_JoystickButtonEvent( int localPlayerNum, int button, qboolean down, unsi
 void CG_JoystickHatEvent( int localPlayerNum, int hat, int value, unsigned time, connstate_t state );
 void CG_EventHandling(int type);
 void CG_RankRunFrame( void );
-void CG_SetScoreSelection(void *menu);
 score_t *CG_GetSelectedScore( void );
 void CG_BuildSpectatorString( void );
 
@@ -1474,6 +1474,8 @@ void CG_AddNotifyText( int realTime, qboolean restoredText );
 void CG_SetupDlightstyles( void );
 
 void CG_KillServer( void );
+
+void CG_UpdateMouseState( int localPlayerNum );
 
 // in order from highest priority to lowest
 // if none of the catchers are active, bound key strings will be executed
@@ -1801,7 +1803,7 @@ void CG_DrawInformation( void );
 // cg_scoreboard.c
 //
 qboolean CG_DrawOldScoreboard( void );
-void CG_DrawOldTourneyScoreboard( void );
+void CG_DrawTourneyScoreboard( void );
 
 //
 // cg_console.c

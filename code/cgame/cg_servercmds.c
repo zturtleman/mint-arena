@@ -74,6 +74,18 @@ CG_ParseScores
 */
 static void CG_ParseScores( int start ) {
 	int		i, powerups;
+#ifdef MISSIONPACK_HUD
+	int		j, selectedPlayerNum[MAX_SPLITVIEW];
+
+	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+		if ( cg.numScores > 0 ) {
+			selectedPlayerNum[i] = cg.scores[ cg.localPlayers[i].selectedScore ].playerNum;
+		} else {
+			selectedPlayerNum[i] = -2;
+		}
+		cg.localPlayers[i].selectedScore = 0;
+	}
+#endif
 
 	cg.numScores = atoi( CG_Argv( 1 + start) );
 	if ( cg.numScores > MAX_CLIENTS ) {
@@ -108,11 +120,19 @@ static void CG_ParseScores( int start ) {
 		cgs.playerinfo[ cg.scores[i].playerNum ].powerups = powerups;
 
 		cg.scores[i].team = cgs.playerinfo[cg.scores[i].playerNum].team;
-	}
-#ifdef MISSIONPACK_HUD
-	CG_SetScoreSelection(NULL);
-#endif
 
+#ifdef MISSIONPACK_HUD
+		// restore score select, select own score if previous score player not present
+		for ( j = 0; j < CG_MaxSplitView(); j++ ) {
+			if ( selectedPlayerNum[j] == cg.scores[i].playerNum ) {
+				selectedPlayerNum[j] = -1; // found it, don't override with their player score
+				cg.localPlayers[j].selectedScore = i;
+			} else if ( selectedPlayerNum[j] != -1 && cg.snap->pss[j].playerNum == cg.scores[i].playerNum ) {
+				cg.localPlayers[j].selectedScore = i;
+			}
+		}
+#endif
+	}
 }
 
 /*

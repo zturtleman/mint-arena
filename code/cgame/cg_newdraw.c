@@ -1469,10 +1469,16 @@ static void CG_DrawTeamSpectators( rectDef_t *rect, float scale, vec4_t color, q
 
 
 void CG_DrawMedal(int ownerDraw, rectDef_t *rect, float scale, vec4_t color, qhandle_t shader) {
-	score_t *score = &cg.scores[cg.selectedScore];
+	score_t *score;
 	float value = 0;
 	char *text = NULL;
 	color[3] = 0.25;
+
+	if ( !cg.cur_lc ) {
+		return;
+	}
+
+	score = &cg.scores[cg.cur_lc->selectedScore];
 
 	switch (ownerDraw) {
 		case CG_ACCURACY:

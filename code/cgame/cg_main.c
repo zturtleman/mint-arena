@@ -2133,41 +2133,6 @@ static int CG_FeederCount(float feederID) {
 	return count;
 }
 
-
-void CG_SetScoreSelection(void *p) {
-	menuDef_t *menu = (menuDef_t*)p;
-	playerState_t *ps = cg.cur_ps;
-	int i, red, blue;
-	red = blue = 0;
-	for (i = 0; i < cg.numScores; i++) {
-		if (cg.scores[i].team == TEAM_RED) {
-			red++;
-		} else if (cg.scores[i].team == TEAM_BLUE) {
-			blue++;
-		}
-		if (ps && ps->playerNum == cg.scores[i].playerNum) {
-			cg.selectedScore = i;
-		}
-	}
-
-	if (menu == NULL) {
-		// just interested in setting the selected score
-		return;
-	}
-
-	if ( cgs.gametype >= GT_TEAM ) {
-		int feeder = FEEDER_REDTEAM_LIST;
-		i = red;
-		if (cg.scores[cg.selectedScore].team == TEAM_BLUE) {
-			feeder = FEEDER_BLUETEAM_LIST;
-			i = blue;
-		}
-		Menu_SetFeederSelection(menu, feeder, i, NULL);
-	} else {
-		Menu_SetFeederSelection(menu, FEEDER_SCOREBOARD, cg.selectedScore, NULL);
-	}
-}
-
 // FIXME: might need to cache this info
 static playerInfo_t * CG_InfoFromScoreIndex(int index, int team, int *scoreIndex) {
 	int i, count;
@@ -2276,6 +2241,11 @@ static qhandle_t CG_FeederItemImage(float feederID, int index) {
 }
 
 static void CG_FeederSelection(float feederID, int index) {
+#if 0 // this only gets called from Menu_SetFeederSelection
+	if ( !cg.cur_lc ) {
+		return;
+	}
+
 	if ( cgs.gametype >= GT_TEAM ) {
 		int i, count;
 		int team = (feederID == FEEDER_REDTEAM_LIST) ? TEAM_RED : TEAM_BLUE;
@@ -2283,14 +2253,15 @@ static void CG_FeederSelection(float feederID, int index) {
 		for (i = 0; i < cg.numScores; i++) {
 			if (cg.scores[i].team == team) {
 				if (index == count) {
-					cg.selectedScore = i;
+					cg.cur_lc->selectedScore = i;
 				}
 				count++;
 			}
 		}
 	} else {
-		cg.selectedScore = index;
+		cg.cur_lc->selectedScore = index;
 	}
+#endif
 }
 
 static float CG_Cvar_Get(const char *cvar) {
@@ -2457,11 +2428,12 @@ CG_ClearState
 Called at init and killing server from UI
 =================
 */
-void CG_ClearState( qboolean everything ) {
+void CG_ClearState( qboolean everything, int maxSplitView ) {
 	int i;
 
 	if ( everything ) {
 		memset( &cgs, 0, sizeof( cgs ) );
+		cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
 	}
 	memset( &cg, 0, sizeof( cg ) );
 	memset( cg_entities, 0, sizeof(cg_entities) );
@@ -2477,6 +2449,26 @@ void CG_ClearState( qboolean everything ) {
 
 /*
 =================
+CG_SetConnectionState
+=================
+*/
+void CG_SetConnectionState( connstate_t state ) {
+	int i;
+
+	if ( cg.connState == state ) {
+		return;
+	}
+
+	cg.connState = state;
+	cg.connected = ( cg.connState > CA_CONNECTED && cg.connState != CA_CINEMATIC );
+
+	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+		CG_UpdateMouseState( i );
+	}
+}
+
+/*
+=================
 CG_Init
 
 Called after every cgame load, such as main menu, level change, or subsystem restart
@@ -2485,12 +2477,9 @@ Called after every cgame load, such as main menu, level change, or subsystem res
 void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 
 	// clear everything
-	CG_ClearState( qtrue );
+	CG_ClearState( qtrue, maxSplitView );
 
-	cg.connState = state;
-	cg.connected = ( cg.connState > CA_CONNECTED && cg.connState != CA_CINEMATIC );
-
-	cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
+	CG_SetConnectionState( state );
 
 	CG_RegisterCvars();
 
@@ -2513,6 +2502,13 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 		return;
 	}
 
+#ifdef MISSIONPACK_HUD
+	Init_Display(&cgDC);
+	String_Init();
+#endif
+
+	UI_Init( cg.connected, maxSplitView );
+
 	// if the user didn't give any commands, run default action
 	if ( playVideo == 1 ) {
 		trap_Cmd_ExecuteText( EXEC_APPEND, "cinematic idlogo.RoQ\n" );
@@ -2521,13 +2517,6 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 			trap_Cvar_Set( "nextmap", "cinematic intro.RoQ" );
 		}
 	}
-
-#ifdef MISSIONPACK_HUD
-	Init_Display(&cgDC);
-	String_Init();
-#endif
-
-	UI_Init( cg.connected, maxSplitView );
 }
 
 /*
@@ -2560,7 +2549,6 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 			continue;
 		}
 
-		trap_Mouse_SetState( i, MOUSE_CLIENT );
 		trap_GetViewAngles( i, cg.localPlayers[i].viewangles );
 		CG_LocalPlayerAdded(i, playerNums[i]);
 	}
@@ -2662,7 +2650,7 @@ void CG_KillServer( void ) {
 
 	trap_SV_Shutdown( "Server was killed" );
 
-	CG_ClearState( qfalse );
+	CG_ClearState( qfalse, cgs.maxSplitView );
 
 	cgs.localServer = qfalse;
 }
@@ -2694,7 +2682,7 @@ Draw the frame
 */
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime ) {
 
-	cg.connState = state;
+	CG_SetConnectionState( state );
 	cg.realFrameTime = realTime - cg.realTime;
 	cg.realTime = realTime;
 
@@ -2871,7 +2859,7 @@ CG_DistributeKeyEvent
 void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state, int axisNum ) {
 	int keyCatcher;
 
-	cg.connState = state;
+	CG_SetConnectionState( state );
 
 	switch ( key ) {
 		case K_KP_PGUP:
@@ -2957,7 +2945,7 @@ CG_DistributeCharEvent
 void CG_DistributeCharEvent( int character, connstate_t state ) {
 	int key, keyCatcher;
 
-	cg.connState = state;
+	CG_SetConnectionState( state );
 
 	key = ( character | K_CHAR_FLAG );
 
@@ -2974,6 +2962,33 @@ void CG_DistributeCharEvent( int character, connstate_t state ) {
 	} else if ( keyCatcher & KEYCATCH_UI ) {
 		UI_KeyEvent( key, qtrue );
 	}
+}
+
+/*
+====================
+CG_UpdateMouseState
+====================
+*/
+void CG_UpdateMouseState( int localPlayerNum ) {
+	int state;
+
+	if ( ( Key_GetCatcher() & KEYCATCH_CONSOLE ) || ( cg.connState != CA_DISCONNECTED && cg.connState != CA_ACTIVE )
+		|| trap_GetDemoState() == DS_PLAYBACK ) {
+		// no grab, show system cursor
+		state = MOUSE_SYSTEMCURSOR;
+	} else {
+		state = 0;
+	}
+
+	if ( Key_GetCatcher() & KEYCATCH_UI ) {
+		// call mouse move event, no grab, hide system cursor
+		state |= MOUSE_CGAME;
+	} else if ( !( state & MOUSE_SYSTEMCURSOR ) ) {
+		// change viewangles, grab mouse, hide system cursor
+		state = MOUSE_CLIENT;
+	}
+
+	trap_Mouse_SetState( localPlayerNum, state );
 }
 
 static int keyCatchers = 0;
@@ -2999,21 +3014,11 @@ void Key_SetCatcher( int catcher ) {
 
 		// If catcher is 0, disable held key repeating so binds don't repeat
 		trap_Key_SetRepeat( catcher != 0 );
-
-		// release mouse grab and show system cursor when console is open
-		if ( catcher & KEYCATCH_CONSOLE ) {
-			trap_Mouse_SetState( 0, ( trap_Mouse_GetState( 0 ) & ~MOUSE_CLIENT ) | MOUSE_SYSTEMCURSOR );
-		} else if ( keyCatchers & KEYCATCH_CONSOLE ) {
-			int state = trap_Mouse_GetState( 0 ) & ~MOUSE_SYSTEMCURSOR;
-
-			if ( catcher == 0 ) {
-				state |= MOUSE_CLIENT;
-			}
-			trap_Mouse_SetState( 0, state );
-		}
 	}
 
 	keyCatchers = catcher;
+
+	CG_UpdateMouseState( 0 );
 }
 
 /*

@@ -39,7 +39,7 @@ void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth ) {
 	float		aspect;
 
 	shaderName = "gfx/2d/bigchars";
-	hShader = trap_R_RegisterShader( shaderName );
+	hShader = trap_R_RegisterShaderNoMip( shaderName );
 
 	Com_sprintf( font->name, sizeof ( font->name ), "bitmapfont_%dx%d", charHeight, charWidth );
 	font->glyphScale = 48.0f / 16;

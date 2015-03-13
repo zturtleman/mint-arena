@@ -46,6 +46,10 @@ endif
 #############################################################################
 -include Makefile.local
 
+ifeq ($(COMPILE_PLATFORM),cygwin)
+  PLATFORM=mingw32
+endif
+
 ifndef PLATFORM
 PLATFORM=$(COMPILE_PLATFORM)
 endif
@@ -90,7 +94,7 @@ endif
 export CROSS_COMPILING
 
 ifndef VERSION
-VERSION=Alpha
+VERSION=0.1
 endif
 
 ifndef VM_PREFIX
@@ -407,6 +411,11 @@ ifeq ($(PLATFORM),mingw32)
 
   ifeq ($(CROSS_COMPILING),0)
     TOOLS_BINEXT=.exe
+  endif
+
+  ifeq ($(COMPILE_PLATFORM),cygwin)
+    TOOLS_BINEXT=.exe
+    TOOLS_CC=$(CC)
   endif
 
   LIBS= -lws2_32 -lwinmm -lpsapi

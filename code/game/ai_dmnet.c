@@ -1377,7 +1377,7 @@ void BotClearPath(bot_state_t *bs, bot_moveresult_t *moveresult) {
 						//
 						BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, target, bs->entitynum, MASK_SHOT);
 						// if the mine is visible from the current position
-						if (bsptrace.fraction >= 1.0 || bsptrace.ent == state.number) {
+						if (bsptrace.fraction >= 1.0 || bsptrace.entityNum == state.number) {
 							// shoot at the mine
 							EA_Attack(bs->playernum);
 						}
@@ -1434,7 +1434,7 @@ void BotClearPath(bot_state_t *bs, bot_moveresult_t *moveresult) {
 						//
 						BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, target, bs->entitynum, MASK_SHOT);
 						// if the mine is visible from the current position
-						if (bsptrace.fraction >= 1.0 || bsptrace.ent == state.number) {
+						if (bsptrace.fraction >= 1.0 || bsptrace.entityNum == state.number) {
 							// shoot at the mine
 							EA_Attack(bs->playernum);
 						}
@@ -1509,7 +1509,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 		//
 		BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, bs->activatestack->target, bs->entitynum, MASK_SHOT);
 		// if the shootable entity is visible from the current position
-		if (bsptrace.fraction >= 1.0 || bsptrace.ent == goal->entitynum) {
+		if (bsptrace.fraction >= 1.0 || bsptrace.entityNum == goal->entitynum) {
 			targetvisible = qtrue;
 			// if holding the right weapon
 			if (bs->cur_ps.weapon == bs->activatestack->weapon) {

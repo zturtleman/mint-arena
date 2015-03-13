@@ -2423,13 +2423,63 @@ static qboolean CG_DrawScoreboard( void ) {
 	}
 
 	if (menuScoreboard) {
-		if (cg.cur_lc && firstTime[cg.cur_localPlayerNum]) {
-			firstTime[cg.cur_localPlayerNum] = qfalse;
-			CG_SetScoreSelection(menuScoreboard);
+		int selectedScore;
 
-			// Update time now to prevent spectator list from jumping.
-			cg.spectatorTime = trap_Milliseconds();
+		if (cg.cur_lc) {
+			if ( firstTime[cg.cur_localPlayerNum] ) {
+				int i;
+
+				firstTime[cg.cur_localPlayerNum] = qfalse;
+
+				// reset selected score to self
+				for (i = 0; i < cg.numScores; i++) {
+					if (cg.cur_ps->playerNum == cg.scores[i].playerNum) {
+						cg.cur_lc->selectedScore = i;
+					}
+				}
+
+				// Update time now to prevent spectator list from jumping.
+				cg.spectatorTime = trap_Milliseconds();
+			}
+
+			selectedScore = cg.cur_lc->selectedScore;
+		} else {
+			if ( cg.intermissionSelectedScore >= cg.numScores ) {
+				cg.intermissionSelectedScore = cg.numScores - 1;
+			}
+
+			selectedScore = cg.intermissionSelectedScore;
 		}
+
+		if ( cgs.gametype >= GT_TEAM ) {
+			int i, red, blue;
+
+			red = blue = 0;
+
+			for (i = 0; i < cg.numScores; i++) {
+				if ( i == selectedScore ) {
+					break;
+				}
+				if (cg.scores[i].team == TEAM_RED) {
+					red++;
+				} else if (cg.scores[i].team == TEAM_BLUE) {
+					blue++;
+				}
+			}
+
+			// only draw selection for the selected team (which may be spectator)
+			if (cg.scores[selectedScore].team != TEAM_RED) {
+				red = -1;
+			}
+			if (cg.scores[selectedScore].team != TEAM_BLUE) {
+				blue = -1;
+			}
+			Menu_SetFeederSelection(menuScoreboard, FEEDER_REDTEAM_LIST, red, NULL);
+			Menu_SetFeederSelection(menuScoreboard, FEEDER_BLUETEAM_LIST, blue, NULL);
+		} else {
+			Menu_SetFeederSelection(menuScoreboard, FEEDER_SCOREBOARD, selectedScore, NULL);
+		}
+
 		Menu_Paint(menuScoreboard, qtrue);
 	}
 
@@ -2883,13 +2933,6 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 	}
 }
 
-
-static void CG_DrawTourneyScoreboard( void ) {
-#ifdef MISSIONPACK_HUD
-#else
-	CG_DrawOldTourneyScoreboard();
-#endif
-}
 
 /*
 =====================

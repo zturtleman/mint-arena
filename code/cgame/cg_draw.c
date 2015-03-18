@@ -3117,7 +3117,7 @@ CG_DrawMessageMode
 =================
 */
 void CG_DrawMessageMode( void ) {
-	if ( !( trap_Key_GetCatcher( ) & KEYCATCH_MESSAGE ) ) {
+	if ( !( Key_GetCatcher() & KEYCATCH_MESSAGE ) ) {
 		return;
 	}
 

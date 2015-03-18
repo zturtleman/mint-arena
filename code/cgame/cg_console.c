@@ -93,7 +93,7 @@ Con_ToggleConsole_f
 */
 void Con_ToggleConsole_f (void) {
 	// Can't toggle the console when it's the only thing available
-	if ( cg.connState == CA_DISCONNECTED && trap_Key_GetCatcher( ) == KEYCATCH_CONSOLE ) {
+	if ( cg.connState == CA_DISCONNECTED && Key_GetCatcher() == KEYCATCH_CONSOLE ) {
 		return;
 	}
 
@@ -103,7 +103,7 @@ void Con_ToggleConsole_f (void) {
 
 	g_consoleField.widthInChars = g_console_field_width;
 
-	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_CONSOLE );
+	Key_SetCatcher( Key_GetCatcher() ^ KEYCATCH_CONSOLE );
 }
 
 /*
@@ -235,7 +235,7 @@ Draw the editline after a ] prompt
 void Con_DrawInput ( connstate_t state, int lines ) {
 	int		y;
 
-	if ( state != CA_DISCONNECTED && !(trap_Key_GetCatcher( ) & KEYCATCH_CONSOLE ) ) {
+	if ( state != CA_DISCONNECTED && !( Key_GetCatcher() & KEYCATCH_CONSOLE ) ) {
 		return;
 	}
 
@@ -342,7 +342,7 @@ Con_DrawConsole
 void Con_DrawConsole( connstate_t state ) {
 	// if disconnected, render console full screen
 	if ( state == CA_DISCONNECTED ) {
-		if ( !( trap_Key_GetCatcher( ) & KEYCATCH_UI) ) {
+		if ( !( Key_GetCatcher() & KEYCATCH_UI ) ) {
 			Con_DrawSolidConsole( state, 1.0f );
 			return;
 		}
@@ -364,7 +364,7 @@ Scroll it up or down and draw it
 */
 void CG_RunConsole( connstate_t state ) {
 	// decide on the destination height of the console
-	if ( trap_Key_GetCatcher( ) & KEYCATCH_CONSOLE )
+	if ( Key_GetCatcher() & KEYCATCH_CONSOLE )
 		con.finalFrac = 0.5;		// half screen
 	else
 		con.finalFrac = 0;				// none visible
@@ -416,7 +416,7 @@ void Con_Bottom( void ) {
 
 void CG_CloseConsole( void ) {
 	MField_Clear( &g_consoleField );
-	trap_Key_SetCatcher( trap_Key_GetCatcher( ) & ~KEYCATCH_CONSOLE );
+	Key_SetCatcher( Key_GetCatcher() & ~KEYCATCH_CONSOLE );
 	con.finalFrac = 0;				// none visible
 	con.displayFrac = 0;
 }

@@ -1486,8 +1486,6 @@ void CG_UpdateMouseState( int localPlayerNum );
 
 int Key_GetCatcher( void );
 void Key_SetCatcher( int catcher );
-#define trap_Key_GetCatcher Key_GetCatcher
-#define trap_Key_SetCatcher Key_SetCatcher
 
 
 //

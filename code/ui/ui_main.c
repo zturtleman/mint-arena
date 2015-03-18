@@ -272,7 +272,7 @@ void UI_Refresh( int realtime )
 	static int index;
 	static int	previousTimes[UI_FPS_FRAMES];
 
-	//if ( !( trap_Key_GetCatcher() & KEYCATCH_UI ) ) {
+	//if ( !( Key_GetCatcher() & KEYCATCH_UI ) ) {
 	//	return;
 	//}
 
@@ -317,7 +317,7 @@ void UI_Refresh( int realtime )
 	
 	// draw cursor
 	trap_R_SetColor( NULL );
-	if (Menu_Count() > 0 && (trap_Key_GetCatcher() & KEYCATCH_UI)) {
+	if (Menu_Count() > 0 && (Key_GetCatcher() & KEYCATCH_UI)) {
 		CG_DrawPic( uiInfo.uiDC.cursorx-16, uiInfo.uiDC.cursory-16, 32, 32, uiInfo.uiDC.Assets.cursor);
 	}
 
@@ -2794,13 +2794,13 @@ static void UI_Update(const char *name) {
 }
 
 void UI_ForceMenuOff (void) {
-	trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
+	Key_SetCatcher( Key_GetCatcher() & ~KEYCATCH_UI );
 	trap_Cvar_SetValue( "cl_paused", 0 );
 	Menus_CloseAll();
 }
 
 void UI_EnterMenu (void) {
-	trap_Key_SetCatcher( KEYCATCH_UI );
+	Key_SetCatcher( KEYCATCH_UI );
 	trap_Cvar_SetValue( "cl_paused", 1 );
 }
 

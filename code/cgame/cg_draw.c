@@ -538,6 +538,11 @@ static float CG_DrawAttacker( float y ) {
 		return y;
 	}
 
+	if ( !cgs.playerinfo[playerNum].infoValid ) {
+		cg.cur_lc->attackerTime = 0;
+		return y;
+	}
+
 	t = cg.time - cg.cur_lc->attackerTime;
 	if ( t > ATTACKER_HEAD_TIME ) {
 		cg.cur_lc->attackerTime = 0;

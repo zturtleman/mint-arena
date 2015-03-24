@@ -2629,21 +2629,20 @@ CG_DrawProxWarning
 */
 static void CG_DrawProxWarning( void ) {
 	char s [32];
-  static int proxTime;
   int proxTick;
 
 	if( !(cg.cur_ps->eFlags & EF_TICKING ) ) {
-    proxTime = 0;
+    cg.cur_lc->proxTime = 0;
 		return;
 	}
 
 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_TOP);
 
-  if (proxTime == 0) {
-    proxTime = cg.time;
+  if (cg.cur_lc->proxTime == 0) {
+    cg.cur_lc->proxTime = cg.time;
   }
 
-  proxTick = 10 - ((cg.time - proxTime) / 1000);
+  proxTick = 10 - ((cg.time - cg.cur_lc->proxTime) / 1000);
 
   if (proxTick > 0 && proxTick <= 5) {
     Com_sprintf(s, sizeof(s), "INTERNAL COMBUSTION IN: %i", proxTick);

@@ -379,7 +379,6 @@ static void CG_DrawStatusBar( void ) {
 	centity_t	*cent;
 	playerState_t	*ps;
 	int			value;
-	vec4_t		hcolor;
 	vec3_t		angles;
 	vec3_t		origin;
 
@@ -483,8 +482,7 @@ static void CG_DrawStatusBar( void ) {
 
 	// stretch the health up when taking damage
 	CG_DrawField ( 185, 432, 3, value);
-	CG_ColorForHealth( hcolor );
-	trap_R_SetColor( hcolor );
+	trap_R_SetColor( NULL );
 
 
 	//
@@ -1555,7 +1553,6 @@ static void CG_DrawLagometer( void ) {
 	y = 480 - 48;
 #endif
 
-	trap_R_SetColor( NULL );
 	CG_DrawPic( x, y, 48, 48, cgs.media.lagometerShader );
 
 	ax = x;
@@ -1754,8 +1751,6 @@ static void CG_DrawCenterString( void ) {
 
 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 
-	trap_R_SetColor( color );
-
 	start = cg.cur_lc->centerPrint;
 
 	charHeight = cg.cur_lc->centerPrintCharScale * 48.0f;
@@ -1783,8 +1778,6 @@ static void CG_DrawCenterString( void ) {
 		}
 		start++;
 	}
-
-	trap_R_SetColor( NULL );
 }
 
 
@@ -1839,8 +1832,6 @@ static void CG_DrawGlobalCenterString( void ) {
 
 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 
-	trap_R_SetColor( color );
-
 	start = cg.centerPrint;
 
 	charHeight = cg.centerPrintCharScale * 48.0f;
@@ -1868,8 +1859,6 @@ static void CG_DrawGlobalCenterString( void ) {
 		}
 		start++;
 	}
-
-	trap_R_SetColor( NULL );
 }
 
 
@@ -1915,8 +1904,6 @@ static void CG_DrawCrosshair(void)
 
 		CG_ColorForHealth( hcolor );
 		trap_R_SetColor( hcolor );
-	} else {
-		trap_R_SetColor( NULL );
 	}
 
 	if (cg.numViewports > 1) {

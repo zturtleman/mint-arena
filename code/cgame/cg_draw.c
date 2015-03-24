@@ -1944,6 +1944,8 @@ static void CG_DrawCrosshair(void)
 	hShader = cgs.media.crosshairShader[ ca % NUM_CROSSHAIRS ];
 
 	CG_DrawPic( ((SCREEN_WIDTH-w)*0.5f)+x, ((SCREEN_HEIGHT-h)*0.5f)+y, w, h, hShader );
+
+	trap_R_SetColor( NULL );
 }
 
 /*

@@ -37,6 +37,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 */
 
+void clearErrorMessage( int item ) {
+	trap_Cvar_Set( "com_errorMessage", "" );
+	trap_Cvar_Set( "com_errorCode", "" );
+}
+
 // ZTM: TODO: should game_restart command be used? otherwise I think it might not work correct if connected to server :untested:
 #ifdef MISSIONPACK
 void launchQ3( int item ) {
@@ -80,20 +85,16 @@ void cinematicHandler( int item ) {
 void exitHandler( int item ) {
 	if ( item == 0 ) {
 		trap_Cmd_ExecuteText( EXEC_APPEND, "quit\n" );
-	} else {
-		CG_Printf("DEBUG: canceled exiting...\n");
 	}
 }
 
 // 0 = yes, 1 = no
 void defaultsHandler( int item ) {
 	if ( item == 0 ) {
-		// should put cvar_restart first? sometimes people put cvars in it -- this would apply to q3_ui too
+		// TODO: should put cvar_restart first? sometimes people put cvars in it -- this would apply to q3_ui too
 		trap_Cmd_ExecuteText( EXEC_APPEND, "exec default.cfg\n");
 		trap_Cmd_ExecuteText( EXEC_APPEND, "cvar_restart\n");
 		trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
-	} else {
-		CG_Printf("DEBUG: canceled reseting to defaults...\n");
 	}
 }
 
@@ -142,6 +143,12 @@ static cvarRange_t cr_zeroToOne = { 0, 1, 0.05f };
 	Menu item definitions
 
 */
+
+menuitem_t errormenu_items[] =
+{
+	{ MIF_BIGTEXT, NULL, NULL, M_NONE, 0, "com_errorMessage" },
+	{ MIF_BIGTEXT|MIF_CALL|MIF_SWAPMENU|MIF_NEXTBUTTON, "Next", clearErrorMessage, M_MAIN, 0 },
+};
 
 #ifdef MISSIONPACK
 menuitem_t mainmenu_items[] =
@@ -570,6 +577,8 @@ menuitem_t stubmenu_items[] =
 
 menudef_t ui_menus[M_NUM_MENUS] = {
 	{ 0, NULL, NULL, 0 },										// M_NONE
+
+	QMENUDEF( errormenu_items, MF_MAINMENU, NULL ),	// M_ERROR
 
 	QMENUDEF( mainmenu_items, MF_MAINMENU, NULL ),				// M_MAIN
 	QMENUDEF( singleplayermenu_items, 0, "Single Player" ),		// M_SINGLEPLAYER

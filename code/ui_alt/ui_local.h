@@ -80,6 +80,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 typedef enum {
 	M_NONE,
 
+	M_ERROR, // Display com_errorMessage
+
 	M_MAIN,
 	M_SINGLEPLAYER,
 	M_MULTIPLAYER,

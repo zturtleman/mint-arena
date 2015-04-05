@@ -607,6 +607,9 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 	int style, panelNum;
 	menudef_t	*menuInfo;
 	currentMenuItem_t *item;
+#ifdef MISSIONPACK
+	qboolean	drawStatusBar;
+#endif
 
 	if ( !current->menu ) {
 		return;
@@ -661,7 +664,8 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 
 #ifdef MISSIONPACK
 	// draw status bar background if not dialog and there is a back button (i.e. not a top level menu)
-	if ( !( menuInfo->menuFlags & (MF_DIALOG|MF_NOBACK) ) && current->numStacked > 0 ) {
+	drawStatusBar = ( !( menuInfo->menuFlags & (MF_DIALOG|MF_NOBACK) ) && current->numStacked > 0 );
+	if ( drawStatusBar ) {
 		UI_DrawGradientBar( 0, SCREEN_HEIGHT-46, SCREEN_WIDTH, 30, qtrue );
 	}
 #endif
@@ -749,6 +753,11 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 				trap_R_SetColor( NULL );
 
 #ifdef MISSIONPACK
+				// only draw lightning or caption if status bar was drawn
+				if ( !drawStatusBar ) {
+					continue;
+				}
+
 				// if next button is selected draw lightning between back button and caption, and caption and next button
 				if ( item->flags & MIF_NEXTBUTTON ) {
 					int captionWidth = CG_DrawStrlen( item->caption, style );
@@ -813,6 +822,12 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 				string = item->cvarPairs[ item->cvarPair ].string;
 			} else {
 				string = item->vmCvar.string;
+			}
+
+			// HACK for M_ERROR com_errorMessage cvar centering
+			if ( !item->caption && !( item->flags & MIF_SELECTABLE ) ) {
+				style = UI_CENTER;
+				x = 320;
 			}
 
 #ifdef Q3UIFONTS

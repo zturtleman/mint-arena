@@ -87,8 +87,16 @@ void	UI_SetActiveMenu( uiMenuCommand_t menu ) {
 		Key_SetCatcher( KEYCATCH_UI );
 		trap_Cvar_SetValue( "cl_paused", 1 );
 
-		if ( menu == UIMENU_MAIN ) {
-			UI_SetMenu( &currentMenu, M_MAIN );
+		 if ( menu == UIMENU_MAIN ) {
+			char errorMessage[2];
+
+			trap_Cvar_VariableStringBuffer( "com_errorMessage", errorMessage, sizeof ( errorMessage ) );
+
+			if ( errorMessage[0] != '\0' ) {
+				UI_SetMenu( &currentMenu, M_ERROR );
+			} else {
+				UI_SetMenu( &currentMenu, M_MAIN );
+			}
 		} else if ( menu == UIMENU_INGAME ) {
 			UI_SetMenu( &currentMenu, M_INGAME );
 		}

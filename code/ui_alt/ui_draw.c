@@ -71,6 +71,9 @@ typedef struct {
 	qhandle_t sliderButton;
 	qhandle_t sliderButtonSelected;
 
+	qhandle_t radioButtonOff;
+	qhandle_t radioButtonOn;
+
 	qhandle_t dialogSmallBackground;
 	qhandle_t dialogLargeBackground;
 
@@ -158,6 +161,9 @@ void UI_LoadAssets( void ) {
 	uiAssets.sliderBar = trap_R_RegisterShaderNoMip( "menu/art/slider2" );
 	uiAssets.sliderButton = trap_R_RegisterShaderNoMip( "menu/art/sliderbutt_0" );
 	uiAssets.sliderButtonSelected = trap_R_RegisterShaderNoMip( "menu/art/sliderbutt_1" );
+
+	uiAssets.radioButtonOff = trap_R_RegisterShaderNoMip( "menu/art/switch_off" );
+	uiAssets.radioButtonOn = trap_R_RegisterShaderNoMip( "menu/art/switch_on" );
 #endif
 
 	uiAssets.dialogSmallBackground = trap_R_RegisterShaderNoMip( "menu/art/cut_frame" );
@@ -452,6 +458,42 @@ void UI_DrawSlider( float x, float y, float min, float max, float value, int sty
 	{
 		CG_DrawString( x + 96 + 8, y, va("%g", value), UI_DROPSHADOW|style, drawcolor );
 	}
+}
+
+// draw radio button if item should have one
+// TODO: Should "is this a radio button" be determined in UI_BuildCurrentMenu instead of checking each item each frame?
+static void UI_DrawRadioButton( currentMenuItem_t *item, float *x ) {
+	qhandle_t hShader;
+	int valuePair0, valuePair1, offPair;
+
+	if ( !item->cvarPairs || item->numPairs != 2 || item->cvarPairs[ 0 ].type != CVT_INT || item->cvarPairs[ 1 ].type != CVT_INT
+		|| !uiAssets.radioButtonOff || !uiAssets.radioButtonOn ) {
+		// not a radio button or missing shader
+		return;
+	}
+
+	valuePair0 = atoi( item->cvarPairs[ 0 ].value );
+	valuePair1 = atoi( item->cvarPairs[ 1 ].value );
+
+	if ( valuePair0 == 0 && valuePair1 == 1 ) {
+		offPair = 0;
+	} else if ( valuePair0 == 1 && valuePair1 == 0 ) {
+		// reversed case
+		offPair = 1;
+	} else {
+		// not a radio button
+		return;
+	}
+
+	if ( Q_stricmp( item->cvarPairs[ offPair ].string, "off" ) || Q_stricmp( item->cvarPairs[ !offPair ].string, "on" ) ) {
+		// not a radio button
+		return;
+	}
+
+	hShader = ( item->cvarPair == offPair ) ? uiAssets.radioButtonOff : uiAssets.radioButtonOn;
+
+	CG_DrawPic( *x, item->captionPos.y, 16, 16, hShader );
+	*x += 16;
 }
 
 int UI_CvarPairsStringCompare( const void *a, const void *b ) {
@@ -823,6 +865,8 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 			} else {
 				string = item->vmCvar.string;
 			}
+
+			UI_DrawRadioButton( item, &x );
 
 			// HACK for M_ERROR com_errorMessage cvar centering
 			if ( !item->caption && !( item->flags & MIF_SELECTABLE ) ) {

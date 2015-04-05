@@ -212,7 +212,7 @@ typedef struct {
 
 	// unique
 	region_t		captionPos;
-	region_t		clickPos;	// bbox for slider or same as cation rect
+	region_t		clickPos;	// bbox for slider or same as caption rect
 	//float			x, y, width, height;
 	//float			cvarValue;	// if cvarRange->numPairs > 0 it's an index, otherwise it's the clamped value for slider
 	vmCvar_t		vmCvar;

@@ -97,7 +97,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		CG_DistributeCharEvent(arg0, arg1);
 		return 0;
 	case CG_MOUSE_EVENT:
-		if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
+		if ( cg.connected && ( Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
 			CG_MouseEvent(arg0, arg1, arg2);
 		} else {
 			UI_MouseEvent(arg0, arg1, arg2);
@@ -785,7 +785,7 @@ void CG_AddNotifyText( int realTime, qboolean restoredText ) {
 
 	CG_ConsolePrint( buffer );
 
-	if ( skipnotify || restoredText || ( trap_Key_GetCatcher() & KEYCATCH_CONSOLE ) ) {
+	if ( skipnotify || restoredText || ( Key_GetCatcher() & KEYCATCH_CONSOLE ) ) {
 		return;
 	}
 
@@ -2498,7 +2498,7 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 	CG_ConsoleInit();
 
 	if ( cg_dedicated.integer ) {
-		trap_Key_SetCatcher( KEYCATCH_CONSOLE );
+		Key_SetCatcher( KEYCATCH_CONSOLE );
 		return;
 	}
 
@@ -2709,7 +2709,7 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 		CG_DrawActiveFrame( serverTime, stereoView, demoPlayback );
 	}
 
-	if ( ( state > CA_DISCONNECTED && state <= CA_LOADING ) || (trap_Key_GetCatcher() & KEYCATCH_UI) ) {
+	if ( ( state > CA_DISCONNECTED && state <= CA_LOADING ) || ( Key_GetCatcher() & KEYCATCH_UI ) ) {
 		if ( ui_stretch.integer ) {
 			CG_SetScreenPlacement( PLACE_STRETCH, PLACE_STRETCH );
 		} else {
@@ -2734,7 +2734,7 @@ Returns qtrue if bind command should be executed while user interface is shown
 ===================
 */
 static qboolean CG_BindUICommand( const char *cmd ) {
-	if ( trap_Key_GetCatcher( ) & KEYCATCH_CONSOLE )
+	if ( Key_GetCatcher( ) & KEYCATCH_CONSOLE )
 		return qfalse;
 
 	if ( !Q_stricmp( cmd, "toggleconsole" ) )
@@ -2831,7 +2831,7 @@ void Message_Key( int key, qboolean down ) {
 	}
 
 	if ( key == K_ESCAPE ) {
-		trap_Key_SetCatcher( trap_Key_GetCatcher( ) & ~KEYCATCH_MESSAGE );
+		Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_MESSAGE );
 		MField_Clear( &cg.messageField );
 		return;
 	}
@@ -2843,7 +2843,7 @@ void Message_Key( int key, qboolean down ) {
 			trap_SendClientCommand( buffer );
 		}
 
-		trap_Key_SetCatcher( trap_Key_GetCatcher( ) & ~KEYCATCH_MESSAGE );
+		Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_MESSAGE );
 		MField_Clear( &cg.messageField );
 		return;
 	}
@@ -2890,8 +2890,7 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 		return;
 	}
 
-	// reduce redundent system calls
-	keyCatcher = trap_Key_GetCatcher( );
+	keyCatcher = Key_GetCatcher();
 
 	// keys can still be used for bound actions
 	if ( ( key < 128 || key == K_MOUSE1
@@ -2949,8 +2948,7 @@ void CG_DistributeCharEvent( int character, connstate_t state ) {
 
 	key = ( character | K_CHAR_FLAG );
 
-	// reduce redundent system calls
-	keyCatcher = trap_Key_GetCatcher( );
+	keyCatcher = Key_GetCatcher();
 
 	// distribute the character event to the apropriate handler
 	if ( keyCatcher & KEYCATCH_CONSOLE ) {

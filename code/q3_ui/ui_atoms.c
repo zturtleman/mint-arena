@@ -83,7 +83,7 @@ void UI_PushMenu( menuframework_s *menu )
 
 	m_entersound = qtrue;
 
-	trap_Key_SetCatcher( KEYCATCH_UI );
+	Key_SetCatcher( KEYCATCH_UI );
 
 	// force first available item to have focus
 	for (i=0; i<menu->nitems; i++)
@@ -128,7 +128,7 @@ void UI_ForceMenuOff (void)
 	uis.menusp     = 0;
 	uis.activemenu = NULL;
 
-	trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
+	Key_SetCatcher( Key_GetCatcher() & ~KEYCATCH_UI );
 	trap_Cvar_SetValue( "cl_paused", 0 );
 }
 
@@ -595,7 +595,7 @@ void UI_DrawChar( int x, int y, int ch, int style, vec4_t color )
 }
 
 qboolean UI_IsFullscreen( void ) {
-	if ( uis.activemenu && ( trap_Key_GetCatcher() & KEYCATCH_UI ) ) {
+	if ( uis.activemenu && ( Key_GetCatcher() & KEYCATCH_UI ) ) {
 		return uis.activemenu->fullscreen;
 	}
 
@@ -864,7 +864,7 @@ void UI_Refresh( int realtime )
 	uis.frametime = realtime - uis.realtime;
 	uis.realtime  = realtime;
 
-	if ( !( trap_Key_GetCatcher() & KEYCATCH_UI ) ) {
+	if ( !( Key_GetCatcher() & KEYCATCH_UI ) ) {
 		return;
 	}
 

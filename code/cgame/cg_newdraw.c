@@ -1744,7 +1744,7 @@ void CG_MouseEvent(int localPlayerNum, int x, int y) {
 	player = &cg.localPlayers[0];
 
 	if ( (player->predictedPlayerState.pm_type == PM_NORMAL || player->predictedPlayerState.pm_type == PM_SPECTATOR) && player->showScores == qfalse) {
-    trap_Key_SetCatcher(0);
+		Key_SetCatcher(0);
 		return;
 	}
 
@@ -1835,7 +1835,7 @@ void CG_KeyEvent(int key, qboolean down) {
 
 	// escape always gets out of CGAME stuff
 	if (key == K_ESCAPE) {
-		trap_Key_SetCatcher( trap_Key_GetCatcher( ) & ~KEYCATCH_CGAME );
+		Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_CGAME );
 		CG_EventHandling(CGAME_EVENT_NONE);
 		return;
 	}
@@ -1844,14 +1844,14 @@ void CG_KeyEvent(int key, qboolean down) {
 
 	if ( player->predictedPlayerState.pm_type == PM_NORMAL || (player->predictedPlayerState.pm_type == PM_SPECTATOR && player->showScores == qfalse)) {
 		CG_EventHandling(CGAME_EVENT_NONE);
-    trap_Key_SetCatcher(0);
+		Key_SetCatcher(0);
 		return;
 	}
 
   //if (key == trap_Key_GetKey("teamMenu", 0) || !Display_CaptureItem(cgs.cursorX, cgs.cursorY)) {
     // if we see this then we should always be visible
   //  CG_EventHandling(CGAME_EVENT_NONE);
-  //  trap_Key_SetCatcher(0);
+  //  Key_SetCatcher(0);
   //}
 
 

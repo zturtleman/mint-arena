@@ -379,7 +379,6 @@ static void CG_DrawStatusBar( void ) {
 	centity_t	*cent;
 	playerState_t	*ps;
 	int			value;
-	vec4_t		hcolor;
 	vec3_t		angles;
 	vec3_t		origin;
 
@@ -483,8 +482,7 @@ static void CG_DrawStatusBar( void ) {
 
 	// stretch the health up when taking damage
 	CG_DrawField ( 185, 432, 3, value);
-	CG_ColorForHealth( hcolor );
-	trap_R_SetColor( hcolor );
+	trap_R_SetColor( NULL );
 
 
 	//
@@ -537,6 +535,11 @@ static float CG_DrawAttacker( float y ) {
 
 	playerNum = cg.cur_lc->predictedPlayerState.persistant[PERS_ATTACKER];
 	if ( playerNum < 0 || playerNum >= MAX_CLIENTS || playerNum == cg.cur_ps->playerNum ) {
+		return y;
+	}
+
+	if ( !cgs.playerinfo[playerNum].infoValid ) {
+		cg.cur_lc->attackerTime = 0;
 		return y;
 	}
 
@@ -1555,7 +1558,6 @@ static void CG_DrawLagometer( void ) {
 	y = 480 - 48;
 #endif
 
-	trap_R_SetColor( NULL );
 	CG_DrawPic( x, y, 48, 48, cgs.media.lagometerShader );
 
 	ax = x;
@@ -1754,8 +1756,6 @@ static void CG_DrawCenterString( void ) {
 
 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 
-	trap_R_SetColor( color );
-
 	start = cg.cur_lc->centerPrint;
 
 	charHeight = cg.cur_lc->centerPrintCharScale * 48.0f;
@@ -1783,8 +1783,6 @@ static void CG_DrawCenterString( void ) {
 		}
 		start++;
 	}
-
-	trap_R_SetColor( NULL );
 }
 
 
@@ -1839,8 +1837,6 @@ static void CG_DrawGlobalCenterString( void ) {
 
 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 
-	trap_R_SetColor( color );
-
 	start = cg.centerPrint;
 
 	charHeight = cg.centerPrintCharScale * 48.0f;
@@ -1868,8 +1864,6 @@ static void CG_DrawGlobalCenterString( void ) {
 		}
 		start++;
 	}
-
-	trap_R_SetColor( NULL );
 }
 
 
@@ -1915,8 +1909,6 @@ static void CG_DrawCrosshair(void)
 
 		CG_ColorForHealth( hcolor );
 		trap_R_SetColor( hcolor );
-	} else {
-		trap_R_SetColor( NULL );
 	}
 
 	if (cg.numViewports > 1) {
@@ -1944,6 +1936,8 @@ static void CG_DrawCrosshair(void)
 	hShader = cgs.media.crosshairShader[ ca % NUM_CROSSHAIRS ];
 
 	CG_DrawPic( ((SCREEN_WIDTH-w)*0.5f)+x, ((SCREEN_HEIGHT-h)*0.5f)+y, w, h, hShader );
+
+	trap_R_SetColor( NULL );
 }
 
 /*
@@ -2629,29 +2623,22 @@ CG_DrawProxWarning
 */
 static void CG_DrawProxWarning( void ) {
 	char s [32];
-  static int proxTime;
-  static int proxCounter;
-  static int proxTick;
+  int proxTick;
 
 	if( !(cg.cur_ps->eFlags & EF_TICKING ) ) {
-    proxTime = 0;
+    cg.cur_lc->proxTime = 0;
 		return;
 	}
 
 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_TOP);
 
-  if (proxTime == 0) {
-    proxTime = cg.time + 5000;
-    proxCounter = 5;
-    proxTick = 0;
+  if (cg.cur_lc->proxTime == 0) {
+    cg.cur_lc->proxTime = cg.time;
   }
 
-  if (cg.time > proxTime) {
-    proxTick = proxCounter--;
-    proxTime = cg.time + 1000;
-  }
+  proxTick = 10 - ((cg.time - cg.cur_lc->proxTime) / 1000);
 
-  if (proxTick != 0) {
+  if (proxTick > 0 && proxTick <= 5) {
     Com_sprintf(s, sizeof(s), "INTERNAL COMBUSTION IN: %i", proxTick);
   } else {
     Com_sprintf(s, sizeof(s), "YOU HAVE BEEN MINED");
@@ -3117,7 +3104,7 @@ CG_DrawMessageMode
 =================
 */
 void CG_DrawMessageMode( void ) {
-	if ( !( trap_Key_GetCatcher( ) & KEYCATCH_MESSAGE ) ) {
+	if ( !( Key_GetCatcher() & KEYCATCH_MESSAGE ) ) {
 		return;
 	}
 

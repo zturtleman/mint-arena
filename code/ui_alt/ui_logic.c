@@ -60,7 +60,7 @@ void UI_SetMenu( currentMenu_t *current, menuId_t menu ) {
 	if ( menu == M_NONE ) {
 		if ( cg.connected ) {
 			trap_Mouse_SetState( 0, MOUSE_CLIENT );
-			trap_Key_SetCatcher( 0 );
+			Key_SetCatcher( 0 );
 			trap_Cvar_SetValue( "cl_paused", 0 );
 		}
 

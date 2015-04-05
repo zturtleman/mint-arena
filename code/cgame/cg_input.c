@@ -530,7 +530,7 @@ void CG_CmdButtons( clientInput_t *ci, usercmd_t *cmd, qboolean anykeydown ) {
 		ci->in_buttons[i].wasPressed = qfalse;
 	}
 
-	if ( trap_Key_GetCatcher( ) ) {
+	if ( Key_GetCatcher( ) ) {
 		cmd->buttons |= BUTTON_TALK;
 	}
 	// allow the game to know if any key at all is

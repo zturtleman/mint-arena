@@ -92,7 +92,7 @@ void CG_MessageMode_f( void ) {
 	Q_strncpyz( cg.messagePrompt, "Say:", sizeof (cg.messagePrompt) );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 30;
-	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
 }
 
 /*
@@ -105,7 +105,7 @@ void CG_MessageMode2_f( void ) {
 	Q_strncpyz( cg.messagePrompt, "Team Say:", sizeof (cg.messagePrompt) );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 25;
-	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
 }
 
 /*
@@ -122,7 +122,7 @@ void CG_MessageMode3_f( void ) {
 	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s:", cgs.playerinfo[ playerNum ].name );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 30;
-	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
 }
 
 /*
@@ -139,7 +139,7 @@ void CG_MessageMode4_f( void ) {
 	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s:", cgs.playerinfo[ playerNum ].name );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 30;
-	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
 }
 
 
@@ -604,12 +604,12 @@ CG_TeamMenu_f
 */
 /*
 static void CG_TeamMenu_f( void ) {
-  if (trap_Key_GetCatcher() & KEYCATCH_CGAME) {
+  if (Key_GetCatcher() & KEYCATCH_CGAME) {
     CG_EventHandling(CGAME_EVENT_NONE);
-    trap_Key_SetCatcher(0);
+    Key_SetCatcher(0);
   } else {
     CG_EventHandling(CGAME_EVENT_TEAMMENU);
-    //trap_Key_SetCatcher(KEYCATCH_CGAME);
+    //Key_SetCatcher(KEYCATCH_CGAME);
   }
 }
 */

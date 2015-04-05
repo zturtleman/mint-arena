@@ -588,8 +588,15 @@ typedef struct {
 
 	// attacking player
 	int			attackerTime;
+
+#ifdef MISSIONPACK
+	// voice chat head
 	int			voiceTime;
 	int			currentVoicePlayerNum;
+
+	// proxy mine warning
+	int			proxTime;
+#endif
 
 	// orders
 	int			currentOrder;
@@ -1486,8 +1493,6 @@ void CG_UpdateMouseState( int localPlayerNum );
 
 int Key_GetCatcher( void );
 void Key_SetCatcher( int catcher );
-#define trap_Key_GetCatcher Key_GetCatcher
-#define trap_Key_SetCatcher Key_SetCatcher
 
 
 //

@@ -551,7 +551,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	int				playerNum;
 	playerInfo_t	*pi;
 	int				i;
-	int				thisClientNum;
 
 	es = &cent->currentState;
 	event = es->event & ~EV_EVENT_BITS;
@@ -570,8 +569,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		playerNum = 0;
 	}
 	pi = &cgs.playerinfo[ playerNum ];
-
-	thisClientNum = cg.snap->pss[0].playerNum;
 
 	switch ( event ) {
 	//
@@ -824,7 +821,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				break;
 			}
 			// powerup pickups are global
-			trap_S_StartSound (NULL, thisClientNum, CHAN_AUTO, cgs.media.itemPickupSounds[ index ] );
+			trap_S_StartLocalSound( cgs.media.itemPickupSounds[ index ], CHAN_AUTO );
 
 			// show icon and name on status bar
 			for (i = 0; i < CG_MaxSplitView(); i++) {
@@ -1032,13 +1029,13 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		}
 		break;
 
-	case EV_GLOBAL_SOUND:	// play from the player's head so it never diminishes
+	case EV_GLOBAL_SOUND:	// play as a local sound so it never diminishes
 		DEBUGNAME("EV_GLOBAL_SOUND");
 		if ( cgs.gameSounds[ es->eventParm ] ) {
-			trap_S_StartSound (NULL, thisClientNum, CHAN_AUTO, cgs.gameSounds[ es->eventParm ] );
+			trap_S_StartLocalSound( cgs.gameSounds[ es->eventParm ], CHAN_AUTO );
 		} else {
 			s = CG_ConfigString( CS_SOUNDS + es->eventParm );
-			trap_S_StartSound (NULL, thisClientNum, CHAN_AUTO, CG_CustomSound( es->number, s ) );
+			trap_S_StartLocalSound( CG_CustomSound( es->number, s ), CHAN_AUTO );
 		}
 		break;
 

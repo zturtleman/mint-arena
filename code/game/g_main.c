@@ -689,8 +689,10 @@ int G_MapRestart( int levelTime, int restartTime ) {
 	if ( trap_Argc() > 1 ) {
 		trap_Argv( 1, buf, sizeof (buf) );
 		delay = atoi( buf );
-	}
-	else {
+	} else if ( g_doWarmup.integer ) {
+		// warmup delays using g_warmup after map restart
+		delay = 0;
+	} else {
 		delay = 5;
 	}
 
@@ -706,11 +708,6 @@ int G_MapRestart( int levelTime, int restartTime ) {
 	// don't let user change restart time
 	if ( restartTime ) {
 		return restartTime;
-	}
-
-	// warmup delays using g_warmup after map restart
-	if ( g_doWarmup.integer ) {
-		return 0;
 	}
 
 	restartTime = levelTime + delay * 1000;

@@ -1269,12 +1269,14 @@ static void ObeliskDie( gentity_t *self, gentity_t *inflictor, gentity_t *attack
 
 static void ObeliskTouch( gentity_t *self, gentity_t *other, trace_t *trace ) {
 	int			tokens;
+	team_t		otherTeam;
 
 	if ( !other->player ) {
 		return;
 	}
 
-	if ( OtherTeam(other->player->sess.sessionTeam) != self->spawnflags ) {
+	otherTeam = OtherTeam( other->player->sess.sessionTeam );
+	if ( otherTeam != self->spawnflags ) {
 		return;
 	}
 
@@ -1283,8 +1285,8 @@ static void ObeliskTouch( gentity_t *self, gentity_t *other, trace_t *trace ) {
 		return;
 	}
 
-	PrintMsg(NULL, "%s" S_COLOR_WHITE " brought in %i skull%s.\n",
-					other->player->pers.netname, tokens, tokens ? "s" : "" );
+	trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE "\nbrought in %i %s skull%s.\n\"",
+					other->player->pers.netname, tokens, TeamName( otherTeam ), tokens ? "s" : "" ));
 
 	AddTeamScore(self->s.pos.trBase, other->player->sess.sessionTeam, tokens);
 	Team_ForceGesture(other->player->sess.sessionTeam);

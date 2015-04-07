@@ -319,7 +319,7 @@ typedef enum {
 } leViewFlags_t;
 
 typedef struct {
-	int				playerNum;	// -1 means any player
+	int				playerNum;
 	leViewFlags_t	viewFlags;
 } lePlayerEfx_t;
 

@@ -1696,8 +1696,8 @@ static void CG_BreathPuff( int playerNum, qboolean firstPerson, vec3_t origin, v
 	int				i;
 	int				contents;
 	localEntity_t	*le;
-	localEntity_t	*puffs[ 3 + 5 ];
-	int				numPuffs;
+	localEntity_t	*puffs[ 3 + 5 ] = { 0 };
+	int				numPuffs = 0;
 
 	contents = CG_PointContents( origin, 0 );
 

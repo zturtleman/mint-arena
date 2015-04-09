@@ -117,13 +117,13 @@ void CG_BubbleTrail( vec3_t start, vec3_t end, float spacing ) {
 CG_SpawnBubbles
 ==================
 */
-void CG_SpawnBubbles( localEntity_t **bubbles, vec3_t origin, float baseSize, int numBubbles ) {
+int CG_SpawnBubbles( localEntity_t **bubbles, vec3_t origin, float baseSize, int numBubbles ) {
 	int			i;
 	float		rnd;
 	qboolean	spawnedLarge;
 
 	if ( cg_oldBubbles.integer ) {
-		return;
+		return 0;
 	}
 
 	spawnedLarge = qfalse;
@@ -179,6 +179,8 @@ void CG_SpawnBubbles( localEntity_t **bubbles, vec3_t origin, float baseSize, in
 		le->pos.trDelta[1] = baseSize * crandom()*5;
 		le->pos.trDelta[2] = 85 + random()*10;
 	}
+
+	return numBubbles;
 }
 
 /*

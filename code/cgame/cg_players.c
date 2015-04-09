@@ -1702,8 +1702,7 @@ static void CG_BreathPuff( int playerNum, qboolean firstPerson, vec3_t origin, v
 	contents = CG_PointContents( origin, 0 );
 
 	if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ) {
-		numPuffs = (int)( 3 + random() * 5 );
-		CG_SpawnBubbles( puffs, origin, 2, numPuffs );
+		numPuffs = CG_SpawnBubbles( puffs, origin, 2, (int)( 3 + random() * 5 ) );
 	} else {
 #ifdef MISSIONPACK
 		if ( cg_enableBreath.integer ) {

@@ -63,8 +63,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "syn.h"				//synonyms
 #include "match.h"				//string matching types and vars
 
-#define MAX_CHARACTERISTICS		80
-
 #define CT_INTEGER				1
 #define CT_FLOAT				2
 #define CT_STRING				3

@@ -3466,8 +3466,6 @@ void BotAimAtEnemy(bot_state_t *bs) {
 	}
 	//
 	if (aim_accuracy <= 0) aim_accuracy = 0.0001f;
-	//get the enemy entity information
-	BotEntityInfo(bs->enemy, &entinfo);
 	//if the enemy is invisible then shoot crappy most of the time
 	if (EntityIsInvisible(&entinfo)) {
 		if (random() > 0.1) aim_accuracy *= 0.4f;

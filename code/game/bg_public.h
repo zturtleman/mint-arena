@@ -30,6 +30,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 // bg_public.h -- definitions shared by both the server game and client game modules
 
+#include "../qcommon/surfaceflags.h"
+
 #ifndef MODDIR
   #ifdef MISSIONPACK
     #define MODDIR "missionpack"

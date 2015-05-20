@@ -1689,26 +1689,72 @@ static void CG_HasteTrail( centity_t *cent ) {
 
 /*
 ===============
-CG_BreathPuffs
+CG_BreathPuff
 ===============
 */
-static void CG_BreathPuffs( centity_t *cent, refEntity_t *head) {
-	playerInfo_t *pi;
+static void CG_BreathPuff( int playerNum, qboolean firstPerson, vec3_t origin, vec3_t *axis ) {
+	int				i;
+	int				contents;
+	localEntity_t	*le;
+	localEntity_t	*puffs[ 3 + 5 ] = { 0 };
+	int				numPuffs = 0;
+
+	contents = CG_PointContents( origin, 0 );
+
+	if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ) {
+		numPuffs = CG_SpawnBubbles( puffs, origin, 2, (int)( 3 + random() * 5 ) );
+	} else {
 #ifdef MISSIONPACK
-	vec3_t up;
+		if ( cg_enableBreath.integer ) {
+			vec3_t up;
+
+			VectorSet( up, 0, 0, 8 );
+
+			puffs[0] = CG_SmokePuff( origin, up, 16, 1, 1, 1, 0.66f, 1500, cg.time, cg.time + 400, LEF_PUFF_DONT_SCALE, cgs.media.shotgunSmokePuffShader );
+			numPuffs = 1;
+		}
 #endif
+	}
+
+	// if first person entity, only draw for specific player in first person
+	// else draw for everyone, except the specific player in third person
+	for ( i = 0; i < numPuffs; ++i ) {
+		le = puffs[i];
+
+		if ( firstPerson ) {
+			le->defaultViewFlags = LEVF_NO_DRAW;
+			le->playerEffects[0].viewFlags = LEVF_THIRD_PERSON_NO_DRAW;
+		} else {
+			le->defaultViewFlags = 0;
+			le->playerEffects[0].viewFlags = LEVF_FIRST_PERSON_NO_DRAW;
+		}
+
+		le->playerEffects[0].playerNum = playerNum;
+		le->numPlayerEffects = 1;
+	}
+}
+
+/*
+===============
+CG_AddBreathPuffs
+===============
+*/
+static void CG_AddBreathPuffs( centity_t *cent, refEntity_t *head ) {
+	playerInfo_t *pi;
 	vec3_t origin;
-	int contents;
 
 	if ( cent->currentState.number >= MAX_CLIENTS ) {
 		return;
 	}
-
 	pi = &cgs.playerinfo[ cent->currentState.number ];
 
-	if ( cent->currentState.number == cg.cur_ps->playerNum && !cg.cur_lc->renderingThirdPerson) {
+	// if it's a local player, only add the particles when they're rendering them self
+	// FIXME?: Causes particles to add a frame late for local players before them (i.e., add for player 4, player 1-3 don't see until next frame)
+	// FIXME: Does not add particles for all players if only a single viewport
+	if ( CG_LocalPlayerState( cent->currentState.number ) && cent->currentState.number != cg.cur_ps->playerNum ) {
 		return;
 	}
+
 	if ( cent->currentState.eFlags & EF_DEAD ) {
 		return;
 	}
@@ -1716,23 +1762,20 @@ static void CG_BreathPuffs( centity_t *cent, refEntity_t *head) {
 		return;
 	}
 
-#ifdef MISSIONPACK
-	VectorSet( up, 0, 0, 8 );
-#endif
-	VectorMA(head->origin, 8, head->axis[0], origin);
-	VectorMA(origin, -4, head->axis[2], origin);
+	// Add first person effects
+	if ( cent->currentState.number == cg.cur_ps->playerNum /* && !cg.cur_lc->renderingThirdPerson */ ) {
+		VectorMA( cg.refdef.vieworg, 20, cg.refdef.viewaxis[0], origin );
+		VectorMA( origin, -4, cg.refdef.viewaxis[2], origin );
 
-	contents = CG_PointContents( origin, 0 );
-
-	if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ) {
-		CG_SpawnBubbles( origin, 2, (int)(3 + random()*5) );
-	} else {
-#ifdef MISSIONPACK
-		if ( cg_enableBreath.integer ) {
-			CG_SmokePuff( origin, up, 16, 1, 1, 1, 0.66f, 1500, cg.time, cg.time + 400, LEF_PUFF_DONT_SCALE, cgs.media.shotgunSmokePuffShader );
-		}
-#endif
+		CG_BreathPuff( cent->currentState.number, qtrue, origin, cg.refdef.viewaxis );
 	}
+
+	// Add third person effects for mirrors / other splitscreen players
+	VectorMA( head->origin, 8, head->axis[0], origin );
+	VectorMA( origin, -4, head->axis[2], origin );
+
+	CG_BreathPuff( cent->currentState.number, qfalse, origin, head->axis );
+
 	pi->breathPuffTime = cg.time + 2000;
 }
 
@@ -2829,7 +2872,7 @@ void CG_Player( centity_t *cent ) {
 
 	CG_AddRefEntityWithPowerups( &head, &cent->currentState );
 
-	CG_BreathPuffs(cent, &head);
+	CG_AddBreathPuffs( cent, &head );
 
 #ifdef MISSIONPACK
 	CG_DustTrail(cent);

@@ -117,13 +117,13 @@ void CG_BubbleTrail( vec3_t start, vec3_t end, float spacing ) {
 CG_SpawnBubbles
 ==================
 */
-void CG_SpawnBubbles( vec3_t origin, float baseSize, int numBubbles ) {
+int CG_SpawnBubbles( localEntity_t **bubbles, vec3_t origin, float baseSize, int numBubbles ) {
 	int			i;
 	float		rnd;
 	qboolean	spawnedLarge;
 
 	if ( cg_oldBubbles.integer ) {
-		return;
+		return 0;
 	}
 
 	spawnedLarge = qfalse;
@@ -133,6 +133,11 @@ void CG_SpawnBubbles( vec3_t origin, float baseSize, int numBubbles ) {
 		refEntity_t		*re;
 
 		le = CG_AllocLocalEntity();
+
+		if ( bubbles ) {
+			bubbles[i] = le;
+		}
+
 		le->leFlags = LEF_PUFF_DONT_SCALE;
 		le->leType = LE_BUBBLE;
 		le->endTime = cg.time + 8000 + random() * 250;
@@ -174,6 +179,8 @@ void CG_SpawnBubbles( vec3_t origin, float baseSize, int numBubbles ) {
 		le->pos.trDelta[1] = baseSize * crandom()*5;
 		le->pos.trDelta[2] = 85 + random()*10;
 	}
+
+	return numBubbles;
 }
 
 /*
@@ -466,29 +473,20 @@ void CG_ScorePlum( int playerNum, vec3_t org, int score ) {
 	localEntity_t	*le;
 	refEntity_t		*re;
 	vec3_t			angles;
-	int				i, localPlayerBits;
 	static vec3_t lastPos;
 
-	// only visualize for the player that scored
 	if (cg_scorePlum.integer == 0) {
 		return;
 	}
 
-	// Select local players to show the plum to
-	localPlayerBits = 0;
-	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if (cg.localPlayers[i].playerNum != -1 && playerNum == cg.snap->pss[i].playerNum ) {
-			localPlayerBits |= (1<<i);
-		}
-	}
-
-	// Not going to be rendered
-	if (!localPlayerBits) {
-		return;
-	}
-
 	le = CG_AllocLocalEntity();
-	le->localPlayerBits = localPlayerBits;
+
+	// only visualize for the player that scored
+	le->defaultViewFlags = LEVF_NO_DRAW;
+	le->playerEffects[0].playerNum = playerNum;
+	le->playerEffects[0].viewFlags = 0;
+	le->numPlayerEffects = 1;
+
 	le->leFlags = 0;
 	le->leType = LE_SCOREPLUM;
 	le->startTime = cg.time;
@@ -606,8 +604,11 @@ void CG_Bleed( vec3_t origin, int entityNum ) {
 
 	ex->refEntity.customShader = cgs.media.bloodExplosionShader;
 
-	// don't show player's own blood in view
-	ex->firstPersonEntity = entityNum;
+	// don't show player's own blood in first person view
+	ex->defaultViewFlags = 0;
+	ex->playerEffects[0].playerNum = entityNum;
+	ex->playerEffects[0].viewFlags = LEVF_FIRST_PERSON_MIRROR;
+	ex->numPlayerEffects = 1;
 }
 
 
@@ -656,7 +657,7 @@ void CG_GibPlayer( vec3_t playerOrigin ) {
 	vec3_t	origin, velocity;
 
 	if ( CG_PointContents( playerOrigin, -1 ) & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ) {
-		CG_SpawnBubbles( playerOrigin, 3, 5 + random() * 5 );
+		CG_SpawnBubbles( NULL, playerOrigin, 3, 5 + random() * 5 );
 	}
 
 	if ( !cg_blood.integer || !cg_gibs.integer ) {

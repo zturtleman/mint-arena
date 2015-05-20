@@ -1691,6 +1691,8 @@ void CG_LocalPlayerRemoved(int localPlayerNum) {
 	if (cg.localPlayers[localPlayerNum].playerNum == -1)
 		return;
 
+	Com_Memset( &cg.localPlayers[localPlayerNum], 0, sizeof ( cg.localPlayers[0] ) );
+
 	cg.localPlayers[localPlayerNum].playerNum = -1;
 }
 

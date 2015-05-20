@@ -63,13 +63,14 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "syn.h"				//synonyms
 #include "match.h"				//string matching types and vars
 
-#define MAX_CHARACTERISTICS		80
-
 #define CT_INTEGER				1
 #define CT_FLOAT				2
 #define CT_STRING				3
 
 #define DEFAULT_CHARACTER		"bots/default_c.c"
+
+// interpolation requires 3 slots per-character plus 2 default character slots, and account for handle 0 being a dummy
+#define MAX_BOT_CHARACTERS ( 3 * MAX_CLIENTS + 2 + 1 )
 
 //characteristic value
 union cvalue
@@ -93,7 +94,7 @@ typedef struct bot_character_s
 	bot_characteristic_t c[MAX_CHARACTERISTICS];
 } bot_character_t;
 
-bot_character_t botcharacters[MAX_CLIENTS + 1];
+bot_character_t botcharacters[MAX_BOT_CHARACTERS];
 
 //========================================================================
 //
@@ -103,7 +104,7 @@ bot_character_t botcharacters[MAX_CLIENTS + 1];
 //========================================================================
 bot_character_t *BotCharacterFromHandle(int handle)
 {
-	if (handle <= 0 || handle > MAX_CLIENTS)
+	if (handle <= 0 || handle >= MAX_BOT_CHARACTERS)
 	{
 		BotAI_Print(PRT_FATAL, "character handle %d out of range\n", handle);
 		return NULL;
@@ -167,7 +168,7 @@ void BotFreeCharacterStrings(bot_character_t *ch)
 //========================================================================
 void BotFreeCharacter2(int handle)
 {
-	if (handle <= 0 || handle > MAX_CLIENTS)
+	if (handle <= 0 || handle >= MAX_BOT_CHARACTERS)
 	{
 		BotAI_Print(PRT_FATAL, "character handle %d out of range\n", handle);
 		return;
@@ -370,7 +371,7 @@ int BotFindCachedCharacter(char *charfile, float skill)
 {
 	int handle;
 
-	for (handle = 1; handle <= MAX_CLIENTS; handle++)
+	for (handle = 1; handle < MAX_BOT_CHARACTERS; handle++)
 	{
 		if ( !botcharacters[handle].skill ) continue;
 		if ( strcmp( botcharacters[handle].filename, charfile ) == 0 &&
@@ -397,11 +398,11 @@ int BotLoadCachedCharacter(char *charfile, float skill, int reload)
 #endif //DEBUG
 
 	//find a free spot for a character
-	for (handle = 1; handle <= MAX_CLIENTS; handle++)
+	for (handle = 1; handle < MAX_BOT_CHARACTERS; handle++)
 	{
 		if (!botcharacters[handle].skill) break;
 	} //end for
-	if (handle > MAX_CLIENTS) return 0;
+	if (handle >= MAX_BOT_CHARACTERS) return 0;
 	//try to load a cached character with the given skill
 	if (!reload)
 	{
@@ -519,11 +520,11 @@ int BotInterpolateCharacters(int handle1, int handle2, float desiredskill)
 	if (!ch1 || !ch2)
 		return 0;
 	//find a free spot for a character
-	for (handle = 1; handle <= MAX_CLIENTS; handle++)
+	for (handle = 1; handle < MAX_BOT_CHARACTERS; handle++)
 	{
 		if (!botcharacters[handle].skill) break;
 	} //end for
-	if (handle > MAX_CLIENTS) return 0;
+	if (handle >= MAX_BOT_CHARACTERS) return 0;
 	out = &botcharacters[handle];
 	out->skill = desiredskill;
 	strcpy(out->filename, ch1->filename);
@@ -771,7 +772,7 @@ void BotShutdownCharacters(void)
 {
 	int handle;
 
-	for (handle = 1; handle <= MAX_CLIENTS; handle++)
+	for (handle = 1; handle < MAX_BOT_CHARACTERS; handle++)
 	{
 		if (botcharacters[handle].skill)
 		{

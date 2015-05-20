@@ -619,8 +619,8 @@ void SetTeam( gentity_t *ent, const char *s ) {
 	// execute the team change
 	//
 
-	// if the player was dead leave the body
-	if ( player->ps.stats[STAT_HEALTH] <= 0 ) {
+	// if the player was dead leave the body, but only if they're actually in game
+	if ( player->ps.stats[STAT_HEALTH] <= 0 && player->pers.connected == CON_CONNECTED ) {
 		CopyToBodyQue(ent);
 	}
 

@@ -1039,7 +1039,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		}
 		break;
 
-	case EV_GLOBAL_TEAM_SOUND:	// play from the player's head so it never diminishes
+	case EV_GLOBAL_TEAM_SOUND:	// play as a local sound so it never diminishes
 		DEBUGNAME("EV_GLOBAL_TEAM_SOUND");
 		{
 			qboolean blueTeam			= qfalse;

@@ -268,6 +268,57 @@ menuitem_t defaultsmenu_items[] =
 };
 
 
+/*
+============================================================================
+	Player Menu
+============================================================================
+*/
+void playerModelUpdate( int item ) {
+	char modelName[MAX_QPATH];
+
+	trap_Cvar_VariableStringBuffer( "model", modelName, sizeof ( modelName ) );
+	trap_Cvar_Set( "headmodel", modelName );
+	trap_Cvar_Set( "team_model", modelName );
+	trap_Cvar_Set( "team_headmodel", modelName );
+}
+
+static cvarValuePair_t cp_handicap[] = {
+	VINT( 100, "None" ),
+	VINT( 95, "95% Health" ),
+	VINT( 90, "90% Health" ),
+	VINT( 85, "85% Health" ),
+	VINT( 80, "80% Health" ),
+	VINT( 75, "75% Health" ),
+	VINT( 70, "70% Health" ),
+	VINT( 65, "65% Health" ),
+	VINT( 60, "60% Health" ),
+	VINT( 55, "55% Health" ),
+	VINT( 50, "50% Health" ),
+	VINT( 45, "45% Health" ),
+	VINT( 40, "40% Health" ),
+	VINT( 35, "35% Health" ),
+	VINT( 30, "30% Health" ),
+	VINT( 25, "25% Health" ),
+	VINT( 20, "20% Health" ),
+	VINT( 15, "15% Health" ),
+	VINT( 10, "10% Health" ),
+	VINT( 5, "5% Health" ),
+	VEND
+};
+
+menuitem_t playermenu_items[] =
+{
+	{ MIF_CALL, "Name:",	NULL, M_NONE, 0, "name" }, // TODO: make it an edit field
+	{ MIF_CALL, "Handicap:",	NULL, M_NONE, 0, "handicap", cp_handicap },
+	{ MIF_LISTBOX|MIF_CALL, "Model:", playerModelUpdate, M_NONE, "\\dir\\models/players\\ext\\/\\empty\\No players found\\width\\80\\listboxheight\\8", "model", NULL },
+};
+
+
+/*
+============================================================================
+	Setup Menu
+============================================================================
+*/
 // From Team Arena's ui_main.c
 // ZTM: TODO: add anisotropy, multisample, and compressed textures
 void graphicsPresetUpdate( int item ) {
@@ -454,6 +505,11 @@ menuitem_t systemmenu_items[] = {
 };
 
 
+/*
+============================================================================
+	Game Options Menu
+============================================================================
+*/
 #ifndef MISSIONPACK_HUD
 static cvarValuePair_t cp_teamoverlay[] = { VINT( 0, "off" ), VINT( 1, "upper right" ), VINT( 2, "lower right" ), VINT( 3, "lower left" ), VEND };
 #endif
@@ -497,6 +553,12 @@ menuitem_t gameoptionsmenu_items[] =
 	{ MIF_CALL, "Snow/Rain:",				NULL, M_NONE, 0, "cg_atmosphericEffects", cp_atmeffects },
 };
 
+
+/*
+============================================================================
+	Credits Menu
+============================================================================
+*/
 // ZTM: TODO: Include Team Arena 'additional credits'?
 menuitem_t creditsmenu_items[] =
 {
@@ -551,6 +613,12 @@ menuitem_t creditsmenu_items[] =
 	{ 0, "...and other contributors", NULL, M_NONE, 0 },
 };
 
+
+/*
+============================================================================
+	Post Game Menu
+============================================================================
+*/
 // Team Arena uses; Replay, Demo, Menu, Next
 menuitem_t postgamemenu_items[] =
 {
@@ -559,10 +627,17 @@ menuitem_t postgamemenu_items[] =
 	{ MIF_BIGTEXT|MIF_CALL|MIF_POPMENU, "Next", restartMap, M_NONE, 0 }, // TODO: add next map logic
 };
 
+
+/*
+============================================================================
+	Stub Menu
+============================================================================
+*/
 menuitem_t stubmenu_items[] =
 {
 	{ 0, "STUB", NULL, M_NONE, 0 },
 };
+
 
 
 /*
@@ -597,7 +672,7 @@ menudef_t ui_menus[M_NUM_MENUS] = {
 #endif
 
 	// Setup menus
-	QMENUSTUB( playermenu_items, 0, "Player Settings" ),	// M_PLAYER
+	QMENUDEF( playermenu_items, 0, "Player Settings" ),	// M_PLAYER
 	QMENUSTUB( controlsmenu_items, 0, "Controls" ),			// M_CONTROLS
 	QMENUDEF( systemmenu_items, 0, "System Setup" ),		// M_SYSTEM
 	QMENUDEF( gameoptionsmenu_items, 0, "Game Options" ),	// M_GAME_OPTIONS

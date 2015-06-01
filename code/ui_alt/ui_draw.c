@@ -508,7 +508,7 @@ void UI_InitListBox( currentMenuItem_t *item, const char *extData ) {
 	static char	defaultMessage[128];
 	char	dirName[MAX_QPATH], extension[MAX_QPATH];
 	char	*name;
-	int		i, len, numFilenames;
+	int		i, len, file, numFilenames;
 
 	if ( item->cvarPairs ) {
 		return;
@@ -547,14 +547,27 @@ void UI_InitListBox( currentMenuItem_t *item, const char *extData ) {
 			numFilenames = MAX_LB_FILES;
 		}
 		name = fileNames;
-		for ( i = 0; i < numFilenames; i++ ) {
+		for ( file = 0, i = 0; file < numFilenames; file++ ) {
 			len = strlen( name );
 
-			COM_StripExtension( name, name, len+1 );
+			// special handling for list of directories
+			// ZTM: FIXME: directories in pk3dirs do not have slash at end, but from pk3s do. causes duplicates if exist in both
+			if ( *extension == '/' ) {
+				if ( name[ len - 1 ] == '/' ) {
+					name[ len - 1 ] = 0;
+				} else if ( Q_stricmp( name, "." ) == 0 || Q_stricmp( name, ".." ) == 0 ) {
+					name[0] = '\0';
+				}
+			} else {
+				COM_StripExtension( name, name, len+1 );
+			}
 
-			filePairs[i].type = CVT_STRING;
-			filePairs[i].value = name;
-			filePairs[i].string = name;
+			if ( *name ) {
+				filePairs[i].type = CVT_STRING;
+				filePairs[i].value = name;
+				filePairs[i].string = name;
+				i++;
+			}
 
 			name += len + 1;
 		}

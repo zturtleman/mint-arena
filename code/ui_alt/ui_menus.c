@@ -234,19 +234,19 @@ menuitem_t setupmenu_items[] =
 
 menuitem_t demosmenu_items[] =
 {
-	{ MIF_LISTBOX|MIF_CALL, NULL, NULL, M_NONE, "\\dir\\demos\\ext\\$demos\\empty\\No demos found", "ui_selectedDemo", NULL },
+	{ MIF_FILELIST|MIF_CALL, NULL, NULL, M_NONE, "\\widget\\listbox\\dir\\demos\\ext\\$demos\\empty\\No demos found", "ui_selectedDemo", NULL },
 	{ MIF_BIGTEXT|MIF_CALL|MIF_NEXTBUTTON, "Play Demo", demoHandler, M_NONE, 0 },
 };
 
 menuitem_t cinematicsmenu_items[] =
 {
-	{ MIF_LISTBOX|MIF_CALL, NULL, NULL, M_NONE, "\\dir\\video\\ext\\$videos\\empty\\No cinematics found", "ui_selectedCinematic", NULL },
+	{ MIF_FILELIST|MIF_CALL, NULL, NULL, M_NONE, "\\widget\\listbox\\dir\\video\\ext\\$videos\\empty\\No cinematics found", "ui_selectedCinematic", NULL },
 	{ MIF_BIGTEXT|MIF_CALL|MIF_NEXTBUTTON, "Play Cinematic", cinematicHandler, M_NONE, 0 },
 };
 
 menuitem_t modsmenu_items[] =
 {
-	{ MIF_LISTBOX|MIF_CALL, NULL, NULL, M_NONE, "\\dir\\$modlist\\empty\\No mods found", "ui_selectedMod", NULL },
+	{ MIF_FILELIST|MIF_CALL, NULL, NULL, M_NONE, "\\widget\\listbox\\dir\\$modlist\\empty\\No mods found", "ui_selectedMod", NULL },
 	{ MIF_BIGTEXT|MIF_CALL|MIF_NEXTBUTTON, "Load Mod", modHandler, M_NONE, 0 },
 };
 
@@ -306,11 +306,15 @@ static cvarValuePair_t cp_handicap[] = {
 	VEND
 };
 
+static cvarRange_t cr_colorEffect = { 0, 12, 1 };
+
 menuitem_t playermenu_items[] =
 {
-	{ MIF_CALL, "Name:",	NULL, M_NONE, 0, "name" }, // TODO: make it an edit field
+	{ MIF_CALL, "Name:",		NULL, M_NONE, 0, "name" }, // TODO: make it an edit field
 	{ MIF_CALL, "Handicap:",	NULL, M_NONE, 0, "handicap", cp_handicap },
-	{ MIF_LISTBOX|MIF_CALL, "Model:", playerModelUpdate, M_NONE, "\\dir\\models/players\\ext\\/\\empty\\No players found\\width\\80\\listboxheight\\8", "model", NULL },
+	{ MIF_CALL, "Effects:",		NULL, M_NONE, "\\widget\\colorbar", "color1", NULL, &cr_colorEffect },
+		/// \\widget\\listbox
+	{ MIF_FILELIST|MIF_CALL, "Model:", playerModelUpdate, M_NONE, "\\dir\\models/players\\ext\\/\\empty\\No players found\\width\\80\\listboxheight\\8", "model", NULL },
 };
 
 

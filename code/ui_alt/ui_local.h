@@ -73,6 +73,19 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #endif
 
+/*
+	List of Widgets
+*/
+typedef enum {
+	UIW_GENERIC, // text button
+	UIW_BITMAP, // bitmap button
+	UIW_SLIDER,
+	UIW_COLORBAR,
+	UIW_RADIO,
+	UIW_LISTBOX,
+
+	UIW_NUM_WIDGETS
+} uiWidgetType_t;
 
 /*
 	List of menus
@@ -128,7 +141,7 @@ typedef enum {
 #define		MIF_HEADER		0x0200	// A Team Arena main menu header
 #define		MIF_PANEL		0x0400	// Begin a 'tab' aka 'panel' of a menu
 #define		MIF_BACKBUTTON	0x0800	// automatically set on back button
-#define		MIF_LISTBOX		0x1000	// display cvarPairs as a list box
+#define		MIF_FILELIST	0x1000	// create cvarPairs using file list information in extData
 
 //#define		MIF_CVAR		0x1000
 //#define		MIF_CONTROL		0x2000	// y is PC_* (PlayerControl Index)
@@ -162,8 +175,10 @@ typedef struct {
 	void (*action)(int item); // used for MIF_CALL
 	menuId_t menuid; // used for MIF_SUBMENU and MIF_SWAPMENU
 	const char *extData; // info string containing extra rarely specified data.
+						 // for any: "widget"
 						 // for everything: "x" and "y" (in pixels)
-						 // for list box: "dir", "ext", "empty", "width" (in pixels), "listboxheight" (in number of text lines)
+						 // for file list: "dir", "ext",
+						 // for list box: "empty", "width" (in pixels), "listboxheight" (in number of text lines)
 
 	const char	*cvarName;
 
@@ -220,6 +235,15 @@ typedef struct {
 	int				numPairs;
 	int				bitmapIndex;
 
+	uiWidgetType_t	widgetType;
+#if 0
+	union {
+		struct {
+			qboolean	colorBar;
+		} slider;
+	} widget;
+#endif
+
 } currentMenuItem_t;
 
 #define MAX_MENU_DEPTH	20
@@ -245,6 +269,29 @@ typedef struct {
 	int numItems;
 
 } currentMenu_t;
+
+/*
+
+	Widgets
+
+*/
+
+typedef struct {
+	//void	(*cache)(); // called once at UI load
+	void	(*init)( currentMenuItem_t *item, const char *extData );
+	void	(*draw)( currentMenuItem_t *item, vec4_t color, int style );
+	void	(*mouseAction)( currentMenuItem_t *item );
+
+} uiWidget_t;
+
+extern uiWidget_t ui_widgets[UIW_NUM_WIDGETS];
+
+
+/*
+
+	Main UI system
+
+*/
 
 typedef struct {
 	int x, y;

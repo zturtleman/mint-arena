@@ -30,6 +30,27 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "ui_local.h"
 
+#define ART_FX_BASE			"menu/art/fx_base"
+#define ART_FX_BLUE			"menu/art/fx_blue"
+#define ART_FX_CYAN			"menu/art/fx_cyan"
+#define ART_FX_GREEN		"menu/art/fx_grn"
+#define ART_FX_RED			"menu/art/fx_red"
+#define ART_FX_TEAL			"menu/art/fx_teal"
+#define ART_FX_WHITE		"menu/art/fx_white"
+#define ART_FX_YELLOW		"menu/art/fx_yel"
+#define ART_FX_ORANGE		"menu/art/fx_orange"
+#define ART_FX_LIME			"menu/art/fx_lime"
+#define ART_FX_VIVIDGREEN	"menu/art/fx_vividgreen"
+#define ART_FX_LIGHTBLUE	"menu/art/fx_lightblue"
+#define ART_FX_PURPLE		"menu/art/fx_purple"
+#define ART_FX_PINK			"menu/art/fx_pink"
+
+#define NUM_COLOR_EFFECTS 13
+
+static int gamecodetoui[NUM_COLOR_EFFECTS] = {8,4,6,0,10,2,12,1,3,5,7,9,11};
+static int uitogamecode[NUM_COLOR_EFFECTS] = {4,8,6,9,2,10,3,11,1,12,5,13,7};
+
+
 vec4_t color_header           = {1.00f, 1.00f, 1.00f, 1.00f};	// bright white
 vec4_t color_copyright        = {0.50f, 0.00f, 0.00f, 1.00f};	// dim red
 #ifdef MISSIONPACK
@@ -76,6 +97,9 @@ typedef struct {
 
 	qhandle_t dialogSmallBackground;
 	qhandle_t dialogLargeBackground;
+
+	qhandle_t fxBasePic;
+	qhandle_t fxPic[NUM_COLOR_EFFECTS];
 
 } uiAssets_t;
 
@@ -173,6 +197,21 @@ void UI_LoadAssets( void ) {
 		ui_bitmaps[i].offShader = trap_R_RegisterShaderNoMip( ui_bitmaps[i].offName );
 		ui_bitmaps[i].onShader = trap_R_RegisterShaderNoMip( ui_bitmaps[i].onName );
 	}
+
+	uiAssets.fxBasePic = trap_R_RegisterShaderNoMip( ART_FX_BASE );
+	uiAssets.fxPic[0] = trap_R_RegisterShaderNoMip( ART_FX_RED );
+	uiAssets.fxPic[1] = trap_R_RegisterShaderNoMip( ART_FX_ORANGE );
+	uiAssets.fxPic[2] = trap_R_RegisterShaderNoMip( ART_FX_YELLOW );
+	uiAssets.fxPic[3] = trap_R_RegisterShaderNoMip( ART_FX_LIME );
+	uiAssets.fxPic[4] = trap_R_RegisterShaderNoMip( ART_FX_GREEN );
+	uiAssets.fxPic[5] = trap_R_RegisterShaderNoMip( ART_FX_VIVIDGREEN );
+	uiAssets.fxPic[6] = trap_R_RegisterShaderNoMip( ART_FX_TEAL );
+	uiAssets.fxPic[7] = trap_R_RegisterShaderNoMip( ART_FX_LIGHTBLUE );
+	uiAssets.fxPic[8] = trap_R_RegisterShaderNoMip( ART_FX_BLUE );
+	uiAssets.fxPic[9] = trap_R_RegisterShaderNoMip( ART_FX_PURPLE );
+	uiAssets.fxPic[10] = trap_R_RegisterShaderNoMip( ART_FX_CYAN );
+	uiAssets.fxPic[11] = trap_R_RegisterShaderNoMip( ART_FX_PINK );
+	uiAssets.fxPic[12] = trap_R_RegisterShaderNoMip( ART_FX_WHITE );
 }
 
 int UI_FindBitmap( const currentMenuItem_t *item, const char *bitmapName ) {
@@ -412,14 +451,31 @@ void UI_BuiltinCircle( float x, float y, float width, float height, float *drawc
 void UI_DrawSlider( float x, float y, float min, float max, float value, int style, float *drawcolor ) {
 	float frac, sliderValue, buttonX;
 	qhandle_t hShader;
-
-	trap_R_SetColor( drawcolor );
+	int sliderWidth, sliderHeight, buttonWidth, buttonHeight;
+	qboolean colorBar = qfalse;
 
 	// draw the background
-	if ( uiAssets.sliderBar ) {
-		CG_DrawPic( x, y, 96, 16, uiAssets.sliderBar );
+	if ( colorBar ) {
+		sliderWidth = 128;
+		sliderHeight = 8;
+		buttonWidth = 16;
+		buttonHeight = 12;
+		hShader = uiAssets.fxBasePic;
 	} else {
-		UI_BuiltinSliderBar( x, y, 96, 16, drawcolor );
+		sliderWidth = 96;
+		sliderHeight = 16;
+		buttonWidth = 12;
+		buttonHeight = 20;
+		hShader = uiAssets.sliderBar;
+
+		// set color of slider bar and button
+		trap_R_SetColor( drawcolor );
+	}
+
+	if ( hShader ) {
+		CG_DrawPic( x, y, sliderWidth, sliderHeight, hShader );
+	} else {
+		UI_BuiltinSliderBar( x, y, sliderWidth, sliderHeight, drawcolor );
 	}
 
 	// draw the button
@@ -439,15 +495,46 @@ void UI_DrawSlider( float x, float y, float min, float max, float value, int sty
 	// position of slider button
 	frac = ( sliderValue - min ) / ( max - min );
 
-	// ZTM: NOTE: team arena colorizes it, q3 does not iirc
-	buttonX = x + 8 + ( 96 - 16 ) * frac - 2;
-	if ( hShader ) {
-		CG_DrawPic( buttonX, y - 2, 12, 20, hShader );
+	if ( colorBar ) {
+		float xOffset = 128.0f / (NUM_COLOR_EFFECTS + 1);
+		int uiColor = gamecodetoui[(int)sliderValue - 1];
+
+		hShader = uiAssets.fxPic[uiColor];
+		if ( !hShader ) {
+			vec4_t picColor;
+
+			hShader = uiAssets.fxPic[NUM_COLOR_EFFECTS-1]; // white
+			if ( !hShader )
+				hShader = cgs.media.whiteShader;
+
+			CG_PlayerColorFromIndex( uitogamecode[uiColor], picColor );
+			picColor[3] = 1;
+			trap_R_SetColor( picColor );
+		}
+		//CG_DrawPic( item->generic.x + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y + PROP_HEIGHT + 6, 16, 12, colorShader );
+
+		// FIXME
+		buttonX = x + 8 + ( sliderWidth - 16 ) * frac - 2;
 	} else {
-		UI_BuiltinCircle( buttonX, y - 2, 12, 20, drawcolor );
+#ifndef MISSIONPACK
+		// team arena colorizes the button, q3 does not
+		trap_R_SetColor( NULL );
+#endif
+
+		buttonX = x + 8 + ( sliderWidth - 16 ) * frac - 2;
+	}
+
+	if ( hShader ) {
+		CG_DrawPic( buttonX, y - 2, buttonWidth, buttonHeight, hShader );
+	} else {
+		UI_BuiltinCircle( buttonX, y - 2, buttonWidth, buttonHeight, drawcolor );
 	}
 
 	trap_R_SetColor( NULL );
+
+	if ( colorBar ) {
+		return;
+	}
 
 	// draw value
 #ifdef Q3UIFONTS
@@ -460,16 +547,14 @@ void UI_DrawSlider( float x, float y, float min, float max, float value, int sty
 	}
 }
 
-// draw radio button if item should have one
-// TODO: Should "is this a radio button" be determined in UI_BuildCurrentMenu instead of checking each item each frame?
-static void UI_DrawRadioButton( currentMenuItem_t *item, float *x ) {
-	qhandle_t hShader;
-	int valuePair0, valuePair1, offPair, picY;
+// FIXME?: this function is ugly
+static qboolean UI_IsRadioButton( currentMenuItem_t *item ) {
+	int valuePair0, valuePair1, offPair;
 
 	if ( !item->cvarPairs || item->numPairs != 2 || item->cvarPairs[ 0 ].type != CVT_INT || item->cvarPairs[ 1 ].type != CVT_INT
 		|| !uiAssets.radioButtonOff || !uiAssets.radioButtonOn ) {
 		// not a radio button or missing shader
-		return;
+		return qfalse;
 	}
 
 	valuePair0 = atoi( item->cvarPairs[ 0 ].value );
@@ -482,12 +567,36 @@ static void UI_DrawRadioButton( currentMenuItem_t *item, float *x ) {
 		offPair = 1;
 	} else {
 		// not a radio button
-		return;
+		return qfalse;
 	}
 
 	if ( Q_stricmp( item->cvarPairs[ offPair ].string, "off" ) || Q_stricmp( item->cvarPairs[ !offPair ].string, "on" ) ) {
 		// not a radio button
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+// draw radio button if item should have one
+// TODO: Should "is this a radio button" be determined in UI_BuildCurrentMenu instead of checking each item each frame?
+void UI_DrawRadioButton( currentMenuItem_t *item, float *x ) {
+	qhandle_t hShader;
+	int valuePair0, valuePair1, offPair, picY;
+
+	if ( !UI_IsRadioButton( item ) ) {
+		// not a radio button or missing shader
 		return;
+	}
+
+	valuePair0 = atoi( item->cvarPairs[ 0 ].value );
+	valuePair1 = atoi( item->cvarPairs[ 1 ].value );
+
+	if ( valuePair0 == 0 && valuePair1 == 1 ) {
+		offPair = 0;
+	} else /* if ( valuePair0 == 1 && valuePair1 == 0 ) */ {
+		// reversed case
+		offPair = 1;
 	}
 
 	hShader = ( item->cvarPair == offPair ) ? uiAssets.radioButtonOff : uiAssets.radioButtonOn;
@@ -500,11 +609,11 @@ static void UI_DrawRadioButton( currentMenuItem_t *item, float *x ) {
 	*x += 16;
 }
 
-int UI_CvarPairsStringCompare( const void *a, const void *b ) {
+static int UI_CvarPairsStringCompare( const void *a, const void *b ) {
 	return Q_stricmp( ((const cvarValuePair_t*)a)->string, ((const cvarValuePair_t*)b)->string );
 }
 
-void UI_InitListBox( currentMenuItem_t *item, const char *extData ) {
+static void UI_InitFileList( currentMenuItem_t *item, const char *extData ) {
 	// ZTM: FIXME: there can only be one file list displayed at a time. They should probably at least be in currentMenu_t?
 	#define MAX_LB_FILES 1024
 	static cvarValuePair_t filePairs[MAX_LB_FILES];
@@ -591,72 +700,6 @@ void UI_InitListBox( currentMenuItem_t *item, const char *extData ) {
 	filePairs[numFilenames].string = NULL;
 
 	item->cvarPairs = filePairs;
-}
-
-void UI_DrawListBox( currentMenuItem_t *item, float *drawcolor, int style ) {
-	int i, x, y, width, height, starty, edgeSize;
-	const char *string;
-	qboolean selected = ( style & UI_PULSE );
-
-	if ( item->caption && *item->caption ) {
-#ifdef Q3UIFONTS
-		if ( item->flags & MIF_BIGTEXT ) {
-			UI_DrawProportionalString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|style, drawcolor );
-		} else
-#endif
-		{
-			CG_DrawString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|style, drawcolor );
-		}
-	}
-
-	CG_DrawRect( item->clickPos.x, item->clickPos.y, item->clickPos.width, item->clickPos.height, 1, drawcolor );
-
-	edgeSize = 2;
-	starty = y = item->clickPos.y + edgeSize;
-	x = item->clickPos.x + edgeSize;
-	width = item->clickPos.width - edgeSize * 2;
-	height = item->clickPos.height - edgeSize * 2;
-
-	for ( i = item->cvarPair; i < item->numPairs; i++ ) {
-		// highlight line of selected item in list box
-		if ( item->cvarPair == i ) {
-			vec4_t color;
-
-			VectorCopy( drawcolor, color );
-			color[3] = 0.5f;
-
-			trap_R_SetColor( color );
-			CG_DrawPic( x, y, width, BIGCHAR_HEIGHT, cgs.media.whiteShader );
-			trap_R_SetColor( NULL );
-		}
-
-		if ( item->cvarPair == i && selected ) {
-			style |= UI_PULSE;
-		} else {
-			style &= ~UI_PULSE;
-		}
-
-		if ( item->cvarPairs && item->numPairs > 0 ) {
-			string = item->cvarPairs[ i ].string;
-		} else {
-			string = item->vmCvar.string;
-		}
-
-#ifdef Q3UIFONTS
-		if ( item->flags & MIF_BIGTEXT ) {
-			UI_DrawProportionalString( x, y, string, UI_DROPSHADOW|style, drawcolor );
-		} else
-#endif
-		{
-			CG_DrawString( x, y, string, UI_DROPSHADOW|style, drawcolor );
-		}
-
-		y += BIGCHAR_HEIGHT+2;
-
-		if ( y > starty + height ) {
-			break;
-		}
-	}
 }
 
 void UI_DrawCurrentMenu( currentMenu_t *current ) {
@@ -775,11 +818,12 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 			}
 		}
 
-		if ( item->flags & MIF_LISTBOX ) {
-			UI_DrawListBox( item, drawcolor, style );
+		if ( ui_widgets[item->widgetType].draw ) {
+			ui_widgets[item->widgetType].draw( item, drawcolor, style );
 			continue;
 		}
 
+		// draw bitmap
 		if ( item->bitmapIndex != -1 ) {
 			CG_DrawPic( item->captionPos.x, item->captionPos.y, item->captionPos.width, item->captionPos.height, ui_bitmaps[item->bitmapIndex].offShader );
 
@@ -835,69 +879,6 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 					CG_DrawString( SCREEN_WIDTH / 2, onImage.y + onImage.height / 2 - GIANTCHAR_HEIGHT / 2, item->caption, UI_CENTER|UI_DROPSHADOW|style, colorWhite );
 				}
 #endif
-			}
-		} else
-#ifdef Q3UIFONTS
-		if ( item->flags & MIF_BIGTEXT ) {
-			UI_DrawProportionalString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|style, drawcolor );
-		} else
-#endif
-		{
-			CG_DrawString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|style, drawcolor );
-		}
-
-		// draw cvar value
-		if ( item->cvarName ) {
-			float x;
-			const char *string;
-
-			// Q3A bitmap prop font doesn't have this glyph
-			if ( current->selectedItem == i && !( item->flags & MIF_BIGTEXT ) ) {
-				char cursorStr[2] = { 13, '\0' };
-
-				x = item->captionPos.x + item->captionPos.width + 2;
-
-#ifdef Q3UIFONTS
-				if ( item->flags & MIF_BIGTEXT ) {
-					UI_DrawProportionalString( x, item->captionPos.y, cursorStr, UI_BLINK|style, drawcolor );
-				} else
-#endif
-				{
-					CG_DrawString( x, item->captionPos.y, cursorStr, UI_BLINK|style, drawcolor );
-				}
-			}
-
-			// x position for cvar value
-			x = item->captionPos.x + item->captionPos.width + BIGCHAR_WIDTH;
-
-			if ( UI_ItemIsSlider( item ) ) {
-				UI_DrawSlider( x, item->captionPos.y,
-						item->cvarRange->min, item->cvarRange->max,
-						item->vmCvar.value, style, drawcolor );
-				continue;
-			}
-
-			if ( item->cvarPairs && item->numPairs > 0 ) {
-				string = item->cvarPairs[ item->cvarPair ].string;
-			} else {
-				string = item->vmCvar.string;
-			}
-
-			UI_DrawRadioButton( item, &x );
-
-			// HACK for M_ERROR com_errorMessage cvar centering
-			if ( !item->caption && !( item->flags & MIF_SELECTABLE ) ) {
-				style = UI_CENTER;
-				x = 320;
-			}
-
-#ifdef Q3UIFONTS
-			if ( item->flags & MIF_BIGTEXT ) {
-				UI_DrawProportionalString( x, item->captionPos.y, string, UI_DROPSHADOW|style, drawcolor );
-			} else
-#endif
-			{
-				CG_DrawString( x, item->captionPos.y, string, UI_DROPSHADOW|style, drawcolor );
 			}
 		}
 	}
@@ -994,6 +975,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		item->captionPos.y = atoi( Info_ValueForKey( itemInfo->extData, "y" ) );
 		item->captionPos.x = atoi( Info_ValueForKey( itemInfo->extData, "x" ) );
 		item->bitmapIndex = -1;
+		item->widgetType = UIW_GENERIC;
 
 		if ( item->flags & MIF_PANEL ) {
 			panelNum++;
@@ -1005,20 +987,39 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			}
 		}
 
-		if ( item->flags & MIF_LISTBOX ) {
-			UI_InitListBox( item, itemInfo->extData );
+		if ( item->flags & MIF_FILELIST ) {
+			UI_InitFileList( item, itemInfo->extData );
 		}
+
+		// ZTM: TODO: improve this. only call Info_ValueForKey once, etc
+		if ( Q_stricmp( Info_ValueForKey( itemInfo->extData, "widget" ), "listbox" ) == 0 ) {
+			item->widgetType = UIW_LISTBOX;
+		} else if ( Q_stricmp( Info_ValueForKey( itemInfo->extData, "widget" ), "colorbar" ) == 0 ) {
+			item->widgetType = UIW_COLORBAR;
+		} else if ( UI_ItemIsSlider( item ) ) {
+			item->widgetType = UIW_SLIDER;
+		} else if ( UI_IsRadioButton( item ) ) {
+			item->widgetType = UIW_RADIO;
+		}
+
+		if ( ui_widgets[item->widgetType].init ) {
+			ui_widgets[item->widgetType].init( item, itemInfo->extData );
+		}
+		else {
+			// generic handling
 #ifdef MISSIONPACK
-		else if ( item->flags & MIF_NEXTBUTTON ) {
-			item->bitmapIndex = UI_FindBitmap( item, "Next" );
-		}
+			if ( item->flags & MIF_NEXTBUTTON ) {
+				item->bitmapIndex = UI_FindBitmap( item, "Next" );
+			} else
 #endif
-		else
-		{
-			item->bitmapIndex = UI_FindBitmap( item, item->caption );
+			{
+				item->bitmapIndex = UI_FindBitmap( item, item->caption );
+			}
 		}
 
 		if ( item->bitmapIndex != -1 ) {
+			item->widgetType = UIW_BITMAP;
+
 			item->captionPos.width = ui_bitmaps[item->bitmapIndex].offWidth;
 			item->captionPos.height = ui_bitmaps[item->bitmapIndex].offHeight;
 		} else if ( item->flags & MIF_BIGTEXT ) {
@@ -1034,7 +1035,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			item->captionPos.height = SMALLCHAR_HEIGHT;
 		}
 
-		if ( item->flags & MIF_LISTBOX ) {
+		if ( item->widgetType == UIW_LISTBOX ) {
 #if 0 // caption above list box
 			item->clickPos.x = 0;
 			item->clickPos.y = item->captionPos.height + 2;
@@ -1054,7 +1055,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			} else {
 				item->clickPos.height = 8 * ( BIGCHAR_HEIGHT + 2 );
 			}
-		} else if ( UI_ItemIsSlider( item ) ) {
+		} else if ( item->widgetType == UIW_SLIDER ) {
 			item->clickPos.x = 0;
 			item->clickPos.y = 0;
 			item->clickPos.width = item->captionPos.width + BIGCHAR_WIDTH + 96;
@@ -1174,7 +1175,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		if ( item->flags & MIF_PANEL ) {
 			// right align
 			curX = 216 - item->captionPos.width;
-		} if ( !panelNum && item->cvarName && centerX && !(item->flags & MIF_LISTBOX) ) {
+		} if ( !panelNum && item->cvarName && centerX && item->widgetType != UIW_SLIDER ) {
 			// right align HACK for M_GAME_OPTIONS
 			curX = SCREEN_WIDTH / 2 + totalWidth[0] / menuInfo->numItems / 6 - item->captionPos.width;
 		} else if ( horizontalMenu && curX == -1 ) {
@@ -1231,6 +1232,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		item->cvarPairs = NULL;
 		item->numPairs = 0;
 		item->bitmapIndex = UI_FindBitmap( item, "Back" );
+		item->widgetType = UIW_GENERIC;
 
 #ifdef MISSIONPACK
 		if ( current->numStacked == 1 )
@@ -1240,6 +1242,8 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		item->caption = "Back";
 
 		if ( item->bitmapIndex != -1 ) {
+			item->widgetType = UIW_BITMAP;
+
 			item->captionPos.width = ui_bitmaps[item->bitmapIndex].offWidth;
 			item->captionPos.height = ui_bitmaps[item->bitmapIndex].offHeight;
 

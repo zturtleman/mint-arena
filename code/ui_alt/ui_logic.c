@@ -290,7 +290,7 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 		}
 
 		// FIXME: slider will always be true here .. is the other case going to be needed? ratio buttons will use cvarPairs.
-		if ( UI_ItemIsSlider( item ) ) {
+		if ( item->widgetType == UIW_SLIDER || item->widgetType == UIW_COLORBAR ) {
 			// added elipse for min=0, max=1, step=0.1 not being able to go to max
 			if ( value < min - 0.001f || value > max + 0.001f ) {
 				// play buzz sound
@@ -361,6 +361,7 @@ qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, 
 	if ( UI_ItemIsSlider( item ) ) {
 		float frac, sliderx, targetStep, targetValue, min, max;
 		qboolean reversed;
+		int sliderWidth;
 
 		// clicked slider caption, ignore -- still allow clicking it to run an action
 		//if ( x < item->captionPos.x + item->captionPos.width && state == MACTION_PRESS )
@@ -377,12 +378,16 @@ qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, 
 			max = item->cvarRange->max;
 		}
 
+		// colorbar!
+		sliderWidth = 128;
+		//sliderWidth = 96;
+
 		// click slider item outside of slider bar... eat action
-		if ( ( x < sliderx || x > sliderx + 96 ) && state == MACTION_PRESS ) {
+		if ( ( x < sliderx || x > sliderx + sliderWidth ) && state == MACTION_PRESS ) {
 			return qtrue;
 		} else {
 			sliderx += 8;
-			frac = Com_Clamp( 0, 1, ( x - 6 - sliderx ) / ( 96 - 16 ) );
+			frac = Com_Clamp( 0, 1, ( x - 6 - sliderx ) / ( sliderWidth - 16 ) );
 
 			if ( reversed ) {
 				frac = 1.0f - frac;
@@ -511,7 +516,7 @@ void UI_RegisterMenuCvars( currentMenu_t *current ) {
 		UI_SetMenuCvarValue( item );
 
 		// cvar for demos/mods/cinematics list box needs to be set initially
-		if ( item->flags & MIF_LISTBOX ) {
+		if ( item->widgetType == UIW_LISTBOX ) {
 			// FIXME: should CVT_CMD be run?
 			if ( item->cvarPairs[ item->cvarPair ].type != CVT_CMD ) {
 				trap_Cvar_Set( item->cvarName, item->cvarPairs[ item->cvarPair ].value );

@@ -163,11 +163,13 @@ void		trap_R_AddRefEntityToScene( const refEntity_t *re );
 // polys are intended for simple wall marks, not really for doing
 // significant construction
 void		trap_R_AddPolyRefEntityToScene( const refEntity_t *re, int numVerts, const polyVert_t *verts, int numPolys );
-void		trap_R_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int bmodelNum );
-void		trap_R_AddPolysToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum );
+void		trap_R_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int bmodelNum, int sortLevel );
+void		trap_R_AddPolysToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum, int sortLevel );
 void        trap_R_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
-void		trap_R_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
+void		trap_R_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b, qhandle_t hShader );
 void		trap_R_AddAdditiveLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
+void		trap_R_AddVertexLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
+void		trap_R_AddJuniorLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
 void		trap_R_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible, qhandle_t hShader );
 int			trap_R_LightForPoint( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir );
 void		trap_R_RenderScene( const refdef_t *fd );

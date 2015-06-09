@@ -244,7 +244,7 @@ void CG_AddLightstyle( centity_t *cent ) {
 	// normal global dlight
 	else
 	{
-		trap_R_AddLightToScene( cent->lerpOrigin, 256, lightval,
+		trap_R_AddVertexLightToScene( cent->lerpOrigin, 256, lightval,
 								(float) r / 255.0f, (float) g / 255.0f, (float) b / 255.0f );
 	}
 }
@@ -287,7 +287,7 @@ static void CG_EntityEffects( centity_t *cent ) {
 			g = (float) ((cl >> 8) & 0xFF) / 255.0;
 			b = (float) ((cl >> 16) & 0xFF) / 255.0;
 			i = (float) ((cl >> 24) & 0xFF) * 4.0;
-			trap_R_AddLightToScene(cent->lerpOrigin, i, 1.0f, r, g, b);
+			trap_R_AddLightToScene(cent->lerpOrigin, i, 1.0f, r, g, b, 0);
 		}
 	}
 
@@ -577,13 +577,13 @@ static void CG_Missile( centity_t *cent ) {
 	// add dynamic light
 	if ( weapon->missileDlight ) {
 		trap_R_AddLightToScene(cent->lerpOrigin, weapon->missileDlight, 1.0f,
-			weapon->missileDlightColor[col][0], weapon->missileDlightColor[col][1], weapon->missileDlightColor[col][2] );
+			weapon->missileDlightColor[col][0], weapon->missileDlightColor[col][1], weapon->missileDlightColor[col][2], 0 );
 	}
 */
 	// add dynamic light
 	if ( weapon->missileDlight ) {
 		trap_R_AddLightToScene(cent->lerpOrigin, weapon->missileDlight, 1.0f,
-			weapon->missileDlightColor[0], weapon->missileDlightColor[1], weapon->missileDlightColor[2] );
+			weapon->missileDlightColor[0], weapon->missileDlightColor[1], weapon->missileDlightColor[2], 0 );
 	}
 
 	// add missile sound

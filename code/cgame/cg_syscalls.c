@@ -382,24 +382,32 @@ void	trap_R_AddRefEntityToScene( const refEntity_t *re ) {
 	syscall( CG_R_ADDREFENTITYTOSCENE, re, sizeof ( refEntity_t ) );
 }
 
-void	trap_R_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int bmodelNum ) {
-	syscall( CG_R_ADDPOLYTOSCENE, hShader, numVerts, verts, bmodelNum );
+void	trap_R_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int bmodelNum, int sortLevel ) {
+	syscall( CG_R_ADDPOLYTOSCENE, hShader, numVerts, verts, bmodelNum, sortLevel );
 }
 
-void	trap_R_AddPolysToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum ) {
-	syscall( CG_R_ADDPOLYSTOSCENE, hShader, numVerts, verts, numPolys, bmodelNum );
+void	trap_R_AddPolysToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum, int sortLevel ) {
+	syscall( CG_R_ADDPOLYSTOSCENE, hShader, numVerts, verts, numPolys, bmodelNum, sortLevel );
 }
 
 void    trap_R_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer ) {
 	syscall( CG_R_ADDPOLYBUFFERTOSCENE, pPolyBuffer );
 }
 
-void	trap_R_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b ) {
-	syscall( CG_R_ADDLIGHTTOSCENE, org, PASSFLOAT( radius ), PASSFLOAT( intensity ), PASSFLOAT( r ), PASSFLOAT( g ), PASSFLOAT( b ) );
+void	trap_R_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b, qhandle_t hShader ) {
+	syscall( CG_R_ADDLIGHTTOSCENE, org, PASSFLOAT( radius ), PASSFLOAT( intensity ), PASSFLOAT( r ), PASSFLOAT( g ), PASSFLOAT( b ), hShader );
 }
 
 void	trap_R_AddAdditiveLightToScene( const vec3_t org, float radius,float intensity, float r, float g, float b ) {
 	syscall( CG_R_ADDADDITIVELIGHTTOSCENE, org, PASSFLOAT( radius ), PASSFLOAT(intensity), PASSFLOAT(r), PASSFLOAT(g), PASSFLOAT(b) );
+}
+
+void	trap_R_AddVertexLightToScene( const vec3_t org, float radius,float intensity, float r, float g, float b ) {
+	syscall( CG_R_ADDVERTEXLIGHTTOSCENE, org, PASSFLOAT( radius ), PASSFLOAT(intensity), PASSFLOAT(r), PASSFLOAT(g), PASSFLOAT(b) );
+}
+
+void	trap_R_AddJuniorLightToScene( const vec3_t org, float radius,float intensity, float r, float g, float b ) {
+	syscall( CG_R_ADDJUNIORLIGHTTOSCENE, org, PASSFLOAT( radius ), PASSFLOAT(intensity), PASSFLOAT(r), PASSFLOAT(g), PASSFLOAT(b) );
 }
 
 void	trap_R_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible, qhandle_t hShader ) {

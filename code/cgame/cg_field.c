@@ -142,9 +142,9 @@ MField_Paste
 ================
 */
 void MField_Paste( mfield_t *edit ) {
-	char	pasteBuffer[64];
+	char	pasteBuffer[MAX_EDIT_LINE*4];
 
-	trap_GetClipboardData( pasteBuffer, 64 );
+	trap_GetClipboardData( pasteBuffer, sizeof ( pasteBuffer ) );
 
 	MField_AddText( edit, pasteBuffer );
 }

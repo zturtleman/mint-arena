@@ -91,6 +91,12 @@ qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font 
 		Com_Memcpy( &font->glyphs[10], &font->glyphs[(int)'_'], sizeof ( glyphInfo_t ) );
 		Com_Memcpy( &font->glyphs[11], &font->glyphs[(int)'|'], sizeof ( glyphInfo_t ) );
 
+		// Make the '|' into a full width block
+		font->glyphs[11].glyph = cgs.media.whiteShader;
+		font->glyphs[11].imageWidth = font->glyphs[(int)'M'].left + font->glyphs[(int)'M'].xSkip;
+		font->glyphs[11].s = 0;
+		font->glyphs[11].s2 = 1;
+
 		// character 13 is used as a selection marker in q3_ui
 		Com_Memcpy( &font->glyphs[13], &font->glyphs[(int)'>'], sizeof ( glyphInfo_t ) );
 
@@ -319,6 +325,20 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 			cp = Q_UTF8_CodePoint( &s );
 			glyph = Text_GetGlyph( font, cp );
 
+				if (count == cursorPos && !((cg.realTime/BLINK_DIVISOR) & 1)) {
+					yadj = useScale * glyph2->top;
+
+					Text_PaintChar(x, y - yadj,
+														glyph->left + glyph->xSkip, // use horizontal width of text character
+														glyph2->imageHeight,
+														useScale,
+														glyph2->s,
+														glyph2->t,
+														glyph2->s2,
+														glyph2->t2,
+														glyph2->glyph);
+				}
+
 				yadj = useScale * glyph->top;
 				xadj = useScale * glyph->left;
 				if (shadowOffset) {
@@ -336,6 +356,20 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 					colorBlack[3] = 1.0;
 					trap_R_SetColor( newColor );
 				}
+
+				// make overstrike cursor invert color
+				if (count == cursorPos && !((cg.realTime/BLINK_DIVISOR) & 1) && cursor == 11) {
+					// invert color
+					vec4_t invertedColor;
+
+					invertedColor[0] = 1.0f - newColor[0];
+					invertedColor[1] = 1.0f - newColor[1];
+					invertedColor[2] = 1.0f - newColor[2];
+					invertedColor[3] = color[3];
+
+					trap_R_SetColor( invertedColor );
+				}
+
 				Text_PaintChar(x + xadj, y - yadj, 
 													glyph->imageWidth,
 													glyph->imageHeight,
@@ -346,17 +380,9 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 													glyph->t2,
 													glyph->glyph);
 
-	      yadj = useScale * glyph2->top;
-		    if (count == cursorPos && !((cg.realTime/BLINK_DIVISOR) & 1)) {
-					Text_PaintChar(x, y - yadj, 
-														glyph2->imageWidth,
-														glyph2->imageHeight,
-														useScale, 
-														glyph2->s,
-														glyph2->t,
-														glyph2->s2,
-														glyph2->t2,
-														glyph2->glyph);
+				if (count == cursorPos && !((cg.realTime/BLINK_DIVISOR) & 1) && cursor == 11) {
+					// restore color
+					trap_R_SetColor( newColor );
 				}
 
 				x += (glyph->xSkip * useScale) + adjust;

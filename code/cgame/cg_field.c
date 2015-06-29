@@ -288,6 +288,8 @@ void MField_CharEvent( mfield_t *edit, int ch ) {
 		for ( i = edit->len + 1; i >= edit->cursor; i-- ) {
 			edit->buffer[i+1] = edit->buffer[i];
 		}
+
+		edit->len++;
 	}
 
 	edit->buffer[edit->cursor] = ch;

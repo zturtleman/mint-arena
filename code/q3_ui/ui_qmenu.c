@@ -1756,7 +1756,7 @@ void Menu_Cache( void )
 	if ( !CG_InitTrueTypeFont( "fonts/font1_prop_glo", PROP_HEIGHT, &uis.fontPropGlow ) ) {
 		UI_InitPropFont( &uis.fontPropGlow, qtrue );
 	}
-	if ( !CG_InitTrueTypeFont( "fonts/font2_prop", 36/*PROPB_HEIGHT*/, &uis.fontPropB ) ) {
+	if ( !CG_InitTrueTypeFont( "fonts/font2_prop", PROPB_HEIGHT, &uis.fontPropB ) ) {
 		UI_InitBannerFont( &uis.fontPropB );
 	}
 

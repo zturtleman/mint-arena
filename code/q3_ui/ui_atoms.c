@@ -279,10 +279,6 @@ static int propMapB[26][3] = {
 {158, 139, 25},
 };
 
-#define PROPB_GAP_WIDTH		4
-#define PROPB_SPACE_WIDTH	12
-#define PROPB_HEIGHT		36
-
 void UI_InitBannerFont( fontInfo_t *font ) {
 	int			i, aw, xSkip;
 	float		fcol, frow, fwidth, fheight;

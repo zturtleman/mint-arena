@@ -287,6 +287,7 @@ vmCvar_t	cg_thirdPerson[MAX_SPLITVIEW];
 vmCvar_t	cg_thirdPersonRange[MAX_SPLITVIEW];
 vmCvar_t	cg_thirdPersonAngle[MAX_SPLITVIEW];
 vmCvar_t	cg_thirdPersonHeight[MAX_SPLITVIEW];
+vmCvar_t	cg_thirdPersonSmooth[MAX_SPLITVIEW];
 
 #ifdef MISSIONPACK
 vmCvar_t	cg_currentSelectedPlayer[MAX_SPLITVIEW];
@@ -471,6 +472,7 @@ static userCvarTable_t userCvarTable[] = {
 	{ cg_thirdPersonRange, "cg_thirdPersonRange", "40", CVAR_CHEAT, RANGE_ALL },
 	{ cg_thirdPersonAngle, "cg_thirdPersonAngle", "0", CVAR_CHEAT, RANGE_ALL },
 	{ cg_thirdPersonHeight, "cg_thirdPersonHeight", "24", 0, RANGE_INT( 0, 32 ) },
+	{ cg_thirdPersonSmooth, "cg_thirdPersonSmooth", "0", 0, RANGE_ALL }, // this cvar exists because it's behavior is too buggy to enable by default
 
 #ifdef MISSIONPACK
 	{ cg_currentSelectedPlayer, "cg_currentSelectedPlayer", "0", CVAR_ARCHIVE, RANGE_ALL },

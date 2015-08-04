@@ -1379,7 +1379,9 @@ static void CG_DrawReward( void ) {
 			cg.cur_lc->rewardTime = cg.time;
 			cg.cur_lc->rewardStack--;
 			color = CG_FadeColor( cg.cur_lc->rewardTime, REWARD_TIME );
-			trap_S_StartLocalSound(cg.cur_lc->rewardSound[0], CHAN_ANNOUNCER);
+			if ( cg.cur_lc->rewardSound[0] ) {
+				trap_S_StartLocalSound( cg.cur_lc->rewardSound[0], CHAN_ANNOUNCER );
+			}
 		} else {
 			return;
 		}

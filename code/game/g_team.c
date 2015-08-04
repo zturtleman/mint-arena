@@ -617,10 +617,8 @@ void Team_TakeFlagSound( gentity_t *ent, int team ) {
 	te->r.svFlags |= SVF_BROADCAST;
 }
 
-void Team_CaptureFlagSound( gentity_t *ent, int team, int playerNum ) {
+void Team_CaptureFlagSound( gentity_t *ent, int team ) {
 	gentity_t	*te;
-	gconnection_t *connection;
-	int			i;
 
 	if (ent == NULL) {
 		G_Printf ("Warning:  NULL passed to Team_CaptureFlagSound\n");
@@ -635,14 +633,6 @@ void Team_CaptureFlagSound( gentity_t *ent, int team, int playerNum ) {
 		te->s.eventParm = GTS_RED_CAPTURE;
 	}
 	te->r.svFlags |= SVF_BROADCAST;
-
-	// send to everyone except the client who generated the event
-	te->r.svFlags |= SVF_PLAYERMASK;
-	Com_ClientListAll( &te->r.sendPlayers );
-	connection = &level.connections[ level.players[ playerNum ].pers.connectionNum ];
-	for (i = 0; i < connection->numLocalPlayers; i++ ) {
-		Com_ClientListRemove( &te->r.sendPlayers, connection->localPlayerNums[i] );
-	}
 }
 
 void Team_ReturnFlag( int team ) {
@@ -765,7 +755,7 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 	// other gets another 10 frag bonus
 	AddScore(other, ent->r.currentOrigin, CTF_CAPTURE_BONUS);
 
-	Team_CaptureFlagSound( ent, team, other->s.number );
+	Team_CaptureFlagSound( ent, team );
 
 	// Ok, let's do the player loop, hand out the bonuses
 	for (i = 0; i < g_maxplayers.integer; i++) {
@@ -1267,7 +1257,7 @@ static void ObeliskDie( gentity_t *self, gentity_t *inflictor, gentity_t *attack
 	attacker->player->rewardTime = level.time + REWARD_SPRITE_TIME;
 	attacker->player->ps.persistant[PERS_CAPTURES]++;
 
-	Team_CaptureFlagSound(self, self->spawnflags, attacker->s.number);
+	Team_CaptureFlagSound(self, self->spawnflags);
 
 	teamgame.redObeliskAttackedTime = 0;
 	teamgame.blueObeliskAttackedTime = 0;
@@ -1312,7 +1302,7 @@ static void ObeliskTouch( gentity_t *self, gentity_t *other, trace_t *trace ) {
 	other->player->ps.tokens = 0;
 	CalculateRanks();
 
-	Team_CaptureFlagSound( self, self->spawnflags, other->s.number );
+	Team_CaptureFlagSound( self, self->spawnflags );
 }
 
 static void ObeliskPain( gentity_t *self, gentity_t *attacker, int damage ) {

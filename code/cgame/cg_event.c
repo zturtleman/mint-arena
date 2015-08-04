@@ -1102,6 +1102,14 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 					CG_AddBufferedSound( cgs.media.blueFlagReturnedSound );
 					break;
 				case GTS_BLUE_RETURN: // CTF red flag returned, 1FCTF: neutral flag returned
+#ifdef MISSIONPACK
+					if ( cgs.gametype == GT_1FCTF ) {
+						CG_AddBufferedSound( cgs.media.returnOpponentSound );
+						CG_AddBufferedSound( cgs.media.neutralFlagReturnedSound );
+						break;
+					}
+#endif
+
 					if ( blueTeam )
 						CG_AddBufferedSound( cgs.media.returnYourTeamSound );
 					else

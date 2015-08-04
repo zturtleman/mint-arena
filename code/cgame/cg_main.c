@@ -1158,7 +1158,7 @@ static void CG_RegisterSounds( void ) {
 #ifdef MISSIONPACK
 		if ( cgs.gametype == GT_1FCTF || cg_buildScript.integer ) {
 			// FIXME: get a replacement for this sound ?
-			cgs.media.neutralFlagReturnedSound = trap_S_RegisterSound( "sound/teamplay/flagreturn_opponent.wav", qtrue );
+			cgs.media.neutralFlagReturnedSound = 0; //trap_S_RegisterSound( "sound/teamplay/voc_red_returned.wav", qtrue );
 			cgs.media.yourTeamTookTheFlagSound = trap_S_RegisterSound( "sound/teamplay/voc_team_1flag.wav", qtrue );
 			cgs.media.enemyTookTheFlagSound = trap_S_RegisterSound( "sound/teamplay/voc_enemy_1flag.wav", qtrue );
 		}

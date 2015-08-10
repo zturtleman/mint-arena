@@ -1534,7 +1534,7 @@ void Menu_Draw( menuframework_s *menu )
 					trap_Error( va("Menu_Draw: unknown type %d", itemptr->type) );
 			}
 		}
-#ifndef NDEBUG
+
 		if( uis.debug ) {
 			int	x;
 			int	y;
@@ -1555,7 +1555,6 @@ void Menu_Draw( menuframework_s *menu )
 				}
 			}
 		}
-#endif
 	}
 
 	itemptr = Menu_ItemAtCursor( menu );
@@ -1655,15 +1654,18 @@ sfxHandle_t Menu_DefaultKey( menuframework_s *m, int key )
 	// default handling
 	switch ( key )
 	{
-#ifndef NDEBUG
 		case K_F11:
-			uis.debug ^= 1;
+			if ( trap_Cvar_VariableValue( "developer" ) ) {
+				uis.debug ^= 1;
+			}
 			break;
 
 		case K_F12:
-			trap_Cmd_ExecuteText(EXEC_APPEND, "screenshot\n");
+			if ( trap_Cvar_VariableValue( "developer" ) ) {
+				trap_Cmd_ExecuteText( EXEC_APPEND, "screenshot\n" );
+			}
 			break;
-#endif
+
 		case K_JOY_DPAD_UP:
 		case K_JOY_LEFTSTICK_UP:
 		case K_2JOY_DPAD_UP:

@@ -610,14 +610,10 @@ void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 		trap_Cvar_SetValue( "cl_paused", 1 );
 		UI_InGameMenu();
 		return;
-		
 	case UIMENU_TEAM:
 	case UIMENU_POSTGAME:
 	default:
-#ifndef NDEBUG
-	  Com_Printf("UI_SetActiveMenu: bad enum %d\n", menu );
-#endif
-	  break;
+		Com_Printf( "UI_SetActiveMenu: unknown enum %d\n", menu );
 	}
 }
 
@@ -900,13 +896,11 @@ void UI_Refresh( int realtime )
 	trap_R_SetColor( NULL );
 	CG_DrawPic( uis.cursorx-16, uis.cursory-16, 32, 32, uis.cursor);
 
-#ifndef NDEBUG
 	if (uis.debug)
 	{
 		// cursor coordinates
 		UI_DrawString( 0, 0, va("(%d,%d)",uis.cursorx,uis.cursory), UI_LEFT|UI_SMALLFONT, colorRed );
 	}
-#endif
 
 	// delay playing the enter sound until after the
 	// menu has been drawn, to avoid delay while

@@ -405,9 +405,7 @@ Actions that happen once a second
 */
 void PlayerTimerActions( gentity_t *ent, int msec ) {
 	gplayer_t	*player;
-#ifdef MISSIONPACK
 	int			maxHealth;
-#endif
 
 	player = ent->player;
 	player->timeResidual += msec;
@@ -420,10 +418,11 @@ void PlayerTimerActions( gentity_t *ent, int msec ) {
 		if( BG_ItemForItemNum( player->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_GUARD ) {
 			maxHealth = player->ps.stats[STAT_MAX_HEALTH] / 2;
 		}
-		else if ( player->ps.powerups[PW_REGEN] ) {
+		else
+#endif
+		if ( player->ps.powerups[PW_REGEN] ) {
 			maxHealth = player->ps.stats[STAT_MAX_HEALTH];
-		}
-		else {
+		} else {
 			maxHealth = 0;
 		}
 		if( maxHealth ) {
@@ -440,22 +439,6 @@ void PlayerTimerActions( gentity_t *ent, int msec ) {
 				}
 				G_AddEvent( ent, EV_POWERUP_REGEN, 0 );
 			}
-#else
-		if ( player->ps.powerups[PW_REGEN] ) {
-			if ( ent->health < player->ps.stats[STAT_MAX_HEALTH]) {
-				ent->health += 15;
-				if ( ent->health > player->ps.stats[STAT_MAX_HEALTH] * 1.1 ) {
-					ent->health = player->ps.stats[STAT_MAX_HEALTH] * 1.1;
-				}
-				G_AddEvent( ent, EV_POWERUP_REGEN, 0 );
-			} else if ( ent->health < player->ps.stats[STAT_MAX_HEALTH] * 2) {
-				ent->health += 5;
-				if ( ent->health > player->ps.stats[STAT_MAX_HEALTH] * 2 ) {
-					ent->health = player->ps.stats[STAT_MAX_HEALTH] * 2;
-				}
-				G_AddEvent( ent, EV_POWERUP_REGEN, 0 );
-			}
-#endif
 		} else {
 			// count down health when over max
 			if ( ent->health > player->ps.stats[STAT_MAX_HEALTH] ) {

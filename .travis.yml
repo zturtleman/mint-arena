@@ -14,13 +14,6 @@ env:
 
 script: ./travis-ci-build.sh
 
-sudo: false
-
-addons:
-  apt:
-    packages:
-    - mingw-w64
-
 notifications:
   irc:
     channels:
@@ -28,7 +21,12 @@ notifications:
     on_success: change
     on_failure: always
 
+sudo: false
+
 addons:
+  apt:
+    packages:
+    - mingw-w64
   coverity_scan:
     project:
       name: "zturtleman/mint-arena"

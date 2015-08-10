@@ -32,4 +32,4 @@ addons:
     notification_email: zturtleman@gmail.com
     build_command_prepend: "make clean"
     build_command: "make release"
-    branch_pattern: master
+    branch_pattern: coverity_scan

@@ -386,7 +386,11 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_deferPlayers, "cg_deferPlayers", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #endif
 	{ &cg_drawTeamOverlay, "cg_drawTeamOverlay", "0", CVAR_ARCHIVE, RANGE_INT(0, 3) },
+#ifdef MISSIONPACK_HUD
+	{ &cg_teamOverlayUserinfo, "teamoverlay", "1", CVAR_ROM | CVAR_USERINFO_ALL, RANGE_ALL },
+#else
 	{ &cg_teamOverlayUserinfo, "teamoverlay", "0", CVAR_ROM | CVAR_USERINFO_ALL, RANGE_ALL },
+#endif
 	{ &cg_stats, "cg_stats", "0", 0, RANGE_ALL },
 	{ &cg_drawFriend, "cg_drawFriend", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_teamChatsOnly, "cg_teamChatsOnly", "0", CVAR_ARCHIVE, RANGE_BOOL },
@@ -665,6 +669,7 @@ void CG_UpdateCvars( void ) {
 
 	// check for modications here
 
+#ifndef MISSIONPACK_HUD
 	// If team overlay is on, ask for updates from the server.  If it's off,
 	// let the server know so we don't receive it
 	if ( drawTeamOverlayModificationCount != cg_drawTeamOverlay.modificationCount ) {
@@ -676,6 +681,7 @@ void CG_UpdateCvars( void ) {
 			trap_Cvar_SetValue( "teamoverlay", 0 );
 		}
 	}
+#endif
 
 #ifdef MISSIONPACK
 	// if force model or a team name changed

@@ -14,21 +14,24 @@ env:
 
 script: ./travis-ci-build.sh
 
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get remove -qq -y mingw32
-  - sudo apt-get install -q -y mingw-w64
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - mingw-w64
 
 notifications:
-  irc: "irc.freenode.org#spearmint"
-  on_success: change
-  on_failure: always
+  irc:
+    channels:
+      - "irc.freenode.org#spearmint"
+    on_success: change
+    on_failure: always
 
 addons:
   coverity_scan:
     project:
       name: "zturtleman/mint-arena"
-      description: "Build submitted via Travis CI"
     notification_email: zturtleman@gmail.com
     build_command_prepend: "make clean"
     build_command: "make release"

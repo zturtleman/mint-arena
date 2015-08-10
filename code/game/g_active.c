@@ -905,22 +905,21 @@ void PlayerThink_real( gentity_t *ent ) {
 	VectorCopy( player->ps.origin, player->oldOrigin );
 
 #ifdef MISSIONPACK
-		if (level.intermissionQueued != 0 && g_singlePlayer.integer) {
-			if ( level.time - level.intermissionQueued >= 1000  ) {
-				pm.cmd.buttons = 0;
-				pm.cmd.forwardmove = 0;
-				pm.cmd.rightmove = 0;
-				pm.cmd.upmove = 0;
-				if ( level.time - level.intermissionQueued >= 2000 && level.time - level.intermissionQueued <= 2500 ) {
-					trap_Cmd_ExecuteText( EXEC_APPEND, "centerview\n");
-				}
-				ent->player->ps.pm_type = PM_SPINTERMISSION;
+	if ( level.intermissionQueued != 0 && g_singlePlayer.integer ) {
+		if ( level.time - level.intermissionQueued >= 1000 ) {
+			pm.cmd.buttons = 0;
+			pm.cmd.forwardmove = 0;
+			pm.cmd.rightmove = 0;
+			pm.cmd.upmove = 0;
+			if ( level.time - level.intermissionQueued >= 2000 && level.time - level.intermissionQueued <= 2500 ) {
+				trap_Cmd_ExecuteText( EXEC_APPEND, "centerview\n" );
 			}
+			ent->player->ps.pm_type = PM_SPINTERMISSION;
 		}
-		Pmove (&pm);
-#else
-		Pmove (&pm);
+	}
 #endif
+
+	Pmove (&pm);
 
 	// save results of pmove
 	if ( ent->player->ps.eventSequence != oldEventSequence ) {

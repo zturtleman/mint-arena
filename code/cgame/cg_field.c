@@ -68,10 +68,6 @@ void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolea
 	}
 
 	// extract <drawLen> characters from the field at <prestep>
-	if ( drawLen >= MAX_STRING_CHARS ) {
-		trap_Error( "drawLen >= MAX_STRING_CHARS" );
-	}
-
 	str[0] = 0;
 	for ( i = 0; i < drawLen; i++ ) {
 		Q_strcat( str, sizeof( str ), Q_UTF8_Encode( edit->buffer[prestep+i] ) );

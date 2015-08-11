@@ -442,11 +442,7 @@ static void CG_DrawStatusBar( void ) {
 				// draw as dark grey when reloading
 				color = 2;	// dark grey
 			} else {
-				if ( value >= 0 ) {
-					color = 0;	// green
-				} else {
-					color = 1;	// red
-				}
+				color = 0;	// green
 			}
 			trap_R_SetColor( colors[color] );
 			

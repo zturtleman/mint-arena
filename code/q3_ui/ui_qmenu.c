@@ -131,11 +131,11 @@ static void Text_Draw( menutext_s *t )
 
 	// possible label
 	if (t->generic.name)
-		strcpy(buff,t->generic.name);
+		Q_strncpyz( buff, t->generic.name, sizeof (buff) );
 
 	// possible value
 	if (t->string)
-		strcat(buff,t->string);
+		Q_strcat( buff, sizeof (buff), t->string );
 		
 	if (t->generic.flags & QMF_GRAYED)
 		color = text_color_disabled;

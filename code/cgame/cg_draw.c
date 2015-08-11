@@ -618,7 +618,7 @@ static float CG_DrawFPS( float y ) {
 		if ( !total ) {
 			total = 1;
 		}
-		fps = 1000 * FPS_FRAMES / total;
+		fps = 1000 * FPS_FRAMES / (float)total;
 
 		s = va( "%ifps", fps );
 		CG_DrawString( 635, y + 2, s, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, NULL );

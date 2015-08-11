@@ -798,8 +798,8 @@ void CG_AddNotifyText( int realTime, qboolean restoredText ) {
 	}
 
 	// [player #] perfix for text that only shows up in notify area for one local player
-	if ( !Q_strncmp( buffer, "[player ", 8 ) && isdigit(buffer[8]) && buffer[9] == ']' ) {
-		localPlayerBits = 1 << ( atoi( &buffer[8] ) - 1 );
+	if ( !Q_strncmp( buffer, "[player ", 8 ) && buffer[8] >= '1' && buffer[8] < '1'+MAX_SPLITVIEW && buffer[9] == ']' ) {
+		localPlayerBits = 1 << ( buffer[8] - '1' );
 
 		buffer += 10;
 	} else {

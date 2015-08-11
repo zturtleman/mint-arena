@@ -2023,13 +2023,16 @@ int PC_ExpectTokenType(int handle, int type, int subtype, pc_token_t *token) {
 		if ((token->subtype & subtype) != subtype)
 		{
 			if (subtype & TT_DECIMAL) strcpy(str, "decimal");
-			if (subtype & TT_HEX) strcpy(str, "hex");
-			if (subtype & TT_OCTAL) strcpy(str, "octal");
-			if (subtype & TT_BINARY) strcpy(str, "binary");
+			else if (subtype & TT_HEX) strcpy(str, "hex");
+			else if (subtype & TT_OCTAL) strcpy(str, "octal");
+			else if (subtype & TT_BINARY) strcpy(str, "binary");
+			else strcpy(str, "unknown");
+
 			if (subtype & TT_LONG) strcat(str, " long");
 			if (subtype & TT_UNSIGNED) strcat(str, " unsigned");
 			if (subtype & TT_FLOAT) strcat(str, " float");
 			if (subtype & TT_INTEGER) strcat(str, " integer");
+
 			PC_SourceError(handle, "expected %s, found %s", str, token->string);
 			return qfalse;
 		}

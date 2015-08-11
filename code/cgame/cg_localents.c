@@ -331,6 +331,8 @@ void CG_AddFragment( localEntity_t *le ) {
 		}
 		BG_EvaluateTrajectory( &le->pos, oldTime, origin );
 
+		VectorClear( angles );
+
 		// add the distance mover has moved since then
 		CG_AdjustPositionForMover( origin, trace.entityNum,
 			oldTime, cg.time, origin, angles, angles );

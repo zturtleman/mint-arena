@@ -293,7 +293,7 @@ void UI_Refresh( int realtime )
 		if ( !total ) {
 			total = 1;
 		}
-		uiInfo.uiDC.FPS = 1000 * UI_FPS_FRAMES / total;
+		uiInfo.uiDC.FPS = 1000 * UI_FPS_FRAMES / (float)total;
 	}
 
 
@@ -319,17 +319,12 @@ void UI_Refresh( int realtime )
 	trap_R_SetColor( NULL );
 	if (Menu_Count() > 0 && (Key_GetCatcher() & KEYCATCH_UI)) {
 		CG_DrawPic( uiInfo.uiDC.cursorx-16, uiInfo.uiDC.cursory-16, 32, 32, uiInfo.uiDC.Assets.cursor);
-	}
 
-#ifndef NDEBUG
-	if (uiInfo.uiDC.debug)
-	{
-		// cursor coordinates
-		//FIXME
-		//UI_DrawString( 0, 0, va("(%d,%d)",uis.cursorx,uis.cursory), UI_LEFT|UI_SMALLFONT, colorRed );
+		if (Display_DebugMode()) {
+			// cursor coordinates
+			CG_DrawString( 0, 0, va("(%d,%d)",uiInfo.uiDC.cursorx,uiInfo.uiDC.cursory), UI_LEFT|UI_SMALLFONT, colorRed );
+		}
 	}
-#endif
-
 }
 
 /*
@@ -4126,6 +4121,11 @@ static qboolean Team_Parse(char **p) {
     }
 
     if (token[0] == '{') {
+      if (uiInfo.teamCount == MAX_TEAMS) {
+        uiInfo.teamCount--;
+        Com_Printf("Too many teams, last team replaced!\n");
+      }
+
       // seven tokens per line, team name and icon, and 5 team member names
       if (!String_Parse(p, &uiInfo.teamList[uiInfo.teamCount].teamName) || !String_Parse(p, &tempStr)) {
         return qfalse;
@@ -4147,11 +4147,8 @@ static qboolean Team_Parse(char **p) {
 			}
 
       Com_DPrintf("Loaded team %s with team icon %s.\n", uiInfo.teamList[uiInfo.teamCount].teamName, tempStr);
-      if (uiInfo.teamCount < MAX_TEAMS) {
-        uiInfo.teamCount++;
-      } else {
-        Com_Printf("Too many teams, last team replaced!\n");
-      }
+      uiInfo.teamCount++;
+
       token = COM_ParseExt(p, qtrue);
       if (token[0] != '}') {
         return qfalse;
@@ -4873,15 +4870,15 @@ void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 
 	// this should be the ONLY way the menu system is brought up
 	// enusure minumum menu data is cached
-  if (Menu_Count() > 0) {
-		vec3_t v;
-		v[0] = v[1] = v[2] = 0;
-	  switch ( menu ) {
-	  case UIMENU_NONE:
-			UI_ForceMenuOff();
+	if (Menu_Count() <= 0) {
+		return;
+	}
 
-		  return;
-	  case UIMENU_MAIN:
+	switch ( menu ) {
+		case UIMENU_NONE:
+			UI_ForceMenuOff();
+			return;
+		case UIMENU_MAIN:
 			CG_KillServer();
 			UI_EnterMenu();
 			//trap_S_StartLocalSound( trap_S_RegisterSound("sound/misc/menu_background.wav", qfalse) , CHAN_LOCAL_SOUND );
@@ -4899,12 +4896,12 @@ void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 					trap_Cvar_Set("com_errorMessage", "");
 				}
 			}
-		  return;
-	  case UIMENU_TEAM:
+			return;
+		case UIMENU_TEAM:
 			UI_EnterMenu();
-      Menus_ActivateByName("team");
-		  return;
-	  case UIMENU_POSTGAME:
+			Menus_ActivateByName("team");
+			return;
+		case UIMENU_POSTGAME:
 			CG_KillServer();
 			UI_EnterMenu();
 			if (uiInfo.inGameLoad) {
@@ -4912,15 +4909,16 @@ void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 			}
 			Menus_CloseAll();
 			Menus_ActivateByName("endofgame");
-		  return;
-	  case UIMENU_INGAME:
+			return;
+		case UIMENU_INGAME:
 			UI_EnterMenu();
 			UI_BuildPlayerList();
 			Menus_CloseAll();
 			Menus_ActivateByName("ingame");
-		  return;
-	  }
-  }
+			return;
+		default:
+			Com_Printf( "UI_SetActiveMenu: unknown enum %d\n", menu );
+	}
 }
 
 qboolean UI_IsFullscreen( void ) {

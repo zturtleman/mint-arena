@@ -701,22 +701,10 @@ void Cmd_Team_f( gentity_t *ent ) {
 	int			oldTeam;
 	char		s[MAX_TOKEN_CHARS];
 
+	oldTeam = ent->player->sess.sessionTeam;
+
 	if ( trap_Argc() != 2 ) {
-		oldTeam = ent->player->sess.sessionTeam;
-		switch ( oldTeam ) {
-		case TEAM_BLUE:
-			trap_SendServerCommand( ent-g_entities, "print \"Blue team\n\"" );
-			break;
-		case TEAM_RED:
-			trap_SendServerCommand( ent-g_entities, "print \"Red team\n\"" );
-			break;
-		case TEAM_FREE:
-			trap_SendServerCommand( ent-g_entities, "print \"Free team\n\"" );
-			break;
-		case TEAM_SPECTATOR:
-			trap_SendServerCommand( ent-g_entities, "print \"Spectator team\n\"" );
-			break;
-		}
+		trap_SendServerCommand( ent-g_entities, va( "print \"You are on the %s team.\n\"", TeamName( oldTeam ) ) );
 		return;
 	}
 
@@ -735,7 +723,9 @@ void Cmd_Team_f( gentity_t *ent ) {
 
 	SetTeam( ent, s );
 
-	ent->player->switchTeamTime = level.time + 5000;
+	if ( oldTeam != ent->player->sess.sessionTeam ) {
+		ent->player->switchTeamTime = level.time + 5000;
+	}
 }
 
 

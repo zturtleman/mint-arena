@@ -1308,7 +1308,7 @@ static void ServerOptions_SetMenuItems( void ) {
 	s_serveroptions.mappic.generic.name = picname;
 
 	// set the map name
-	strcpy( s_serveroptions.mapnamebuffer, s_startserver.mapname.string );
+	Q_strncpyz( s_serveroptions.mapnamebuffer, s_startserver.mapname.string, sizeof ( s_serveroptions.mapnamebuffer ) );
 	Q_strupr( s_serveroptions.mapnamebuffer );
 
 	// get the player selections initialized

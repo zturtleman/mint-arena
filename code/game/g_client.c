@@ -782,18 +782,6 @@ void PlayerUserinfoChanged( int playerNum ) {
 		Q_strncpyz( headModel, Info_ValueForKey (userinfo, "headmodel"), sizeof( headModel ) );
 	}
 
-#ifdef MISSIONPACK
-	if (g_gametype.integer >= GT_TEAM) {
-		player->pers.teamInfo = qtrue;
-	} else {
-		s = Info_ValueForKey( userinfo, "teamoverlay" );
-		if ( ! *s || atoi( s ) != 0 ) {
-			player->pers.teamInfo = qtrue;
-		} else {
-			player->pers.teamInfo = qfalse;
-		}
-	}
-#else
 	// teamInfo
 	s = Info_ValueForKey( userinfo, "teamoverlay" );
 	if ( ! *s || atoi( s ) != 0 ) {
@@ -801,7 +789,7 @@ void PlayerUserinfoChanged( int playerNum ) {
 	} else {
 		player->pers.teamInfo = qfalse;
 	}
-#endif
+
 	/*
 	s = Info_ValueForKey( userinfo, "cg_pmove_fixed" );
 	if ( !*s || atoi( s ) == 0 ) {

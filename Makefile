@@ -6,7 +6,7 @@
 
 COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]'|sed -e 's/\//_/g')
 
-COMPILE_ARCH=$(shell uname -m | sed -e s/i.86/x86/)
+COMPILE_ARCH=$(shell uname -m | sed -e s/i.86/x86/ | sed -e 's/^arm.*/arm/')
 
 ifeq ($(COMPILE_PLATFORM),sunos)
   # Solaris uname and GNU uname differ
@@ -54,6 +54,13 @@ ifndef PLATFORM
 PLATFORM=$(COMPILE_PLATFORM)
 endif
 export PLATFORM
+
+ifeq ($(PLATFORM),mingw32)
+  MINGW=1
+endif
+ifeq ($(PLATFORM),mingw64)
+  MINGW=1
+endif
 
 ifeq ($(COMPILE_ARCH),i86pc)
   COMPILE_ARCH=x86
@@ -198,41 +205,27 @@ endif
 # SETUP AND BUILD -- LINUX
 #############################################################################
 
-## Defaults
-LIB=lib
-
 INSTALL=install
 MKDIR=mkdir
 
-ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
+ifneq (,$(findstring "$(COMPILE_PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu" "gnu"))
+  TOOLS_CFLAGS += -DARCH_STRING=\"$(COMPILE_ARCH)\"
+endif
 
-  ifeq ($(ARCH),x86_64)
-    LIB=lib64
-  else
-  ifeq ($(ARCH),ppc64)
-    LIB=lib64
-  else
-  ifeq ($(ARCH),s390x)
-    LIB=lib64
-  endif
-  endif
-  endif
-
+ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu" "gnu"))
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
-    -pipe -DUSE_ICON
+    -pipe -DUSE_ICON -DARCH_STRING=\\\"$(ARCH)\\\"
 
-  OPTIMIZEVM = -O3 -funroll-loops -fomit-frame-pointer
+  OPTIMIZEVM = -O3
   OPTIMIZE = $(OPTIMIZEVM) -ffast-math
 
   ifeq ($(ARCH),x86_64)
-    OPTIMIZEVM = -O3 -fomit-frame-pointer -funroll-loops \
-      -falign-functions=2 -fstrength-reduce
+    OPTIMIZEVM = -O3
     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
     HAVE_VM_COMPILED = true
   else
   ifeq ($(ARCH),x86)
-    OPTIMIZEVM = -O3 -march=i586 -fomit-frame-pointer \
-      -funroll-loops -falign-functions=2 -fstrength-reduce
+    OPTIMIZEVM = -O3 -march=i586
     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
     HAVE_VM_COMPILED=true
   else
@@ -310,13 +303,13 @@ ifeq ($(PLATFORM),darwin)
   endif
 
   ifeq ($(CROSS_COMPILING),1)
-    ifeq ($(ARCH),ppc)
-      CC=powerpc-apple-darwin10-gcc
-      RANLIB=powerpc-apple-darwin10-ranlib
+    ifeq ($(ARCH),x86_64)
+      CC=x86_64-apple-darwin13-cc
+      RANLIB=x86_64-apple-darwin13-ranlib
     else
       ifeq ($(ARCH),x86)
-        CC=i686-apple-darwin10-gcc
-        RANLIB=i686-apple-darwin10-ranlib
+        CC=i386-apple-darwin13-cc
+        RANLIB=i386-apple-darwin13-ranlib
       else
         $(error Architecture $(ARCH) is not supported when cross compiling)
       endif
@@ -344,7 +337,7 @@ else # ifeq darwin
 # SETUP AND BUILD -- MINGW32
 #############################################################################
 
-ifeq ($(PLATFORM),mingw32)
+ifdef MINGW
 
   ifeq ($(CROSS_COMPILING),1)
     # If CC is already set to something generic, we probably want to use
@@ -358,7 +351,7 @@ ifeq ($(PLATFORM),mingw32)
       MINGW_PREFIXES=amd64-mingw32msvc x86_64-w64-mingw32
     endif
     ifeq ($(ARCH),x86)
-      MINGW_PREFIXES=i586-mingw32msvc i686-w64-mingw32
+      MINGW_PREFIXES=i586-mingw32msvc i686-w64-mingw32 i686-pc-mingw32
     endif
 
     ifndef CC
@@ -391,14 +384,12 @@ ifeq ($(PLATFORM),mingw32)
   endif
 
   ifeq ($(ARCH),x86_64)
-    OPTIMIZEVM = -O3 -fno-omit-frame-pointer \
-      -funroll-loops -falign-functions=2 -fstrength-reduce
+    OPTIMIZEVM = -O3
     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
     HAVE_VM_COMPILED = true
   endif
   ifeq ($(ARCH),x86)
-    OPTIMIZEVM = -O3 -march=i586 -fno-omit-frame-pointer \
-      -funroll-loops -falign-functions=2 -fstrength-reduce
+    OPTIMIZEVM = -O3 -march=i586
     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
     HAVE_VM_COMPILED = true
   endif
@@ -427,7 +418,7 @@ ifeq ($(PLATFORM),mingw32)
     BASE_CFLAGS += -m64
   endif
 
-else # ifeq mingw32
+else # ifdef MINGW
 
 #############################################################################
 # SETUP AND BUILD -- FREEBSD
@@ -441,7 +432,7 @@ ifeq ($(PLATFORM),freebsd)
     -DUSE_ICON -DMAP_ANONYMOUS=MAP_ANON
   HAVE_VM_COMPILED = true
 
-  OPTIMIZEVM = -O3 -funroll-loops -fomit-frame-pointer
+  OPTIMIZEVM = -O3
   OPTIMIZE = $(OPTIMIZEVM) -ffast-math
 
   SHLIBEXT=so
@@ -475,18 +466,16 @@ ifeq ($(PLATFORM),openbsd)
     -pipe -DUSE_ICON -DMAP_ANONYMOUS=MAP_ANON
   CLIENT_CFLAGS += $(SDL_CFLAGS)
 
-  OPTIMIZEVM = -O3 -funroll-loops -fomit-frame-pointer
+  OPTIMIZEVM = -O3
   OPTIMIZE = $(OPTIMIZEVM) -ffast-math
 
   ifeq ($(ARCH),x86_64)
-    OPTIMIZEVM = -O3 -fomit-frame-pointer -funroll-loops \
-      -falign-functions=2 -fstrength-reduce
+    OPTIMIZEVM = -O3
     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
     HAVE_VM_COMPILED = true
   else
   ifeq ($(ARCH),x86)
-    OPTIMIZEVM = -O3 -march=i586 -fomit-frame-pointer \
-      -funroll-loops -falign-functions=2 -fstrength-reduce
+    OPTIMIZEVM = -O3 -march=i586
     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
     HAVE_VM_COMPILED=true
   else
@@ -543,6 +532,7 @@ else # ifeq netbsd
 #############################################################################
 
 ifeq ($(PLATFORM),irix64)
+  LIB=lib
 
   ARCH=mips
 
@@ -625,7 +615,7 @@ else # ifeq sunos
 
 endif #Linux
 endif #darwin
-endif #mingw32
+endif #MINGW
 endif #FreeBSD
 endif #OpenBSD
 endif #NetBSD
@@ -772,7 +762,7 @@ release:
 	  CLIENT_CFLAGS="$(CLIENT_CFLAGS)" SERVER_CFLAGS="$(SERVER_CFLAGS)" V=$(V)
 
 ifneq ($(call bin_path, tput),)
-  TERM_COLUMNS=$(shell echo $$((`tput cols`-4)))
+  TERM_COLUMNS=$(shell if c=`tput cols`; then echo $$(($$c-4)); else echo 76; fi)
 else
   TERM_COLUMNS=76
 endif

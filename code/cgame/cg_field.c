@@ -68,17 +68,14 @@ void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolea
 	}
 
 	// extract <drawLen> characters from the field at <prestep>
-	if ( drawLen >= MAX_STRING_CHARS ) {
-		trap_Error( "drawLen >= MAX_STRING_CHARS" );
-	}
-
 	str[0] = 0;
 	for ( i = 0; i < drawLen; i++ ) {
 		Q_strcat( str, sizeof( str ), Q_UTF8_Encode( edit->buffer[prestep+i] ) );
 	}
 
 	if ( drawCursor ) {
-		if ( trap_Key_GetOverstrikeMode() ) {
+		// if overstrike and not at end of buffer
+		if ( trap_Key_GetOverstrikeMode() && edit->cursor != edit->len ) {
 			cursorChar = 11; // full block
 		} else {
 			cursorChar = 10; // full width low line
@@ -142,9 +139,9 @@ MField_Paste
 ================
 */
 void MField_Paste( mfield_t *edit ) {
-	char	pasteBuffer[64];
+	char	pasteBuffer[MAX_EDIT_LINE*4];
 
-	trap_GetClipboardData( pasteBuffer, 64 );
+	trap_GetClipboardData( pasteBuffer, sizeof ( pasteBuffer ) );
 
 	MField_AddText( edit, pasteBuffer );
 }
@@ -288,6 +285,8 @@ void MField_CharEvent( mfield_t *edit, int ch ) {
 		for ( i = edit->len + 1; i >= edit->cursor; i-- ) {
 			edit->buffer[i+1] = edit->buffer[i];
 		}
+
+		edit->len++;
 	}
 
 	edit->buffer[edit->cursor] = ch;

@@ -442,11 +442,7 @@ static void CG_DrawStatusBar( void ) {
 				// draw as dark grey when reloading
 				color = 2;	// dark grey
 			} else {
-				if ( value >= 0 ) {
-					color = 0;	// green
-				} else {
-					color = 1;	// red
-				}
+				color = 0;	// green
 			}
 			trap_R_SetColor( colors[color] );
 			
@@ -618,7 +614,7 @@ static float CG_DrawFPS( float y ) {
 		if ( !total ) {
 			total = 1;
 		}
-		fps = 1000 * FPS_FRAMES / total;
+		fps = 1000 * FPS_FRAMES / (float)total;
 
 		s = va( "%ifps", fps );
 		CG_DrawString( 635, y + 2, s, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, NULL );
@@ -1379,7 +1375,9 @@ static void CG_DrawReward( void ) {
 			cg.cur_lc->rewardTime = cg.time;
 			cg.cur_lc->rewardStack--;
 			color = CG_FadeColor( cg.cur_lc->rewardTime, REWARD_TIME );
-			trap_S_StartLocalSound(cg.cur_lc->rewardSound[0], CHAN_ANNOUNCER);
+			if ( cg.cur_lc->rewardSound[0] ) {
+				trap_S_StartLocalSound( cg.cur_lc->rewardSound[0], CHAN_ANNOUNCER );
+			}
 		} else {
 			return;
 		}

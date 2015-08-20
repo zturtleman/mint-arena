@@ -1139,8 +1139,12 @@ void	SnapVectorTowards( vec3_t v, vec3_t to );
 #define PROP_HEIGHT				27
 #define PROP_SMALL_SIZE_SCALE	0.75
 
+#define PROPB_GAP_WIDTH			4
+#define PROPB_SPACE_WIDTH		12
+#define PROPB_HEIGHT			36
+
 #define BLINK_DIVISOR			200
-#define PULSE_DIVISOR			75
+#define PULSE_DIVISOR			75.0f
 
 #define UI_LEFT			0x00000000	// default
 #define UI_CENTER		0x00000001

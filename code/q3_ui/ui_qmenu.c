@@ -131,11 +131,11 @@ static void Text_Draw( menutext_s *t )
 
 	// possible label
 	if (t->generic.name)
-		strcpy(buff,t->generic.name);
+		Q_strncpyz( buff, t->generic.name, sizeof (buff) );
 
 	// possible value
 	if (t->string)
-		strcat(buff,t->string);
+		Q_strcat( buff, sizeof (buff), t->string );
 		
 	if (t->generic.flags & QMF_GRAYED)
 		color = text_color_disabled;
@@ -1534,7 +1534,7 @@ void Menu_Draw( menuframework_s *menu )
 					trap_Error( va("Menu_Draw: unknown type %d", itemptr->type) );
 			}
 		}
-#ifndef NDEBUG
+
 		if( uis.debug ) {
 			int	x;
 			int	y;
@@ -1555,7 +1555,6 @@ void Menu_Draw( menuframework_s *menu )
 				}
 			}
 		}
-#endif
 	}
 
 	itemptr = Menu_ItemAtCursor( menu );
@@ -1655,15 +1654,18 @@ sfxHandle_t Menu_DefaultKey( menuframework_s *m, int key )
 	// default handling
 	switch ( key )
 	{
-#ifndef NDEBUG
 		case K_F11:
-			uis.debug ^= 1;
+			if ( trap_Cvar_VariableValue( "developer" ) ) {
+				uis.debug ^= 1;
+			}
 			break;
 
 		case K_F12:
-			trap_Cmd_ExecuteText(EXEC_APPEND, "screenshot\n");
+			if ( trap_Cvar_VariableValue( "developer" ) ) {
+				trap_Cmd_ExecuteText( EXEC_APPEND, "screenshot\n" );
+			}
 			break;
-#endif
+
 		case K_JOY_DPAD_UP:
 		case K_JOY_LEFTSTICK_UP:
 		case K_2JOY_DPAD_UP:
@@ -1756,7 +1758,7 @@ void Menu_Cache( void )
 	if ( !CG_InitTrueTypeFont( "fonts/font1_prop_glo", PROP_HEIGHT, &uis.fontPropGlow ) ) {
 		UI_InitPropFont( &uis.fontPropGlow, qtrue );
 	}
-	if ( !CG_InitTrueTypeFont( "fonts/font2_prop", 36/*PROPB_HEIGHT*/, &uis.fontPropB ) ) {
+	if ( !CG_InitTrueTypeFont( "fonts/font2_prop", PROPB_HEIGHT, &uis.fontPropB ) ) {
 		UI_InitBannerFont( &uis.fontPropB );
 	}
 

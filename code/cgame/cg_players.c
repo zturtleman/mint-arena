@@ -2548,7 +2548,10 @@ void CG_Player( centity_t *cent ) {
 	// get the player model information
 	renderfx = 0;
 	if ( cent->currentState.number == cg.cur_ps->playerNum) {
-		CG_StepOffset( cent->lerpOrigin );
+		// ZTM: FIXME: using CG_StepOffset, if player runs up steep stairs they are drawn deep in stairs/floor
+		if ( cg_thirdPersonSmooth[cg.cur_localPlayerNum].integer ) {
+			CG_StepOffset( cent->lerpOrigin );
+		}
 
 		if (!cg.cur_lc->renderingThirdPerson) {
 			renderfx = RF_ONLY_MIRROR;

@@ -2579,7 +2579,7 @@ static qboolean CG_DrawFollow( void ) {
 
 	CG_DrawString( SCREEN_WIDTH / 2, 40, name, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 
-	CG_DrawBotInfo( 40 + GIANT_HEIGHT );
+	CG_DrawBotInfo( 40 + GIANTCHAR_HEIGHT );
 
 	return qtrue;
 }

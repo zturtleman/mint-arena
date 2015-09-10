@@ -97,11 +97,27 @@ void CG_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 
 		if (cg.numViewports == 2) {
 			if (cg.viewport == 1) {
-				down = qtrue;
+				if (cg_splitviewVertical.integer) {
+					right = qtrue;
+				} else {
+					down = qtrue;
+				}
 			}
 		}
-		else if (cg.numViewports == 3 && cg.viewport == 2) {
-			down = qtrue;
+		else if (cg.numViewports == 3 && !cg_splitviewThirdEqual.integer) {
+			if (cg.viewport == 2) {
+				if (cg_splitviewVertical.integer) {
+					right = qtrue;
+				} else {
+					down = qtrue;
+				}
+			} else if (cg.viewport == 1) {
+				if (!cg_splitviewVertical.integer) {
+					right = qtrue;
+				} else {
+					down = qtrue;
+				}
+			}
 		}
 		else if (cg.numViewports <= 4) {
 			if (cg.viewport == 1 || cg.viewport == 3) {
@@ -110,11 +126,6 @@ void CG_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 			if (cg.viewport == 2 || cg.viewport == 3) {
 				down = qtrue;
 			}
-		}
-
-		if (cg.viewport != 0 && (cg.numViewports == 2 || cg.numViewports == 3) && cg_splitviewVertical.integer) {
-			right = !right;
-			down = !down;
 		}
 
 		if (right) {

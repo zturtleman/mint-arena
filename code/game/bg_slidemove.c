@@ -182,7 +182,10 @@ qboolean	PM_SlideMove( qboolean gravity ) {
 
 				// try clipping the move to the plane
 				PM_ClipVelocity( clipVelocity, planes[j], clipVelocity, OVERCLIP );
-				PM_ClipVelocity( endClipVelocity, planes[j], endClipVelocity, OVERCLIP );
+
+				if ( gravity ) {
+					PM_ClipVelocity( endClipVelocity, planes[j], endClipVelocity, OVERCLIP );
+				}
 
 				// see if it goes back into the first clip plane
 				if ( DotProduct( clipVelocity, planes[i] ) >= 0 ) {

@@ -150,7 +150,7 @@ const glyphInfo_t *Text_GetGlyph( const fontInfo_t *font, unsigned long index ) 
 }
 
 int Text_Width(const char *text, const fontInfo_t *font, float scale, int limit) {
-  int count,len;
+	int count,len;
 	float out;
 	const glyphInfo_t *glyph;
 	float useScale;
@@ -158,8 +158,8 @@ int Text_Width(const char *text, const fontInfo_t *font, float scale, int limit)
 	const char *s = text;
 
 	useScale = scale * font->glyphScale;
-  out = 0;
-  if (text) {
+	out = 0;
+	if (text) {
 		len = Q_UTF8_PrintStrlen(text);
 		if (limit > 0 && len > limit) {
 			len = limit;
@@ -175,13 +175,13 @@ int Text_Width(const char *text, const fontInfo_t *font, float scale, int limit)
 				out += glyph->xSkip;
 				count++;
 			}
-    }
-  }
-  return out * useScale;
+		}
+	}
+	return out * useScale;
 }
 
 int Text_Height(const char *text, const fontInfo_t *font, float scale, int limit) {
-  int len, count;
+	int len, count;
 	float max;
 	const glyphInfo_t *glyph;
 	float useScale;
@@ -189,8 +189,8 @@ int Text_Height(const char *text, const fontInfo_t *font, float scale, int limit
 	const char *s = text;
 
 	useScale = scale * font->glyphScale;
-  max = 0;
-  if (text) {
+	max = 0;
+	if (text) {
 		len = Q_UTF8_PrintStrlen(text);
 		if (limit > 0 && len > limit) {
 			len = limit;
@@ -203,26 +203,26 @@ int Text_Height(const char *text, const fontInfo_t *font, float scale, int limit
 			} else {
 				cp = Q_UTF8_CodePoint( &s );
 				glyph = Text_GetGlyph( font, cp );
-	      if (max < glyph->height) {
-		      max = glyph->height;
-			  }
+				if (max < glyph->height) {
+					max = glyph->height;
+				}
 				count++;
 			}
-    }
-  }
-  return max * useScale;
+		}
+	}
+	return max * useScale;
 }
 
 void Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader) {
-  float w, h;
-  w = width * scale;
-  h = height * scale;
-  CG_AdjustFrom640( &x, &y, &w, &h );
-  trap_R_DrawStretchPic( x, y, w, h, s, t, s2, t2, hShader );
+	float w, h;
+	w = width * scale;
+	h = height * scale;
+	CG_AdjustFrom640( &x, &y, &w, &h );
+	trap_R_DrawStretchPic( x, y, w, h, s, t, s2, t2, hShader );
 }
 
 void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, qboolean forceColor) {
-  int len, count;
+	int len, count;
 	vec4_t newColor;
 	const glyphInfo_t *glyph;
 	float yadj, xadj;
@@ -230,8 +230,8 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
 	unsigned long cp;
 
 	useScale = scale * font->glyphScale;
-  if (text) {
-    const char *s = text;
+	if (text) {
+		const char *s = text;
 		trap_R_SetColor( color );
 		memcpy(&newColor[0], &color[0], sizeof(vec4_t));
 		len = Q_UTF8_PrintStrlen(text);
@@ -240,8 +240,8 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
 		}
 		count = 0;
 		while (s && *s && count < len) {
-      //int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
-      //float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
+			//int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
+			//float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
 			if ( Q_IsColorString( s ) ) {
 				if ( !forceColor ) {
 					memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
@@ -272,7 +272,7 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
 					trap_R_SetColor( newColor );
 					colorBlack[3] = 1.0;
 				}
-				Text_PaintChar(x + xadj, y - yadj, 
+				Text_PaintChar(x + xadj, y - yadj,
 													glyph->imageWidth,
 													glyph->imageHeight,
 													useScale,
@@ -284,13 +284,13 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
 
 				x += (glyph->xSkip * useScale) + adjust;
 				count++;
-    }
-	  trap_R_SetColor( NULL );
-  }
+		}
+		trap_R_SetColor( NULL );
+	}
 }
 
 void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, qboolean forceColor) {
-  int len, count;
+	int len, count;
 	vec4_t newColor;
 	const glyphInfo_t *glyph, *glyph2;
 	float yadj, xadj;
@@ -298,8 +298,8 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 	unsigned long cp;
 
 	useScale = scale * font->glyphScale;
-  if (text) {
-    const char *s = text;
+	if (text) {
+		const char *s = text;
 		trap_R_SetColor( color );
 		memcpy(&newColor[0], &color[0], sizeof(vec4_t));
 		len = Q_UTF8_Strlen(text); // note: doesn't use Q_UTF8_PrintStrlen because this function draws color codes
@@ -309,8 +309,8 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 		count = 0;
 		glyph2 = &font->glyphs[cursor & 255];
 		while (s && *s && count < len) {
-      //int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
-      //float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
+			//int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
+			//float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
 			if ( Q_IsColorString( s ) ) {
 				if ( !forceColor ) {
 					memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
@@ -387,33 +387,33 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 
 				x += (glyph->xSkip * useScale) + adjust;
 				count++;
-    }
-    // need to paint cursor at end of text
-    if (cursorPos == len && !((cg.realTime/BLINK_DIVISOR) & 1)) {
-        yadj = useScale * glyph2->top;
-        Text_PaintChar(x, y - yadj, 
-                          glyph2->imageWidth,
-                          glyph2->imageHeight,
-                          useScale, 
-                          glyph2->s,
-                          glyph2->t,
-                          glyph2->s2,
-                          glyph2->t2,
-                          glyph2->glyph);
+		}
+		// need to paint cursor at end of text
+		if (cursorPos == len && !((cg.realTime/BLINK_DIVISOR) & 1)) {
+				yadj = useScale * glyph2->top;
+				Text_PaintChar(x, y - yadj,
+													glyph2->imageWidth,
+													glyph2->imageHeight,
+													useScale,
+													glyph2->s,
+													glyph2->t,
+													glyph2->s2,
+													glyph2->t2,
+													glyph2->glyph);
 
-    }
+		}
 
-	  trap_R_SetColor( NULL );
-  }
+		trap_R_SetColor( NULL );
+	}
 }
 
 
 void Text_Paint_Limit(float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit) {
-  int len, count;
+	int len, count;
 	vec4_t newColor;
 	const glyphInfo_t *glyph;
-  if (text) {
-    const char *s = text;
+	if (text) {
+		const char *s = text;
 		float max = *maxX;
 		float yadj, xadj;
 		float useScale;
@@ -444,21 +444,21 @@ void Text_Paint_Limit(float *maxX, float x, float y, const fontInfo_t *font, flo
 					*maxX = 0;
 					break;
 				}
-		    Text_PaintChar(x + xadj, y - yadj, 
-			                 glyph->imageWidth,
-				               glyph->imageHeight,
-				               useScale, 
-						           glyph->s,
-								       glyph->t,
-								       glyph->s2,
-									     glyph->t2,
-										   glyph->glyph);
-	      x += (glyph->xSkip * useScale) + adjust;
+				Text_PaintChar(x + xadj, y - yadj,
+											 glyph->imageWidth,
+											 glyph->imageHeight,
+											 useScale,
+											 glyph->s,
+											 glyph->t,
+											 glyph->s2,
+											 glyph->t2,
+											 glyph->glyph);
+				x += (glyph->xSkip * useScale) + adjust;
 				*maxX = x;
 				count++;
 		}
-	  trap_R_SetColor( NULL );
-  }
+		trap_R_SetColor( NULL );
+	}
 
 }
 

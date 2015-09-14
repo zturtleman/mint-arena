@@ -203,10 +203,6 @@ int UI_Text_Height(const char *text, float scale, int limit) {
 	return Text_Height( text, UI_FontForScale( scale ), scale, limit );
 }
 
-void UI_Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader) {
-	Text_PaintChar( x, y, width, height, scale, s, t, s2, t2, hShader );
-}
-
 void UI_Text_Paint(float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle) {
 	float shadowOffset;
 

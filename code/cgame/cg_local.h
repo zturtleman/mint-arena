@@ -1630,22 +1630,24 @@ qboolean CG_AnyScoreboardShowing( void );
 // cg_text.c
 //
 void CG_TextInit( void );
+void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth );
 qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font );
 fontInfo_t *CG_FontForScale( float scale );
 
-void Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader);
-void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, qboolean forceColor);
-void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, qboolean forceColor);
-void Text_Paint_Limit(float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit);
-int Text_Width(const char *text, const fontInfo_t *font, float scale, int limit);
-int Text_Height(const char *text, const fontInfo_t *font, float scale, int limit);
+const glyphInfo_t *Text_GetGlyph( const fontInfo_t *font, unsigned long index );
+int Text_Width( const char *text, const fontInfo_t *font, float scale, int limit );
+int Text_Height( const char *text, const fontInfo_t *font, float scale, int limit );
+void Text_PaintChar( float x, float y, float width, float height, float useScale, float s, float t, float s2, float t2, qhandle_t hShader );
+void Text_PaintGlyph( float x, float y, float useScale, const glyphInfo_t *glyph );
+void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, qboolean forceColor );
+void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, qboolean forceColor );
+void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit );
 
-void CG_Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader);
-void CG_Text_Paint(float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle);
-void CG_Text_PaintWithCursor(float x, float y, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, int textStyle);
-void CG_Text_Paint_Limit(float *maxX, float x, float y, float scale, const vec4_t color, const char* text, float adjust, int limit);
-int CG_Text_Width(const char *text, float scale, int limit);
-int CG_Text_Height(const char *text, float scale, int limit);
+void CG_Text_Paint( float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle );
+void CG_Text_PaintWithCursor( float x, float y, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, int textStyle );
+void CG_Text_Paint_Limit( float *maxX, float x, float y, float scale, const vec4_t color, const char* text, float adjust, int limit );
+int CG_Text_Width( const char *text, float scale, int limit );
+int CG_Text_Height( const char *text, float scale, int limit );
 
 
 //

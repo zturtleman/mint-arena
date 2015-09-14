@@ -240,8 +240,6 @@ void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec
 		}
 		count = 0;
 		while (s && *s && count < len) {
-			//int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
-			//float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
 			if ( Q_IsColorString( s ) ) {
 				if ( !forceColor ) {
 					memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
@@ -309,8 +307,6 @@ void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale,
 		count = 0;
 		glyph2 = &font->glyphs[cursor & 255];
 		while (s && *s && count < len) {
-			//int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
-			//float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
 			if ( Q_IsColorString( s ) ) {
 				if ( !forceColor ) {
 					memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );

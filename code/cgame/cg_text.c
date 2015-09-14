@@ -31,6 +31,38 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "cg_local.h"
 #include "../qcommon/q_unicode.h"
 
+// Q3A UI also uses additional fonts (font1_prop, font2_prop, ..)
+// Team Arena HUD/UI also use separate fonts (specified in .menu files).
+// The truetype font names here are the same as in Team Arena (except tiny font that does not exist)
+void CG_TextInit( void ) {
+	cgs.media.smallFontHeight = 12;
+	cgs.media.bigFontHeight = 20;
+
+	if ( !CG_InitTrueTypeFont( "fonts/tinyfont", 8, &cgs.media.tinyFont ) ) {
+		CG_InitBitmapFont( &cgs.media.tinyFont, 8, 8 );
+	}
+
+	if ( !CG_InitTrueTypeFont( "fonts/smallfont", 12, &cgs.media.smallFont ) ) {
+		// quake 3 bitmap style
+		cgs.media.smallFontHeight = 16;
+		CG_InitBitmapFont( &cgs.media.smallFont, 16, 8 );
+		// team arena truetype style
+		//CG_InitBitmapFont( &cgs.media.smallFont, 12, 6 );
+	}
+
+	if ( !CG_InitTrueTypeFont( "fonts/font", 16, &cgs.media.textFont ) ) {
+		CG_InitBitmapFont( &cgs.media.textFont, 16, 16 );
+	}
+
+	if ( !CG_InitTrueTypeFont( "fonts/bigfont", 20, &cgs.media.bigFont ) ) {
+		// quake 3 bitmap style
+		cgs.media.bigFontHeight = 48;
+		CG_InitBitmapFont( &cgs.media.bigFont, 48, 32 );
+		// team arena truetype style
+		//CG_InitBitmapFont( &cgs.media.bigFont, 20, 10 );
+	}
+}
+
 // 256x256 image with characters that are 16x16
 void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth ) {
 	int			i, col, row;
@@ -108,38 +140,6 @@ qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font 
 	}
 
 	return qtrue;
-}
-
-// Q3A UI also uses additional fonts (font1_prop, font2_prop, ..)
-// Team Arena HUD/UI also use separate fonts (specified in .menu files).
-// The truetype font names here are the same as in Team Arena (except tiny font that does not exist)
-void CG_TextInit( void ) {
-	cgs.media.smallFontHeight = 12;
-	cgs.media.bigFontHeight = 20;
-
-	if ( !CG_InitTrueTypeFont( "fonts/tinyfont", 8, &cgs.media.tinyFont ) ) {
-		CG_InitBitmapFont( &cgs.media.tinyFont, 8, 8 );
-	}
-
-	if ( !CG_InitTrueTypeFont( "fonts/smallfont", 12, &cgs.media.smallFont ) ) {
-		// quake 3 bitmap style
-		cgs.media.smallFontHeight = 16;
-		CG_InitBitmapFont( &cgs.media.smallFont, 16, 8 );
-		// team arena truetype style
-		//CG_InitBitmapFont( &cgs.media.smallFont, 12, 6 );
-	}
-
-	if ( !CG_InitTrueTypeFont( "fonts/font", 16, &cgs.media.textFont ) ) {
-		CG_InitBitmapFont( &cgs.media.textFont, 16, 16 );
-	}
-
-	if ( !CG_InitTrueTypeFont( "fonts/bigfont", 20, &cgs.media.bigFont ) ) {
-		// quake 3 bitmap style
-		cgs.media.bigFontHeight = 48;
-		CG_InitBitmapFont( &cgs.media.bigFont, 48, 32 );
-		// team arena truetype style
-		//CG_InitBitmapFont( &cgs.media.bigFont, 20, 10 );
-	}
 }
 
 const glyphInfo_t *Text_GetGlyph( const fontInfo_t *font, unsigned long index ) {

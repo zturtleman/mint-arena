@@ -464,9 +464,16 @@ void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const
 		shadowOffset = 2;
 	}
 
+	//
 	// This function expects that y is top of line, text_paint expects at baseline
+	//
 	decent = -font->glyphs[(int)'g'].top + font->glyphs[(int)'g'].height;
 	y = y + charh - decent * scale * font->glyphScale;
+	if ( decent != 0 ) {
+		// Make TrueType fonts line up with bigchars bitmap font which has 2 transparent pixels above glyphs at 16 point font size
+		y += 2.0f * charh / 16.0f;
+	}
+
 	if ( cursorChar >= 0 ) {
 		Text_PaintWithCursor( x, y, font, scale, drawcolor, str, cursorPos, cursorChar, 0, maxChars, shadowOffset, ( style & UI_FORCECOLOR ) );
 	} else {

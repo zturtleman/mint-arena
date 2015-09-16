@@ -103,6 +103,10 @@ qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font 
 	int i;
 	qboolean oldFont;
 
+	if ( cg_forceBitmapFonts.integer ) {
+		return qfalse;
+	}
+
 	trap_R_RegisterFont( name, pointSize, font );
 
 	if ( !font->name[0] ) {

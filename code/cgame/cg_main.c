@@ -263,6 +263,8 @@ vmCvar_t	cg_drawScores;
 vmCvar_t	cg_oldBubbles;
 vmCvar_t	cg_smoothBodySink;
 vmCvar_t	cg_antiLag;
+vmCvar_t	cg_forceBitmapFonts;
+
 vmCvar_t	cg_introPlayed;
 vmCvar_t	cg_joystickDebug;
 vmCvar_t	ui_stretch;
@@ -458,6 +460,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_oldBubbles, "cg_oldBubbles", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_smoothBodySink, "cg_smoothBodySink", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_antiLag, "cg_antiLag", "0", CVAR_USERINFO_ALL | CVAR_ARCHIVE, RANGE_INT( 0, 2 ) },
+	{ &cg_forceBitmapFonts, "cg_forceBitmapFonts", "0", CVAR_ARCHIVE | CVAR_LATCH, RANGE_BOOL },
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
 
 	{ &cg_introPlayed, "com_introPlayed", "0", CVAR_ARCHIVE, RANGE_BOOL },
@@ -1860,7 +1863,9 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.textFont);
+			if (!CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.textFont)) {
+				CG_InitBitmapFont(&cgDC.Assets.textFont, pointSize, pointSize / 2);
+			}
 			continue;
 		}
 
@@ -1870,7 +1875,9 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.smallFont);
+			if (!CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.smallFont)) {
+				CG_InitBitmapFont(&cgDC.Assets.smallFont, pointSize, pointSize / 2);
+			}
 			continue;
 		}
 
@@ -1880,7 +1887,9 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.bigFont);
+			if (!CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.bigFont)) {
+				CG_InitBitmapFont(&cgDC.Assets.bigFont, pointSize, pointSize / 2);
+			}
 			continue;
 		}
 

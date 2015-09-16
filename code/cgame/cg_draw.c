@@ -1742,6 +1742,7 @@ static void CG_DrawCenterString( void ) {
 	int		y;
 	int		charHeight;
 	float	*color;
+	float	scale;
 
 	if ( !cg.cur_lc->centerPrintTime ) {
 		return;
@@ -1756,7 +1757,15 @@ static void CG_DrawCenterString( void ) {
 
 	start = cg.cur_lc->centerPrint;
 
-	charHeight = cg.cur_lc->centerPrintCharScale * 48.0f;
+	scale = cg.cur_lc->centerPrintCharScale;
+	charHeight = GIANTCHAR_HEIGHT;
+
+	if ( scale <= 0 ) {
+		scale = charHeight / 48.0f;
+	} else {
+		charHeight = 48 * scale;
+	}
+
 	y = cg.cur_lc->centerPrintY - cg.cur_lc->centerPrintLines * charHeight / 2;
 
 	while ( 1 ) {
@@ -1770,7 +1779,7 @@ static void CG_DrawCenterString( void ) {
 		}
 		linebuffer[l] = 0;
 
-		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, cg.cur_lc->centerPrintCharScale, 0, 0 );
+		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, scale, 0, 0 );
 		y += charHeight + 6;
 
 		while ( *start && ( *start != '\n' ) ) {
@@ -1823,6 +1832,7 @@ static void CG_DrawGlobalCenterString( void ) {
 	int		y;
 	int		charHeight;
 	float	*color;
+	float	scale;
 
 	if ( !cg.centerPrintTime ) {
 		return;
@@ -1837,7 +1847,15 @@ static void CG_DrawGlobalCenterString( void ) {
 
 	start = cg.centerPrint;
 
-	charHeight = cg.centerPrintCharScale * 48.0f;
+	scale = cg.centerPrintCharScale;
+	charHeight = GIANTCHAR_HEIGHT;
+
+	if ( scale <= 0 ) {
+		scale = charHeight / 48.0f;
+	} else {
+		charHeight = 48 * scale;
+	}
+
 	y = cg.centerPrintY - cg.centerPrintLines * charHeight / 2;
 
 	while ( 1 ) {
@@ -1851,7 +1869,7 @@ static void CG_DrawGlobalCenterString( void ) {
 		}
 		linebuffer[l] = 0;
 
-		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, cg.centerPrintCharScale, 0, 0 );
+		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, scale, 0, 0 );
 		y += charHeight + 6;
 
 		while ( *start && ( *start != '\n' ) ) {

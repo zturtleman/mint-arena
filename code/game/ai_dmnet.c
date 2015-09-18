@@ -1852,7 +1852,7 @@ int AINode_Seek_LTG(bot_state_t *bs)
 	bs->enemy = -1;
 	//
 	if (bs->killedenemy_time > FloatTime() - 2) {
-		if (random() < bs->thinktime * 1) {
+		if (random() < bs->thinktime) {
 			EA_Gesture(bs->playernum);
 		}
 	}

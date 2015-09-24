@@ -1159,6 +1159,7 @@ void	SnapVectorTowards( vec3_t v, vec3_t to );
 #define UI_INVERSE		0x00002000
 #define UI_PULSE		0x00004000
 #define UI_FORCECOLOR	0x00008000
+#define UI_GRADIENT		0x00010000
 
 
 typedef struct

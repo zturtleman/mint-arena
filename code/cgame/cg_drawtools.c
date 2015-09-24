@@ -374,18 +374,20 @@ Draws a multi-colored string with a drop shadow, optionally forcing
 to a fixed color.
 
 Coordinates are at 640 by 480 virtual resolution
+
+Gradient value is how much to darken color at bottom of text.
 ==================
 */
 void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color ) {
-	CG_DrawStringExtWithCursor( x, y, str, style, color, 0, 0, 0, -1, -1 );
+	CG_DrawStringExtWithCursor( x, y, str, style, color, 0, 0, 0, 0, -1, -1 );
 }
 void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const vec4_t color, int cursorPos, int cursorChar ) {
-	CG_DrawStringExtWithCursor( x, y, str, style, color, 0, 0, 0, cursorPos, cursorChar );
+	CG_DrawStringExtWithCursor( x, y, str, style, color, 0, 0, 0, 0, cursorPos, cursorChar );
 }
 void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset ) {
-	CG_DrawStringExtWithCursor( x, y, str, style, color, scale, maxChars, shadowOffset, -1, -1 );
+	CG_DrawStringExtWithCursor( x, y, str, style, color, scale, maxChars, shadowOffset, 0, -1, -1 );
 }
-void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, int cursorPos, int cursorChar ) {
+void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar ) {
 	int		charh;
 	vec4_t	newcolor;
 	vec4_t	lowlight;
@@ -464,6 +466,10 @@ void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const
 		shadowOffset = 2;
 	}
 
+	if ( gradient == 0 && ( style & UI_GRADIENT ) ) {
+		gradient = 0.4f;
+	}
+
 	//
 	// This function expects that y is top of line, text_paint expects at baseline
 	//
@@ -475,9 +481,9 @@ void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const
 	}
 
 	if ( cursorChar >= 0 ) {
-		Text_PaintWithCursor( x, y, font, scale, drawcolor, str, cursorPos, cursorChar, 0, maxChars, shadowOffset, ( style & UI_FORCECOLOR ) );
+		Text_PaintWithCursor( x, y, font, scale, drawcolor, str, cursorPos, cursorChar, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ) );
 	} else {
-		Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, ( style & UI_FORCECOLOR ) );
+		Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ) );
 	}
 }
 

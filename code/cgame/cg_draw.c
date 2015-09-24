@@ -59,7 +59,7 @@ Draws large numbers for status bar and powerups
 ==============
 */
 #ifndef MISSIONPACK_HUD
-static void CG_DrawField (int x, int y, int width, int value) {
+static void CG_DrawField (int x, int y, int width, int value, float *color) {
 	char	num[16], *ptr;
 	int		l;
 	int		frame;
@@ -93,10 +93,13 @@ static void CG_DrawField (int x, int y, int width, int value) {
 	}
 
 	Com_sprintf (num, sizeof(num), "%i", value);
+
 	l = strlen(num);
 	if (l > width)
 		l = width;
 	x += 2 + CHAR_WIDTH*(width - l);
+
+	trap_R_SetColor( color );
 
 	ptr = num;
 	while (*ptr && l)
@@ -111,6 +114,8 @@ static void CG_DrawField (int x, int y, int width, int value) {
 		ptr++;
 		l--;
 	}
+
+	trap_R_SetColor( NULL );
 }
 #endif // MISSIONPACK_HUD
 
@@ -444,10 +449,8 @@ static void CG_DrawStatusBar( void ) {
 			} else {
 				color = 0;	// green
 			}
-			trap_R_SetColor( colors[color] );
-			
-			CG_DrawField (0, 432, 3, value);
-			trap_R_SetColor( NULL );
+
+			CG_DrawField (0, 432, 3, value, colors[color] );
 
 			// if we didn't draw a 3D icon, draw a 2D icon for ammo
 			if ( !cg_draw3dIcons.integer && cg_drawIcons.integer ) {
@@ -466,19 +469,17 @@ static void CG_DrawStatusBar( void ) {
 	//
 	value = ps->stats[STAT_HEALTH];
 	if ( value > 100 ) {
-		trap_R_SetColor( colors[3] );		// white
+		color = 3; // white
 	} else if (value > 25) {
-		trap_R_SetColor( colors[0] );	// green
+		color = 0; // green
 	} else if (value > 0) {
-		color = (cg.time >> 8) & 1;	// flash
-		trap_R_SetColor( colors[color] );
+		color = (cg.time >> 8) & 1; // flash
 	} else {
-		trap_R_SetColor( colors[1] );	// red
+		color = 1; // red
 	}
 
 	// stretch the health up when taking damage
-	CG_DrawField ( 185, 432, 3, value);
-	trap_R_SetColor( NULL );
+	CG_DrawField ( 185, 432, 3, value, colors[color] );
 
 
 	//
@@ -486,9 +487,8 @@ static void CG_DrawStatusBar( void ) {
 	//
 	value = ps->stats[STAT_ARMOR];
 	if (value > 0 ) {
-		trap_R_SetColor( colors[0] );
-		CG_DrawField (370, 432, 3, value);
-		trap_R_SetColor( NULL );
+		CG_DrawField (370, 432, 3, value, colors[0]);
+
 		// if we didn't draw a 3D icon, draw a 2D icon for armor
 		if ( !cg_draw3dIcons.integer && cg_drawIcons.integer ) {
 			CG_DrawPic( 370 + CHAR_WIDTH*3 + TEXT_ICON_SPACE, 432, ICON_SIZE, ICON_SIZE, cgs.media.armorIcon );
@@ -1126,12 +1126,10 @@ static float CG_DrawPowerups( float y ) {
 
 		  y -= ICON_SIZE;
 
-		  trap_R_SetColor( colors[color] );
-		  CG_DrawField( x, y, 2, sortedTime[ i ] / 1000 );
+		  CG_DrawField( x, y, 2, sortedTime[ i ] / 1000, colors[color] );
 
 		  t = ps->powerups[ sorted[i] ];
 		  if ( t - cg.time >= POWERUP_BLINKS * POWERUP_BLINK_TIME ) {
-			  trap_R_SetColor( NULL );
 		  } else {
 			  vec4_t	modulate;
 
@@ -1151,9 +1149,10 @@ static float CG_DrawPowerups( float y ) {
 
 		  CG_DrawPic( 640 - size, y + ICON_SIZE / 2 - size / 2, 
 			  size, size, trap_R_RegisterShader( item->icon ) );
-    }
+
+			trap_R_SetColor( NULL );
+		}
 	}
-	trap_R_SetColor( NULL );
 
 	return y;
 }

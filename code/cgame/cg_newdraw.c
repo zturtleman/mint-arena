@@ -84,6 +84,20 @@ void CG_Text_Paint(float x, float y, float scale, const vec4_t color, const char
 	Text_Paint( x, y, CG_FontForScale( scale ), scale, color, text, adjust, limit, shadowOffset, 0, qfalse );
 }
 
+void CG_Text_PaintGradient(float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle) {
+	float shadowOffset;
+
+	if ( textStyle == ITEM_TEXTSTYLE_SHADOWED ) {
+		shadowOffset = 1;
+	} else if ( textStyle == ITEM_TEXTSTYLE_SHADOWEDMORE ) {
+		shadowOffset = 2;
+	} else {
+		shadowOffset = 0;
+	}
+
+	Text_Paint( x, y, CG_FontForScale( scale ), scale, color, text, adjust, limit, shadowOffset, 0.4f, qfalse );
+}
+
 void CG_Text_Paint_Limit(float *maxX, float x, float y, float scale, const vec4_t color, const char* text, float adjust, int limit) {
 	Text_Paint_Limit( maxX, x, y, CG_FontForScale( scale ), scale, color, text, adjust, limit );
 }
@@ -296,7 +310,7 @@ static void CG_DrawPlayerArmorValue(rectDef_t *rect, float scale, vec4_t color, 
 	} else {
 		Com_sprintf (num, sizeof(num), "%i", value);
 		value = CG_Text_Width(num, scale, 0);
-		CG_Text_Paint(rect->x + (rect->w - value) / 2, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
+		CG_Text_PaintGradient(rect->x + (rect->w - value) / 2, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
 	}
 }
 
@@ -344,7 +358,7 @@ static void CG_DrawPlayerAmmoValue(rectDef_t *rect, float scale, vec4_t color, q
 			} else {
 				Com_sprintf (num, sizeof(num), "%i", value);
 				value = CG_Text_Width(num, scale, 0);
-				CG_Text_Paint(rect->x + (rect->w - value) / 2, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
+				CG_Text_PaintGradient(rect->x + (rect->w - value) / 2, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
 			}
 		}
 	}
@@ -701,7 +715,7 @@ static void CG_DrawPlayerHealth(rectDef_t *rect, float scale, vec4_t color, qhan
 	} else {
 		Com_sprintf (num, sizeof(num), "%i", value);
 		value = CG_Text_Width(num, scale, 0);
-		CG_Text_Paint(rect->x + (rect->w - value) / 2, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
+		CG_Text_PaintGradient(rect->x + (rect->w - value) / 2, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
 	}
 }
 

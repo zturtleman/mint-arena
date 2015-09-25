@@ -849,6 +849,7 @@ typedef struct {
 	fontInfo_t	smallFont;
 	fontInfo_t	textFont;
 	fontInfo_t	bigFont;
+	fontInfo_t	numberFont; // status bar giant number font
 
 	int			smallFontHeight;
 	int			bigFontHeight;
@@ -946,8 +947,6 @@ typedef struct {
 	qhandle_t	nailPuffShader;
 	qhandle_t	blueProxMine;
 #endif
-
-	qhandle_t	numberShaders[11];
 
 	qhandle_t	shadowMarkShader;
 
@@ -1632,6 +1631,7 @@ qboolean CG_AnyScoreboardShowing( void );
 //
 void CG_TextInit( void );
 void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth );
+void CG_InitBitmapNumberFont( fontInfo_t *font );
 qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font );
 fontInfo_t *CG_FontForScale( float scale );
 
@@ -1796,6 +1796,7 @@ void CG_SurfaceRailRings( const refEntity_t *re );
 void CG_SurfaceRailCore( const refEntity_t *re );
 void CG_SurfaceLightningBolt( const refEntity_t *re );
 void CG_SurfaceBeam( const refEntity_t *re );
+void CG_SurfaceText( const refEntity_t *re, const fontInfo_t *font, float scale, const char *text, float adjust, int limit, float gradient, qboolean forceColor );
 
 //
 // cg_spawn.c

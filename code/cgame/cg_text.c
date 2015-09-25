@@ -61,6 +61,11 @@ void CG_TextInit( void ) {
 		// team arena truetype style
 		//CG_InitBitmapFont( &cgs.media.bigFont, 20, 10 );
 	}
+
+	// note: the original Q3 number bitmaps look like font1_prop
+	if ( !CG_InitTrueTypeFont( "fonts/numberfont", 48, &cgs.media.numberFont ) ) {
+		CG_InitBitmapNumberFont( &cgs.media.numberFont );
+	}
 }
 
 // 256x256 image with characters that are 16x16
@@ -95,6 +100,54 @@ void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth ) {
 		font->glyphs[i].s2 = col*0.0625 + 0.0625;
 		font->glyphs[i].t2 = row*0.0625 + 0.0625;
 		font->glyphs[i].glyph = hShader;
+		Q_strncpyz( font->glyphs[i].shaderName, shaderName, sizeof ( font->glyphs[i].shaderName ) );
+	}
+}
+
+// Status bar number font, separeate 32x32 images for 0-9 and minus
+void CG_InitBitmapNumberFont( fontInfo_t *font ) {
+	int			i, index;
+	const char	*shaderName;
+	static char	*sb_nums[11] = {
+		"gfx/2d/numbers/zero_32b",
+		"gfx/2d/numbers/one_32b",
+		"gfx/2d/numbers/two_32b",
+		"gfx/2d/numbers/three_32b",
+		"gfx/2d/numbers/four_32b",
+		"gfx/2d/numbers/five_32b",
+		"gfx/2d/numbers/six_32b",
+		"gfx/2d/numbers/seven_32b",
+		"gfx/2d/numbers/eight_32b",
+		"gfx/2d/numbers/nine_32b",
+		"gfx/2d/numbers/minus_32b",
+	};
+
+	Com_Memset( font, 0, sizeof( fontInfo_t ) );
+
+	Com_sprintf( font->name, sizeof ( font->name ), "numberfont" );
+	font->glyphScale = 48.0f / 48;
+
+	for ( index = 0; index < 11; index++ ) {
+		shaderName = sb_nums[index];
+
+		if ( index == 10 ) {
+			i = '-';
+		} else {
+			i = '0' + index;
+		}
+
+		font->glyphs[i].height = 48;
+		font->glyphs[i].top = 48;
+		font->glyphs[i].left = 0;
+		font->glyphs[i].pitch = 32;
+		font->glyphs[i].xSkip = 32;
+		font->glyphs[i].imageWidth = 32;
+		font->glyphs[i].imageHeight = 48;
+		font->glyphs[i].s = 0;
+		font->glyphs[i].t = 0;
+		font->glyphs[i].s2 = 1;
+		font->glyphs[i].t2 = 1;
+		font->glyphs[i].glyph = trap_R_RegisterShader( shaderName );
 		Q_strncpyz( font->glyphs[i].shaderName, shaderName, sizeof ( font->glyphs[i].shaderName ) );
 	}
 }

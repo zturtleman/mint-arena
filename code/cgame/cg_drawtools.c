@@ -421,6 +421,16 @@ void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const
 		font = &cgs.media.bigFont;
 		charh =	GIANTCHAR_HEIGHT;
 	}
+	else if (style & UI_NUMBERFONT)
+	{
+		font = &cgs.media.numberFont;
+		charh =	CHAR_HEIGHT;
+
+		// the original number bitmaps already have a gradient
+		if ( font->glyphs[(int)'a'].xSkip == 0 ) {
+			style &= ~UI_GRADIENT;
+		}
+	}
 	else
 	{
 		font = &cgs.media.textFont;
@@ -537,6 +547,11 @@ int CG_DrawStrlenEx( const char *str, int style, int maxchars ) {
 		font = &cgs.media.bigFont;
 		charh =	GIANTCHAR_HEIGHT;
 	}
+	else if (style & UI_NUMBERFONT)
+	{
+		font = &cgs.media.numberFont;
+		charh =	CHAR_HEIGHT;
+	}
 	else
 	{
 		font = &cgs.media.textFont;
@@ -571,6 +586,11 @@ int CG_DrawStrlen( const char *str, int style ) {
 	{
 		font = &cgs.media.bigFont;
 		charh =	GIANTCHAR_HEIGHT;
+	}
+	else if (style & UI_NUMBERFONT)
+	{
+		font = &cgs.media.numberFont;
+		charh =	CHAR_HEIGHT;
 	}
 	else
 	{

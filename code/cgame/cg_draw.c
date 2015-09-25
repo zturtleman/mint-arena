@@ -60,9 +60,7 @@ Draws large numbers for status bar and powerups
 */
 #ifndef MISSIONPACK_HUD
 static void CG_DrawField (int x, int y, int width, int value, float *color) {
-	char	num[16], *ptr;
-	int		l;
-	int		frame;
+	char	num[16];
 
 	if ( width < 1 ) {
 		return;
@@ -94,28 +92,7 @@ static void CG_DrawField (int x, int y, int width, int value, float *color) {
 
 	Com_sprintf (num, sizeof(num), "%i", value);
 
-	l = strlen(num);
-	if (l > width)
-		l = width;
-	x += 2 + CHAR_WIDTH*(width - l);
-
-	trap_R_SetColor( color );
-
-	ptr = num;
-	while (*ptr && l)
-	{
-		if (*ptr == '-')
-			frame = STAT_MINUS;
-		else
-			frame = *ptr -'0';
-
-		CG_DrawPic( x,y, CHAR_WIDTH, CHAR_HEIGHT, cgs.media.numberShaders[frame] );
-		x += CHAR_WIDTH;
-		ptr++;
-		l--;
-	}
-
-	trap_R_SetColor( NULL );
+	CG_DrawString( x + 2 + CHAR_WIDTH * width, y, num, UI_RIGHT|UI_GRADIENT|UI_NUMBERFONT, color );
 }
 #endif // MISSIONPACK_HUD
 

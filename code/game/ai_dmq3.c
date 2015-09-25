@@ -4523,7 +4523,7 @@ void BotPrintActivateGoalInfo(bot_state_t *bs, bot_activategoal_t *activategoal,
 BotRandomMove
 ==================
 */
-void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult) {
+void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult, float speed) {
 	vec3_t dir, angles;
 	int i;
 
@@ -4534,7 +4534,7 @@ void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult) {
 	for (i = 0; i < 8; i++) {
 		AngleVectors(angles, dir, NULL, NULL);
 
-		if (BotMoveInDirection(bs->ms, dir, 400, MOVE_WALK)) {
+		if (BotMoveInDirection(bs->ms, dir, speed, MOVE_WALK)) {
 			break;
 		}
 
@@ -4560,6 +4560,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 #ifdef OBSTACLEDEBUG
 	char netname[MAX_NETNAME];
 #endif
+	float speed;
 	int movetype, bspent;
 	vec3_t mins, maxs, end, v1, v2, hordir, sideward, angles, up = {0, 0, 1};
 	aas_entityinfo_t entinfo;
@@ -4572,11 +4573,16 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 		bs->notblocked_time = FloatTime();
 		return;
 	}
+
+	if (!BotWantsToWalk(bs)) {
+		speed = 400;
+	} else {
+		speed = 200;
+	}
 	// if stuck in a solid area
 	if ( moveresult->type == RESULTTYPE_INSOLIDAREA ) {
 		// move in a random direction in the hope to get out
-		BotRandomMove(bs, moveresult);
-		//
+		BotRandomMove(bs, moveresult, speed);
 		return;
 	}
 	// get info for the entity that is blocking the bot
@@ -4661,17 +4667,17 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 		VectorNegate(sideward, sideward);
 	}
 	//try to crouch or jump over barrier
-	if (!BotMoveInDirection(bs->ms, hordir, 400, movetype)) {
+	if (!BotMoveInDirection(bs->ms, hordir, speed, movetype)) {
 		// try to move to the right
-		if (!BotMoveInDirection(bs->ms, sideward, 400, movetype)) {
+		if (!BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
 			// flip the avoid direction flag
 			bs->flags ^= BFL_AVOIDRIGHT;
 			// flip the direction
 			VectorNegate(sideward, sideward);
 			// try to move to the left
-			if (!BotMoveInDirection(bs->ms, sideward, 400, movetype)) {
+			if (!BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
 				// move in a random direction in the hope to get out
-				BotRandomMove(bs, moveresult);
+				BotRandomMove(bs, moveresult, speed);
 			}
 		}
 	}

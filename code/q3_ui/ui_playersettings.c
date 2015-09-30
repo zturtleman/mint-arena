@@ -381,6 +381,11 @@ static void PlayerSettings_MenuEvent( void* ptr, int event ) {
 				va( "%i", 100 - 25 * s_playersettings.handicap.curvalue ) );
 		break;
 
+	case ID_EFFECTS:
+		PlayerSettings_SaveChanges();
+		UI_PlayerInfo_UpdateColor( &s_playersettings.playerinfo );
+		break;
+
 	case ID_MODEL:
 		PlayerSettings_SaveChanges();
 		UI_PlayerModelMenu(s_playersettings.localPlayerNum);
@@ -501,6 +506,7 @@ static void PlayerSettings_MenuInit( int localPlayerNum )
 	s_playersettings.effects.generic.type		= MTYPE_SPINCONTROL;
 	s_playersettings.effects.generic.flags		= QMF_NODEFAULTINIT;
 	s_playersettings.effects.generic.id			= ID_EFFECTS;
+	s_playersettings.effects.generic.callback	= PlayerSettings_MenuEvent;
 	s_playersettings.effects.generic.ownerdraw	= PlayerSettings_DrawEffects;
 	s_playersettings.effects.generic.statusbar  = PlayerSettings_StatusBar;
 	s_playersettings.effects.generic.x			= 192;

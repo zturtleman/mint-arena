@@ -965,6 +965,7 @@ static void UI_DrawMapCinematic(rectDef_t *rect, float scale, vec4_t color, qboo
 
 static qboolean updateModel = qtrue;
 static qboolean q3Model = qfalse;
+static qboolean updateModelColor = qtrue;
 
 static void UI_DrawPlayerModel(rectDef_t *rect) {
   static uiPlayerInfo_t info;
@@ -1002,6 +1003,11 @@ static void UI_DrawPlayerModel(rectDef_t *rect) {
     UI_PlayerInfo_SetInfo( &info, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
 //		UI_RegisterPlayerModelname( &info, model, head, team);
     updateModel = qfalse;
+    updateModelColor = qfalse; // playerinfo setinfo calls updatecolor
+  }
+  if (updateModelColor) {
+    UI_PlayerInfo_UpdateColor( &info );
+    updateModelColor = qfalse;
   }
 
   UI_DrawPlayer( rect->x, rect->y, rect->w, rect->h, &info, uiInfo.uiDC.realTime / 2);
@@ -1893,6 +1899,7 @@ static qboolean UI_Effects_HandleKey(int flags, float *special, int key) {
 		}
 
 	  trap_Cvar_SetValue( "color1", uitogamecode[uiInfo.effectsColor] );
+	  updateModelColor = qtrue;
     return qtrue;
   }
   return qfalse;

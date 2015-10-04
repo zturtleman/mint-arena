@@ -179,7 +179,7 @@ void		trap_R_DrawStretchPic( float x, float y, float w, float h,
 				float s1, float t1, float s2, float t2, qhandle_t hShader );
 void		trap_R_DrawRotatedPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader, float angle );
 void		trap_R_DrawStretchPicGradient( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader,
-				const float *gradientColor, int gradientType );
+				const float *gradientColor );
 void		trap_R_Add2dPolys( polyVert_t* verts, int numverts, qhandle_t hShader );
 int			trap_R_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac );
 int			trap_R_LerpTag( orientation_t *tag, clipHandle_t mod, int startFrame, int endFrame, 

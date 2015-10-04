@@ -300,7 +300,7 @@ void Text_PaintGlyph( float x, float y, float useScale, const glyphInfo_t *glyph
 	CG_AdjustFrom640( &x, &y, &w, &h );
 
 	if ( gradientColor ) {
-		trap_R_DrawStretchPicGradient( x, y, w, h, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph, gradientColor, 0 );
+		trap_R_DrawStretchPicGradient( x, y, w, h, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph, gradientColor );
 	} else {
 		trap_R_DrawStretchPic( x, y, w, h, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
 	}

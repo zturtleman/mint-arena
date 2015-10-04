@@ -513,6 +513,7 @@ static void RadioButton_Draw( menuradiobutton_s *rb )
 	float *color;
 	int	style;
 	qboolean focus;
+	int picY;
 
 	x = rb->generic.x;
 	y = rb->generic.y;
@@ -545,14 +546,18 @@ static void RadioButton_Draw( menuradiobutton_s *rb )
 	if ( rb->generic.name )
 		UI_DrawString( x - SMALLCHAR_WIDTH, y, rb->generic.name, UI_RIGHT|UI_SMALLFONT, color );
 
+	// center ratio button on box and move down 2 pixels at 16 pt size
+	picY = rb->generic.top + ( rb->generic.bottom - rb->generic.top ) / 2 - 16 / 2
+				+ 2.0f * SMALLCHAR_HEIGHT / 16.0f;
+
 	if ( !rb->curvalue )
 	{
-		CG_DrawPic( x + SMALLCHAR_WIDTH, y + 2, 16, 16, uis.rb_off);
+		CG_DrawPic( x + SMALLCHAR_WIDTH, picY, 16, 16, uis.rb_off);
 		UI_DrawString( x + SMALLCHAR_WIDTH + 16, y, "off", style, color );
 	}
 	else
 	{
-		CG_DrawPic( x + SMALLCHAR_WIDTH, y + 2, 16, 16, uis.rb_on );
+		CG_DrawPic( x + SMALLCHAR_WIDTH, picY, 16, 16, uis.rb_on );
 		UI_DrawString( x + SMALLCHAR_WIDTH + 16, y, "on", style, color );
 	}
 }

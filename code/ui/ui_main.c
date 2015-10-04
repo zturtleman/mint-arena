@@ -192,7 +192,7 @@ void UI_Text_PaintWithCursor(float x, float y, float scale, const vec4_t color, 
 		shadowOffset = 0;
 	}
 
-	Text_PaintWithCursor(x, y, UI_FontForScale( scale ), scale, color, text, cursorPos, cursor, 0, limit, shadowOffset, qfalse);
+	Text_PaintWithCursor(x, y, UI_FontForScale( scale ), scale, color, text, cursorPos, cursor, 0, limit, shadowOffset, 0, qfalse);
 }
 
 int UI_Text_Width(const char *text, float scale, int limit) {
@@ -201,10 +201,6 @@ int UI_Text_Width(const char *text, float scale, int limit) {
 
 int UI_Text_Height(const char *text, float scale, int limit) {
 	return Text_Height( text, UI_FontForScale( scale ), scale, limit );
-}
-
-void UI_Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader) {
-	Text_PaintChar( x, y, width, height, scale, s, t, s2, t2, hShader );
 }
 
 void UI_Text_Paint(float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle) {
@@ -218,7 +214,7 @@ void UI_Text_Paint(float x, float y, float scale, const vec4_t color, const char
 		shadowOffset = 0;
 	}
 
-	Text_Paint( x, y, UI_FontForScale( scale ), scale, color, text, adjust, limit, shadowOffset, qfalse );
+	Text_Paint( x, y, UI_FontForScale( scale ), scale, color, text, adjust, limit, shadowOffset, 0, qfalse );
 }
 
 void UI_Text_Paint_Limit(float *maxX, float x, float y, float scale, const vec4_t color, const char* text, float adjust, int limit) {
@@ -389,7 +385,9 @@ qboolean Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle,&pointSize)) {
 				return qfalse;
 			}
-			CG_InitTrueTypeFont(tempStr, pointSize, &uiInfo.uiDC.Assets.textFont);
+			if (!CG_InitTrueTypeFont(tempStr, pointSize, &uiInfo.uiDC.Assets.textFont)) {
+				CG_InitBitmapFont(&uiInfo.uiDC.Assets.textFont, pointSize, pointSize / 2);
+			}
 			uiInfo.uiDC.Assets.fontRegistered = qtrue;
 			continue;
 		}
@@ -399,7 +397,9 @@ qboolean Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle,&pointSize)) {
 				return qfalse;
 			}
-			CG_InitTrueTypeFont(tempStr, pointSize, &uiInfo.uiDC.Assets.smallFont);
+			if (!CG_InitTrueTypeFont(tempStr, pointSize, &uiInfo.uiDC.Assets.smallFont)) {
+				CG_InitBitmapFont(&uiInfo.uiDC.Assets.smallFont, pointSize, pointSize / 2);
+			}
 			continue;
 		}
 
@@ -408,7 +408,9 @@ qboolean Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle,&pointSize)) {
 				return qfalse;
 			}
-			CG_InitTrueTypeFont(tempStr, pointSize, &uiInfo.uiDC.Assets.bigFont);
+			if (!CG_InitTrueTypeFont(tempStr, pointSize, &uiInfo.uiDC.Assets.bigFont)) {
+				CG_InitBitmapFont(&uiInfo.uiDC.Assets.bigFont, pointSize, pointSize / 2);
+			}
 			continue;
 		}
 
@@ -963,6 +965,7 @@ static void UI_DrawMapCinematic(rectDef_t *rect, float scale, vec4_t color, qboo
 
 static qboolean updateModel = qtrue;
 static qboolean q3Model = qfalse;
+static qboolean updateModelColor = qtrue;
 
 static void UI_DrawPlayerModel(rectDef_t *rect) {
   static uiPlayerInfo_t info;
@@ -1000,6 +1003,11 @@ static void UI_DrawPlayerModel(rectDef_t *rect) {
     UI_PlayerInfo_SetInfo( &info, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
 //		UI_RegisterPlayerModelname( &info, model, head, team);
     updateModel = qfalse;
+    updateModelColor = qfalse; // playerinfo setinfo calls updatecolor
+  }
+  if (updateModelColor) {
+    UI_PlayerInfo_UpdateColor( &info );
+    updateModelColor = qfalse;
   }
 
   UI_DrawPlayer( rect->x, rect->y, rect->w, rect->h, &info, uiInfo.uiDC.realTime / 2);
@@ -1891,6 +1899,7 @@ static qboolean UI_Effects_HandleKey(int flags, float *special, int key) {
 		}
 
 	  trap_Cvar_SetValue( "color1", uitogamecode[uiInfo.effectsColor] );
+	  updateModelColor = qtrue;
     return qtrue;
   }
   return qfalse;

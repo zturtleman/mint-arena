@@ -59,10 +59,8 @@ Draws large numbers for status bar and powerups
 ==============
 */
 #ifndef MISSIONPACK_HUD
-static void CG_DrawField (int x, int y, int width, int value) {
-	char	num[16], *ptr;
-	int		l;
-	int		frame;
+static void CG_DrawField (int x, int y, int width, int value, float *color) {
+	char	num[16];
 
 	if ( width < 1 ) {
 		return;
@@ -93,34 +91,18 @@ static void CG_DrawField (int x, int y, int width, int value) {
 	}
 
 	Com_sprintf (num, sizeof(num), "%i", value);
-	l = strlen(num);
-	if (l > width)
-		l = width;
-	x += 2 + CHAR_WIDTH*(width - l);
 
-	ptr = num;
-	while (*ptr && l)
-	{
-		if (*ptr == '-')
-			frame = STAT_MINUS;
-		else
-			frame = *ptr -'0';
-
-		CG_DrawPic( x,y, CHAR_WIDTH, CHAR_HEIGHT, cgs.media.numberShaders[frame] );
-		x += CHAR_WIDTH;
-		ptr++;
-		l--;
-	}
+	CG_DrawString( x + 2 + CHAR_WIDTH * width, y, num, UI_RIGHT|UI_GRADIENT|UI_NUMBERFONT, color );
 }
 #endif // MISSIONPACK_HUD
 
 /*
 ================
-CG_Draw3DModel
+CG_Draw3DModelEx
 
 ================
 */
-void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, cgSkin_t *skin, vec3_t origin, vec3_t angles ) {
+void CG_Draw3DModelEx( float x, float y, float w, float h, qhandle_t model, cgSkin_t *skin, vec3_t origin, vec3_t angles, const byte *rgba ) {
 	refdef_t		refdef;
 	refEntity_t		ent;
 
@@ -139,6 +121,10 @@ void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, cgSkin
 	ent.customSkin = CG_AddSkinToFrame( skin );
 	ent.renderfx = RF_NOSHADOW;		// no stencil shadows
 
+	if ( rgba ) {
+		Byte4Copy( rgba, ent.shaderRGBA );
+	}
+
 	refdef.rdflags = RDF_NOWORLDMODEL;
 
 	AxisClear( refdef.viewaxis );
@@ -156,6 +142,16 @@ void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, cgSkin
 	trap_R_ClearScene();
 	CG_AddRefEntityWithMinLight( &ent );
 	trap_R_RenderScene( &refdef );
+}
+
+/*
+================
+CG_Draw3DModel
+
+================
+*/
+void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, cgSkin_t *skin, vec3_t origin, vec3_t angles ) {
+	CG_Draw3DModelEx( x, y, w, h, model, skin, origin, angles, NULL );
 }
 
 /*
@@ -194,7 +190,7 @@ void CG_DrawHead( float x, float y, float w, float h, int playerNum, vec3_t head
 		// allow per-model tweaking
 		VectorAdd( origin, pi->headOffset, origin );
 
-		CG_Draw3DModel( x, y, w, h, pi->headModel, &pi->modelSkin, origin, headAngles );
+		CG_Draw3DModelEx( x, y, w, h, pi->headModel, &pi->modelSkin, origin, headAngles, pi->c1RGBA );
 	} else if ( cg_drawIcons.integer ) {
 		CG_DrawPic( x, y, w, h, pi->modelIcon );
 	}
@@ -444,10 +440,8 @@ static void CG_DrawStatusBar( void ) {
 			} else {
 				color = 0;	// green
 			}
-			trap_R_SetColor( colors[color] );
-			
-			CG_DrawField (0, 432, 3, value);
-			trap_R_SetColor( NULL );
+
+			CG_DrawField (0, 432, 3, value, colors[color] );
 
 			// if we didn't draw a 3D icon, draw a 2D icon for ammo
 			if ( !cg_draw3dIcons.integer && cg_drawIcons.integer ) {
@@ -466,19 +460,17 @@ static void CG_DrawStatusBar( void ) {
 	//
 	value = ps->stats[STAT_HEALTH];
 	if ( value > 100 ) {
-		trap_R_SetColor( colors[3] );		// white
+		color = 3; // white
 	} else if (value > 25) {
-		trap_R_SetColor( colors[0] );	// green
+		color = 0; // green
 	} else if (value > 0) {
-		color = (cg.time >> 8) & 1;	// flash
-		trap_R_SetColor( colors[color] );
+		color = (cg.time >> 8) & 1; // flash
 	} else {
-		trap_R_SetColor( colors[1] );	// red
+		color = 1; // red
 	}
 
 	// stretch the health up when taking damage
-	CG_DrawField ( 185, 432, 3, value);
-	trap_R_SetColor( NULL );
+	CG_DrawField ( 185, 432, 3, value, colors[color] );
 
 
 	//
@@ -486,9 +478,8 @@ static void CG_DrawStatusBar( void ) {
 	//
 	value = ps->stats[STAT_ARMOR];
 	if (value > 0 ) {
-		trap_R_SetColor( colors[0] );
-		CG_DrawField (370, 432, 3, value);
-		trap_R_SetColor( NULL );
+		CG_DrawField (370, 432, 3, value, colors[0]);
+
 		// if we didn't draw a 3D icon, draw a 2D icon for armor
 		if ( !cg_draw3dIcons.integer && cg_drawIcons.integer ) {
 			CG_DrawPic( 370 + CHAR_WIDTH*3 + TEXT_ICON_SPACE, 432, ICON_SIZE, ICON_SIZE, cgs.media.armorIcon );
@@ -1126,12 +1117,10 @@ static float CG_DrawPowerups( float y ) {
 
 		  y -= ICON_SIZE;
 
-		  trap_R_SetColor( colors[color] );
-		  CG_DrawField( x, y, 2, sortedTime[ i ] / 1000 );
+		  CG_DrawField( x, y, 2, sortedTime[ i ] / 1000, colors[color] );
 
 		  t = ps->powerups[ sorted[i] ];
 		  if ( t - cg.time >= POWERUP_BLINKS * POWERUP_BLINK_TIME ) {
-			  trap_R_SetColor( NULL );
 		  } else {
 			  vec4_t	modulate;
 
@@ -1151,9 +1140,10 @@ static float CG_DrawPowerups( float y ) {
 
 		  CG_DrawPic( 640 - size, y + ICON_SIZE / 2 - size / 2, 
 			  size, size, trap_R_RegisterShader( item->icon ) );
-    }
+
+			trap_R_SetColor( NULL );
+		}
 	}
-	trap_R_SetColor( NULL );
 
 	return y;
 }
@@ -1742,6 +1732,7 @@ static void CG_DrawCenterString( void ) {
 	int		y;
 	int		charHeight;
 	float	*color;
+	float	scale;
 
 	if ( !cg.cur_lc->centerPrintTime ) {
 		return;
@@ -1756,7 +1747,15 @@ static void CG_DrawCenterString( void ) {
 
 	start = cg.cur_lc->centerPrint;
 
-	charHeight = cg.cur_lc->centerPrintCharScale * 48.0f;
+	scale = cg.cur_lc->centerPrintCharScale;
+	charHeight = GIANTCHAR_HEIGHT;
+
+	if ( scale <= 0 ) {
+		scale = charHeight / 48.0f;
+	} else {
+		charHeight = 48 * scale;
+	}
+
 	y = cg.cur_lc->centerPrintY - cg.cur_lc->centerPrintLines * charHeight / 2;
 
 	while ( 1 ) {
@@ -1770,7 +1769,7 @@ static void CG_DrawCenterString( void ) {
 		}
 		linebuffer[l] = 0;
 
-		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, cg.cur_lc->centerPrintCharScale, 0, 0 );
+		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, scale, 0, 0 );
 		y += charHeight + 6;
 
 		while ( *start && ( *start != '\n' ) ) {
@@ -1823,6 +1822,7 @@ static void CG_DrawGlobalCenterString( void ) {
 	int		y;
 	int		charHeight;
 	float	*color;
+	float	scale;
 
 	if ( !cg.centerPrintTime ) {
 		return;
@@ -1837,7 +1837,15 @@ static void CG_DrawGlobalCenterString( void ) {
 
 	start = cg.centerPrint;
 
-	charHeight = cg.centerPrintCharScale * 48.0f;
+	scale = cg.centerPrintCharScale;
+	charHeight = GIANTCHAR_HEIGHT;
+
+	if ( scale <= 0 ) {
+		scale = charHeight / 48.0f;
+	} else {
+		charHeight = 48 * scale;
+	}
+
 	y = cg.centerPrintY - cg.centerPrintLines * charHeight / 2;
 
 	while ( 1 ) {
@@ -1851,7 +1859,7 @@ static void CG_DrawGlobalCenterString( void ) {
 		}
 		linebuffer[l] = 0;
 
-		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, cg.centerPrintCharScale, 0, 0 );
+		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, scale, 0, 0 );
 		y += charHeight + 6;
 
 		while ( *start && ( *start != '\n' ) ) {
@@ -2579,7 +2587,7 @@ static qboolean CG_DrawFollow( void ) {
 
 	CG_DrawString( SCREEN_WIDTH / 2, 40, name, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 
-	CG_DrawBotInfo( 40 + GIANT_HEIGHT );
+	CG_DrawBotInfo( 40 + GIANTCHAR_HEIGHT );
 
 	return qtrue;
 }

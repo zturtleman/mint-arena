@@ -3316,6 +3316,46 @@ void BotVisibleTeamMatesAndEnemies(bot_state_t *bs, int *teammates, int *enemies
 	}
 }
 
+/*
+==================
+BotCountTeamMates
+
+Counts all teammates inside a specific range, regardless if they are visible or not.
+==================
+*/
+void BotCountTeamMates(bot_state_t *bs, int *teammates, float range) {
+	int i;
+	aas_entityinfo_t entinfo;
+	vec3_t dir;
+
+	if (teammates) {
+		*teammates = 0;
+	}
+
+	for (i = 0; i < level.maxplayers; i++) {
+		if (i == bs->playernum) {
+			continue;
+		}
+
+		BotEntityInfo(i, &entinfo);
+		// if this player is active
+		if (!entinfo.valid) {
+			continue;
+		}
+		// if not within range
+		VectorSubtract(entinfo.origin, bs->origin, dir);
+
+		if (VectorLengthSquared(dir) > Square(range)) {
+			continue;
+		}
+		// if on the same team
+		if (BotSameTeam(bs, i)) {
+			if (teammates) {
+				(*teammates)++;
+			}
+		}
+	}
+}
 #ifdef MISSIONPACK
 /*
 ==================

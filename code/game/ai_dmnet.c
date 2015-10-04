@@ -325,6 +325,8 @@ int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 			//reset the avoid goals and the avoid reach
 			BotResetAvoidGoals(bs->gs);
 			BotResetAvoidReach(bs->ms);
+			//check blocked teammates
+			BotCheckBlockedTeammates(bs);
 		}
 		//get the goal at the top of the stack
 		return BotGetTopGoal(bs->gs, goal);
@@ -341,12 +343,12 @@ however this saves us a lot of code
 ==================
 */
 int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) {
-	vec3_t target, dir, dir2;
+	vec3_t target, dir;
 	char netname[MAX_NETNAME];
 	char buf[MAX_MESSAGE_SIZE];
 	int areanum, teammates;
 	float croucher;
-	aas_entityinfo_t entinfo, botinfo;
+	aas_entityinfo_t entinfo;
 	bot_waypoint_t *wp;
 
 	if (bs->ltgtype == LTG_TEAMHELP && !retreat) {
@@ -371,6 +373,8 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			VectorSubtract(entinfo.origin, bs->origin, dir);
 			if (VectorLengthSquared(dir) < Square(100)) {
 				BotResetAvoidReach(bs->ms);
+				//check blocked teammates
+				BotCheckBlockedTeammates(bs);
 				return qfalse;
 			}
 		}
@@ -431,35 +435,6 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			if (BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, bs->teammate)) {
 				//update visible time
 				bs->teammatevisible_time = FloatTime();
-				//
-				// if the player being followed bumps into this bot then
-				// the bot should back up
-				BotEntityInfo(bs->entitynum, &botinfo);
-				// if the followed player is not standing ontop of the bot
-				if (botinfo.origin[2] + botinfo.maxs[2] > entinfo.origin[2] + entinfo.mins[2]) {
-					// if the bounding boxes touch each other
-					if (botinfo.origin[0] + botinfo.maxs[0] > entinfo.origin[0] + entinfo.mins[0] - 4&&
-						botinfo.origin[0] + botinfo.mins[0] < entinfo.origin[0] + entinfo.maxs[0] + 4) {
-						if (botinfo.origin[1] + botinfo.maxs[1] > entinfo.origin[1] + entinfo.mins[1] - 4 &&
-							botinfo.origin[1] + botinfo.mins[1] < entinfo.origin[1] + entinfo.maxs[1] + 4) {
-							if (botinfo.origin[2] + botinfo.maxs[2] > entinfo.origin[2] + entinfo.mins[2] - 4 &&
-								botinfo.origin[2] + botinfo.mins[2] < entinfo.origin[2] + entinfo.maxs[2] + 4) {
-								// if the followed player looks in the direction of this bot
-								AngleVectors(entinfo.angles, dir, NULL, NULL);
-								dir[2] = 0;
-								VectorNormalize(dir);
-								//VectorSubtract(entinfo.origin, entinfo.lastvisorigin, dir);
-								VectorSubtract(bs->origin, entinfo.origin, dir2);
-								VectorNormalize(dir2);
-								if (DotProduct(dir, dir2) > 0.7) {
-									// back up
-									BotSetupForMovement(bs);
-									BotMoveInDirection(bs->ms, dir2, 400, MOVE_WALK);
-								}
-							}
-						}
-					}
-				}
 				//if not arrived yet or arived some time ago
 				if (bs->arrive_time < FloatTime() - 2) {
 					//if not arrived yet
@@ -507,6 +482,8 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			}
 
 			BotResetAvoidReach(bs->ms);
+			//check blocked teammates
+			BotCheckBlockedTeammates(bs);
 			return qfalse;
 		}
 		//if the entity information is valid (entity in PVS)
@@ -710,6 +687,8 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			//FIXME: move around a bit
 			//
 			BotResetAvoidReach(bs->ms);
+			//check blocked teammates
+			BotCheckBlockedTeammates(bs);
 			return qfalse;
 		}
 		return qtrue;

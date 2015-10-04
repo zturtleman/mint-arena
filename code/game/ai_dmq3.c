@@ -2740,7 +2740,11 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 	jumper = Characteristic_BFloat(bs->character, CHARACTERISTIC_JUMPER, 0, 1);
 	croucher = Characteristic_BFloat(bs->character, CHARACTERISTIC_CROUCHER, 0, 1);
 	//if the bot is really stupid
-	if (attack_skill < 0.2) return moveresult;
+	if (attack_skill < 0.2) {
+		//check blocked teammates
+		BotCheckBlockedTeammates(bs);
+		return moveresult;
+	}
 	//initialize the movement state
 	BotSetupForMovement(bs);
 	//get the enemy entity info
@@ -4583,6 +4587,122 @@ void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult, float speed) {
 
 	moveresult->failure = (i == 8);
 	VectorCopy(dir, moveresult->movedir);
+}
+/*
+==================
+BotCheckBlockedTeammates
+==================
+*/
+void BotCheckBlockedTeammates(bot_state_t* bs) {
+	bot_moveresult_t moveresult;
+	int movetype, i;
+	aas_entityinfo_t entinfo;
+	gentity_t *ent;
+	float mindist, speed;
+	vec3_t mins, maxs, end, v1, sideward, up = {0, 0, 1}, blocked_movedir;
+	trace_t trace;
+
+	if (g_gametype.integer < GT_TEAM) {
+		return;
+	}
+
+	if (BotCTFCarryingFlag(bs)) {
+		return;
+	}
+#ifdef MISSIONPACK
+	if (Bot1FCTFCarryingFlag(bs)) {
+		return;
+	}
+
+	if (BotHarvesterCarryingCubes(bs)) {
+		return;
+	}
+#endif
+	// initialize the movement state
+	BotSetupForMovement(bs);
+
+	for (i = 0; i < level.maxplayers; i++) {
+		if (i == bs->playernum) {
+			continue;
+		}
+		// if on the same team
+		if (!BotSameTeam(bs, i)) {
+			continue;
+		}
+		// get entity information of the teammate
+		BotEntityInfo(i, &entinfo);
+		// if this teammate is active
+		if (!entinfo.valid) {
+			continue;
+		}
+		// if the teammate isn't dead and the teammate isn't the bot self
+		if (EntityIsDead(&entinfo) || entinfo.number == bs->entitynum) {
+			continue;
+		}
+		// set some movement parameters
+		movetype = MOVE_WALK;
+		mindist = 8;
+		speed = 200;
+
+		ent = &g_entities[i];
+		// human players and facing teammates need more space
+		if ((!(ent->r.svFlags & SVF_BOT)) || BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 90, i)) {
+			mindist = 32;
+		}
+		// teammates with an important item needs even more space, and stay away from dangerous teammates (mined/burning players).
+		if (EntityCarriesFlag(&entinfo)
+#ifdef MISSIONPACK
+		 || EntityCarriesCubes(&entinfo) || bs->inventory[INVENTORY_SCOUT] || entinfo.flags & EF_TICKING
+#endif
+		 ) {
+			mindist = 128;
+			speed = 400;
+		}
+		// safety check, don't force to reach the goal
+		if (mindist >= bs->formation_dist) {
+			bs->formation_dist *= 2;
+		}
+		// calculate the direction towards the teammate
+		v1[2] = 0;
+		VectorSubtract(entinfo.origin, bs->origin, v1);
+		VectorNormalize(v1);
+		// now check if the teammate is blocked, increase the distance accordingly
+		trap_AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
+		VectorMA(bs->origin, mindist, v1, end);
+		trap_ClipToEntities(&trace, bs->origin, mins, maxs, end, bs->entitynum, MASK_PLAYERSOLID);
+		// if the teammate is too close (blocked)
+		if (trace.entityNum == i && (trace.startsolid || trace.fraction < 1.0)) {
+			// stop crouching to gain speed
+			bs->attackcrouch_time = FloatTime() - 1;
+			// look into the direction of the blocked teammate
+			vectoangles(v1, bs->ideal_viewangles);
+			// get the sideward vector
+			CrossProduct(up, v1, sideward);
+			// get the direction the blocked player is moving
+			blocked_movedir[2] = 0;
+			VectorCopy(ent->player->ps.velocity, blocked_movedir);
+			// the blocked player is moving to his left side, so move to his right side (and vice versa)
+			if (DotProduct(blocked_movedir, sideward) > -50.0f) {
+				// flip the direction
+				VectorNegate(sideward, sideward);
+			}
+			// also go backwards a little
+			VectorMA(sideward, -1, v1, sideward);
+			// move sidwards
+			if (!BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
+				// flip the direction
+				VectorNegate(sideward, sideward);
+				// move in the other direction
+				if (!BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
+					// try to step back
+					if (!BotMoveInDirection(bs->ms, v1, speed, movetype)) {
+						// move in a random direction in the hope to get out
+						BotRandomMove(bs, &moveresult, speed);
+					}
+				}
+			}
+		}
+	}
 }
 
 /*

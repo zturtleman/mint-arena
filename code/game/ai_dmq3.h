@@ -134,6 +134,8 @@ float BotEntityVisible(int viewer, vec3_t eye, vec3_t viewangles, float fov, int
 void BotAimAtEnemy(bot_state_t *bs);
 //check if the bot should attack
 void BotCheckAttack(bot_state_t *bs);
+//check if the bot is blocking a teammate
+void BotCheckBlockedTeammates(bot_state_t *bs);
 //AI when the bot is blocked
 void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate);
 //AI to predict obstacles

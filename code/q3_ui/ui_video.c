@@ -309,23 +309,23 @@ static InitialVideoOptions_s s_ivo_templates[] =
 {
 	// very high
 	{
-		6, qtrue, 3, 0, 2, 3, 3, 2, qtrue, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
+		6, qtrue, 3, 0, 2, 3, 5, 2, qtrue, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
 	},
 	// high
 	{
-		4, qtrue, 3, 0, 2, 2, 2, 1, qtrue, qtrue
+		6, qtrue, 3, 0, 2, 2, 2, 1, qtrue, qtrue
 	},
 	// normal
 	{
-		3, qtrue, 2, 0, 0, 1, 0, 0, qtrue, qfalse
+		6, qtrue, 3, 0, 2, 2, 1, 0, qtrue, qtrue
 	},
 	// fast
 	{
-		2, qtrue, 1, 0, 0, 0, 0, 0, qtrue, qfalse
+		4, qtrue, 2, 0, 0, 1, 0, 0, qtrue, qfalse
 	},
 	// fastest
 	{
-		2, qtrue, 1, 1, 0, 0, 0, 0, qtrue, qfalse
+		3, qtrue, 1, 1, 0, 0, 0, 0, qtrue, qfalse
 	},
 	// custom
 	{
@@ -521,6 +521,21 @@ static void GraphicsOptions_GetInitialVideo( void )
 	s_ivo.filter      = s_graphicsoptions.filter.curvalue;
 	s_ivo.multisample = s_graphicsoptions.multisample.curvalue;
 	s_ivo.texturebits = s_graphicsoptions.texturebits.curvalue;
+
+#if 0
+	Com_Printf( "DEBUG: s_ivo = { %d, %d, %d, %d, %d, %d, %d, %d, %s, %s }\n",
+			s_ivo.mode,
+			s_ivo.fullscreen,
+			s_ivo.tq,
+			s_ivo.lighting,
+			s_ivo.texturebits,
+			s_ivo.geometry,
+			s_ivo.filter,
+			s_ivo.multisample,
+			s_ivo.extensions ? "qtrue" : "qfalse",
+			s_ivo.flares ? "qtrue" : "qfalse"
+			);
+#endif
 }
 
 /*
@@ -574,8 +589,8 @@ static void GraphicsOptions_CheckConfig( void )
 	{
 		if ( GraphicsOptions_FindDetectedResolution(s_ivo_templates[i].mode) != s_graphicsoptions.mode.curvalue )
 			continue;
-		if ( s_ivo_templates[i].fullscreen != s_graphicsoptions.fs.curvalue )
-			continue;
+//		if ( s_ivo_templates[i].fullscreen != s_graphicsoptions.fs.curvalue )
+//			continue;
 		if ( s_ivo_templates[i].tq != s_graphicsoptions.tq.curvalue )
 			continue;
 		if ( s_ivo_templates[i].lighting != s_graphicsoptions.lighting.curvalue )

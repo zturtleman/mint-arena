@@ -464,7 +464,7 @@ void UI_DrawSlider( float x, float y, float min, float max, float value, int sty
 // TODO: Should "is this a radio button" be determined in UI_BuildCurrentMenu instead of checking each item each frame?
 static void UI_DrawRadioButton( currentMenuItem_t *item, float *x ) {
 	qhandle_t hShader;
-	int valuePair0, valuePair1, offPair;
+	int valuePair0, valuePair1, offPair, picY;
 
 	if ( !item->cvarPairs || item->numPairs != 2 || item->cvarPairs[ 0 ].type != CVT_INT || item->cvarPairs[ 1 ].type != CVT_INT
 		|| !uiAssets.radioButtonOff || !uiAssets.radioButtonOn ) {
@@ -492,7 +492,11 @@ static void UI_DrawRadioButton( currentMenuItem_t *item, float *x ) {
 
 	hShader = ( item->cvarPair == offPair ) ? uiAssets.radioButtonOff : uiAssets.radioButtonOn;
 
-	CG_DrawPic( *x, item->captionPos.y, 16, 16, hShader );
+	// center ratio button on box and move down 2 pixels at 16 pt size
+	picY = item->captionPos.y + item->captionPos.height / 2 - 16 / 2
+				+ 2.0f * SMALLCHAR_HEIGHT / 16.0f;
+
+	CG_DrawPic( *x, picY, 16, 16, hShader );
 	*x += 16;
 }
 

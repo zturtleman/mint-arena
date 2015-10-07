@@ -277,7 +277,6 @@ typedef struct {
 	menulist_s  	fs;
 	menulist_s  	lighting;
 	menulist_s  	flares;
-	menulist_s  	allow_extensions;
 	menulist_s  	texturebits;
 	menulist_s  	geometry;
 	menulist_s  	filter;
@@ -298,7 +297,6 @@ typedef struct
 	int geometry;
 	int filter;
 	int multisample;
-	qboolean extensions;
 	qboolean flares;
 } InitialVideoOptions_s;
 
@@ -309,27 +307,27 @@ static InitialVideoOptions_s s_ivo_templates[] =
 {
 	// very high
 	{
-		6, qtrue, 3, 0, 2, 3, 5, 2, qtrue, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
+		6, qtrue, 3, 0, 2, 3, 5, 2, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
 	},
 	// high
 	{
-		6, qtrue, 3, 0, 2, 2, 2, 1, qtrue, qtrue
+		6, qtrue, 3, 0, 2, 2, 2, 1, qtrue
 	},
 	// normal
 	{
-		6, qtrue, 3, 0, 2, 2, 1, 0, qtrue, qtrue
+		6, qtrue, 3, 0, 2, 2, 1, 0, qtrue
 	},
 	// fast
 	{
-		4, qtrue, 2, 0, 0, 1, 0, 0, qtrue, qfalse
+		4, qtrue, 2, 0, 0, 1, 0, 0, qfalse
 	},
 	// fastest
 	{
-		3, qtrue, 1, 1, 0, 0, 0, 0, qtrue, qfalse
+		3, qtrue, 1, 1, 0, 0, 0, 0, qfalse
 	},
 	// custom
 	{
-		3, qtrue, 1, 0, 0, 1, 0, 0, qtrue, qfalse
+		3, qtrue, 1, 0, 0, 1, 0, 0, qfalse
 	}
 };
 
@@ -513,7 +511,6 @@ static void GraphicsOptions_GetInitialVideo( void )
 {
 	s_ivo.mode        = s_graphicsoptions.mode.curvalue;
 	s_ivo.fullscreen  = s_graphicsoptions.fs.curvalue;
-	s_ivo.extensions  = s_graphicsoptions.allow_extensions.curvalue;
 	s_ivo.tq          = s_graphicsoptions.tq.curvalue;
 	s_ivo.lighting    = s_graphicsoptions.lighting.curvalue;
 	s_ivo.flares      = s_graphicsoptions.flares.curvalue;
@@ -523,7 +520,7 @@ static void GraphicsOptions_GetInitialVideo( void )
 	s_ivo.texturebits = s_graphicsoptions.texturebits.curvalue;
 
 #if 0
-	Com_Printf( "DEBUG: s_ivo = { %d, %d, %d, %d, %d, %d, %d, %d, %s, %s }\n",
+	Com_Printf( "DEBUG: s_ivo = { %d, %d, %d, %d, %d, %d, %d, %d, %s }\n",
 			s_ivo.mode,
 			s_ivo.fullscreen,
 			s_ivo.tq,
@@ -532,7 +529,6 @@ static void GraphicsOptions_GetInitialVideo( void )
 			s_ivo.geometry,
 			s_ivo.filter,
 			s_ivo.multisample,
-			s_ivo.extensions ? "qtrue" : "qfalse",
 			s_ivo.flares ? "qtrue" : "qfalse"
 			);
 #endif
@@ -620,14 +616,6 @@ GraphicsOptions_UpdateMenuItems
 */
 static void GraphicsOptions_UpdateMenuItems( void )
 {
-	if ( s_graphicsoptions.allow_extensions.curvalue == 0 )
-	{
-		if ( s_graphicsoptions.texturebits.curvalue == 0 )
-		{
-			s_graphicsoptions.texturebits.curvalue = 1;
-		}
-	}
-
 	s_graphicsoptions.apply.generic.flags |= QMF_HIDDEN|QMF_INACTIVE;
 
 	if ( s_ivo.mode != s_graphicsoptions.mode.curvalue )
@@ -635,10 +623,6 @@ static void GraphicsOptions_UpdateMenuItems( void )
 		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
 	}
 	if ( s_ivo.fullscreen != s_graphicsoptions.fs.curvalue )
-	{
-		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
-	}
-	if ( s_ivo.extensions != s_graphicsoptions.allow_extensions.curvalue )
 	{
 		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
 	}
@@ -697,7 +681,6 @@ static void GraphicsOptions_ApplyChanges( void *unused, int notification )
 		break;
 	}
 	trap_Cvar_SetValue( "r_picmip", 3 - s_graphicsoptions.tq.curvalue );
-	trap_Cvar_SetValue( "r_allowExtensions", s_graphicsoptions.allow_extensions.curvalue );
 
 	if( resolutionsDetected )
 	{
@@ -915,7 +898,6 @@ static void GraphicsOptions_SetMenuItems( void )
 	s_graphicsoptions.ratio.curvalue =
 		resToRatio[ s_graphicsoptions.mode.curvalue ];
 	s_graphicsoptions.fs.curvalue = trap_Cvar_VariableValue("r_fullscreen");
-	s_graphicsoptions.allow_extensions.curvalue = trap_Cvar_VariableValue("r_allowExtensions");
 	s_graphicsoptions.tq.curvalue = 3-trap_Cvar_VariableValue( "r_picmip");
 	if ( s_graphicsoptions.tq.curvalue < 0 )
 	{
@@ -1167,15 +1149,6 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.list.itemnames        = s_graphics_options_names;
 	y += 2 * ( BIGCHAR_HEIGHT + 2 );
 
-	// references/modifies "r_allowExtensions"
-	s_graphicsoptions.allow_extensions.generic.type     = MTYPE_SPINCONTROL;
-	s_graphicsoptions.allow_extensions.generic.name	    = "GL Extensions:";
-	s_graphicsoptions.allow_extensions.generic.flags	= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
-	s_graphicsoptions.allow_extensions.generic.x	    = 400;
-	s_graphicsoptions.allow_extensions.generic.y	    = y;
-	s_graphicsoptions.allow_extensions.itemnames        = enabled_names;
-	y += BIGCHAR_HEIGHT+2;
-
 	s_graphicsoptions.ratio.generic.type     = MTYPE_SPINCONTROL;
 	s_graphicsoptions.ratio.generic.name     = "Aspect Ratio:";
 	s_graphicsoptions.ratio.generic.flags    = QMF_PULSEIFFOCUS|QMF_SMALLFONT;
@@ -1310,7 +1283,6 @@ void GraphicsOptions_MenuInit( void )
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.network );
 
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.list );
-	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.allow_extensions );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.ratio );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.mode );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.fs );

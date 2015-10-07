@@ -273,7 +273,7 @@ typedef struct {
 	menulist_s		ratio;
 	menulist_s		mode;
 	menulist_s		driver;
-	menuslider_s	tq;
+	menulist_s		tq;
 	menulist_s  	fs;
 	menulist_s  	lighting;
 	menulist_s  	flares;
@@ -849,19 +849,6 @@ static void GraphicsOptions_Event( void* ptr, int event ) {
 
 /*
 ================
-GraphicsOptions_TQEvent
-================
-*/
-static void GraphicsOptions_TQEvent( void *ptr, int event ) {
-	if( event != QM_ACTIVATED ) {
-	 	return;
-	}
-	s_graphicsoptions.tq.curvalue = (int)(s_graphicsoptions.tq.curvalue + 0.5);
-}
-
-
-/*
-================
 GraphicsOptions_MenuDraw
 ================
 */
@@ -1068,6 +1055,14 @@ void GraphicsOptions_MenuInit( void )
 		"4x MSAA",
 		NULL
 	};
+	static const char *detail_names[] =
+	{
+		"13%",
+		"25%",
+		"50%",
+		"100%",
+		NULL
+	};
 
 	int y;
 
@@ -1233,14 +1228,12 @@ void GraphicsOptions_MenuInit( void )
 	y += BIGCHAR_HEIGHT+2;
 
 	// references/modifies "r_picmip"
-	s_graphicsoptions.tq.generic.type	= MTYPE_SLIDER;
+	s_graphicsoptions.tq.generic.type	= MTYPE_SPINCONTROL;
 	s_graphicsoptions.tq.generic.name	= "Texture Detail:";
 	s_graphicsoptions.tq.generic.flags	= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
 	s_graphicsoptions.tq.generic.x		= 400;
 	s_graphicsoptions.tq.generic.y		= y;
-	s_graphicsoptions.tq.minvalue       = 0;
-	s_graphicsoptions.tq.maxvalue       = 3;
-	s_graphicsoptions.tq.generic.callback = GraphicsOptions_TQEvent;
+	s_graphicsoptions.tq.itemnames		= detail_names;
 	y += BIGCHAR_HEIGHT+2;
 
 	// references/modifies "r_textureBits"

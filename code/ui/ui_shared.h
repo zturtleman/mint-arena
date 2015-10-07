@@ -449,6 +449,7 @@ void Menu_Paint(menuDef_t *menu, qboolean forcePaint);
 void Menu_SetFeederSelection(menuDef_t *menu, int feeder, int index, const char *name);
 void Menu_SetScreenPlacement(menuDef_t *menu, screenPlacement_e hpos, screenPlacement_e vpos );
 void Display_CacheAll( void );
+qboolean Display_DebugMode( void );
 
 void *UI_Alloc( int size );
 void UI_InitMemory( void );

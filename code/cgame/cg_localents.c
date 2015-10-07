@@ -331,6 +331,8 @@ void CG_AddFragment( localEntity_t *le ) {
 		}
 		BG_EvaluateTrajectory( &le->pos, oldTime, origin );
 
+		VectorClear( angles );
+
 		// add the distance mover has moved since then
 		CG_AdjustPositionForMover( origin, trace.entityNum,
 			oldTime, cg.time, origin, angles, angles );
@@ -777,13 +779,11 @@ void CG_AddRefEntity( localEntity_t *le ) {
 CG_AddScorePlum
 ===================
 */
-#define NUMBER_SIZE		8
-
 void CG_AddScorePlum( localEntity_t *le ) {
 	refEntity_t	*re;
 	vec3_t		origin, delta, dir, vec, up = {0, 0, 1};
 	float		c, len;
-	int			i, score, digits[10], numdigits, negative;
+	int			score;
 
 	re = &le->refEntity;
 
@@ -815,8 +815,6 @@ void CG_AddScorePlum( localEntity_t *le ) {
 	else
 		re->shaderRGBA[3] = 0xff;
 
-	re->radius = NUMBER_SIZE / 2;
-
 	VectorCopy(le->pos.trBase, origin);
 	origin[2] += 110 - c * 100;
 
@@ -835,27 +833,10 @@ void CG_AddScorePlum( localEntity_t *le ) {
 		return;
 	}
 
-	negative = qfalse;
-	if (score < 0) {
-		negative = qtrue;
-		score = -score;
-	}
-
-	for (numdigits = 0; !(numdigits && !score); numdigits++) {
-		digits[numdigits] = score % 10;
-		score = score / 10;
-	}
-
-	if (negative) {
-		digits[numdigits] = 10;
-		numdigits++;
-	}
-
-	for (i = 0; i < numdigits; i++) {
-		VectorMA(origin, (float) (((float) numdigits / 2) - i) * NUMBER_SIZE, vec, re->origin);
-		re->customShader = cgs.media.numberShaders[digits[numdigits-1-i]];
-		trap_R_AddRefEntityToScene( re );
-	}
+	VectorCopy( origin, re->origin );
+	VectorCopy( origin, re->oldorigin );
+	AxisCopy( cg.refdef.viewaxis, re->axis );
+	CG_SurfaceText( re, &cgs.media.numberFont, 1, va( "%d", score ), 0, 0, 0.4f, qfalse );
 }
 
 /*

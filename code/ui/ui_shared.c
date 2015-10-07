@@ -5823,3 +5823,7 @@ static qboolean Menu_OverActiveItem(menuDef_t *menu, float x, float y) {
 	return qfalse;
 }
 
+qboolean Display_DebugMode( void ) {
+	return debugMode;
+}
+

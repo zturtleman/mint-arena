@@ -170,7 +170,7 @@ void CG_AddLightstyle( centity_t *cent ) {
 	int otime;
 	int lastch, nextch;
 
-	if ( !cent->dl_stylestring ) {
+	if ( !cent->dl_stylestring[0] ) {
 		return;
 	}
 
@@ -712,6 +712,7 @@ static void CG_Mover( centity_t *cent ) {
 	VectorCopy( cent->lerpOrigin, ent.oldorigin);
 	AnglesToAxis( cent->lerpAngles, ent.axis );
 
+	ent.reType = RT_MODEL;
 	ent.renderfx = RF_NOSHADOW;
 
 	// flicker between two skins (FIXME?)

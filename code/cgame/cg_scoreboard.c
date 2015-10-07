@@ -505,14 +505,14 @@ void CG_DrawTourneyScoreboard( void ) {
 		s = va("%i", cg.teamScores[0] );
 		CG_DrawString( 632, y, s, UI_RIGHT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 		
-		y += 64;
+		y += GIANTCHAR_HEIGHT + 16;
 
 		CG_DrawString( 8, y, "Blue Team", UI_LEFT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 		s = va("%i", cg.teamScores[1] );
 		CG_DrawString( 632, y, s, UI_RIGHT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
-	} else {
+	} else if ( cgs.gametype == GT_TOURNAMENT ) {
 		//
-		// free for all scoreboard
+		// tournament scoreboard
 		//
 		for ( i = 0 ; i < MAX_CLIENTS ; i++ ) {
 			pi = &cgs.playerinfo[i];
@@ -526,7 +526,40 @@ void CG_DrawTourneyScoreboard( void ) {
 			CG_DrawString( 8, y, pi->name, UI_LEFT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 			s = va("%i", pi->score );
 			CG_DrawString( 632, y, s, UI_RIGHT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
-			y += 64;
+			y += GIANTCHAR_HEIGHT + 16;
+		}
+	} else {
+		//
+		// free for all scoreboard (players sorted by score)
+		//
+		int style, gap;
+
+		style = UI_GIANTFONT;
+		gap = GIANTCHAR_HEIGHT + 16;
+
+		// use smaller font if not all players fit
+		if ( cg.numScores > ( SCREEN_HEIGHT - y ) / gap ) {
+			style = UI_BIGFONT;
+			gap = BIGCHAR_HEIGHT + 4;
+		}
+
+		for ( i = 0 ; i < cg.numScores; i++ ) {
+			pi = &cgs.playerinfo[ cg.scores[i].playerNum ];
+			if ( !pi->infoValid ) {
+				continue;
+			}
+			if ( pi->team != TEAM_FREE ) {
+				continue;
+			}
+
+			CG_DrawString( 8, y, pi->name, UI_LEFT|UI_DROPSHADOW|style, NULL );
+			s = va("%i", pi->score );
+			CG_DrawString( 632, y, s, UI_RIGHT|UI_DROPSHADOW|style, NULL );
+			y += gap;
+
+			if ( y >= SCREEN_HEIGHT ) {
+				break;
+			}
 		}
 	}
 

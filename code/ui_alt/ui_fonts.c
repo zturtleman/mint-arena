@@ -185,7 +185,6 @@ static int propMapB[26][3] = {
 
 #define PROPB_GAP_WIDTH		4
 #define PROPB_SPACE_WIDTH	12
-#define PROPB_HEIGHT		36
 
 void UI_InitBannerFont( fontInfo_t *font ) {
 	int			i, aw, xSkip;
@@ -266,10 +265,13 @@ void UI_DrawBannerString( int x, int y, const char* str, int style, vec4_t color
 			break;
 	}
 
+	//
 	// This function expects that y is top of line, text_paint expects at baseline
+	//
 	decent = -uis.fontPropB.glyphs[(int)'g'].top + uis.fontPropB.glyphs[(int)'g'].height;
 	y = y + PROPB_HEIGHT - decent * PROPB_HEIGHT / 48.0f * uis.fontPropB.glyphScale;
-	Text_Paint( x, y, &uis.fontPropB, PROPB_HEIGHT / 48.0f, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, qfalse );
+
+	Text_Paint( x, y, &uis.fontPropB, PROPB_HEIGHT / 48.0f, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, qfalse );
 }
 
 
@@ -360,19 +362,23 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 	int		glowY;
 	vec4_t	drawcolor;
 	int		width;
-	float	sizeScale;
+	int		charh;
+	float	propScale;
+	float	scale;
 
+	propScale = UI_ProportionalSizeScale( style );
 
-	sizeScale = UI_ProportionalSizeScale( style );
+	charh = propScale * PROP_HEIGHT;
+	scale = propScale * PROP_HEIGHT / 48.0f;
 
 	switch( style & UI_FORMATMASK ) {
 		case UI_CENTER:
-			width = UI_ProportionalStringWidth( str ) * sizeScale;
+			width = UI_ProportionalStringWidth( str ) * propScale;
 			x -= width / 2;
 			break;
 
 		case UI_RIGHT:
-			width = UI_ProportionalStringWidth( str ) * sizeScale;
+			width = UI_ProportionalStringWidth( str ) * propScale;
 			x -= width;
 			break;
 
@@ -381,36 +387,46 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 			break;
 	}
 
+	//
 	// This function expects that y is top of line, text_paint expects at baseline
+	//
 	// glow font
 	decent = -uis.fontPropGlow.glyphs[(int)'g'].top + uis.fontPropGlow.glyphs[(int)'g'].height;
-	glowY = y + PROP_HEIGHT - decent * sizeScale * PROP_HEIGHT / 48.0f * uis.fontPropGlow.glyphScale;
+	glowY = y + charh - decent * scale * uis.fontPropGlow.glyphScale;
+	if ( decent != 0 ) {
+		// Make TrueType fonts line up with font1_prop bitmap font which has 4 transparent pixels above glyphs at 16 point font size
+		glowY += 3.0f * propScale;
+	}
 
 	// normal font
 	decent = -uis.fontProp.glyphs[(int)'g'].top + uis.fontProp.glyphs[(int)'g'].height;
-	y = y + PROP_HEIGHT - decent * sizeScale * PROP_HEIGHT / 48.0f * uis.fontProp.glyphScale;
+	y = y + charh - decent * scale * uis.fontProp.glyphScale;
+	if ( decent != 0 ) {
+		// Make TrueType fonts line up with font1_prop bitmap font which has 4 transparent pixels above glyphs at 16 point font size
+		y += 3.0f * propScale;
+	}
 
 	if ( style & UI_INVERSE ) {
 		drawcolor[0] = color[0] * 0.7;
 		drawcolor[1] = color[1] * 0.7;
 		drawcolor[2] = color[2] * 0.7;
 		drawcolor[3] = color[3];
-		Text_Paint( x, y, &uis.fontProp, sizeScale * PROP_HEIGHT / 48.0f, drawcolor, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, qfalse );
+		Text_Paint( x, y, &uis.fontProp, scale, drawcolor, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, qfalse );
 		return;
 	}
 
 	if ( style & UI_PULSE ) {
-		Text_Paint( x, y, &uis.fontProp, sizeScale * PROP_HEIGHT / 48.0f, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, qfalse );
+		Text_Paint( x, y, &uis.fontProp, scale, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, qfalse );
 
 		drawcolor[0] = color[0];
 		drawcolor[1] = color[1];
 		drawcolor[2] = color[2];
 		drawcolor[3] = 0.5 + 0.5 * sin( cg.realTime / PULSE_DIVISOR );
-		Text_Paint( x, glowY, &uis.fontPropGlow, sizeScale * PROP_HEIGHT / 48.0f, drawcolor, str, 0, 0, 0, qfalse );
+		Text_Paint( x, glowY, &uis.fontPropGlow, scale, drawcolor, str, 0, 0, 0, 0, qfalse );
 		return;
 	}
 
-	Text_Paint( x, y, &uis.fontProp, sizeScale * PROP_HEIGHT / 48.0f, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, qfalse );
+	Text_Paint( x, y, &uis.fontProp, scale, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, qfalse );
 }
 
 #endif // Q3UIFONTS

@@ -2548,7 +2548,10 @@ void CG_Player( centity_t *cent ) {
 	// get the player model information
 	renderfx = 0;
 	if ( cent->currentState.number == cg.cur_ps->playerNum) {
-		CG_StepOffset( cent->lerpOrigin );
+		// ZTM: FIXME: using CG_StepOffset, if player runs up steep stairs they are drawn deep in stairs/floor
+		if ( cg_thirdPersonSmooth[cg.cur_localPlayerNum].integer ) {
+			CG_StepOffset( cent->lerpOrigin );
+		}
 
 		if (!cg.cur_lc->renderingThirdPerson) {
 			renderfx = RF_ONLY_MIRROR;
@@ -2621,6 +2624,8 @@ void CG_Player( centity_t *cent ) {
 	legs.renderfx = renderfx;
 	VectorCopy (legs.origin, legs.oldorigin);	// don't positionally lerp at all
 
+	Byte4Copy( pi->c1RGBA, legs.shaderRGBA );
+
 	CG_AddRefEntityWithPowerups( &legs, &cent->currentState );
 
 	// if the model failed, allow the default nullmodel to be displayed
@@ -2644,6 +2649,8 @@ void CG_Player( centity_t *cent ) {
 
 	torso.shadowPlane = shadowPlane;
 	torso.renderfx = renderfx;
+
+	Byte4Copy( pi->c1RGBA, torso.shaderRGBA );
 
 	CG_AddRefEntityWithPowerups( &torso, &cent->currentState );
 
@@ -2869,6 +2876,8 @@ void CG_Player( centity_t *cent ) {
 
 	head.shadowPlane = shadowPlane;
 	head.renderfx = renderfx;
+
+	Byte4Copy( pi->c1RGBA, head.shaderRGBA );
 
 	CG_AddRefEntityWithPowerups( &head, &cent->currentState );
 

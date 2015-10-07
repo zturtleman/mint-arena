@@ -31,6 +31,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // cg_surface.c -- procedurally generated surfaces
 
 #include "cg_local.h"
+#include "../qcommon/q_unicode.h"
 
 /*
 ==============
@@ -403,5 +404,135 @@ void CG_SurfaceBeam( const refEntity_t *originEnt )
 	// for acting like Q3A create a custom shader with
 	// cull none and blendfunc GL_ONE GL_ONE
 	trap_R_AddPolysToScene( re.customShader, 4, verts, NUM_BEAM_SEGS, 0 );
+}
+
+/*
+==============
+CG_SurfaceText
+
+Add text in 3D space. Text faces away from axis forward directory.
+
+ref entity should have origin, axis, and shaderRGBA set
+==============
+*/
+void CG_SurfaceText( const refEntity_t *originEnt, const fontInfo_t *font, float scale, const char *text, float adjust, int limit, float gradient, qboolean forceColor ) {
+	int len, count;
+	vec4_t newColor;
+	vec4_t gradientColor;
+	const glyphInfo_t *glyph;
+	const char *s;
+	float yadj, xadj;
+	float useScale;
+
+	vec3_t baseline;
+	refEntity_t re;
+	polyVert_t verts[4];
+	float x, y, w, h;
+	int j;
+
+	if ( !text ) {
+		return;
+	}
+
+	scale *= 0.25f; // for world scale
+
+	re = *originEnt;
+	re.reType = RT_POLY_LOCAL;
+	VectorCopy( re.origin, re.oldorigin );
+
+	// center justify at origin
+	VectorCopy( vec3_origin, baseline );
+	x = 0 - Text_Width( text, font, scale, 0 ) / 2;
+	y = 0;
+
+
+	useScale = scale * font->glyphScale;
+
+	newColor[0] = re.shaderRGBA[0] / 255.0f;
+	newColor[1] = re.shaderRGBA[1] / 255.0f;
+	newColor[2] = re.shaderRGBA[2] / 255.0f;
+	newColor[3] = re.shaderRGBA[3] / 255.0f;
+
+	gradientColor[0] = Com_Clamp( 0, 1, newColor[0] - gradient );
+	gradientColor[1] = Com_Clamp( 0, 1, newColor[1] - gradient );
+	gradientColor[2] = Com_Clamp( 0, 1, newColor[2] - gradient );
+	gradientColor[3] = newColor[3];
+
+	len = Q_UTF8_PrintStrlen( text );
+	if ( limit > 0 && len > limit ) {
+		len = limit;
+	}
+
+	s = text;
+	count = 0;
+	while ( s && *s && count < len ) {
+		if ( Q_IsColorString( s ) ) {
+			if ( !forceColor ) {
+				VectorCopy( g_color_table[ColorIndex(*(s+1))], newColor );
+
+				gradientColor[0] = Com_Clamp( 0, 1, newColor[0] - gradient );
+				gradientColor[1] = Com_Clamp( 0, 1, newColor[1] - gradient );
+				gradientColor[2] = Com_Clamp( 0, 1, newColor[2] - gradient );
+			}
+			s += 2;
+			continue;
+		}
+
+		glyph = Text_GetGlyph( font, Q_UTF8_CodePoint( &s ) );
+
+		yadj = useScale * glyph->top;
+		xadj = useScale * glyph->left;
+		w = glyph->imageWidth * useScale;
+		h = glyph->imageHeight * useScale;
+
+		// 0  1
+		// 3  2
+		verts[0].xyz[0] = baseline[0] + 0;
+		verts[0].xyz[1] = baseline[1] - ( x + xadj );
+		verts[0].xyz[2] = baseline[2] + y + yadj;
+
+		verts[1].xyz[0] = baseline[0] + 0;
+		verts[1].xyz[1] = baseline[1] - ( x + xadj + w );
+		verts[1].xyz[2] = baseline[2] + y + yadj;
+
+		verts[2].xyz[0] = baseline[0] + 0;
+		verts[2].xyz[1] = baseline[1] - ( x + xadj + w );
+		verts[2].xyz[2] = baseline[2] + y + yadj - h;
+
+		verts[3].xyz[0] = baseline[0] + 0;
+		verts[3].xyz[1] = baseline[1] - ( x + xadj );
+		verts[3].xyz[2] = baseline[2] + y + yadj - h;
+
+		// standard square texture coordinates
+		for ( j = 0; j < 4; j++ ) {
+			verts[j].st[0] = ( j == 0 || j == 3 ) ? glyph->s : glyph->s2;
+			verts[j].st[1] = ( j < 2 ) ? glyph->t : glyph->t2;
+
+			if ( j < 2 || gradient == 0 ) {
+				verts[j].modulate[0] = newColor[0] * 0xFF;
+				verts[j].modulate[1] = newColor[1] * 0xFF;
+				verts[j].modulate[2] = newColor[2] * 0xFF;
+				verts[j].modulate[3] = newColor[3] * 0xFF;
+			} else {
+				verts[j].modulate[0] = gradientColor[0] * 0xFF;
+				verts[j].modulate[1] = gradientColor[1] * 0xFF;
+				verts[j].modulate[2] = gradientColor[2] * 0xFF;
+				verts[j].modulate[3] = gradientColor[3] * 0xFF;
+			}
+		}
+
+		re.customShader = glyph->glyph;
+		re.radius = w / 2;
+
+		trap_R_AddPolyRefEntityToScene( &re, 4, verts, 1 );
+
+		x += ( glyph->xSkip * useScale ) + adjust;
+		count++;
+	}
+
+	// debug axis
+	//re.reType = RT_MODEL;
+	//re.hModel = 0;
+	//trap_R_AddRefEntityToScene( &re );
 }
 

@@ -437,10 +437,10 @@ static cvarValuePair_t cp_geometricDetail[] = {
 	VCMD( "r_lodBias -2; r_subdivisions 4;", "Very High" ), // ZTM: New option to never use low LOD models
 	VEND
 };
+static cvarValuePair_t cp_textureDetail[] = { VINT( 0, "100%" ), VINT( 1, "50%" ), VINT( 2, "25%" ), VINT( 3, "13%" ), VEND };
 static cvarValuePair_t cp_textureQuality[] = { VINT( 0, "Default" ), VINT( 16, "16 bit" ), VINT( 32, "32 bit" ), VEND };
 static cvarValuePair_t cp_lighting[] = { VINT( 0, "Lightmap (High)" ), VINT( 1, "Vertex (Low)" ), VEND };
 
-static cvarRange_t cr_pimip = { 3, 0, 1 };
 static cvarRange_t cr_gamma = { 0.5, 2.0, 0.1 };
 static cvarRange_t cr_viewsize = { 30, 100, 10 };
 
@@ -478,7 +478,7 @@ menuitem_t systemmenu_items[] = {
 	{ MIF_CALL, "Flares:",				NULL, M_NONE, 0, "r_flares", cp_bool },
 	// ZTM: FIXME: Geometric Detail always defaults to 'low' when opening menu
 	{ MIF_CALL, "Geometric Detail:",	NULL, M_NONE, 0, "r_lodBias", cp_geometricDetail }, // modifies both "r_lodBias" and "r_subdivisions" cvars
-	{ MIF_CALL, "Texture Detail:",		NULL, M_NONE, 0, "r_picmip", NULL, &cr_pimip },
+	{ MIF_CALL, "Texture Detail:",		NULL, M_NONE, 0, "r_picmip", cp_textureDetail },
 	{ MIF_CALL, "Texture Quality:",		NULL, M_NONE, 0, "r_texturebits", cp_textureQuality },
 	{ MIF_CALL, "Compress Textures:",	NULL, M_NONE, 0, "r_ext_compressed_textures", cp_bool }, // ZTM: new, from team arena
 	// ZTM: FIXME: Texture Filter always defaults to 'Bilinear' when opening menu

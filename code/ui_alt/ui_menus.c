@@ -420,12 +420,14 @@ void graphicsPresetUpdate( int item ) {
 
 static cvarValuePair_t cp_glCustom[] = { VINT( 0, "Very High" ), VINT( 1, "High" ), VINT( 2, "Medium" ), VINT( 3, "Fast" ), VINT( 4, "Fastest" ), VINT( 5, "Custom" ), VEND };
 static cvarValuePair_t cp_multisample[] = { VINT( 0, "off" ), VINT( 2, "2x MSAA" ), VINT( 4, "4x MSAA" ), VEND };
-static cvarValuePair_t cp_anisotropic[] = {
-	VCMD( "r_ext_texture_filter_anisotropic 0; reset r_ext_max_anisotropy;", "off" ),
-	VCMD( "r_ext_texture_filter_anisotropic 1; r_ext_max_anisotropy 2;", "2x" ),
-	VCMD( "r_ext_texture_filter_anisotropic 1; r_ext_max_anisotropy 4;", "4x" ),
-	VCMD( "r_ext_texture_filter_anisotropic 1; r_ext_max_anisotropy 8;", "8x" ),
-	VCMD( "r_ext_texture_filter_anisotropic 1; r_ext_max_anisotropy 16;", "16x" ),
+// ZTM: new, added anisotropic filtering
+static cvarValuePair_t cp_textureFilter[] = {
+	VCMD( "r_ext_texture_filter_anisotropic 0; r_textureMode GL_LINEAR_MIPMAP_NEAREST;", "Bilinear" ),
+	VCMD( "r_ext_texture_filter_anisotropic 0; r_textureMode GL_LINEAR_MIPMAP_LINEAR;", "Trilinear" ),
+	VCMD( "r_ext_texture_filter_anisotropic 1; r_ext_max_anisotropy 2;", "Anisotropic 2x" ),
+	VCMD( "r_ext_texture_filter_anisotropic 1; r_ext_max_anisotropy 4;", "Anisotropic 4x" ),
+	VCMD( "r_ext_texture_filter_anisotropic 1; r_ext_max_anisotropy 8;", "Anisotropic 8x" ),
+	VCMD( "r_ext_texture_filter_anisotropic 1; r_ext_max_anisotropy 16;", "Anisotropic 16x" ),
 	VEND
 };
 static cvarValuePair_t cp_geometricDetail[] = {
@@ -436,7 +438,6 @@ static cvarValuePair_t cp_geometricDetail[] = {
 	VEND
 };
 static cvarValuePair_t cp_textureQuality[] = { VINT( 0, "Default" ), VINT( 16, "16 bit" ), VINT( 32, "32 bit" ), VEND };
-static cvarValuePair_t cp_textureFilter[] = { VSTRING( "GL_LINEAR_MIPMAP_NEAREST", "Bilinear" ), VSTRING( "GL_LINEAR_MIPMAP_LINEAR", "Trilinear" ), VEND };
 static cvarValuePair_t cp_lighting[] = { VINT( 0, "Lightmap (High)" ), VINT( 1, "Vertex (Low)" ), VEND };
 
 static cvarRange_t cr_pimip = { 3, 0, 1 };
@@ -480,9 +481,8 @@ menuitem_t systemmenu_items[] = {
 	{ MIF_CALL, "Texture Detail:",		NULL, M_NONE, 0, "r_picmip", NULL, &cr_pimip },
 	{ MIF_CALL, "Texture Quality:",		NULL, M_NONE, 0, "r_texturebits", cp_textureQuality },
 	{ MIF_CALL, "Compress Textures:",	NULL, M_NONE, 0, "r_ext_compressed_textures", cp_bool }, // ZTM: new, from team arena
-	{ MIF_CALL, "Texture Filter:",		NULL, M_NONE, 0, "r_textureMode", cp_textureFilter },
-	// ZTM: FIXME: Anisotropic Filtering always defaults to 'off' when opening menu
-	{ MIF_CALL, "Anisotropic Filtering:", NULL, M_NONE, 0, "r_ext_max_anisotropy", cp_anisotropic }, // ZTM: new. should it be merged with texture filter?
+	// ZTM: FIXME: Texture Filter always defaults to 'Bilinear' when opening menu
+	{ MIF_CALL, "Texture Filter:",		NULL, M_NONE, 0, "r_textureMode", cp_textureFilter }, // modifies r_textureMode, r_ext_texture_filter_anisotropic, r_ext_max_anisotropy
 
 	// missing driver info button
 

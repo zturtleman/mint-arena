@@ -281,6 +281,7 @@ typedef struct {
 	menulist_s  	texturebits;
 	menulist_s  	geometry;
 	menulist_s  	filter;
+	menulist_s  	multisample;
 	menutext_s		driverinfo;
 
 	menubitmap_s	apply;
@@ -296,6 +297,7 @@ typedef struct
 	int texturebits;
 	int geometry;
 	int filter;
+	int multisample;
 	qboolean extensions;
 	qboolean flares;
 } InitialVideoOptions_s;
@@ -305,23 +307,29 @@ static graphicsoptions_t		s_graphicsoptions;
 
 static InitialVideoOptions_s s_ivo_templates[] =
 {
+	// very high
 	{
-		6, qtrue, 3, 0, 2, 2, 1, qtrue, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
+		6, qtrue, 3, 0, 2, 3, 3, 2, qtrue, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
 	},
+	// high
 	{
-		4, qtrue, 2, 0, 2, 1, 1, qtrue, qtrue	// JDC: this was tq 3
+		4, qtrue, 3, 0, 2, 2, 2, 1, qtrue, qtrue
 	},
+	// normal
 	{
-		3, qtrue, 2, 0, 0, 1, 0, qtrue, qfalse
+		3, qtrue, 2, 0, 0, 1, 0, 0, qtrue, qfalse
 	},
+	// fast
 	{
-		2, qtrue, 1, 0, 0, 0, 0, qtrue, qfalse
+		2, qtrue, 1, 0, 0, 0, 0, 0, qtrue, qfalse
 	},
+	// fastest
 	{
-		2, qtrue, 1, 1, 0, 0, 0, qtrue, qfalse
+		2, qtrue, 1, 1, 0, 0, 0, 0, qtrue, qfalse
 	},
+	// custom
 	{
-		3, qtrue, 1, 0, 0, 1, 0, qtrue, qfalse
+		3, qtrue, 1, 0, 0, 1, 0, 0, qtrue, qfalse
 	}
 };
 
@@ -511,6 +519,7 @@ static void GraphicsOptions_GetInitialVideo( void )
 	s_ivo.flares      = s_graphicsoptions.flares.curvalue;
 	s_ivo.geometry    = s_graphicsoptions.geometry.curvalue;
 	s_ivo.filter      = s_graphicsoptions.filter.curvalue;
+	s_ivo.multisample = s_graphicsoptions.multisample.curvalue;
 	s_ivo.texturebits = s_graphicsoptions.texturebits.curvalue;
 }
 
@@ -577,6 +586,8 @@ static void GraphicsOptions_CheckConfig( void )
 			continue;
 		if ( s_ivo_templates[i].filter != s_graphicsoptions.filter.curvalue )
 			continue;
+		if ( s_ivo_templates[i].multisample != s_graphicsoptions.multisample.curvalue )
+			continue;
 //		if ( s_ivo_templates[i].texturebits != s_graphicsoptions.texturebits.curvalue )
 //			continue;
 		s_graphicsoptions.list.curvalue = i;
@@ -637,6 +648,10 @@ static void GraphicsOptions_UpdateMenuItems( void )
 		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
 	}
 	if ( s_ivo.filter != s_graphicsoptions.filter.curvalue )
+	{
+		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
+	}
+	if ( s_ivo.multisample != s_graphicsoptions.multisample.curvalue )
 	{
 		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
 	}
@@ -703,7 +718,12 @@ static void GraphicsOptions_ApplyChanges( void *unused, int notification )
 	trap_Cvar_SetValue( "r_vertexLight", s_graphicsoptions.lighting.curvalue );
 	trap_Cvar_SetValue( "r_flares", s_graphicsoptions.flares.curvalue );
 
-	if ( s_graphicsoptions.geometry.curvalue == 2 )
+	if ( s_graphicsoptions.geometry.curvalue == 3 )
+	{
+		trap_Cvar_SetValue( "r_lodBias", -2 );
+		trap_Cvar_SetValue( "r_subdivisions", 4 );
+	}
+	else if ( s_graphicsoptions.geometry.curvalue == 2 )
 	{
 		trap_Cvar_SetValue( "r_lodBias", 0 );
 		trap_Cvar_SetValue( "r_subdivisions", 4 );
@@ -719,14 +739,42 @@ static void GraphicsOptions_ApplyChanges( void *unused, int notification )
 		trap_Cvar_SetValue( "r_subdivisions", 20 );
 	}
 
-	if ( s_graphicsoptions.filter.curvalue )
+	if ( s_graphicsoptions.filter.curvalue >= 2 )
 	{
-		trap_Cvar_Set( "r_textureMode", "GL_LINEAR_MIPMAP_LINEAR" );
+		trap_Cvar_SetValue( "r_ext_texture_filter_anisotropic", 1 );
+
+		switch ( s_graphicsoptions.filter.curvalue )
+		{
+			default:
+			case 2:
+				trap_Cvar_SetValue( "r_ext_max_anisotropy", 2 );
+				break;
+			case 3:
+				trap_Cvar_SetValue( "r_ext_max_anisotropy", 4 );
+				break;
+			case 4:
+				trap_Cvar_SetValue( "r_ext_max_anisotropy", 8 );
+				break;
+			case 5:
+				trap_Cvar_SetValue( "r_ext_max_anisotropy", 16 );
+				break;
+		}
 	}
 	else
 	{
-		trap_Cvar_Set( "r_textureMode", "GL_LINEAR_MIPMAP_NEAREST" );
+		trap_Cvar_SetValue( "r_ext_texture_filter_anisotropic", 0 );
+
+		if ( s_graphicsoptions.filter.curvalue )
+		{
+			trap_Cvar_Set( "r_textureMode", "GL_LINEAR_MIPMAP_LINEAR" );
+		}
+		else
+		{
+			trap_Cvar_Set( "r_textureMode", "GL_LINEAR_MIPMAP_NEAREST" );
+		}
 	}
+
+	trap_Cvar_SetValue( "r_ext_multisample", s_graphicsoptions.multisample.curvalue * 2 );
 
 	trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
 }
@@ -766,6 +814,7 @@ static void GraphicsOptions_Event( void* ptr, int event ) {
 		s_graphicsoptions.texturebits.curvalue = ivo->texturebits;
 		s_graphicsoptions.geometry.curvalue    = ivo->geometry;
 		s_graphicsoptions.filter.curvalue      = ivo->filter;
+		s_graphicsoptions.multisample.curvalue = ivo->multisample;
 		s_graphicsoptions.fs.curvalue          = ivo->fullscreen;
 		break;
 
@@ -892,7 +941,26 @@ static void GraphicsOptions_SetMenuItems( void )
 		break;
 	}
 
-	if ( !Q_stricmp( CG_Cvar_VariableString( "r_textureMode" ), "GL_LINEAR_MIPMAP_NEAREST" ) )
+	if ( trap_Cvar_VariableIntegerValue( "r_ext_texture_filter_anisotropic" ) != 0 )
+	{
+		switch ( ( int ) trap_Cvar_VariableValue( "r_ext_max_anisotropy" ) )
+		{
+		default:
+		case 2:
+			s_graphicsoptions.filter.curvalue = 2;
+			break;
+		case 4:
+			s_graphicsoptions.filter.curvalue = 3;
+			break;
+		case 8:
+			s_graphicsoptions.filter.curvalue = 4;
+			break;
+		case 16:
+			s_graphicsoptions.filter.curvalue = 5;
+			break;
+		}
+	}
+	else if ( !Q_stricmp( CG_Cvar_VariableString( "r_textureMode" ), "GL_LINEAR_MIPMAP_NEAREST" ) )
 	{
 		s_graphicsoptions.filter.curvalue = 0;
 	}
@@ -912,9 +980,27 @@ static void GraphicsOptions_SetMenuItems( void )
 			s_graphicsoptions.geometry.curvalue = 1;
 		}
 	}
-	else
+	else if ( trap_Cvar_VariableValue( "r_lodBias" ) == 0 )
 	{
 		s_graphicsoptions.geometry.curvalue = 2;
+	}
+	else
+	{
+		s_graphicsoptions.geometry.curvalue = 3;
+	}
+
+	switch ( trap_Cvar_VariableIntegerValue( "r_ext_multisample" ) )
+	{
+		case 0:
+		default:
+			s_graphicsoptions.multisample.curvalue = 0;
+			break;
+		case 2:
+			s_graphicsoptions.multisample.curvalue = 1;
+			break;
+		case 4:
+			s_graphicsoptions.multisample.curvalue = 2;
+			break;
 	}
 }
 
@@ -955,6 +1041,10 @@ void GraphicsOptions_MenuInit( void )
 	{
 		"Bilinear",
 		"Trilinear",
+		"Anisotropic 2x",
+		"Anisotropic 4x",
+		"Anisotropic 8x",
+		"Anisotropic 16x",
 		NULL
 	};
 	static const char *quality_names[] =
@@ -962,12 +1052,20 @@ void GraphicsOptions_MenuInit( void )
 		"Low",
 		"Medium",
 		"High",
+		"Very High",
 		NULL
 	};
 	static const char *enabled_names[] =
 	{
 		"Off",
 		"On",
+		NULL
+	};
+	static const char *multisample_names[] =
+	{
+		"Off",
+		"2x MSAA",
+		"4x MSAA",
 		NULL
 	};
 
@@ -1098,6 +1196,15 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.fs.itemnames	      = enabled_names;
 	y += BIGCHAR_HEIGHT+2;
 
+	// references/modifies "r_ext_multisample"
+	s_graphicsoptions.multisample.generic.type  = MTYPE_SPINCONTROL;
+	s_graphicsoptions.multisample.generic.name  = "Anti-aliasing:";
+	s_graphicsoptions.multisample.generic.flags = QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	s_graphicsoptions.multisample.generic.x     = 400;
+	s_graphicsoptions.multisample.generic.y     = y;
+	s_graphicsoptions.multisample.itemnames     = multisample_names;
+	y += BIGCHAR_HEIGHT+2;
+
 	// references/modifies "r_vertexLight"
 	s_graphicsoptions.lighting.generic.type  = MTYPE_SPINCONTROL;
 	s_graphicsoptions.lighting.generic.name	 = "Lighting:";
@@ -1199,6 +1306,7 @@ void GraphicsOptions_MenuInit( void )
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.ratio );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.mode );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.fs );
+	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.multisample );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.lighting );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.flares );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.geometry );

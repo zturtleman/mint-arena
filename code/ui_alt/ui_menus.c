@@ -132,8 +132,8 @@ void restartMap( int item ) {
 #define VCMD( x, str ) { CVT_CMD, x, str }
 #define VEND { CVT_NONE, NULL, NULL }
 
-static cvarValuePair_t cp_bool[] = { VINT( 0, "off" ), VINT( 1, "on" ), VEND };
-static cvarValuePair_t cp_boolInvert[] = { VINT( 0, "on" ), VINT( 1, "off" ), VEND };
+static cvarValuePair_t cp_bool[] = { VINT( 0, "Off" ), VINT( 1, "On" ), VEND };
+static cvarValuePair_t cp_boolInvert[] = { VINT( 0, "On" ), VINT( 1, "Off" ), VEND };
 
 // 0.0 to 1.0 slider
 static cvarRange_t cr_zeroToOne = { 0, 1, 0.05f };
@@ -450,15 +450,15 @@ static cvarRange_t cr_viewsize = { 30, 100, 10 };
 
 static cvarValuePair_t cp_anaglyphMode[] =
 {
-	VINT( 0, "off" ),
-	VINT( 1, "red-cyan" ),
-	VINT( 2, "red-blue" ),
-	VINT( 3, "red-green" ),
-	VINT( 4, "green-magenta" ),
-	VINT( 5, "cyan-red" ),
-	VINT( 6, "blue-red" ),
-	VINT( 7, "green-red" ),
-	VINT( 8, "magenta-green" ),
+	VINT( 0, "Off" ),
+	VINT( 1, "Red-cyan" ),
+	VINT( 2, "Red-blue" ),
+	VINT( 3, "Red-green" ),
+	VINT( 4, "Green-magenta" ),
+	VINT( 5, "Cyan-red" ),
+	VINT( 6, "Blue-red" ),
+	VINT( 7, "Green-red" ),
+	VINT( 8, "Magenta-green" ),
 	VEND
 };
 
@@ -515,12 +515,12 @@ menuitem_t systemmenu_items[] = {
 ============================================================================
 */
 #ifndef MISSIONPACK_HUD
-static cvarValuePair_t cp_teamoverlay[] = { VINT( 0, "off" ), VINT( 1, "upper right" ), VINT( 2, "lower right" ), VINT( 3, "lower left" ), VEND };
+static cvarValuePair_t cp_teamoverlay[] = { VINT( 0, "Off" ), VINT( 1, "Upper right" ), VINT( 2, "Lower right" ), VINT( 3, "Lower left" ), VEND };
 #endif
-static cvarValuePair_t cp_splitvertical[] = { VINT( 0, "horizontal" ), VINT( 1, "vertical" ), VEND };
-static cvarValuePair_t cp_atmeffects[] = { VINT( 0, "off" ), VFLOAT( 0.5, "low" ), VINT( 1, "high" ), VEND };
-static cvarValuePair_t cp_brassTime[] = { VINT( 0, "off" ), VINT( 1250, "short" ), VINT( 2500, "long" ), VEND };
-static cvarValuePair_t cp_drawGun[] = { VINT( 0, "off" ), VINT( 1, "right-handed" ), VINT( 3, "centered" ), VINT( 2, "left-handed" ), VEND };
+static cvarValuePair_t cp_splitvertical[] = { VINT( 0, "Horizontal" ), VINT( 1, "Vertical" ), VEND };
+static cvarValuePair_t cp_atmeffects[] = { VINT( 0, "Off" ), VFLOAT( 0.5, "Low" ), VINT( 1, "High" ), VEND };
+static cvarValuePair_t cp_brassTime[] = { VINT( 0, "Off" ), VINT( 1250, "Short" ), VINT( 2500, "Long" ), VEND };
+static cvarValuePair_t cp_drawGun[] = { VINT( 0, "Off" ), VINT( 1, "Right-handed" ), VINT( 3, "Centered" ), VINT( 2, "Left-handed" ), VEND };
 
 // ZTM: TODO: remove the MIF_CALL? I think it's there so they are selectable...
 menuitem_t gameoptionsmenu_items[] =

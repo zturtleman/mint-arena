@@ -325,6 +325,7 @@ menuitem_t playermenu_items[] =
 */
 // From Team Arena's ui_main.c
 // ZTM: TODO: add anisotropy, multisample, and compressed textures
+// ZTM: TODO: Update graphics presets based my q3_ui changes
 void graphicsPresetUpdate( int item ) {
 	int val;
 
@@ -474,19 +475,19 @@ menuitem_t systemmenu_items[] = {
 	// ZTM: let's remove this, because generally no one should turn it off
 	//{ MIF_CALL, "GL Extensions:",		NULL, M_NONE, 0, "r_allowExtensions", cp_bool },
 	// ZTM: NOTE: I don't really like how Aspect Ratio works in q3_ui and don't feel like implementing it right now. Should aspect just be displayed after resolution size?
-	//{ MIF_CALL, "Aspect Ratio:",		NULL, M_NONE, 0 }, // 4:3, ...
-	{ MIF_CALL, "Resolution:",			NULL, M_NONE, 0, "r_mode", cp_resolution }, // 1024x768 ...
+	//{ MIF_CALL, "Aspect Ratio:",		NULL, M_NONE, 0 },
+	{ MIF_CALL, "Resolution:",			NULL, M_NONE, 0, NULL, cp_resolution }, // modifies r_mode, r_customwidth, r_customheight
 	{ MIF_CALL, "Fullscreen:",			NULL, M_NONE, 0, "r_fullscreen", cp_bool },
 	{ MIF_CALL, "Anti-aliasing:",		NULL, M_NONE, 0, "r_ext_multisample", cp_multisample }, // ZTM: new
 	{ MIF_CALL, "Lighting:",			NULL, M_NONE, 0, "r_vertexLight", cp_lighting },
 	{ MIF_CALL, "Flares:",				NULL, M_NONE, 0, "r_flares", cp_bool },
 	// ZTM: FIXME: Geometric Detail always defaults to 'low' when opening menu
-	{ MIF_CALL, "Geometric Detail:",	NULL, M_NONE, 0, "r_lodBias", cp_geometricDetail }, // modifies both "r_lodBias" and "r_subdivisions" cvars
+	{ MIF_CALL, "Geometric Detail:",	NULL, M_NONE, 0, NULL, cp_geometricDetail }, // modifies r_lodBias, r_subdivisions
 	{ MIF_CALL, "Texture Detail:",		NULL, M_NONE, 0, "r_picmip", cp_textureDetail },
 	{ MIF_CALL, "Texture Quality:",		NULL, M_NONE, 0, "r_texturebits", cp_textureQuality },
 	{ MIF_CALL, "Compress Textures:",	NULL, M_NONE, 0, "r_ext_compressed_textures", cp_bool }, // ZTM: new, from team arena
 	// ZTM: FIXME: Texture Filter always defaults to 'Bilinear' when opening menu
-	{ MIF_CALL, "Texture Filter:",		NULL, M_NONE, 0, "r_textureMode", cp_textureFilter }, // modifies r_textureMode, r_ext_texture_filter_anisotropic, r_ext_max_anisotropy
+	{ MIF_CALL, "Texture Filter:",		NULL, M_NONE, 0, NULL, cp_textureFilter }, // modifies r_textureMode, r_ext_texture_filter_anisotropic, r_ext_max_anisotropy
 
 	// missing driver info button
 

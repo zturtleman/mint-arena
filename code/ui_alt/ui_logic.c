@@ -245,10 +245,6 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 
 	item = &current->items[itemNum];
 
-	if ( !item->cvarName ) {
-		return qtrue;
-	}
-
 	if ( item->cvarPairs && item->numPairs > 0 ) {
 		const char *value;
 
@@ -264,8 +260,10 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 
 		if ( item->cvarPairs[ item->cvarPair ].type == CVT_CMD ) {
 			trap_Cmd_ExecuteText( EXEC_APPEND, value );
-		} else {
+		} else if ( item->cvarName ) {
 			trap_Cvar_Set( item->cvarName, value );
+		} else {
+			Com_Printf( S_COLOR_YELLOW "WARNING: menu item '%s' doesn't have a cvarName but it's value requires it\n", item->caption );
 		}
 	}
 	else if ( item->cvarRange )
@@ -309,7 +307,11 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 			}
 		}
 
-		trap_Cvar_SetValue( item->cvarName, value );
+		if ( item->cvarName ) {
+			trap_Cvar_SetValue( item->cvarName, value );
+		} else {
+			Com_Printf( S_COLOR_YELLOW "WARNING: menu item '%s' doesn't have a cvarName but it's value requires it\n", item->caption );
+		}
 	}
 
 	return qtrue;
@@ -460,18 +462,6 @@ static void UI_SetMenuCvarValue( currentMenuItem_t *item ) {
 		return;
 	}
 
-	// HACK: need to override this for resolution (r_mode)
-	if ( item->cvarPairs == cp_resolution ) {
-		item->cvarPair = uis.currentResPair;
-		return;
-	}
-
-	// HACK: TODO: need to override this for Geometric Detail
-	if ( !Q_stricmp( item->cvarName, "r_lodBias" ) ) {
-		item->cvarPair = 0;
-		return;
-	}
-
 	// HACK: TODO: need to override this for Graphics Settings
 	if ( !Q_stricmp( item->cvarName, "ui_glCustom" ) ) {
 		item->cvarPair = 0;
@@ -514,8 +504,12 @@ void UI_RegisterMenuCvars( currentMenu_t *current ) {
 		item->vmCvar.value = atof( item->vmCvar.string );
 		item->vmCvar.integer = atoi( item->vmCvar.string );
 
-		item->numPairs = UI_NumCvarPairs( item->cvarPairs );
-		UI_SetMenuCvarValue( item );
+		// HACK: need to override this for resolution (r_mode)
+		if ( item->cvarPairs == cp_resolution ) {
+			item->cvarPair = uis.currentResPair;
+		} else {
+			UI_SetMenuCvarValue( item );
+		}
 
 		// cvar for demos/mods/cinematics list box needs to be set initially
 		if ( item->widgetType == UIW_LISTBOX ) {
@@ -532,7 +526,7 @@ void UI_UpdateMenuCvars( currentMenu_t *current ) {
 	currentMenuItem_t *item;
 	int i;
 	int modCount;
-	float oldValue;
+	//float oldValue;
 	char oldString[MAX_CVAR_VALUE_STRING];
 
 	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
@@ -540,22 +534,8 @@ void UI_UpdateMenuCvars( currentMenu_t *current ) {
 			continue;
 		}
 
-		// HACK: don't update r_mode, it's hard coded to always get set to the initial pair
-		if ( item->cvarPairs == cp_resolution ) {
-			continue;
-		}
-
-		// HACK: Geometric Detail item references two cvars using cvarPairs all as CVT_CMD
-		if ( !Q_stricmp( item->cvarName, "r_lodBias" ) ) {
-			continue;
-		}
-		// HACK: same as above
-		if ( !Q_stricmp( item->cvarName, "r_textureMode" ) ) {
-			continue;
-		}
-
 		modCount = item->vmCvar.modificationCount;
-		oldValue = item->vmCvar.value;
+		//oldValue = item->vmCvar.value;
 		Q_strncpyz( oldString, item->vmCvar.string, sizeof (oldString) );
 		trap_Cvar_Update( &item->vmCvar );
 
@@ -567,7 +547,7 @@ void UI_UpdateMenuCvars( currentMenu_t *current ) {
 			item->vmCvar.value = atof( item->vmCvar.string );
 			item->vmCvar.integer = atoi( item->vmCvar.string );
 
-			Com_Printf("Cvar changed! %s: %s -> %s. %f -> %f.\n", item->cvarName, oldString, item->vmCvar.string, oldValue, item->vmCvar.value );
+			//Com_Printf("DEBUG: Cvar changed! %s: %s -> %s. %f -> %f.\n", item->cvarName, oldString, item->vmCvar.string, oldValue, item->vmCvar.value );
 			UI_SetMenuCvarValue( item );
 			// should action function get run? well, if add it here it would run twice. and currently I don't want it _only_ here.
 		}
@@ -575,7 +555,7 @@ void UI_UpdateMenuCvars( currentMenu_t *current ) {
 		// should there just a string compare? could get rid of the trap_Cvar_Update call.
 		// also, why does this not always get changed?
 		if ( modCount != item->vmCvar.modificationCount ) {
-			Com_Printf("Cvar mod cound changed! %s: %s -> %s. %f -> %f.\n", item->cvarName, oldString, item->vmCvar.string, oldValue, item->vmCvar.value );
+			//Com_Printf("DEBUG: Cvar mod cound changed! %s: %s -> %s. %f -> %f.\n", item->cvarName, oldString, item->vmCvar.string, oldValue, item->vmCvar.value );
 		}
 	}
 }

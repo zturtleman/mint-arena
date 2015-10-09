@@ -102,38 +102,41 @@ static void Generic_Init( currentMenuItem_t *item, const char *extData ) {
 }
 
 static void Generic_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style ) {
+	const char *value;
 	float x;
 
-	x = Caption_Draw( item, drawcolor, style, ( item->cvarName && ( style & UI_PULSE ) ) );
+	if ( item->cvarPairs && item->numPairs > 0 ) {
+		value = item->cvarPairs[ item->cvarPair ].string;
+	} else if ( item->cvarName ) {
+		value = item->vmCvar.string;
+	} else {
+		value = NULL;
+	}
+
+	x = Caption_Draw( item, drawcolor, style, ( value && ( style & UI_PULSE ) ) );
+
+	if ( !value ) {
+		return;
+	}
+
+	if ( item->widgetType == UIW_RADIO ) {
+		UI_DrawRadioButton( item, &x );
+	}
+
+	// HACK for M_ERROR com_errorMessage cvar centering
+	if ( !item->caption && !( item->flags & MIF_SELECTABLE ) ) {
+		style = UI_CENTER;
+		x = 320;
+	}
 
 	// draw cvar value
-	if ( item->cvarName ) {
-		const char *string;
-
-		if ( item->cvarPairs && item->numPairs > 0 ) {
-			string = item->cvarPairs[ item->cvarPair ].string;
-		} else {
-			string = item->vmCvar.string;
-		}
-
-		if ( item->widgetType == UIW_RADIO ) {
-			UI_DrawRadioButton( item, &x );
-		}
-
-		// HACK for M_ERROR com_errorMessage cvar centering
-		if ( !item->caption && !( item->flags & MIF_SELECTABLE ) ) {
-			style = UI_CENTER;
-			x = 320;
-		}
-
 #ifdef Q3UIFONTS
-		if ( item->flags & MIF_BIGTEXT ) {
-			UI_DrawProportionalString( x, item->captionPos.y, string, UI_DROPSHADOW|style, drawcolor );
-		} else
+	if ( item->flags & MIF_BIGTEXT ) {
+		UI_DrawProportionalString( x, item->captionPos.y, value, UI_DROPSHADOW|style, drawcolor );
+	} else
 #endif
-		{
-			CG_DrawString( x, item->captionPos.y, string, UI_DROPSHADOW|style, drawcolor );
-		}
+	{
+		CG_DrawString( x, item->captionPos.y, value, UI_DROPSHADOW|style, drawcolor );
 	}
 }
 

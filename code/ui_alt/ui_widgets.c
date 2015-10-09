@@ -30,10 +30,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "ui_local.h"
 
-// ZTM: FIXME: ### randomly writing this here
-// sliders are currently invisible (need to port code to 'widget' system)
-// listboxs are not centered like they were before I'm not sure why.
-
 // ui_draw.c
 void UI_DrawRadioButton( currentMenuItem_t *item, float *x );
 void UI_DrawSlider( currentMenuItem_t *item, float x, float y, int style, float *drawcolor, qboolean colorBar );

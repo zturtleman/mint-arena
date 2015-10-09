@@ -698,6 +698,7 @@ static void UI_InitFileList( currentMenuItem_t *item, const char *extData ) {
 	filePairs[numFilenames].string = NULL;
 
 	item->cvarPairs = filePairs;
+	item->numPairs = numFilenames;
 }
 
 void UI_DrawCurrentMenu( currentMenu_t *current ) {
@@ -1132,7 +1133,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		if ( item->flags & MIF_PANEL ) {
 			// right align
 			curX = 216 - item->captionPos.width;
-		} if ( !panelNum && ( item->cvarName || item->numPairs ) && centerX && item->widgetType != UIW_SLIDER ) {
+		} if ( !panelNum && ( item->cvarName || item->numPairs ) && centerX && item->widgetType != UIW_SLIDER && item->widgetType != UIW_LISTBOX ) {
 			// right align HACK for M_GAME_OPTIONS
 			curX = SCREEN_WIDTH / 2 + totalWidth[0] / menuInfo->numItems / 6 - item->captionPos.width;
 		} else if ( horizontalMenu && curX == -1 ) {

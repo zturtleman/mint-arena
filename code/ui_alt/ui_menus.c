@@ -306,13 +306,30 @@ static cvarValuePair_t cp_handicap[] = {
 	VEND
 };
 
-static cvarRange_t cr_colorEffect = { 0, 12, 1 };
+static cvarRange_t cr_colorEffect = { 1, 13, 1 };
+static cvarValuePair_t cp_colorEffect[] = {
+	VINT( 4, "Red" ),
+	VINT( 8, "Orange" ),
+	VINT( 6, "Yellow" ),
+	VINT( 9, "Lime" ),
+	VINT( 2, "Green" ),
+	VINT( 10, "Vivid green" ),
+	VINT( 3, "Cyan" ),
+	VINT( 11, "Light blue" ),
+	VINT( 1, "Blue" ),
+	VINT( 12, "Purple" ),
+	VINT( 5, "Magenta" ),
+	VINT( 13, "Pink" ),
+	VINT( 7, "White" ),
+	VEND
+};
 
 menuitem_t playermenu_items[] =
 {
 	{ MIF_CALL, "Name:",		NULL, M_NONE, 0, "name" }, // TODO: make it an edit field
 	{ MIF_CALL, "Handicap:",	NULL, M_NONE, 0, "handicap", cp_handicap },
-	{ MIF_CALL, "Effects:",		NULL, M_NONE, "\\widget\\colorbar", "color1", NULL, &cr_colorEffect },
+	{ MIF_CALL, "Effects:",		NULL, M_NONE, "\\widget\\colorbar", "color1", cp_colorEffect, &cr_colorEffect },
+	{ MIF_CALL, NULL,		NULL, M_NONE, "\\widget\\colorbar", "color2", cp_colorEffect, &cr_colorEffect },
 		/// \\widget\\listbox
 	{ MIF_FILELIST|MIF_CALL, "Model:", playerModelUpdate, M_NONE, "\\dir\\models/players\\ext\\/\\empty\\No players found\\width\\80\\listboxheight\\8", "model", NULL },
 };

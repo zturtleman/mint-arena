@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // ui_draw.c
 void UI_DrawRadioButton( currentMenuItem_t *item, float *x );
-void UI_DrawSlider( float x, float y, float min, float max, float value, int style, float *drawcolor, qboolean colorBar );
+void UI_DrawSlider( currentMenuItem_t *item, float x, float y, int style, float *drawcolor, qboolean colorBar );
 
 /*
 ============================================================================
@@ -174,9 +174,7 @@ static void Slider_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style ) 
 
 	x = Caption_Draw( item, drawcolor, style, itemSelected );
 
-	UI_DrawSlider( x, item->captionPos.y,
-					item->cvarRange->min, item->cvarRange->max,
-					item->vmCvar.value, style, drawcolor, qfalse );
+	UI_DrawSlider( item, x, item->captionPos.y, style, drawcolor, qfalse );
 }
 
 
@@ -200,9 +198,7 @@ static void ColorBar_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style 
 
 	x = Caption_Draw( item, drawcolor, style, itemSelected );
 
-	UI_DrawSlider( x, item->captionPos.y,
-					item->cvarRange->min, item->cvarRange->max,
-					item->vmCvar.value, style, drawcolor, qtrue );
+	UI_DrawSlider( item, x, item->captionPos.y, style, drawcolor, qtrue );
 }
 
 

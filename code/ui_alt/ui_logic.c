@@ -288,7 +288,7 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 		}
 
 		// FIXME: slider will always be true here .. is the other case going to be needed? ratio buttons will use cvarPairs.
-		if ( item->widgetType == UIW_SLIDER || item->widgetType == UIW_COLORBAR ) {
+		if ( item->widgetType == UIW_SLIDER ) {
 			// added elipse for min=0, max=1, step=0.1 not being able to go to max
 			if ( value < min - 0.001f || value > max + 0.001f ) {
 				// play buzz sound
@@ -297,7 +297,7 @@ qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir ) 
 			}
 			value = Com_Clamp( min, max, value );
 		}
-		// ratio button, ..erm or any wrapping value
+		// wrapping value
 		else if ( min != max ) {
 			// if cvar has min and max and out of range, wrap around
 			if ( value < min ) {
@@ -364,6 +364,7 @@ qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, 
 		float frac, sliderx, targetStep, targetValue, min, max;
 		qboolean reversed;
 		int sliderWidth;
+		float value, halfStep;
 
 		// clicked slider caption, ignore -- still allow clicking it to run an action
 		//if ( x < item->captionPos.x + item->captionPos.width && state == MACTION_PRESS )
@@ -401,19 +402,30 @@ qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, 
 			targetValue = targetStep + min;
 		}
 
+		//
+		// round to nearest
+		//
+		halfStep = item->cvarRange->stepSize / 2.0f;
+
+		// snap to step
+		value = 0;
+		while ( value + halfStep <= targetStep ) {
+			value += item->cvarRange->stepSize;
+		}
+		value += min;
+
+		value = Com_Clamp( min, max, value );
+
+		// color bar uses values in a non-linear order
+		if ( item->numPairs ) {
+			item->cvarPair = Com_Clamp( 0, item->numPairs, ( value - min ) / item->cvarRange->stepSize );
+
+			// ZTM: TODO: handle CVT_CMD and CVT_STRING
+			// display the cvar value, not the index value
+			targetValue = value = atof( item->cvarPairs[item->cvarPair].value );
+		}
+
 		if ( state == MACTION_RELEASE ) {
-			float value, halfStep;
-
-			halfStep = item->cvarRange->stepSize / 2.0f;
-
-			// snap to step
-			value = 0;
-			while ( value + halfStep <= targetStep ) {
-				value += item->cvarRange->stepSize;
-			}
-			value += min;
-
-			value = Com_Clamp( min, max, value );
 			trap_Cvar_SetValue( item->cvarName, value );
 
 #if 0 // ZTM: Old code. Now the cvar will automatically update to latched value each frame (derp, but only if the string changes -- i.e. not when snaps to existing value)
@@ -436,7 +448,7 @@ qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, 
 }
 
 qboolean UI_ItemIsSlider( currentMenuItem_t *item ) {
-	return ( item->cvarRange && item->numPairs == 0 );
+	return ( item->cvarRange != NULL );
 }
 
 int UI_NumCvarPairs( cvarValuePair_t *cvarPairs ) {

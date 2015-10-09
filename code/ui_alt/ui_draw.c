@@ -448,10 +448,15 @@ void UI_BuiltinCircle( float x, float y, float width, float height, float *drawc
 	trap_R_Add2dPolys( verts, CIRCLE_VERTS, cgs.media.whiteShader );
 }
 
-void UI_DrawSlider( float x, float y, float min, float max, float value, int style, float *drawcolor, qboolean colorBar ) {
+void UI_DrawSlider( currentMenuItem_t *item, float x, float y, int style, float *drawcolor, qboolean colorBar ) {
 	float frac, sliderValue, buttonX;
 	qhandle_t hShader;
 	int sliderWidth, sliderHeight, buttonWidth, buttonHeight;
+	float min, max, value;
+
+	min = item->cvarRange->min;
+	max = item->cvarRange->max;
+	value = item->vmCvar.value;
 
 	// draw the background
 	if ( colorBar ) {
@@ -492,11 +497,16 @@ void UI_DrawSlider( float x, float y, float min, float max, float value, int sty
 	}
 
 	// position of slider button
-	frac = ( sliderValue - min ) / ( max - min );
+	if ( item->numPairs ) {
+		// ZTM: TODO: Make color bar smoother while dragging it?
+		frac = ( item->cvarPair / (float)item->numPairs );
+	} else {
+		frac = ( sliderValue - min ) / ( max - min );
+	}
 
 	if ( colorBar ) {
 		//float xOffset = 128.0f / (NUM_COLOR_EFFECTS + 1);
-		int uiColor = gamecodetoui[(int)sliderValue - 1];
+		int uiColor = gamecodetoui[atoi( item->cvarPairs[item->cvarPair].value ) - 1];
 
 		hShader = uiAssets.fxPic[uiColor];
 		if ( !hShader ) {
@@ -538,11 +548,11 @@ void UI_DrawSlider( float x, float y, float min, float max, float value, int sty
 	// draw value
 #ifdef Q3UIFONTS
 	if ( style & UI_GIANTFONT ) {
-		UI_DrawProportionalString( x + 96 + 8, y, va("%g", value), style, drawcolor );
+		UI_DrawProportionalString( x + sliderWidth + 8, y, va("%g", value), style, drawcolor );
 	} else
 #endif
 	{
-		CG_DrawString( x + 96 + 8, y, va("%g", value), UI_DROPSHADOW|style, drawcolor );
+		CG_DrawString( x + sliderWidth + 8, y, va("%g", value), UI_DROPSHADOW|style, drawcolor );
 	}
 }
 
@@ -988,7 +998,11 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		if ( Q_stricmp( Info_ValueForKey( itemInfo->extData, "widget" ), "listbox" ) == 0 ) {
 			item->widgetType = UIW_LISTBOX;
 		} else if ( Q_stricmp( Info_ValueForKey( itemInfo->extData, "widget" ), "colorbar" ) == 0 ) {
-			item->widgetType = UIW_COLORBAR;
+			if ( item->cvarRange ) {
+				item->widgetType = UIW_COLORBAR;
+			} else {
+				Com_Printf( S_COLOR_YELLOW "WARNING: Menu item '%s' missing cvarRange for colorbar widget\n", item->caption );
+			}
 		} else if ( UI_ItemIsSlider( item ) ) {
 			item->widgetType = UIW_SLIDER;
 		} else if ( UI_IsRadioButton( item ) ) {

@@ -30,7 +30,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "ui_local.h"
 
-// ui_draw.c
 void UI_DrawRadioButton( currentMenuItem_t *item, float *x );
 void UI_DrawSlider( currentMenuItem_t *item, float x, float y, int style, float *drawcolor, qboolean colorBar );
 
@@ -143,6 +142,9 @@ Bitmap button
 ============================================================================
 */
 static void Bitmap_Init( currentMenuItem_t *item, const char *extData ) {
+	item->captionPos.width = ui_bitmaps[item->bitmapIndex].offWidth;
+	item->captionPos.height = ui_bitmaps[item->bitmapIndex].offHeight;
+
 	item->clickPos.x = 0;
 	item->clickPos.y = 0;
 	item->clickPos.width = item->captionPos.width;
@@ -155,6 +157,196 @@ static void Bitmap_Init( currentMenuItem_t *item, const char *extData ) {
 Horizontal slider bar
 ============================================================================
 */
+static void UI_BuiltinSliderBar( float x, float y, float width, float height, float *drawcolor ) {
+	polyVert_t verts[3];
+
+	CG_AdjustFrom640( &x, &y, &width, &height );
+
+	VectorSet( verts[0].xyz, x, y+height, 0 ); // left lower
+	verts[0].st[0] = 0;
+	verts[0].st[1] = 0;
+
+	VectorSet( verts[1].xyz, x+width, y, 0 ); // right upper
+	verts[1].st[0] = 1;
+	verts[1].st[1] = 0;
+
+	VectorSet( verts[2].xyz, x+width, y+height, 0 ); // right upper
+	verts[2].st[0] = 1;
+	verts[2].st[1] = 1;
+
+	verts[0].modulate[0] = drawcolor[0] * 0xFF;
+	verts[0].modulate[1] = drawcolor[1] * 0xFF;
+	verts[0].modulate[2] = drawcolor[2] * 0xFF;
+	verts[0].modulate[3] = 0;
+
+	verts[1].modulate[0] = drawcolor[0] * 0xFF;
+	verts[1].modulate[1] = drawcolor[1] * 0xFF;
+	verts[1].modulate[2] = drawcolor[2] * 0xFF;
+	verts[1].modulate[3] = 0xE0;
+
+	verts[2].modulate[0] = drawcolor[0] * 0xFF;
+	verts[2].modulate[1] = drawcolor[1] * 0xFF;
+	verts[2].modulate[2] = drawcolor[2] * 0xFF;
+	verts[2].modulate[3] = 0xE0;
+
+	trap_R_Add2dPolys( verts, 3, cgs.media.whiteShader );
+}
+
+static void UI_BuiltinCircle( float x, float y, float width, float height, float *drawcolor ) {
+#define CIRCLE_VERTS	21
+	polyVert_t verts[CIRCLE_VERTS];
+	int i;
+	float horizontalRadius, verticialRadius;
+
+	CG_AdjustFrom640( &x, &y, &width, &height );
+
+	horizontalRadius = width * 0.5f;
+	verticialRadius = height * 0.5f;
+
+	// move to center of circle
+	x += horizontalRadius;
+	y += verticialRadius;
+
+	// full bright point at center
+	i = 0;
+	verts[i].xyz[0] = x;
+	verts[i].xyz[1] = y;
+	verts[i].xyz[2] = 0;
+
+	verts[i].st[0] = 0.5f;
+	verts[i].st[1] = 0.5f;
+
+	verts[i].modulate[0] = drawcolor[0] * 0xFF;
+	verts[i].modulate[1] = drawcolor[1] * 0xFF;
+	verts[i].modulate[2] = drawcolor[2] * 0xFF;
+	verts[i].modulate[3] = 0xFF;
+
+	for ( i = 1; i < CIRCLE_VERTS; i++ ) {
+		float theta = 2.0f * M_PI * (float)(i-1) / (float)(CIRCLE_VERTS-2);
+
+		verts[i].xyz[0] = x + cos( theta ) * horizontalRadius;
+		verts[i].xyz[1] = y + sin( theta ) * verticialRadius;
+		verts[i].xyz[2] = 0;
+
+		// these are wrong.. but drawing blank image anyway
+		verts[i].st[0] = 0.5f + ( verts[i].xyz[0] - x ) / horizontalRadius;
+		verts[i].st[1] = 0.5f + ( verts[i].xyz[1] - y ) / verticialRadius;
+
+		verts[i].modulate[0] = drawcolor[0] * 0x40;
+		verts[i].modulate[1] = drawcolor[1] * 0x40;
+		verts[i].modulate[2] = drawcolor[2] * 0x40;
+		verts[i].modulate[3] = 0xFF;
+	}
+
+	trap_R_Add2dPolys( verts, CIRCLE_VERTS, cgs.media.whiteShader );
+}
+
+void UI_DrawSlider( currentMenuItem_t *item, float x, float y, int style, float *drawcolor, qboolean colorBar ) {
+	float frac, sliderValue, buttonX;
+	qhandle_t hShader;
+	int sliderWidth, sliderHeight, buttonWidth, buttonHeight;
+	float min, max, value;
+
+	min = item->cvarRange->min;
+	max = item->cvarRange->max;
+	value = item->vmCvar.value;
+
+	// draw the background
+	if ( colorBar ) {
+		sliderWidth = 128;
+		sliderHeight = 8;
+		buttonWidth = 16;
+		buttonHeight = 12;
+		hShader = uiAssets.fxBasePic;
+	} else {
+		sliderWidth = 96;
+		sliderHeight = 16;
+		buttonWidth = 12;
+		buttonHeight = 20;
+		hShader = uiAssets.sliderBar;
+
+		// set color of slider bar and button
+		trap_R_SetColor( drawcolor );
+	}
+
+	if ( hShader ) {
+		CG_DrawPic( x, y, sliderWidth, sliderHeight, hShader );
+	} else {
+		UI_BuiltinSliderBar( x, y, sliderWidth, sliderHeight, drawcolor );
+	}
+
+	// draw the button
+	if ( style & UI_PULSE )
+		hShader = uiAssets.sliderButtonSelected;
+	else
+		hShader = uiAssets.sliderButton;
+
+	// clamp slider value so it doesn't go off when value is out of range
+	// but still display the real value
+	if ( min > max ) {
+		sliderValue = Com_Clamp( max, min, value );
+	} else {
+		sliderValue = Com_Clamp( min, max, value );
+	}
+
+	// position of slider button
+	if ( item->numPairs ) {
+		// ZTM: TODO: Make color bar smoother while dragging it?
+		frac = ( item->cvarPair / (float)item->numPairs );
+	} else {
+		frac = ( sliderValue - min ) / ( max - min );
+	}
+
+	if ( colorBar ) {
+		//float xOffset = 128.0f / (NUM_COLOR_EFFECTS + 1);
+		hShader = uiAssets.fxPic[item->cvarPair];
+		if ( !hShader ) {
+			vec4_t picColor;
+
+			hShader = uiAssets.fxPic[NUM_COLOR_EFFECTS-1]; // white
+			if ( !hShader )
+				hShader = cgs.media.whiteShader;
+
+			CG_PlayerColorFromIndex( atoi( item->cvarPairs[item->cvarPair].value ), picColor );
+			picColor[3] = 1;
+			trap_R_SetColor( picColor );
+		}
+		//CG_DrawPic( item->generic.x + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y + PROP_HEIGHT + 6, 16, 12, colorShader );
+
+		// FIXME
+		buttonX = x + 8 + ( sliderWidth - 16 ) * frac - 2;
+	} else {
+#ifndef MISSIONPACK
+		// team arena colorizes the button, q3 does not
+		trap_R_SetColor( NULL );
+#endif
+
+		buttonX = x + 8 + ( sliderWidth - 16 ) * frac - 2;
+	}
+
+	if ( hShader ) {
+		CG_DrawPic( buttonX, y - 2, buttonWidth, buttonHeight, hShader );
+	} else {
+		UI_BuiltinCircle( buttonX, y - 2, buttonWidth, buttonHeight, drawcolor );
+	}
+
+	trap_R_SetColor( NULL );
+
+	if ( colorBar ) {
+		return;
+	}
+
+	// draw value
+#ifdef Q3UIFONTS
+	if ( style & UI_GIANTFONT ) {
+		UI_DrawProportionalString( x + sliderWidth + 8, y, va("%g", value), style, drawcolor );
+	} else
+#endif
+	{
+		CG_DrawString( x + sliderWidth + 8, y, va("%g", value), UI_DROPSHADOW|style, drawcolor );
+	}
+}
+
 static void Slider_Init( currentMenuItem_t *item, const char *extData ) {
 	Caption_Init( item, extData );
 
@@ -171,6 +363,10 @@ static void Slider_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style ) 
 	x = Caption_Draw( item, drawcolor, style, itemSelected );
 
 	UI_DrawSlider( item, x, item->captionPos.y, style, drawcolor, qfalse );
+}
+
+qboolean UI_ItemIsSlider( currentMenuItem_t *item ) {
+	return ( item->cvarRange != NULL );
 }
 
 
@@ -209,6 +405,63 @@ static void Radio_Init( currentMenuItem_t *item, const char *extData ) {
 
 static void Radio_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style ) {
 	Generic_Draw( item, drawcolor, style );
+}
+
+// this is called from Generic_Draw
+void UI_DrawRadioButton( currentMenuItem_t *item, float *x ) {
+	qhandle_t hShader;
+	int valuePair0, valuePair1, offPair, picY;
+
+	valuePair0 = atoi( item->cvarPairs[ 0 ].value );
+	valuePair1 = atoi( item->cvarPairs[ 1 ].value );
+
+	if ( valuePair0 == 0 && valuePair1 == 1 ) {
+		offPair = 0;
+	} else /* if ( valuePair0 == 1 && valuePair1 == 0 ) */ {
+		// reversed case
+		offPair = 1;
+	}
+
+	hShader = ( item->cvarPair == offPair ) ? uiAssets.radioButtonOff : uiAssets.radioButtonOn;
+
+	// center ratio button on box and move down 2 pixels at 16 pt size
+	picY = item->captionPos.y + item->captionPos.height / 2 - 16 / 2
+				+ 2.0f * SMALLCHAR_HEIGHT / 16.0f;
+
+	CG_DrawPic( *x, picY, 16, 16, hShader );
+	*x += 16;
+}
+
+qboolean UI_ItemIsRadioButton( currentMenuItem_t *item ) {
+	int valuePair0, valuePair1, offPair;
+
+	if ( !uiAssets.radioButtonOff || !uiAssets.radioButtonOn ) {
+		return qfalse;
+	}
+
+	if ( !item->cvarPairs || item->numPairs != 2
+			|| item->cvarPairs[ 0 ].type != CVT_INT
+			|| item->cvarPairs[ 1 ].type != CVT_INT ) {
+		return qfalse;
+	}
+
+	valuePair0 = atoi( item->cvarPairs[ 0 ].value );
+	valuePair1 = atoi( item->cvarPairs[ 1 ].value );
+
+	if ( valuePair0 == 0 && valuePair1 == 1 ) {
+		offPair = 0;
+	} else if ( valuePair0 == 1 && valuePair1 == 0 ) {
+		// reversed case
+		offPair = 1;
+	} else {
+		return qfalse;
+	}
+
+	if ( Q_stricmp( item->cvarPairs[ offPair ].string, "off" ) || Q_stricmp( item->cvarPairs[ !offPair ].string, "on" ) ) {
+		return qfalse;
+	}
+
+	return qtrue;
 }
 
 

@@ -73,6 +73,24 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #endif
 
+// color bar
+#define ART_FX_BASE			"menu/art/fx_base"
+#define ART_FX_BLUE			"menu/art/fx_blue"
+#define ART_FX_CYAN			"menu/art/fx_cyan"
+#define ART_FX_GREEN		"menu/art/fx_grn"
+#define ART_FX_RED			"menu/art/fx_red"
+#define ART_FX_TEAL			"menu/art/fx_teal"
+#define ART_FX_WHITE		"menu/art/fx_white"
+#define ART_FX_YELLOW		"menu/art/fx_yel"
+#define ART_FX_ORANGE		"menu/art/fx_orange"
+#define ART_FX_LIME			"menu/art/fx_lime"
+#define ART_FX_VIVIDGREEN	"menu/art/fx_vividgreen"
+#define ART_FX_LIGHTBLUE	"menu/art/fx_lightblue"
+#define ART_FX_PURPLE		"menu/art/fx_purple"
+#define ART_FX_PINK			"menu/art/fx_pink"
+
+#define NUM_COLOR_EFFECTS 13
+
 /*
 	List of Widgets
 */
@@ -292,6 +310,9 @@ typedef struct {
 
 extern uiWidget_t ui_widgets[UIW_NUM_WIDGETS];
 
+qboolean UI_ItemIsSlider( currentMenuItem_t *item );
+qboolean UI_ItemIsRadioButton( currentMenuItem_t *item );
+
 
 /*
 
@@ -327,7 +348,66 @@ typedef struct {
 
 } uiStatic_t;
 
+typedef struct {
+	qhandle_t menuBackground;
+	qhandle_t menuBackgroundNoLogo;
+	qhandle_t connectBackground;
+
+#ifdef MISSIONPACK
+	qhandle_t menuBackgroundB;
+	qhandle_t menuBackgroundC;
+	qhandle_t menuBackgroundD;
+	qhandle_t menuBackgroundE;
+	qhandle_t levelShotDetail;
+
+	qhandle_t gradientBar;
+	qhandle_t lightningShader;
+#else
+	qhandle_t bannerModel;
+
+	qhandle_t frameLeft;
+	qhandle_t frameLeftFilled; // player model select menu
+	qhandle_t frameRight;
+#endif
+
+	qhandle_t sliderBar;
+	qhandle_t sliderButton;
+	qhandle_t sliderButtonSelected;
+
+	qhandle_t radioButtonOff;
+	qhandle_t radioButtonOn;
+
+	qhandle_t dialogSmallBackground;
+	qhandle_t dialogLargeBackground;
+
+	qhandle_t fxBasePic;
+	qhandle_t fxPic[NUM_COLOR_EFFECTS];
+
+} uiAssets_t;
+
+typedef struct {
+	const char	*text;
+
+	// only used for back and next buttons
+	int			horizontalPad;
+	int			verticialPad;
+
+	const char	*offName;
+	int			offWidth;
+	int			offHeight;
+
+	const char	*onName;
+	int			onWidth;
+	int			onHeight;
+
+	// filled in at run time
+	qhandle_t	offShader;
+	qhandle_t	onShader;
+} uiBitmap_t;
+
 extern uiStatic_t uis;
+extern uiAssets_t uiAssets;
+extern uiBitmap_t ui_bitmaps[];
 
 // ui_main.c
 #define MAX_RESOLUTIONS	32
@@ -359,7 +439,6 @@ void UI_MenuCursorPoint( currentMenu_t *current, int x, int y );
 void UI_MenuAction( currentMenu_t *current, int itemNum, int dir );
 qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, mouseActionState_t state );
 qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir );
-qboolean UI_ItemIsSlider( currentMenuItem_t *item );
 int UI_NumCvarPairs( cvarValuePair_t *cvarPairs );
 void UI_RegisterMenuCvars( currentMenu_t *current );
 void UI_UpdateMenuCvars( currentMenu_t *current );

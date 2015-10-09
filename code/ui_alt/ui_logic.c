@@ -447,10 +447,6 @@ qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, 
 	return qfalse;
 }
 
-qboolean UI_ItemIsSlider( currentMenuItem_t *item ) {
-	return ( item->cvarRange != NULL );
-}
-
 int UI_NumCvarPairs( cvarValuePair_t *cvarPairs ) {
 	int pair;
 

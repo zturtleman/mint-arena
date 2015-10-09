@@ -177,8 +177,8 @@ typedef struct {
 	const char *extData; // info string containing extra rarely specified data.
 						 // for any: "widget"
 						 // for everything: "x" and "y" (in pixels)
-						 // for file list: "dir", "ext",
-						 // for list box: "empty", "width" (in pixels), "listboxheight" (in number of text lines)
+						 // for file list: "dir", "ext", "empty"
+						 // for list box: "width" (in pixels), "listboxheight" (in number of text lines)
 
 	const char	*cvarName;
 
@@ -267,6 +267,12 @@ typedef struct {
 	currentMenuItem_t	header;
 	currentMenuItem_t	items[MAX_MENU_ITEMS];
 	int numItems;
+
+	// file list information
+	cvarValuePair_t filePairs[1024];
+	int		numFilePairs;
+	char	fileText[4096];
+	int		fileTextLength;
 
 } currentMenu_t;
 
@@ -357,6 +363,7 @@ qboolean UI_ItemIsSlider( currentMenuItem_t *item );
 int UI_NumCvarPairs( cvarValuePair_t *cvarPairs );
 void UI_RegisterMenuCvars( currentMenu_t *current );
 void UI_UpdateMenuCvars( currentMenu_t *current );
+void UI_InitFileList( currentMenu_t *current, currentMenuItem_t *item, const char *extData );
 
 
 // ui_fonts.c

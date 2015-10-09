@@ -607,100 +607,6 @@ void UI_DrawRadioButton( currentMenuItem_t *item, float *x ) {
 	*x += 16;
 }
 
-static int UI_CvarPairsStringCompare( const void *a, const void *b ) {
-	return Q_stricmp( ((const cvarValuePair_t*)a)->string, ((const cvarValuePair_t*)b)->string );
-}
-
-static void UI_InitFileList( currentMenuItem_t *item, const char *extData ) {
-	// ZTM: FIXME: there can only be one file list displayed at a time. They should probably at least be in currentMenu_t?
-	#define MAX_LB_FILES 1024
-	static cvarValuePair_t filePairs[MAX_LB_FILES];
-	static char	fileNames[4096];
-	static char	defaultMessage[128];
-	char	dirName[MAX_QPATH], extension[MAX_QPATH];
-	char	*name;
-	int		i, len, file, numFilenames;
-
-	if ( item->cvarPairs ) {
-		return;
-	}
-
-	Q_strncpyz( dirName, Info_ValueForKey( extData, "dir" ), sizeof (dirName) );
-	Q_strncpyz( extension, Info_ValueForKey( extData, "ext" ), sizeof (extension) );
-	// defaultMessage cannot be local memory...
-	Q_strncpyz( defaultMessage, Info_ValueForKey( extData, "empty" ), sizeof (defaultMessage) );
-
-	numFilenames = trap_FS_GetFileList( dirName, extension, fileNames, sizeof ( fileNames ) );
-
-	// mod list is "gamedir\0description\0"
-	if ( !Q_stricmp( dirName, "$modlist" ) ) {
-		numFilenames /= 2;
-		if (numFilenames > MAX_LB_FILES) {
-			numFilenames = MAX_LB_FILES;
-		}
-		name = fileNames;
-		for ( i = 0; i < numFilenames; i++ ) {
-			filePairs[i].type = CVT_STRING;
-
-			// gamedir
-			filePairs[i].value = name;
-			name += strlen( name ) + 1;
-
-			// description
-			filePairs[i].string = name;
-			name += strlen( name ) + 1;
-		}
-
-		// sort list by displayed names
-		qsort( filePairs, numFilenames, sizeof ( filePairs[0] ), UI_CvarPairsStringCompare );
-	} else {
-		if (numFilenames > MAX_LB_FILES) {
-			numFilenames = MAX_LB_FILES;
-		}
-		name = fileNames;
-		for ( file = 0, i = 0; file < numFilenames; file++ ) {
-			len = strlen( name );
-
-			// special handling for list of directories
-			// ZTM: FIXME: directories in pk3dirs do not have slash at end, but from pk3s do. causes duplicates if exist in both
-			if ( *extension == '/' ) {
-				if ( name[ len - 1 ] == '/' ) {
-					name[ len - 1 ] = 0;
-				} else if ( Q_stricmp( name, "." ) == 0 || Q_stricmp( name, ".." ) == 0 ) {
-					name[0] = '\0';
-				}
-			} else {
-				COM_StripExtension( name, name, len+1 );
-			}
-
-			if ( *name ) {
-				filePairs[i].type = CVT_STRING;
-				filePairs[i].value = name;
-				filePairs[i].string = name;
-				i++;
-			}
-
-			name += len + 1;
-		}
-	}
-
-	//
-	if (!numFilenames) {
-		filePairs[numFilenames].type = CVT_STRING;
-		filePairs[numFilenames].value = "";
-		filePairs[numFilenames].string = defaultMessage;
-		numFilenames++;
-		item->flags &= ~MIF_SELECTABLE;
-	}
-
-	filePairs[numFilenames].type = CVT_NONE;
-	filePairs[numFilenames].value = NULL;
-	filePairs[numFilenames].string = NULL;
-
-	item->cvarPairs = filePairs;
-	item->numPairs = numFilenames;
-}
-
 void UI_DrawCurrentMenu( currentMenu_t *current ) {
 	int i;
 	qboolean drawFramePics = qtrue;
@@ -910,6 +816,11 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		return;
 	}
 
+	// clear old menu information
+	current->numItems = 0;
+	current->numFilePairs = 0;
+	current->fileTextLength = 0;
+
 	menuInfo = &ui_menus[current->menu];
 
 	if ( menuInfo->header ) {
@@ -962,7 +873,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 	item = current->items;
 	itemInfo = menuInfo->items;
 	panelNum = 0;
-	for ( i = 0, current->numItems = 0; i < menuInfo->numItems; i++, itemInfo++ ) {
+	for ( i = 0; i < menuInfo->numItems; i++, itemInfo++ ) {
 		item->flags = itemInfo->flags;
 		item->action = itemInfo->action;
 		item->menuid = itemInfo->menuid;
@@ -987,7 +898,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		}
 
 		if ( item->flags & MIF_FILELIST ) {
-			UI_InitFileList( item, itemInfo->extData );
+			UI_InitFileList( current, item, itemInfo->extData );
 		}
 
 		// ZTM: TODO: improve this. only call Info_ValueForKey once, etc

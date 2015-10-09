@@ -572,3 +572,107 @@ void UI_UpdateMenuCvars( currentMenu_t *current ) {
 	}
 }
 
+static int UI_CvarPairsStringCompare( const void *a, const void *b ) {
+	return Q_stricmp( ((const cvarValuePair_t*)a)->string, ((const cvarValuePair_t*)b)->string );
+}
+
+void UI_InitFileList( currentMenu_t *current, currentMenuItem_t *item, const char *extData ) {
+	char	dirName[MAX_QPATH], extension[MAX_QPATH], defaultMessage[128];
+	char	*name;
+	int		i, len, file, numFilenames;
+	cvarValuePair_t *filePairs;
+	int		maxFilePairs;
+	char	*fileNames;
+	int		fileNamesSize;
+
+	filePairs = &current->filePairs[current->numFilePairs];
+	maxFilePairs = ARRAY_LEN( current->filePairs ) - current->numFilePairs;
+
+	fileNames = &current->fileText[current->fileTextLength];
+	fileNamesSize = ARRAY_LEN( current->fileText ) - current->fileTextLength;
+
+	Q_strncpyz( dirName, Info_ValueForKey( extData, "dir" ), sizeof (dirName) );
+	Q_strncpyz( extension, Info_ValueForKey( extData, "ext" ), sizeof (extension) );
+	// defaultMessage cannot be local memory...
+	Q_strncpyz( defaultMessage, Info_ValueForKey( extData, "empty" ), sizeof (defaultMessage) );
+
+	numFilenames = trap_FS_GetFileList( dirName, extension, fileNames, fileNamesSize );
+
+	// mod list is "gamedir\0description\0"
+	if ( !Q_stricmp( dirName, "$modlist" ) ) {
+		numFilenames /= 2;
+		if ( numFilenames >= maxFilePairs ) {
+			numFilenames = maxFilePairs - 1;
+		}
+		name = fileNames;
+		for ( i = 0; i < numFilenames; i++ ) {
+			filePairs[i].type = CVT_STRING;
+
+			// gamedir
+			filePairs[i].value = name;
+			name += strlen( name ) + 1;
+
+			// description
+			filePairs[i].string = name;
+			name += strlen( name ) + 1;
+		}
+
+		// sort list by displayed names
+		qsort( filePairs, numFilenames, sizeof ( filePairs[0] ), UI_CvarPairsStringCompare );
+	} else {
+		if ( numFilenames >= maxFilePairs ) {
+			numFilenames = maxFilePairs - 1;
+		}
+		name = fileNames;
+		for ( file = 0, i = 0; file < numFilenames; file++ ) {
+			len = strlen( name );
+
+			// special handling for list of directories
+			// ZTM: FIXME: directories in pk3dirs do not have slash at end, but from pk3s do. causes duplicates if exist in both
+			if ( *extension == '/' ) {
+				if ( name[ len - 1 ] == '/' ) {
+					name[ len - 1 ] = 0;
+				} else if ( Q_stricmp( name, "." ) == 0 || Q_stricmp( name, ".." ) == 0 ) {
+					name[0] = '\0';
+				}
+			} else {
+				COM_StripExtension( name, name, len+1 );
+			}
+
+			if ( *name ) {
+				filePairs[i].type = CVT_STRING;
+				filePairs[i].value = name;
+				filePairs[i].string = name;
+				i++;
+			}
+
+			name += len + 1;
+		}
+	}
+
+	// create default message placeholder and store text in menu's fileText
+	if ( !numFilenames && defaultMessage[0] ) {
+		filePairs[numFilenames].type = CVT_STRING;
+		filePairs[numFilenames].value = "";
+		filePairs[numFilenames].string = name;
+		Q_strncpyz( name, defaultMessage, fileNamesSize );
+		name += strlen( name ) + 1;
+
+		numFilenames++;
+		item->flags &= ~MIF_SELECTABLE;
+	}
+
+	filePairs[numFilenames].type = CVT_NONE;
+	filePairs[numFilenames].value = NULL;
+	filePairs[numFilenames].string = NULL;
+
+	item->cvarPairs = filePairs;
+	item->numPairs = numFilenames;
+
+	// don't overwrite the CVT_NONE list terminator
+	numFilenames++;
+
+	current->fileTextLength += (int)(name - fileNames);
+	current->numFilePairs += numFilenames;
+}
+

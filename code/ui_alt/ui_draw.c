@@ -47,9 +47,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define NUM_COLOR_EFFECTS 13
 
-static int gamecodetoui[NUM_COLOR_EFFECTS] = {8,4,6,0,10,2,12,1,3,5,7,9,11};
-static int uitogamecode[NUM_COLOR_EFFECTS] = {4,8,6,9,2,10,3,11,1,12,5,13,7};
-
 
 vec4_t color_header           = {1.00f, 1.00f, 1.00f, 1.00f};	// bright white
 vec4_t color_copyright        = {0.50f, 0.00f, 0.00f, 1.00f};	// dim red
@@ -506,9 +503,7 @@ void UI_DrawSlider( currentMenuItem_t *item, float x, float y, int style, float 
 
 	if ( colorBar ) {
 		//float xOffset = 128.0f / (NUM_COLOR_EFFECTS + 1);
-		int uiColor = gamecodetoui[atoi( item->cvarPairs[item->cvarPair].value ) - 1];
-
-		hShader = uiAssets.fxPic[uiColor];
+		hShader = uiAssets.fxPic[item->cvarPair];
 		if ( !hShader ) {
 			vec4_t picColor;
 
@@ -516,7 +511,7 @@ void UI_DrawSlider( currentMenuItem_t *item, float x, float y, int style, float 
 			if ( !hShader )
 				hShader = cgs.media.whiteShader;
 
-			CG_PlayerColorFromIndex( uitogamecode[uiColor], picColor );
+			CG_PlayerColorFromIndex( atoi( item->cvarPairs[item->cvarPair].value ), picColor );
 			picColor[3] = 1;
 			trap_R_SetColor( picColor );
 		}

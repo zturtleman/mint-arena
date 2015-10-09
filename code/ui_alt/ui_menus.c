@@ -329,7 +329,7 @@ menuitem_t playermenu_items[] =
 	{ MIF_CALL, "Name:",		NULL, M_NONE, 0, "name" }, // TODO: make it an edit field
 	{ MIF_CALL, "Handicap:",	NULL, M_NONE, 0, "handicap", cp_handicap },
 	{ MIF_CALL, "Effects:",		NULL, M_NONE, "\\widget\\colorbar", "color1", cp_colorEffect, &cr_colorEffect },
-	{ MIF_CALL, NULL,		NULL, M_NONE, "\\widget\\colorbar", "color2", cp_colorEffect, &cr_colorEffect },
+	{ MIF_CALL, NULL,			NULL, M_NONE, "\\widget\\colorbar", "color2", cp_colorEffect, &cr_colorEffect },
 		/// \\widget\\listbox
 	{ MIF_FILELIST|MIF_CALL, "Model:", playerModelUpdate, M_NONE, "\\dir\\models/players\\ext\\/\\empty\\No players found\\width\\80\\listboxheight\\8", "model", NULL },
 };

@@ -36,27 +36,29 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // ui_draw.c
 void UI_DrawRadioButton( currentMenuItem_t *item, float *x );
-void UI_DrawSlider( float x, float y, float min, float max, float value, int style, float *drawcolor );
+void UI_DrawSlider( float x, float y, float min, float max, float value, int style, float *drawcolor, qboolean colorBar );
 
 /*
 ============================================================================
 Common
 ============================================================================
 */
-
-static void Caption_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style, float *x, float *y ) {
-
+static void Caption_Init( currentMenuItem_t *item, const char *extData ) {
+	if ( item->flags & MIF_BIGTEXT ) {
+#ifdef Q3UIFONTS
+		item->captionPos.width = UI_ProportionalStringWidth( item->caption );
+		item->captionPos.height = PROP_HEIGHT;
+#else
+		item->captionPos.width = CG_DrawStrlen( item->caption, UI_GIANTFONT );
+		item->captionPos.height = GIANTCHAR_HEIGHT;
+#endif
+	} else {
+		item->captionPos.width = CG_DrawStrlen( item->caption, UI_SMALLFONT );
+		item->captionPos.height = SMALLCHAR_HEIGHT;
+	}
 }
 
-/*
-============================================================================
-Generic
-============================================================================
-*/
-
-static void Generic_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style ) {
-	qboolean itemSelected = !!( style & UI_PULSE );
-
+static float Caption_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style, qboolean selectionMarker ) {
 #ifdef Q3UIFONTS
 	if ( item->flags & MIF_BIGTEXT ) {
 		UI_DrawProportionalString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|style, drawcolor );
@@ -66,36 +68,47 @@ static void Generic_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style )
 		CG_DrawString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|style, drawcolor );
 	}
 
-	// draw cvar value
-	if ( item->cvarName ) {
-		float x;
-		const char *string;
-
-		// Q3A bitmap prop font doesn't have this glyph
-		if ( itemSelected && !( item->flags & MIF_BIGTEXT ) ) {
-			char cursorStr[2] = { 13, '\0' };
-
-			x = item->captionPos.x + item->captionPos.width + 2;
+	// Q3A bitmap prop font doesn't have this glyph
+	if ( selectionMarker && !( item->flags & MIF_BIGTEXT ) ) {
+		char cursorStr[2] = { 13, '\0' };
+		float x = item->captionPos.x + item->captionPos.width + 2;
 
 #ifdef Q3UIFONTS
-			if ( item->flags & MIF_BIGTEXT ) {
-				UI_DrawProportionalString( x, item->captionPos.y, cursorStr, UI_BLINK|style, drawcolor );
-			} else
+		if ( item->flags & MIF_BIGTEXT ) {
+			UI_DrawProportionalString( x, item->captionPos.y, cursorStr, UI_BLINK|style, drawcolor );
+		} else
 #endif
-			{
-				CG_DrawString( x, item->captionPos.y, cursorStr, UI_BLINK|style, drawcolor );
-			}
+		{
+			CG_DrawString( x, item->captionPos.y, cursorStr, UI_BLINK|style, drawcolor );
 		}
+	}
 
-		// x position for cvar value
-		x = item->captionPos.x + item->captionPos.width + BIGCHAR_WIDTH;
+	return item->captionPos.x + item->captionPos.width + BIGCHAR_WIDTH;
+}
 
-		if ( UI_ItemIsSlider( item ) ) {
-			UI_DrawSlider( x, item->captionPos.y,
-					item->cvarRange->min, item->cvarRange->max,
-					item->vmCvar.value, style, drawcolor );
-			return;
-		}
+
+/*
+============================================================================
+Text button or list item with value
+============================================================================
+*/
+static void Generic_Init( currentMenuItem_t *item, const char *extData ) {
+	Caption_Init( item, extData );
+
+	item->clickPos.x = 0;
+	item->clickPos.y = 0;
+	item->clickPos.width = item->captionPos.width;
+	item->clickPos.height = item->captionPos.height;
+}
+
+static void Generic_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style ) {
+	float x;
+
+	x = Caption_Draw( item, drawcolor, style, ( item->cvarName && ( style & UI_PULSE ) ) );
+
+	// draw cvar value
+	if ( item->cvarName ) {
+		const char *string;
 
 		if ( item->cvarPairs && item->numPairs > 0 ) {
 			string = item->cvarPairs[ item->cvarPair ].string;
@@ -103,7 +116,9 @@ static void Generic_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style )
 			string = item->vmCvar.string;
 		}
 
-		UI_DrawRadioButton( item, &x );
+		if ( item->widgetType == UIW_RADIO ) {
+			UI_DrawRadioButton( item, &x );
+		}
 
 		// HACK for M_ERROR com_errorMessage cvar centering
 		if ( !item->caption && !( item->flags & MIF_SELECTABLE ) ) {
@@ -125,15 +140,40 @@ static void Generic_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style )
 
 /*
 ============================================================================
+Bitmap button
+============================================================================
+*/
+static void Bitmap_Init( currentMenuItem_t *item, const char *extData ) {
+	item->clickPos.x = 0;
+	item->clickPos.y = 0;
+	item->clickPos.width = item->captionPos.width;
+	item->clickPos.height = item->captionPos.height;
+}
+
+
+/*
+============================================================================
 Horizontal slider bar
 ============================================================================
 */
 static void Slider_Init( currentMenuItem_t *item, const char *extData ) {
+	Caption_Init( item, extData );
 
+	item->clickPos.x = 0;
+	item->clickPos.y = 0;
+	item->clickPos.width = item->captionPos.width + BIGCHAR_WIDTH + 96;
+	item->clickPos.height = MAX( item->captionPos.height, 20 );
 }
 
 static void Slider_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style ) {
-	Generic_Draw( item, drawcolor, style );
+	qboolean itemSelected = !!( style & UI_PULSE );
+	float x;
+
+	x = Caption_Draw( item, drawcolor, style, itemSelected );
+
+	UI_DrawSlider( x, item->captionPos.y,
+					item->cvarRange->min, item->cvarRange->max,
+					item->vmCvar.value, style, drawcolor, qfalse );
 }
 
 
@@ -143,21 +183,37 @@ Color effects bar
 ============================================================================
 */
 static void ColorBar_Init( currentMenuItem_t *item, const char *extData ) {
+	Caption_Init( item, extData );
 
+	item->clickPos.x = 0;
+	item->clickPos.y = 0;
+	item->clickPos.width = item->captionPos.width + BIGCHAR_WIDTH + 128;
+	item->clickPos.height = MAX( item->captionPos.height, 12 );
 }
 
 static void ColorBar_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style ) {
-	Generic_Draw( item, drawcolor, style );
+	qboolean itemSelected = !!( style & UI_PULSE );
+	float x;
+
+	x = Caption_Draw( item, drawcolor, style, itemSelected );
+
+	UI_DrawSlider( x, item->captionPos.y,
+					item->cvarRange->min, item->cvarRange->max,
+					item->vmCvar.value, style, drawcolor, qtrue );
 }
 
 
 /*
 ============================================================================
-Ratio button
+Radio button
 ============================================================================
 */
-static void Radio_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style ) {
+static void Radio_Init( currentMenuItem_t *item, const char *extData ) {
+	Generic_Init( item, extData );
+}
 
+static void Radio_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style ) {
+	Generic_Draw( item, drawcolor, style );
 }
 
 
@@ -167,7 +223,27 @@ List Box
 ============================================================================
 */
 static void ListBox_Init( currentMenuItem_t *item, const char *extData ) {
+	Caption_Init( item, extData );
 
+#if 0 // caption above list box
+	item->clickPos.x = 0;
+	item->clickPos.y = item->captionPos.height + 2;
+#else // caption left of list box
+	item->clickPos.x = item->captionPos.width + BIGCHAR_WIDTH;
+	item->clickPos.y = 0;
+#endif
+
+	item->clickPos.width = atoi( Info_ValueForKey( extData, "width" ) );
+	if ( item->clickPos.width <= 0 ) {
+		item->clickPos.width = 280;
+	}
+
+	item->clickPos.height = atoi( Info_ValueForKey( extData, "listboxheight" ) );
+	if ( item->clickPos.height > 0 ) {
+		item->clickPos.height *= BIGCHAR_HEIGHT + 2;
+	} else {
+		item->clickPos.height = 8 * ( BIGCHAR_HEIGHT + 2 );
+	}
 }
 
 static void ListBox_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style ) {
@@ -243,11 +319,11 @@ static void ListBox_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style )
 ============================================================================
 */
 uiWidget_t ui_widgets[UIW_NUM_WIDGETS] = {
-	{ NULL, Generic_Draw, NULL },					// UIW_GENERIC
-	{ NULL, NULL, NULL },							// UIW_BITMAP, drawing is handled in UI_DrawCurrentMenu
+	{ Generic_Init, Generic_Draw, NULL },			// UIW_GENERIC
+	{ Bitmap_Init, NULL, NULL },					// UIW_BITMAP, drawing is handled in UI_DrawCurrentMenu
 	{ Slider_Init, Slider_Draw, NULL },				// UIW_SLIDER
 	{ ColorBar_Init, ColorBar_Draw, NULL },			// UIW_COLORBAR
-	{ NULL, Radio_Draw, NULL },						// UIW_RADIO
+	{ Radio_Init, Radio_Draw, NULL },				// UIW_RADIO
 	{ ListBox_Init, ListBox_Draw, NULL },			// UIW_LISTBOX
 };
 

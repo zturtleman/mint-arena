@@ -358,7 +358,7 @@ qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, 
 
 	item = &current->items[itemNum];
 
-	if ( UI_ItemIsSlider( item ) ) {
+	if ( item->widgetType == UIW_SLIDER || item->widgetType == UIW_COLORBAR ) {
 		float frac, sliderx, targetStep, targetValue, min, max;
 		qboolean reversed;
 		int sliderWidth;
@@ -378,9 +378,11 @@ qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, 
 			max = item->cvarRange->max;
 		}
 
-		// colorbar!
-		sliderWidth = 128;
-		//sliderWidth = 96;
+		if ( item->widgetType == UIW_COLORBAR ) {
+			sliderWidth = 128;
+		} else {
+			sliderWidth = 96;
+		}
 
 		// click slider item outside of slider bar... eat action
 		if ( ( x < sliderx || x > sliderx + sliderWidth ) && state == MACTION_PRESS ) {
@@ -435,7 +437,7 @@ qboolean UI_ItemIsSlider( currentMenuItem_t *item ) {
 	return ( item->cvarRange && item->numPairs == 0 );
 }
 
-static int UI_NumCvarPairs( cvarValuePair_t *cvarPairs ) {
+int UI_NumCvarPairs( cvarValuePair_t *cvarPairs ) {
 	int pair;
 
 	if ( !cvarPairs ) {
@@ -548,7 +550,7 @@ void UI_UpdateMenuCvars( currentMenu_t *current ) {
 			continue;
 		}
 		// HACK: same as above
-		if ( !Q_stricmp( item->cvarName, "r_ext_max_anisotropy" ) ) {
+		if ( !Q_stricmp( item->cvarName, "r_textureMode" ) ) {
 			continue;
 		}
 

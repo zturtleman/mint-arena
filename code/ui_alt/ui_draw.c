@@ -448,11 +448,10 @@ void UI_BuiltinCircle( float x, float y, float width, float height, float *drawc
 	trap_R_Add2dPolys( verts, CIRCLE_VERTS, cgs.media.whiteShader );
 }
 
-void UI_DrawSlider( float x, float y, float min, float max, float value, int style, float *drawcolor ) {
+void UI_DrawSlider( float x, float y, float min, float max, float value, int style, float *drawcolor, qboolean colorBar ) {
 	float frac, sliderValue, buttonX;
 	qhandle_t hShader;
 	int sliderWidth, sliderHeight, buttonWidth, buttonHeight;
-	qboolean colorBar = qfalse;
 
 	// draw the background
 	if ( colorBar ) {
@@ -496,7 +495,7 @@ void UI_DrawSlider( float x, float y, float min, float max, float value, int sty
 	frac = ( sliderValue - min ) / ( max - min );
 
 	if ( colorBar ) {
-		float xOffset = 128.0f / (NUM_COLOR_EFFECTS + 1);
+		//float xOffset = 128.0f / (NUM_COLOR_EFFECTS + 1);
 		int uiColor = gamecodetoui[(int)sliderValue - 1];
 
 		hShader = uiAssets.fxPic[uiColor];
@@ -547,13 +546,16 @@ void UI_DrawSlider( float x, float y, float min, float max, float value, int sty
 	}
 }
 
-// FIXME?: this function is ugly
 static qboolean UI_IsRadioButton( currentMenuItem_t *item ) {
 	int valuePair0, valuePair1, offPair;
 
-	if ( !item->cvarPairs || item->numPairs != 2 || item->cvarPairs[ 0 ].type != CVT_INT || item->cvarPairs[ 1 ].type != CVT_INT
-		|| !uiAssets.radioButtonOff || !uiAssets.radioButtonOn ) {
-		// not a radio button or missing shader
+	if ( !uiAssets.radioButtonOff || !uiAssets.radioButtonOn ) {
+		return qfalse;
+	}
+
+	if ( !item->cvarPairs || item->numPairs != 2
+			|| item->cvarPairs[ 0 ].type != CVT_INT
+			|| item->cvarPairs[ 1 ].type != CVT_INT ) {
 		return qfalse;
 	}
 
@@ -566,28 +568,19 @@ static qboolean UI_IsRadioButton( currentMenuItem_t *item ) {
 		// reversed case
 		offPair = 1;
 	} else {
-		// not a radio button
 		return qfalse;
 	}
 
 	if ( Q_stricmp( item->cvarPairs[ offPair ].string, "off" ) || Q_stricmp( item->cvarPairs[ !offPair ].string, "on" ) ) {
-		// not a radio button
 		return qfalse;
 	}
 
 	return qtrue;
 }
 
-// draw radio button if item should have one
-// TODO: Should "is this a radio button" be determined in UI_BuildCurrentMenu instead of checking each item each frame?
 void UI_DrawRadioButton( currentMenuItem_t *item, float *x ) {
 	qhandle_t hShader;
 	int valuePair0, valuePair1, offPair, picY;
-
-	if ( !UI_IsRadioButton( item ) ) {
-		// not a radio button or missing shader
-		return;
-	}
 
 	valuePair0 = atoi( item->cvarPairs[ 0 ].value );
 	valuePair1 = atoi( item->cvarPairs[ 1 ].value );
@@ -920,7 +913,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			current->header.captionPos.height = PROP_HEIGHT;
 		} else {
 			current->header.captionPos.width = UI_BannerStringWidth( menuInfo->header );
-			current->header.captionPos.height = 36; // ZTM: FIXME: Put PROPB_HEIGHT in a header
+			current->header.captionPos.height = PROPB_HEIGHT;
 		}
 #else
 		current->header.captionPos.width = CG_DrawStrlen( menuInfo->header, UI_GIANTFONT );
@@ -970,7 +963,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		item->cvarName = itemInfo->cvarName;
 		item->cvarRange = itemInfo->cvarRange;
 		item->cvarPairs = itemInfo->cvarPairs;
-		item->numPairs = 0; // this is set later
+		item->numPairs = UI_NumCvarPairs( item->cvarPairs );
 		item->caption = itemInfo->caption;
 		item->captionPos.y = atoi( Info_ValueForKey( itemInfo->extData, "y" ) );
 		item->captionPos.x = atoi( Info_ValueForKey( itemInfo->extData, "x" ) );
@@ -1002,11 +995,8 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			item->widgetType = UIW_RADIO;
 		}
 
-		if ( ui_widgets[item->widgetType].init ) {
-			ui_widgets[item->widgetType].init( item, itemInfo->extData );
-		}
-		else {
-			// generic handling
+		// if it's plain text, check if there is a bitmap
+		if ( item->widgetType == UIW_GENERIC ) {
 #ifdef MISSIONPACK
 			if ( item->flags & MIF_NEXTBUTTON ) {
 				item->bitmapIndex = UI_FindBitmap( item, "Next" );
@@ -1015,74 +1005,18 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			{
 				item->bitmapIndex = UI_FindBitmap( item, item->caption );
 			}
-		}
-
-		if ( item->bitmapIndex != -1 ) {
-			item->widgetType = UIW_BITMAP;
-
-			item->captionPos.width = ui_bitmaps[item->bitmapIndex].offWidth;
-			item->captionPos.height = ui_bitmaps[item->bitmapIndex].offHeight;
-		} else if ( item->flags & MIF_BIGTEXT ) {
-#ifdef Q3UIFONTS
-			item->captionPos.width = UI_ProportionalStringWidth( item->caption );
-			item->captionPos.height = PROP_HEIGHT;
-#else
-			item->captionPos.width = CG_DrawStrlen( item->caption, UI_GIANTFONT );
-			item->captionPos.height = GIANTCHAR_HEIGHT;
-#endif
-		} else {
-			item->captionPos.width = CG_DrawStrlen( item->caption, UI_SMALLFONT );
-			item->captionPos.height = SMALLCHAR_HEIGHT;
-		}
-
-		if ( item->widgetType == UIW_LISTBOX ) {
-#if 0 // caption above list box
-			item->clickPos.x = 0;
-			item->clickPos.y = item->captionPos.height + 2;
-#else // caption left of list box
-			item->clickPos.x = item->captionPos.width + BIGCHAR_WIDTH;
-			item->clickPos.y = 0;
-#endif
-
-			item->clickPos.width = atoi( Info_ValueForKey( itemInfo->extData, "width" ) );
-			if ( item->clickPos.width <= 0 ) {
-				item->clickPos.width = 280;
-			}
-
-			item->clickPos.height = atoi( Info_ValueForKey( itemInfo->extData, "listboxheight" ) );
-			if ( item->clickPos.height > 0 ) {
-				item->clickPos.height *= BIGCHAR_HEIGHT + 2;
-			} else {
-				item->clickPos.height = 8 * ( BIGCHAR_HEIGHT + 2 );
-			}
-		} else if ( item->widgetType == UIW_SLIDER ) {
-			item->clickPos.x = 0;
-			item->clickPos.y = 0;
-			item->clickPos.width = item->captionPos.width + BIGCHAR_WIDTH + 96;
-			item->clickPos.height = 20;
-		} else {
-			item->clickPos.x = 0;
-			item->clickPos.y = 0;
-			item->clickPos.width = item->captionPos.width;
-			item->clickPos.height = item->captionPos.height;
-		}
-
-		if ( item->flags & MIF_NEXTBUTTON ) {
-			// Fixed place in lower right
-			item->captionPos.x = SCREEN_WIDTH - item->captionPos.width;
-			item->captionPos.y = SCREEN_HEIGHT - item->captionPos.height;
 
 			if ( item->bitmapIndex != -1 ) {
-				item->captionPos.y -= ui_bitmaps[item->bitmapIndex].verticialPad;
-				item->captionPos.x -= ui_bitmaps[item->bitmapIndex].horizontalPad;
-			} else {
-				// move away from the screen edges
-				item->captionPos.x -= 10;
-				item->captionPos.y -= 10;
-			}
+				item->widgetType = UIW_BITMAP;
 
-			item->clickPos.x = item->captionPos.x;
-			item->clickPos.y = item->captionPos.y;
+				// ZTM: TODO: Move this to Bitmap_Init
+				item->captionPos.width = ui_bitmaps[item->bitmapIndex].offWidth;
+				item->captionPos.height = ui_bitmaps[item->bitmapIndex].offHeight;
+			}
+		}
+
+		if ( ui_widgets[item->widgetType].init ) {
+			ui_widgets[item->widgetType].init( item, itemInfo->extData );
 		}
 
 		item++;
@@ -1134,6 +1068,20 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 
 		if ( item->flags & MIF_NEXTBUTTON ) {
 			// Fixed place in lower right
+			item->captionPos.x = SCREEN_WIDTH - item->captionPos.width;
+			item->captionPos.y = SCREEN_HEIGHT - item->captionPos.height;
+
+			if ( item->bitmapIndex != -1 ) {
+				item->captionPos.y -= ui_bitmaps[item->bitmapIndex].verticialPad;
+				item->captionPos.x -= ui_bitmaps[item->bitmapIndex].horizontalPad;
+			} else {
+				// move away from the screen edges
+				item->captionPos.x -= 10;
+				item->captionPos.y -= 10;
+			}
+
+			item->clickPos.x = item->captionPos.x;
+			item->clickPos.y = item->captionPos.y;
 			continue;
 		}
 
@@ -1244,29 +1192,24 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		if ( item->bitmapIndex != -1 ) {
 			item->widgetType = UIW_BITMAP;
 
+			// TODO: Move to Bitmap_init
 			item->captionPos.width = ui_bitmaps[item->bitmapIndex].offWidth;
 			item->captionPos.height = ui_bitmaps[item->bitmapIndex].offHeight;
 
 			item->captionPos.y = SCREEN_HEIGHT - item->captionPos.height - ui_bitmaps[item->bitmapIndex].verticialPad;
 			item->captionPos.x = ui_bitmaps[item->bitmapIndex].horizontalPad;
 		} else {
-			// note: assumes MIF_BIGTEXT
-#ifdef Q3UIFONTS
-			item->captionPos.width = UI_ProportionalStringWidth( item->caption );
-			item->captionPos.height = PROP_HEIGHT;
-#else
-			item->captionPos.width = CG_DrawStrlen( item->caption, UI_GIANTFONT );
-			item->captionPos.height = GIANTCHAR_HEIGHT;
-#endif
-
+			// assume UIW_GENERIC
 			item->captionPos.y = SCREEN_HEIGHT - item->captionPos.height - 10;
 			item->captionPos.x = 10;
 		}
 
-		item->clickPos.x = item->captionPos.x;
-		item->clickPos.y = item->captionPos.y;
-		item->clickPos.width = item->captionPos.width;
-		item->clickPos.height = item->captionPos.height;
+		if ( ui_widgets[item->widgetType].init ) {
+			ui_widgets[item->widgetType].init( item, "" );
+		}
+
+		item->clickPos.x += item->captionPos.x;
+		item->clickPos.y += item->captionPos.y;
 
 		i++;
 		current->numItems++;

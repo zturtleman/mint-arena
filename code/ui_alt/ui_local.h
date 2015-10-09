@@ -354,6 +354,7 @@ void UI_MenuAction( currentMenu_t *current, int itemNum, int dir );
 qboolean UI_MenuMouseAction( currentMenu_t *current, int itemNum, int x, int y, mouseActionState_t state );
 qboolean UI_MenuItemChangeValue( currentMenu_t *current, int itemNum, int dir );
 qboolean UI_ItemIsSlider( currentMenuItem_t *item );
+int UI_NumCvarPairs( cvarValuePair_t *cvarPairs );
 void UI_RegisterMenuCvars( currentMenu_t *current );
 void UI_UpdateMenuCvars( currentMenu_t *current );
 

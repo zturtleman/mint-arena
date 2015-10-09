@@ -399,14 +399,6 @@ static void ColorBar_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style 
 Radio button
 ============================================================================
 */
-static void Radio_Init( currentMenuItem_t *item, const char *extData ) {
-	Generic_Init( item, extData );
-}
-
-static void Radio_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style ) {
-	Generic_Draw( item, drawcolor, style );
-}
-
 // this is called from Generic_Draw
 void UI_DrawRadioButton( currentMenuItem_t *item, float *x ) {
 	qhandle_t hShader;
@@ -571,7 +563,7 @@ uiWidget_t ui_widgets[UIW_NUM_WIDGETS] = {
 	{ Bitmap_Init, NULL, NULL },					// UIW_BITMAP, drawing is handled in UI_DrawCurrentMenu
 	{ Slider_Init, Slider_Draw, NULL },				// UIW_SLIDER
 	{ ColorBar_Init, ColorBar_Draw, NULL },			// UIW_COLORBAR
-	{ Radio_Init, Radio_Draw, NULL },				// UIW_RADIO
+	{ Generic_Init, Generic_Draw, NULL },			// UIW_RADIO
 	{ ListBox_Init, ListBox_Draw, NULL },			// UIW_LISTBOX
 };
 

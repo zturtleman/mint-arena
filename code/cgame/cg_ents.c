@@ -233,13 +233,16 @@ void CG_AddLightstyle( centity_t *cent ) {
 
 	// ydnar: if the dlight has angles, then it is a directional global dlight
 	if ( cent->currentState.angles[ 0 ] || cent->currentState.angles[ 1 ] || cent->currentState.angles[ 2 ] ) {
-#if 0 // ZTM: FIXME: add support for directed dlights
 		vec3_t normal;
 
+		// ZTM: NOTE: Lightning on ET's Radar map is too bright with multiple light passes
+		//            (enabled with r_dynamiclight 2 in vanilla ET, currently always done in Spearmint)
+		//            so scale the light values down.
+		lightval *= 0.25f;
+
 		AngleVectors( cent->currentState.angles, normal, NULL, NULL );
-		trap_R_AddDirectedLightToScene( normal, 256, lightval,
-								(float) r / 255.0f, (float) r / 255.0f, (float) r / 255.0f );
-#endif
+		trap_R_AddDirectedLightToScene( normal, lightval,
+								(float) r / 255.0f, (float) g / 255.0f, (float) b / 255.0f );
 	}
 	// normal global dlight
 	else

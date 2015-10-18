@@ -410,6 +410,10 @@ void	trap_R_AddJuniorLightToScene( const vec3_t org, float radius,float intensit
 	syscall( CG_R_ADDJUNIORLIGHTTOSCENE, org, PASSFLOAT( radius ), PASSFLOAT(intensity), PASSFLOAT(r), PASSFLOAT(g), PASSFLOAT(b) );
 }
 
+void	trap_R_AddDirectedLightToScene( const vec3_t normal, float intensity, float r, float g, float b ) {
+	syscall( CG_R_ADDDIRECTEDLIGHTTOSCENE, normal, PASSFLOAT(intensity), PASSFLOAT(r), PASSFLOAT(g), PASSFLOAT(b) );
+}
+
 void	trap_R_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible, qhandle_t hShader ) {
 	syscall( CG_R_ADDCORONATOSCENE, org, PASSFLOAT( r ), PASSFLOAT( g ), PASSFLOAT( b ), PASSFLOAT( scale ), id, visible, hShader );
 }

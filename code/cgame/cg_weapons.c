@@ -1512,7 +1512,7 @@ void CG_DrawWeaponSelect( void ) {
 	if ( cg_weapons[ cg.cur_lc->weaponSelect ].item ) {
 		name = cg_weapons[ cg.cur_lc->weaponSelect ].item->pickup_name;
 		if ( name ) {
-			CG_DrawString( SCREEN_WIDTH / 2, y - BIGCHAR_HEIGHT - 6, name, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color );
+			CG_DrawString( SCREEN_WIDTH / 2, y - 6, name, UI_CENTER|UI_VA_BOTTOM|UI_DROPSHADOW|UI_BIGFONT, color );
 		}
 	}
 

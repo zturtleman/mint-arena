@@ -351,7 +351,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 	// fragged by ... line
 	if ( cg.cur_lc && cg.cur_lc->killerName[0] ) {
 		s = va("Fragged by %s", cg.cur_lc->killerName );
-		y = 40;
+		y = SB_HEADER - 6 - CG_DrawStringLineHeight( UI_BIGFONT ) * 2;
 		CG_DrawString( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 	}
 
@@ -361,7 +361,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 			s = va("%s place with %i",
 				CG_PlaceString( cg.cur_ps->persistant[PERS_RANK] + 1 ),
 				cg.cur_ps->persistant[PERS_SCORE] );
-			y = 60;
+			y = SB_HEADER - 6 - CG_DrawStringLineHeight( UI_BIGFONT );
 			CG_DrawString( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 		}
 	} else {
@@ -373,7 +373,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 			s = va("Blue leads %i to %i",cg.teamScores[1], cg.teamScores[0] );
 		}
 
-		y = 60;
+		y = SB_HEADER - 6 - CG_DrawStringLineHeight( UI_BIGFONT );
 		CG_DrawString( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 	}
 

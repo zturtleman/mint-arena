@@ -1710,6 +1710,12 @@ void CG_CenterPrint( int localPlayerNum, const char *str, int y, float charScale
 
 	player = &cg.localPlayers[localPlayerNum];
 
+	if ( cg.numViewports != 1 ) {
+		charScale *= cg_splitviewTextScale.value;
+	} else {
+		charScale *= cg_hudTextScale.value;
+	}
+
 	Q_strncpyz( player->centerPrint, str, sizeof(player->centerPrint) );
 
 	player->centerPrintTime = cg.time;
@@ -1753,7 +1759,6 @@ static void CG_DrawCenterString( void ) {
 
 	start = cg.cur_lc->centerPrint;
 
-	// ZTM: TODO: Use CG_DrawStringLineHeight -- but either means adding argument to for scale or removing scale from center print :/
 	scale = cg.cur_lc->centerPrintCharScale;
 	charHeight = GIANTCHAR_HEIGHT;
 
@@ -1776,7 +1781,7 @@ static void CG_DrawCenterString( void ) {
 		}
 		linebuffer[l] = 0;
 
-		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, scale, 0, 0 );
+		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT|UI_NOSCALE, color, scale, 0, 0 );
 		y += charHeight + 6;
 
 		while ( *start && ( *start != '\n' ) ) {
@@ -1800,6 +1805,12 @@ for a few moments
 */
 void CG_GlobalCenterPrint( const char *str, int y, float charScale ) {
 	char	*s;
+
+	if ( cg.numViewports != 1 ) {
+		charScale *= cg_splitviewTextScale.value;
+	} else {
+		charScale *= cg_hudTextScale.value;
+	}
 
 	Q_strncpyz( cg.centerPrint, str, sizeof(cg.centerPrint) );
 
@@ -1844,7 +1855,6 @@ static void CG_DrawGlobalCenterString( void ) {
 
 	start = cg.centerPrint;
 
-	// ZTM: TODO: Use CG_DrawStringLineHeight -- but either means adding argument to for scale or removing scale from center print :/
 	scale = cg.centerPrintCharScale;
 	charHeight = GIANTCHAR_HEIGHT;
 
@@ -1867,7 +1877,7 @@ static void CG_DrawGlobalCenterString( void ) {
 		}
 		linebuffer[l] = 0;
 
-		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, scale, 0, 0 );
+		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT|UI_NOSCALE, color, scale, 0, 0 );
 		y += charHeight + 6;
 
 		while ( *start && ( *start != '\n' ) ) {
@@ -2624,7 +2634,7 @@ static qboolean CG_DrawFollow( void ) {
 
 	name = cgs.playerinfo[ cg.cur_ps->playerNum ].name;
 
-	CG_DrawString( SCREEN_WIDTH / 2, 40, name, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, NULL );
+	CG_DrawString( SCREEN_WIDTH / 2, y, name, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 	y += CG_DrawStringLineHeight( UI_GIANTFONT );
 
 	CG_DrawBotInfo( y );

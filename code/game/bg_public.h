@@ -1146,21 +1146,34 @@ void	SnapVectorTowards( vec3_t v, vec3_t to );
 #define BLINK_DIVISOR			200
 #define PULSE_DIVISOR			75.0f
 
-#define UI_LEFT			0x00000000	// default
-#define UI_CENTER		0x00000001
-#define UI_RIGHT		0x00000002
-#define UI_FORMATMASK	0x00000007
-#define UI_SMALLFONT	0x00000010
-#define UI_BIGFONT		0x00000020	// default
-#define UI_GIANTFONT	0x00000040
-#define UI_TINYFONT		0x00000080
-#define UI_NUMBERFONT	0x00000100
-#define UI_DROPSHADOW	0x00000800
-#define UI_BLINK		0x00001000
-#define UI_INVERSE		0x00002000
-#define UI_PULSE		0x00004000
-#define UI_FORCECOLOR	0x00008000
-#define UI_GRADIENT		0x00010000
+// horizontal alignment
+#define UI_LEFT			0x00000001	// default
+#define UI_CENTER		0x00000002
+#define UI_RIGHT		0x00000003
+#define UI_FORMATMASK	0x0000000F
+
+// vertical alignment
+#define UI_VA_TOP			0x00000010	// default
+#define UI_VA_CENTER		0x00000020
+#define UI_VA_BOTTOM		0x00000030
+#define UI_VA_FORMATMASK	0x000000F0
+
+// font selection
+#define UI_SMALLFONT	0x00000100
+#define UI_BIGFONT		0x00000200	// default
+#define UI_GIANTFONT	0x00000300
+#define UI_TINYFONT		0x00000400
+#define UI_NUMBERFONT	0x00000500
+#define UI_FONTMASK		0x00000F00
+
+// other flags
+#define UI_DROPSHADOW	0x00001000
+#define UI_BLINK		0x00002000
+#define UI_INVERSE		0x00004000
+#define UI_PULSE		0x00008000
+#define UI_FORCECOLOR	0x00010000
+#define UI_GRADIENT		0x00020000
+#define UI_NOSCALE		0x00040000 // fixed size with other UI elements, don't change it's scale
 
 
 typedef struct

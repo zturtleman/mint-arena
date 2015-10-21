@@ -169,13 +169,30 @@ static void CG_DrawPlayerScore( int y, score_t *score, float *color, float fade,
 
 #ifdef MISSIONPACK
 	// draw the team task
-	if ( pi->teamTask != TEAMTASK_NONE ) {
-		if ( pi->teamTask == TEAMTASK_OFFENSE ) {
+	switch ( pi->teamTask ) {
+		case TEAMTASK_OFFENSE:
 			CG_DrawPic( headx + 48, y, 16, 16, cgs.media.assaultShader );
-		}
-		else if ( pi->teamTask == TEAMTASK_DEFENSE ) {
+			break;
+		case TEAMTASK_DEFENSE:
 			CG_DrawPic( headx + 48, y, 16, 16, cgs.media.defendShader );
-		}
+			break;
+		case TEAMTASK_PATROL:
+			CG_DrawPic( headx + 48, y, 16, 16, cgs.media.patrolShader );
+			break;
+		case TEAMTASK_FOLLOW:
+			CG_DrawPic( headx + 48, y, 16, 16, cgs.media.followShader );
+			break;
+		case TEAMTASK_CAMP:
+			CG_DrawPic( headx + 48, y, 16, 16, cgs.media.campShader );
+			break;
+		case TEAMTASK_RETRIEVE:
+			CG_DrawPic( headx + 48, y, 16, 16, cgs.media.retrieveShader );
+			break;
+		case TEAMTASK_ESCORT:
+			CG_DrawPic( headx + 48, y, 16, 16, cgs.media.escortShader );
+			break;
+		default:
+			break;
 	}
 #endif
 
@@ -334,7 +351,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 	// fragged by ... line
 	if ( cg.cur_lc && cg.cur_lc->killerName[0] ) {
 		s = va("Fragged by %s", cg.cur_lc->killerName );
-		y = 40;
+		y = SB_HEADER - 6 - CG_DrawStringLineHeight( UI_BIGFONT ) * 2;
 		CG_DrawString( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 	}
 
@@ -344,7 +361,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 			s = va("%s place with %i",
 				CG_PlaceString( cg.cur_ps->persistant[PERS_RANK] + 1 ),
 				cg.cur_ps->persistant[PERS_SCORE] );
-			y = 60;
+			y = SB_HEADER - 6 - CG_DrawStringLineHeight( UI_BIGFONT );
 			CG_DrawString( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 		}
 	} else {
@@ -356,7 +373,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 			s = va("Blue leads %i to %i",cg.teamScores[1], cg.teamScores[0] );
 		}
 
-		y = 60;
+		y = SB_HEADER - 6 - CG_DrawStringLineHeight( UI_BIGFONT );
 		CG_DrawString( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 	}
 

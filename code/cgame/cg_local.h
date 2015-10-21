@@ -1358,6 +1358,8 @@ extern	vmCvar_t		cg_fov;
 extern	vmCvar_t		cg_zoomFov;
 extern	vmCvar_t		cg_splitviewVertical;
 extern	vmCvar_t		cg_splitviewThirdEqual;
+extern	vmCvar_t		cg_splitviewTextScale;
+extern	vmCvar_t		cg_hudTextScale;
 extern	vmCvar_t		cg_lagometer;
 extern	vmCvar_t		cg_drawAttacker;
 extern	vmCvar_t		cg_synchronousClients;
@@ -1565,6 +1567,7 @@ void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color );
 
 int CG_DrawStrlenEx( const char *str, int style, int maxchars );
 int CG_DrawStrlen( const char *str, int style );
+int CG_DrawStringLineHeight( int style );
 
 float	*CG_FadeColor( int startMsec, int totalMsec );
 float *CG_TeamColor( int team );

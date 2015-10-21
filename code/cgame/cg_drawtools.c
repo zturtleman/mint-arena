@@ -406,41 +406,64 @@ void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const
 	if ((style & UI_BLINK) && ((cg.realTime/BLINK_DIVISOR) & 1))
 		return;
 
-	if (style & UI_TINYFONT)
+	switch (style & UI_FONTMASK)
 	{
-		font = &cgs.media.tinyFont;
-		charh =	TINYCHAR_HEIGHT;
-	}
-	else if (style & UI_SMALLFONT)
-	{
-		font = &cgs.media.smallFont;
-		charh =	SMALLCHAR_HEIGHT;
-	}
-	else if (style & UI_GIANTFONT)
-	{
-		font = &cgs.media.bigFont;
-		charh =	GIANTCHAR_HEIGHT;
-	}
-	else if (style & UI_NUMBERFONT)
-	{
-		font = &cgs.media.numberFont;
-		charh =	CHAR_HEIGHT;
+		case UI_TINYFONT:
+			font = &cgs.media.tinyFont;
+			charh =	TINYCHAR_HEIGHT;
+			break;
 
-		// the original number bitmaps already have a gradient
-		if ( font->glyphs[(int)'a'].xSkip == 0 ) {
-			style &= ~UI_GRADIENT;
-		}
+		case UI_SMALLFONT:
+			font = &cgs.media.smallFont;
+			charh =	SMALLCHAR_HEIGHT;
+			break;
+
+		case UI_BIGFONT:
+		default:
+			font = &cgs.media.textFont;
+			charh =	BIGCHAR_HEIGHT;
+			break;
+
+		case UI_GIANTFONT:
+			font = &cgs.media.bigFont;
+			charh =	GIANTCHAR_HEIGHT;
+			break;
+
+		case UI_NUMBERFONT:
+			font = &cgs.media.numberFont;
+			charh =	CHAR_HEIGHT;
+
+			// the original number bitmaps already have a gradient
+			if ( font->glyphs[(int)'a'].xSkip == 0 ) {
+				style &= ~UI_GRADIENT;
+			}
+			break;
 	}
-	else
-	{
-		font = &cgs.media.textFont;
-		charh =	BIGCHAR_HEIGHT;
+
+	if ( shadowOffset == 0 && ( style & UI_DROPSHADOW ) ) {
+		shadowOffset = 2;
+	}
+
+	if ( gradient == 0 && ( style & UI_GRADIENT ) ) {
+		gradient = 0.4f;
 	}
 
 	if ( scale <= 0 ) {
 		scale = charh / 48.0f;
 	} else {
 		charh = 48 * scale;
+	}
+
+	if ( !( style & UI_NOSCALE ) && cg.cur_lc ) {
+		if ( cg.numViewports != 1 ) {
+			shadowOffset *= cg_splitviewTextScale.value;
+			scale *= cg_splitviewTextScale.value;
+			charh *= cg_splitviewTextScale.value;
+		} else {
+			shadowOffset *= cg_hudTextScale.value;
+			scale *= cg_hudTextScale.value;
+			charh *= cg_hudTextScale.value;
+		}
 	}
 
 	if (style & UI_PULSE)
@@ -467,17 +490,28 @@ void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const
 			x = x - Text_Width( str, font, scale, 0 );
 			break;
 
+		case UI_LEFT:
 		default:
 			// left justify at x
 			break;
 	}
 
-	if ( shadowOffset == 0 && ( style & UI_DROPSHADOW ) ) {
-		shadowOffset = 2;
-	}
+	switch (style & UI_VA_FORMATMASK)
+	{
+		case UI_VA_CENTER:
+			// center justify at y
+			y = y - charh /*Text_Height( str, font, scale, 0 )*/ / 2;
+			break;
 
-	if ( gradient == 0 && ( style & UI_GRADIENT ) ) {
-		gradient = 0.4f;
+		case UI_VA_BOTTOM:
+			// bottom justify at y
+			y = y - charh /*Text_Height( str, font, scale, 0 )*/;
+			break;
+
+		case UI_VA_TOP:
+		default:
+			// top justify at y
+			break;
 	}
 
 	//
@@ -532,30 +566,41 @@ int CG_DrawStrlenEx( const char *str, int style, int maxchars ) {
 	const fontInfo_t *font;
 	int charh;
 
-	if (style & UI_TINYFONT)
+	switch (style & UI_FONTMASK)
 	{
-		font = &cgs.media.tinyFont;
-		charh =	TINYCHAR_HEIGHT;
+		case UI_TINYFONT:
+			font = &cgs.media.tinyFont;
+			charh =	TINYCHAR_HEIGHT;
+			break;
+
+		case UI_SMALLFONT:
+			font = &cgs.media.smallFont;
+			charh =	SMALLCHAR_HEIGHT;
+			break;
+
+		case UI_BIGFONT:
+		default:
+			font = &cgs.media.textFont;
+			charh =	BIGCHAR_HEIGHT;
+			break;
+
+		case UI_GIANTFONT:
+			font = &cgs.media.bigFont;
+			charh =	GIANTCHAR_HEIGHT;
+			break;
+
+		case UI_NUMBERFONT:
+			font = &cgs.media.numberFont;
+			charh =	CHAR_HEIGHT;
+			break;
 	}
-	else if (style & UI_SMALLFONT)
-	{
-		font = &cgs.media.smallFont;
-		charh =	SMALLCHAR_HEIGHT;
-	}
-	else if (style & UI_GIANTFONT)
-	{
-		font = &cgs.media.bigFont;
-		charh =	GIANTCHAR_HEIGHT;
-	}
-	else if (style & UI_NUMBERFONT)
-	{
-		font = &cgs.media.numberFont;
-		charh =	CHAR_HEIGHT;
-	}
-	else
-	{
-		font = &cgs.media.textFont;
-		charh =	BIGCHAR_HEIGHT;
+
+	if ( !( style & UI_NOSCALE ) && cg.cur_lc ) {
+		if ( cg.numViewports != 1 ) {
+			charh *= cg_splitviewTextScale.value;
+		} else {
+			charh *= cg_hudTextScale.value;
+		}
 	}
 
 	return Text_Width( str, font, charh / 48.0f, maxchars );
@@ -572,33 +617,98 @@ int CG_DrawStrlen( const char *str, int style ) {
 	const fontInfo_t *font;
 	int charh;
 
-	if (style & UI_TINYFONT)
+	switch (style & UI_FONTMASK)
 	{
-		font = &cgs.media.tinyFont;
-		charh =	TINYCHAR_HEIGHT;
+		case UI_TINYFONT:
+			font = &cgs.media.tinyFont;
+			charh =	TINYCHAR_HEIGHT;
+			break;
+
+		case UI_SMALLFONT:
+			font = &cgs.media.smallFont;
+			charh =	SMALLCHAR_HEIGHT;
+			break;
+
+		case UI_BIGFONT:
+		default:
+			font = &cgs.media.textFont;
+			charh =	BIGCHAR_HEIGHT;
+			break;
+
+		case UI_GIANTFONT:
+			font = &cgs.media.bigFont;
+			charh =	GIANTCHAR_HEIGHT;
+			break;
+
+		case UI_NUMBERFONT:
+			font = &cgs.media.numberFont;
+			charh =	CHAR_HEIGHT;
+			break;
 	}
-	else if (style & UI_SMALLFONT)
-	{
-		font = &cgs.media.smallFont;
-		charh =	SMALLCHAR_HEIGHT;
-	}
-	else if (style & UI_GIANTFONT)
-	{
-		font = &cgs.media.bigFont;
-		charh =	GIANTCHAR_HEIGHT;
-	}
-	else if (style & UI_NUMBERFONT)
-	{
-		font = &cgs.media.numberFont;
-		charh =	CHAR_HEIGHT;
-	}
-	else
-	{
-		font = &cgs.media.textFont;
-		charh =	BIGCHAR_HEIGHT;
+
+	if ( !( style & UI_NOSCALE ) && cg.cur_lc ) {
+		if ( cg.numViewports != 1 ) {
+			charh *= cg_splitviewTextScale.value;
+		} else {
+			charh *= cg_hudTextScale.value;
+		}
 	}
 
 	return Text_Width( str, font, charh / 48.0f, 0 );
+}
+
+/*
+=================
+CG_DrawStringLineHeight
+
+Returns draw height of text line for drawing multiple lines of text
+=================
+*/
+int CG_DrawStringLineHeight( int style ) {
+	int lineHeight;
+	int charh;
+	int gap;
+
+	gap = 0;
+
+	switch (style & UI_FONTMASK)
+	{
+		case UI_TINYFONT:
+			charh =	TINYCHAR_HEIGHT;
+			break;
+
+		case UI_SMALLFONT:
+			charh =	SMALLCHAR_HEIGHT;
+			gap = 2;
+			break;
+
+		case UI_BIGFONT:
+		default:
+			charh =	BIGCHAR_HEIGHT;
+			gap = 2;
+			break;
+
+		case UI_GIANTFONT:
+			charh =	GIANTCHAR_HEIGHT;
+			gap = 6;
+			break;
+
+		case UI_NUMBERFONT:
+			charh =	CHAR_HEIGHT;
+			break;
+	}
+
+	lineHeight = charh + gap;
+
+	if ( !( style & UI_NOSCALE ) && cg.cur_lc ) {
+		if ( cg.numViewports != 1 ) {
+			lineHeight *= cg_splitviewTextScale.value;
+		} else {
+			lineHeight *= cg_hudTextScale.value;
+		}
+	}
+
+	return lineHeight;
 }
 
 /*

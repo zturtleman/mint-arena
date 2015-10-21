@@ -344,7 +344,7 @@ UI_ProportionalSizeScale
 =================
 */
 float UI_ProportionalSizeScale( int style ) {
-	if(  style & UI_SMALLFONT ) {
+	if ( ( style & UI_FONTMASK ) == UI_SMALLFONT ) {
 		return PROP_SMALL_SIZE_SCALE;
 	}
 

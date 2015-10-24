@@ -77,7 +77,8 @@ at the same time.
 
 typedef struct {
 	int			down[2];		// key nums holding it down
-	int			axisNum[2];		// analog joystick axis + 1 (possible negated for negative axis)
+	int			joystickNum[2];	// player joystick number or -1 if key is not on a joystick
+	int			axisNum[2];		// analog joystick axis + 1 (possibly negated for negative axis)
 	unsigned	downtime;		// msec timestamp
 	unsigned	msec;			// msec down this frame if both a down and up happened
 	qboolean	active;			// current state
@@ -99,7 +100,7 @@ typedef struct
 
 clientInput_t cis[MAX_SPLITVIEW];
 
-float CL_AxisFraction( localPlayer_t *player, int axisNum );
+float CL_AxisFraction( int localPlayerNum, int joystickNum, int axisNum );
 
 void IN_MLookDown( int localPlayerNum ) {
 	cis[localPlayerNum].in_mlooking = qtrue;
@@ -116,6 +117,7 @@ void IN_MLookUp( int localPlayerNum ) {
 void IN_KeyDown( kbutton_t *b ) {
 	int		k;
 	int		localPlayerNum;
+	int		joystickNum;
 	int		axisNum;
 	char	c[20];
 	
@@ -131,18 +133,28 @@ void IN_KeyDown( kbutton_t *b ) {
 	}
 	
 	trap_Argv( 3, c, sizeof (c) );
+	joystickNum = *c ? atoi( c ) : -1;
+
+	trap_Argv( 4, c, sizeof (c) );
 	axisNum = atoi( c );
+
+	if ( joystickNum < 0 || joystickNum >= MAX_SPLITVIEW || ( abs( axisNum ) - 1 ) >= MAX_JOYSTICK_AXIS ) {
+		joystickNum = -1;
+		axisNum = 0;
+	}
 
 	localPlayerNum = Com_LocalPlayerForCvarName( CG_Argv( 0 ) );
 
 	if ( !b->down[0] ) {
 		b->down[0] = k;
+		b->joystickNum[0] = joystickNum;
 		b->axisNum[0] = axisNum;
-		b->lastFraction[0] = CL_AxisFraction( &cg.localPlayers[localPlayerNum], axisNum );
+		b->lastFraction[0] = CL_AxisFraction( localPlayerNum, joystickNum, axisNum );
 	} else if ( !b->down[1] ) {
 		b->down[1] = k;
+		b->joystickNum[1] = joystickNum;
 		b->axisNum[1] = axisNum;
-		b->lastFraction[1] = CL_AxisFraction( &cg.localPlayers[localPlayerNum], axisNum );
+		b->lastFraction[1] = CL_AxisFraction( localPlayerNum, joystickNum, axisNum );
 	} else {
 		Com_Printf ("Three keys down for a button!\n");
 		return;
@@ -209,13 +221,12 @@ CL_AxisFraction
 Returns the fraction of the axis press
 ===============
 */
-float CL_AxisFraction( localPlayer_t *player, int axisNum ) {
+float CL_AxisFraction( int localPlayerNum, int joystickNum, int axisNum ) {
 	float fraction;
 	int axis;
-	int localPlayerNum = player - cg.localPlayers;
 
 	// non-analog keystate or analog disabled
-	if ( axisNum == 0 || !cg_joystickUseAnalog[localPlayerNum].integer ) {
+	if ( axisNum == 0 || !cg_joystickUseAnalog[joystickNum].integer ) {
 		return 1;
 	}
 
@@ -226,13 +237,13 @@ float CL_AxisFraction( localPlayer_t *player, int axisNum ) {
 	}
 
 	// sign flip shouldn't ever happen, key should be released first
-	if ( !!( axisNum < 0 ) != !!( player->joystickAxis[ axis ] < 0 ) ) {
+	if ( !!( axisNum < 0 ) != !!( cg.localPlayers[ joystickNum ].joystickAxis[ axis ] < 0 ) ) {
 		fraction = 0;
-		CG_Printf("WARNING: Axis (%d) fraction 0, but still input system think it's pressed\n", axisNum);
+		CG_Printf("WARNING: Cmd for player %d (axis %d on joystick for player %d): axis fraction is 0, but input system still thinks it's pressed\n", localPlayerNum+1, axisNum, joystickNum+1);
 	} else {
-		float threshold = 32767.0f * cg_joystickThreshold[localPlayerNum].value;
+		float threshold = 32767.0f * cg_joystickThreshold[joystickNum].value;
 
-		fraction = ( (float)abs( player->joystickAxis[ axis ] ) - threshold ) / ( 32767.0f - threshold );
+		fraction = ( (float)abs( cg.localPlayers[ joystickNum ].joystickAxis[ axis ] ) - threshold ) / ( 32767.0f - threshold );
 	}
 
 	return fraction;
@@ -269,7 +280,7 @@ void CL_KeyStateSeparate( localPlayer_t *player, kbutton_t *key, float *pDigital
 
 		for ( i = 0; i < 2; ++i ) {
 			if ( key->down[i] ) {
-				fraction[i] = CL_AxisFraction( player, key->axisNum[i] );
+				fraction[i] = CL_AxisFraction( localPlayerNum, key->joystickNum[i], key->axisNum[i] );
 			} else {
 				fraction[i] = 0;
 			}
@@ -286,7 +297,7 @@ void CL_KeyStateSeparate( localPlayer_t *player, kbutton_t *key, float *pDigital
 	digitalFrac = 0;
 
 	for ( i = 0; i < 2; ++i ) {
-		if ( key->axisNum[i] && cg_joystickUseAnalog[localPlayerNum].integer ) {
+		if ( key->axisNum[i] && cg_joystickUseAnalog[ key->joystickNum[i] ].integer ) {
 			analogFrac += fraction[i];
 		} else {
 			digitalFrac += fraction[i];

@@ -417,8 +417,8 @@ static cvarTable_t cgameCvarTable[] = {
 #ifdef MISSIONPACK
 	{ &cg_redTeamName, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, RANGE_ALL },
 	{ &cg_blueTeamName, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, RANGE_ALL },
-	{ &cg_enableDust, "g_enableDust", "0", CVAR_SYSTEMINFO, RANGE_BOOL },
-	{ &cg_enableBreath, "g_enableBreath", "0", CVAR_SYSTEMINFO, RANGE_BOOL },
+	{ &cg_enableDust, "cg_enableDust", "0", 0, RANGE_BOOL },
+	{ &cg_enableBreath, "cg_enableBreath", "0", 0, RANGE_BOOL },
 	{ &cg_recordSPDemo, "ui_recordSPDemo", "0", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_recordSPDemoName, "ui_recordSPDemoName", "", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SYSTEMINFO, RANGE_ALL },

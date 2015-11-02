@@ -2209,14 +2209,13 @@ static void CG_DrawCrosshairNames( void ) {
 		crosshairSize = cg_crosshairSize.value;
 	}
 
-	// ZTM: TODO: Check how much different this Y is from original 170
 	// space for two lines above crosshair
 	lineHeight = CG_DrawStringLineHeight( UI_BIGFONT );
 	y = ( SCREEN_HEIGHT - crosshairSize ) / 2 - lineHeight * 2;
 
 	name = cgs.playerinfo[ cg.cur_lc->crosshairPlayerNum ].name;
 	color[3] *= 0.5f;
-	CG_DrawStringExt( SCREEN_WIDTH / 2, 170, name, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color, 0, 0, 1 );
+	CG_DrawStringExt( SCREEN_WIDTH / 2, y, name, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color, 0, 0, 1 );
 
 	if ( cg_voipShowCrosshairMeter.integer )
 	{

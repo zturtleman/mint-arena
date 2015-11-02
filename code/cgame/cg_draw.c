@@ -1512,8 +1512,13 @@ static void CG_DrawDisconnect( void ) {
 
 	CG_SetScreenPlacement(PLACE_RIGHT, PLACE_BOTTOM);
 
+#ifdef MISSIONPACK_HUD
+	x = 640 - 48;
+	y = 480 - 144;
+#else
 	x = 640 - 48;
 	y = 480 - 48;
+#endif
 
 	CG_DrawPic( x, y, 48, 48, trap_R_RegisterShader("gfx/2d/net.tga" ) );
 }

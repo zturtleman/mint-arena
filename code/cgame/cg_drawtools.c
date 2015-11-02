@@ -562,7 +562,7 @@ CG_DrawStrlenEx
 Returns draw width, skiping color escape codes
 =================
 */
-int CG_DrawStrlenEx( const char *str, int style, int maxchars ) {
+float CG_DrawStrlenEx( const char *str, int style, int maxchars ) {
 	const fontInfo_t *font;
 	int charh;
 
@@ -613,7 +613,7 @@ CG_DrawStrlen
 Returns draw width, skiping color escape codes
 =================
 */
-int CG_DrawStrlen( const char *str, int style ) {
+float CG_DrawStrlen( const char *str, int style ) {
 	const fontInfo_t *font;
 	int charh;
 

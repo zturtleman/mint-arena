@@ -647,8 +647,6 @@ static float CG_DrawTimer( float y ) {
 CG_DrawTeamOverlay
 =================
 */
-
-// ZTM: TODO: Use CG_DrawStringLineHeight for team overlay
 static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	int x, w, h, xx;
 	int i, j, len;
@@ -661,6 +659,9 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	gitem_t	*item;
 	int ret_y, count;
 	int team;
+	int lineHeight;
+	int iconWidth, iconHeight;
+	int healthWidth, armorWidth;
 
 	if ( !cg_drawTeamOverlay.integer ) {
 		return y;
@@ -676,6 +677,12 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 		// Info is too out of date.
 		return y;
 	}
+
+	lineHeight = CG_DrawStringLineHeight( UI_TINYFONT );
+	healthWidth = CG_DrawStrlen( "000", UI_TINYFONT );
+
+	iconWidth = iconHeight = lineHeight;
+	armorWidth = healthWidth;
 
 	plyrs = 0;
 
@@ -712,14 +719,14 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	if (lwidth > TEAM_OVERLAY_MAXLOCATION_WIDTH*TINYCHAR_WIDTH)
 		lwidth = TEAM_OVERLAY_MAXLOCATION_WIDTH*TINYCHAR_WIDTH;
 
-	w = pwidth + lwidth + (4 + 7) * TINYCHAR_WIDTH;
+	w = pwidth + lwidth + healthWidth + armorWidth + iconWidth * 5;
 
 	if ( right )
 		x = 640 - w;
 	else
 		x = 0;
 
-	h = plyrs * TINYCHAR_HEIGHT;
+	h = plyrs * lineHeight;
 
 	if ( upper ) {
 		ret_y = y + h;
@@ -749,42 +756,50 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 
 			hcolor[0] = hcolor[1] = hcolor[2] = hcolor[3] = 1.0;
 
-			xx = x + TINYCHAR_WIDTH;
+			xx = x + iconWidth;
 
 			CG_DrawStringExt( xx, y, pi->name, UI_TINYFONT, NULL, 0, TEAM_OVERLAY_MAXNAME_WIDTH, 0 );
+			xx += pwidth;
 
 			if (lwidth) {
 				p = CG_ConfigString(CS_LOCATIONS + pi->location);
 				if (!p || !*p)
 					p = "unknown";
-				xx = x + TINYCHAR_WIDTH * 2 + pwidth;
+				xx += iconWidth; // not icon related
 				CG_DrawStringExt( xx, y, p, UI_TINYFONT, NULL, 0, TEAM_OVERLAY_MAXLOCATION_WIDTH, 0 );
+				xx += lwidth;
 			}
 
 			CG_GetColorForHealth( pi->health, pi->armor, hcolor );
 
-			Com_sprintf (st, sizeof(st), "%3i %3i", pi->health,	pi->armor);
+			// draw health
+			xx += iconWidth; // not icon related
 
-			xx = x + TINYCHAR_WIDTH * 3 + pwidth + lwidth;
-
+			Com_sprintf( st, sizeof(st), "%3i", pi->health );
 			CG_DrawString( xx, y, st, UI_TINYFONT, hcolor );
 
 			// draw weapon icon
-			xx += TINYCHAR_WIDTH * 3;
+			xx += healthWidth;
 
 			if ( cg_weapons[pi->curWeapon].weaponIcon ) {
-				CG_DrawPic( xx, y, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 
+				CG_DrawPic( xx, y, iconWidth, iconHeight,
 					cg_weapons[pi->curWeapon].weaponIcon );
 			} else {
-				CG_DrawPic( xx, y, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 
+				CG_DrawPic( xx, y, iconWidth, iconHeight,
 					cgs.media.deferShader );
 			}
+
+			// draw armor
+			xx += iconWidth;
+
+			Com_sprintf( st, sizeof(st), "%3i", pi->armor );
+			CG_DrawString( xx, y, st, UI_TINYFONT, hcolor );
 
 			// Draw powerup icons
 			if (right) {
 				xx = x;
 			} else {
-				xx = x + w - TINYCHAR_WIDTH;
+				xx = x + w - iconWidth;
 			}
 			for (j = 0; j <= PW_NUM_POWERUPS; j++) {
 				if (pi->powerups & (1 << j)) {
@@ -792,18 +807,18 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 					item = BG_FindItemForPowerup( j );
 
 					if (item) {
-						CG_DrawPic( xx, y, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 
+						CG_DrawPic( xx, y, iconWidth, iconHeight,
 						trap_R_RegisterShader( item->icon ) );
 						if (right) {
-							xx -= TINYCHAR_WIDTH;
+							xx -= iconWidth;
 						} else {
-							xx += TINYCHAR_WIDTH;
+							xx += iconWidth;
 						}
 					}
 				}
 			}
 
-			y += TINYCHAR_HEIGHT;
+			y += lineHeight;
 		}
 	}
 

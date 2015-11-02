@@ -1360,7 +1360,7 @@ extern	vmCvar_t		cg_splitviewVertical;
 extern	vmCvar_t		cg_splitviewThirdEqual;
 extern	vmCvar_t		cg_splitviewTextScale;
 extern	vmCvar_t		cg_hudTextScale;
-extern	vmCvar_t		cg_lagometer;
+extern	vmCvar_t		cg_drawLagometer;
 extern	vmCvar_t		cg_drawAttacker;
 extern	vmCvar_t		cg_synchronousClients;
 extern	vmCvar_t		cg_singlePlayer;

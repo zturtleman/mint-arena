@@ -47,16 +47,16 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	SCREEN_HEIGHT		480
 
 #define TINYCHAR_WIDTH		8
-#define TINYCHAR_HEIGHT		8
+#define TINYCHAR_HEIGHT		cgs.media.tinyFont.pointSize // default: 8
 
 #define SMALLCHAR_WIDTH		8
-#define SMALLCHAR_HEIGHT	cgs.media.smallFontHeight //16
+#define SMALLCHAR_HEIGHT	cgs.media.smallFont.pointSize // default: 16 (bitmap), 12 (true type)
 
 #define BIGCHAR_WIDTH		16
-#define BIGCHAR_HEIGHT		16
+#define BIGCHAR_HEIGHT		cgs.media.textFont.pointSize // default: 16
 
 #define	GIANTCHAR_WIDTH		32
-#define	GIANTCHAR_HEIGHT	cgs.media.bigFontHeight //48
+#define	GIANTCHAR_HEIGHT	cgs.media.bigFont.pointSize // default: 48 (bitmap), 20 (true type)
 
 #define	POWERUP_BLINKS		5
 
@@ -851,9 +851,6 @@ typedef struct {
 	fontInfo_t	bigFont;
 	fontInfo_t	numberFont; // status bar giant number font
 
-	int			smallFontHeight;
-	int			bigFontHeight;
-
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
 	qhandle_t	nodrawShader;
@@ -1634,7 +1631,7 @@ qboolean CG_AnyScoreboardShowing( void );
 //
 void CG_TextInit( void );
 void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth );
-void CG_InitBitmapNumberFont( fontInfo_t *font );
+void CG_InitBitmapNumberFont( fontInfo_t *font, int charHeight, int charWidth );
 qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font );
 fontInfo_t *CG_FontForScale( float scale );
 

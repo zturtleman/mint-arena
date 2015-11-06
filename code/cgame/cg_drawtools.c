@@ -410,28 +410,23 @@ void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const
 	{
 		case UI_TINYFONT:
 			font = &cgs.media.tinyFont;
-			charh =	TINYCHAR_HEIGHT;
 			break;
 
 		case UI_SMALLFONT:
 			font = &cgs.media.smallFont;
-			charh =	SMALLCHAR_HEIGHT;
 			break;
 
 		case UI_BIGFONT:
 		default:
 			font = &cgs.media.textFont;
-			charh =	BIGCHAR_HEIGHT;
 			break;
 
 		case UI_GIANTFONT:
 			font = &cgs.media.bigFont;
-			charh =	GIANTCHAR_HEIGHT;
 			break;
 
 		case UI_NUMBERFONT:
 			font = &cgs.media.numberFont;
-			charh =	CHAR_HEIGHT;
 
 			// the original number bitmaps already have a gradient
 			if ( font->glyphs[(int)'a'].xSkip == 0 ) {
@@ -439,6 +434,8 @@ void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const
 			}
 			break;
 	}
+
+	charh = font->pointSize;
 
 	if ( shadowOffset == 0 && ( style & UI_DROPSHADOW ) ) {
 		shadowOffset = 2;
@@ -570,30 +567,27 @@ float CG_DrawStrlenEx( const char *str, int style, int maxchars ) {
 	{
 		case UI_TINYFONT:
 			font = &cgs.media.tinyFont;
-			charh =	TINYCHAR_HEIGHT;
 			break;
 
 		case UI_SMALLFONT:
 			font = &cgs.media.smallFont;
-			charh =	SMALLCHAR_HEIGHT;
 			break;
 
 		case UI_BIGFONT:
 		default:
 			font = &cgs.media.textFont;
-			charh =	BIGCHAR_HEIGHT;
 			break;
 
 		case UI_GIANTFONT:
 			font = &cgs.media.bigFont;
-			charh =	GIANTCHAR_HEIGHT;
 			break;
 
 		case UI_NUMBERFONT:
 			font = &cgs.media.numberFont;
-			charh =	CHAR_HEIGHT;
 			break;
 	}
+
+	charh = font->pointSize;
 
 	if ( !( style & UI_NOSCALE ) && cg.cur_lc ) {
 		if ( cg.numViewports != 1 ) {
@@ -621,30 +615,27 @@ float CG_DrawStrlen( const char *str, int style ) {
 	{
 		case UI_TINYFONT:
 			font = &cgs.media.tinyFont;
-			charh =	TINYCHAR_HEIGHT;
 			break;
 
 		case UI_SMALLFONT:
 			font = &cgs.media.smallFont;
-			charh =	SMALLCHAR_HEIGHT;
 			break;
 
 		case UI_BIGFONT:
 		default:
 			font = &cgs.media.textFont;
-			charh =	BIGCHAR_HEIGHT;
 			break;
 
 		case UI_GIANTFONT:
 			font = &cgs.media.bigFont;
-			charh =	GIANTCHAR_HEIGHT;
 			break;
 
 		case UI_NUMBERFONT:
 			font = &cgs.media.numberFont;
-			charh =	CHAR_HEIGHT;
 			break;
 	}
+
+	charh = font->pointSize;
 
 	if ( !( style & UI_NOSCALE ) && cg.cur_lc ) {
 		if ( cg.numViewports != 1 ) {
@@ -665,6 +656,7 @@ Returns draw height of text line for drawing multiple lines of text
 =================
 */
 int CG_DrawStringLineHeight( int style ) {
+	const fontInfo_t *font;
 	int lineHeight;
 	int charh;
 	int gap;
@@ -674,30 +666,31 @@ int CG_DrawStringLineHeight( int style ) {
 	switch (style & UI_FONTMASK)
 	{
 		case UI_TINYFONT:
-			charh =	TINYCHAR_HEIGHT;
+			font = &cgs.media.tinyFont;
 			break;
 
 		case UI_SMALLFONT:
-			charh =	SMALLCHAR_HEIGHT;
+			font = &cgs.media.smallFont;
 			gap = 2;
 			break;
 
 		case UI_BIGFONT:
 		default:
-			charh =	BIGCHAR_HEIGHT;
+			font = &cgs.media.textFont;
 			gap = 2;
 			break;
 
 		case UI_GIANTFONT:
-			charh =	GIANTCHAR_HEIGHT;
+			font = &cgs.media.bigFont;
 			gap = 6;
 			break;
 
 		case UI_NUMBERFONT:
-			charh =	CHAR_HEIGHT;
+			font = &cgs.media.numberFont;
 			break;
 	}
 
+	charh = font->pointSize;
 	lineHeight = charh + gap;
 
 	if ( !( style & UI_NOSCALE ) && cg.cur_lc ) {

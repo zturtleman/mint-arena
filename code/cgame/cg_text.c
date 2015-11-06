@@ -33,38 +33,54 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // Q3A UI also uses additional fonts (font1_prop, font2_prop, ..)
 // Team Arena HUD/UI also use separate fonts (specified in .menu files).
-// The truetype font names here are the same as in Team Arena (except tiny font that does not exist)
+// The truetype font names here are the same as in Team Arena
+//   (except tiny and number fonts that do not exist)
 void CG_TextInit( void ) {
-	cgs.media.smallFontHeight = 12;
-	cgs.media.bigFontHeight = 20;
+	int tinySize;
+	int smallSize;
+	int bigSize;
+	int giantSize;
+	int numberSize;
+	int smallBitmapSize;
+	int giantBitmapSize;
 
-	if ( !CG_InitTrueTypeFont( "fonts/tinyfont", 8, &cgs.media.tinyFont ) ) {
-		CG_InitBitmapFont( &cgs.media.tinyFont, 8, 8 );
+	// TrueType font sizes
+	tinySize = 8;
+	smallSize = 12;
+	bigSize = 16;
+	giantSize = 20;
+	numberSize = 48;
+
+	// Bitmap font sizes
+	smallBitmapSize = 16;
+	giantBitmapSize = 48;
+
+	// Make bitmap fonts use TrueType sizes
+	//smallBitmapSize = smallSize;
+	//giantBitmapSize = giantSize;
+
+	if ( !CG_InitTrueTypeFont( "fonts/tinyfont", tinySize, &cgs.media.tinyFont ) ) {
+		CG_InitBitmapFont( &cgs.media.tinyFont, tinySize, tinySize );
 	}
 
-	if ( !CG_InitTrueTypeFont( "fonts/smallfont", 12, &cgs.media.smallFont ) ) {
+	if ( !CG_InitTrueTypeFont( "fonts/smallfont", smallSize, &cgs.media.smallFont ) ) {
+		CG_InitBitmapFont( &cgs.media.smallFont, smallBitmapSize, smallBitmapSize * 0.5f );
+	}
+
+	if ( !CG_InitTrueTypeFont( "fonts/font", bigSize, &cgs.media.textFont ) ) {
+		CG_InitBitmapFont( &cgs.media.textFont, bigSize, bigSize );
+	}
+
+	if ( !CG_InitTrueTypeFont( "fonts/bigfont", giantSize, &cgs.media.bigFont ) ) {
 		// quake 3 bitmap style
-		cgs.media.smallFontHeight = 16;
-		CG_InitBitmapFont( &cgs.media.smallFont, 16, 8 );
+		CG_InitBitmapFont( &cgs.media.bigFont, giantBitmapSize, ceil( giantBitmapSize * 0.666666f ) );
 		// team arena truetype style
-		//CG_InitBitmapFont( &cgs.media.smallFont, 12, 6 );
-	}
-
-	if ( !CG_InitTrueTypeFont( "fonts/font", 16, &cgs.media.textFont ) ) {
-		CG_InitBitmapFont( &cgs.media.textFont, 16, 16 );
-	}
-
-	if ( !CG_InitTrueTypeFont( "fonts/bigfont", 20, &cgs.media.bigFont ) ) {
-		// quake 3 bitmap style
-		cgs.media.bigFontHeight = 48;
-		CG_InitBitmapFont( &cgs.media.bigFont, 48, 32 );
-		// team arena truetype style
-		//CG_InitBitmapFont( &cgs.media.bigFont, 20, 10 );
+		//CG_InitBitmapFont( &cgs.media.bigFont, giantSize, giantSize * 0.5f );
 	}
 
 	// note: the original Q3 number bitmaps look like font1_prop
-	if ( !CG_InitTrueTypeFont( "fonts/numberfont", 48, &cgs.media.numberFont ) ) {
-		CG_InitBitmapNumberFont( &cgs.media.numberFont );
+	if ( !CG_InitTrueTypeFont( "fonts/numberfont", numberSize, &cgs.media.numberFont ) ) {
+		CG_InitBitmapNumberFont( &cgs.media.numberFont, numberSize, ceil( numberSize * 0.666666f ) );
 	}
 }
 
@@ -80,6 +96,8 @@ void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth ) {
 
 	Com_sprintf( font->name, sizeof ( font->name ), "bitmapfont_%dx%d", charHeight, charWidth );
 	font->glyphScale = 48.0f / 16;
+	font->pointSize = charHeight;
+	font->flags = FONTFLAG_CURSORS;
 
 	aspect = (float)charWidth / (float)charHeight;
 
@@ -105,9 +123,10 @@ void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth ) {
 }
 
 // Status bar number font, separeate 32x32 images for 0-9 and minus
-void CG_InitBitmapNumberFont( fontInfo_t *font ) {
+void CG_InitBitmapNumberFont( fontInfo_t *font, int charHeight, int charWidth ) {
 	int			i, index;
 	const char	*shaderName;
+	float		aspect;
 	static char	*sb_nums[11] = {
 		"gfx/2d/numbers/zero_32b",
 		"gfx/2d/numbers/one_32b",
@@ -124,8 +143,12 @@ void CG_InitBitmapNumberFont( fontInfo_t *font ) {
 
 	Com_Memset( font, 0, sizeof( fontInfo_t ) );
 
-	Com_sprintf( font->name, sizeof ( font->name ), "numberfont" );
+	Com_sprintf( font->name, sizeof ( font->name ), "numberfont_%dx%d", charHeight, charWidth );
 	font->glyphScale = 48.0f / 48;
+	font->pointSize = charHeight;
+	font->flags = 0;
+
+	aspect = (float)charWidth / (float)charHeight;
 
 	for ( index = 0; index < 11; index++ ) {
 		shaderName = sb_nums[index];
@@ -139,9 +162,9 @@ void CG_InitBitmapNumberFont( fontInfo_t *font ) {
 		font->glyphs[i].height = 48;
 		font->glyphs[i].top = 48;
 		font->glyphs[i].left = 0;
-		font->glyphs[i].pitch = 32;
-		font->glyphs[i].xSkip = 32;
-		font->glyphs[i].imageWidth = 32;
+		font->glyphs[i].pitch = 32*aspect;
+		font->glyphs[i].xSkip = 32*aspect;
+		font->glyphs[i].imageWidth = 32*aspect;
 		font->glyphs[i].imageHeight = 48;
 		font->glyphs[i].s = 0;
 		font->glyphs[i].t = 0;
@@ -153,9 +176,6 @@ void CG_InitBitmapNumberFont( fontInfo_t *font ) {
 }
 
 qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font ) {
-	int i;
-	qboolean oldFont;
-
 	if ( cg_forceBitmapFonts.integer ) {
 		return qfalse;
 	}
@@ -166,16 +186,8 @@ qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font 
 		return qfalse;
 	}
 
-	// check if it's a dynamicly rendered font (which has cursors)
-	oldFont = qtrue;
-	for ( i = 0; i < GLYPHS_PER_FONT; i++ ) {
-		if ( font->glyphs[i].left != 0 ) {
-			oldFont = qfalse;
-			break;
-		}
-	}
-
-	if ( oldFont ) {
+	// fallback if missing Q3 bigchars-like cursors only present in Spearmint rendered fonts
+	if ( !( font->flags & FONTFLAG_CURSORS ) ) {
 		// Team Arena per-rendered fonts don't have cursor characters (they're just transparent space)
 		Com_Memcpy( &font->glyphs[10], &font->glyphs[(int)'_'], sizeof ( glyphInfo_t ) );
 		Com_Memcpy( &font->glyphs[11], &font->glyphs[(int)'|'], sizeof ( glyphInfo_t ) );
@@ -188,12 +200,6 @@ qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font 
 
 		// character 13 is used as a selection marker in q3_ui
 		Com_Memcpy( &font->glyphs[13], &font->glyphs[(int)'>'], sizeof ( glyphInfo_t ) );
-
-		// Team Arena's fonts don't have character 255,
-		// it's suppose to be a lowercase y with two dots over it
-		if ( font->glyphs[255].shaderName[0] == '\0' ) {
-			Com_Memcpy( &font->glyphs[255], &font->glyphs[(int)'y'], sizeof ( glyphInfo_t ) );
-		}
 	}
 
 	return qtrue;

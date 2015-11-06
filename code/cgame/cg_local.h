@@ -1358,7 +1358,9 @@ extern	vmCvar_t		cg_fov;
 extern	vmCvar_t		cg_zoomFov;
 extern	vmCvar_t		cg_splitviewVertical;
 extern	vmCvar_t		cg_splitviewThirdEqual;
-extern	vmCvar_t		cg_lagometer;
+extern	vmCvar_t		cg_splitviewTextScale;
+extern	vmCvar_t		cg_hudTextScale;
+extern	vmCvar_t		cg_drawLagometer;
 extern	vmCvar_t		cg_drawAttacker;
 extern	vmCvar_t		cg_synchronousClients;
 extern	vmCvar_t		cg_singlePlayer;
@@ -1471,7 +1473,7 @@ void CG_UpdateCvars( void );
 int CG_CrosshairPlayer( int localPlayerNum );
 int CG_LastAttacker( int localPlayerNum );
 void CG_LoadMenus(const char *menuFile);
-void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state, int axisNum );
+void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state, int joystickNum, int axisNum );
 void CG_DistributeCharEvent( int key, connstate_t state );
 void CG_KeyEvent(int key, qboolean down);
 void CG_MouseEvent(int localPlayerNum, int x, int y);
@@ -1563,8 +1565,9 @@ void CG_DrawBigStringColor( int x, int y, const char *s, vec4_t color );
 void CG_DrawSmallString( int x, int y, const char *s, float alpha );
 void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color );
 
-int CG_DrawStrlenEx( const char *str, int style, int maxchars );
-int CG_DrawStrlen( const char *str, int style );
+float CG_DrawStrlenEx( const char *str, int style, int maxchars );
+float CG_DrawStrlen( const char *str, int style );
+int CG_DrawStringLineHeight( int style );
 
 float	*CG_FadeColor( int startMsec, int totalMsec );
 float *CG_TeamColor( int team );
@@ -1636,8 +1639,8 @@ qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font 
 fontInfo_t *CG_FontForScale( float scale );
 
 const glyphInfo_t *Text_GetGlyph( const fontInfo_t *font, unsigned long index );
-int Text_Width( const char *text, const fontInfo_t *font, float scale, int limit );
-int Text_Height( const char *text, const fontInfo_t *font, float scale, int limit );
+float Text_Width( const char *text, const fontInfo_t *font, float scale, int limit );
+float Text_Height( const char *text, const fontInfo_t *font, float scale, int limit );
 void Text_PaintChar( float x, float y, float width, float height, float useScale, float s, float t, float s2, float t2, qhandle_t hShader );
 void Text_PaintGlyph( float x, float y, float useScale, const glyphInfo_t *glyph, float *gradientColor );
 void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor );

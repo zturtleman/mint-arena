@@ -72,7 +72,7 @@ qboolean CG_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *parent,
 	returnValue = trap_R_LerpTagFrameModel( &lerped, parentModel,
 		parent->oldframeModel, parent->oldframe,
 		parent->frameModel, parent->frame,
-		1.0 - parent->backlerp, tagName );
+		1.0 - parent->backlerp, tagName, NULL );
 
 	// FIXME: allow origin offsets along tag?
 	VectorCopy( parent->origin, entity->origin );
@@ -108,7 +108,7 @@ qboolean CG_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *
 	returnValue = trap_R_LerpTagFrameModel( &lerped, parentModel,
 		parent->oldframeModel, parent->oldframe,
 		parent->frameModel, parent->frame,
-		1.0 - parent->backlerp, tagName );
+		1.0 - parent->backlerp, tagName, NULL );
 
 	// FIXME: allow origin offsets along tag?
 	VectorCopy( parent->origin, entity->origin );

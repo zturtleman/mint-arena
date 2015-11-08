@@ -309,7 +309,7 @@ static qboolean UI_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *
 	returnValue = trap_R_LerpTagFrameModel( &lerped, parentModel,
 		parent->oldframeModel, parent->oldframe,
 		parent->frameModel, parent->frame,
-		1.0 - parent->backlerp, tagName );
+		1.0 - parent->backlerp, tagName, NULL );
 
 	// FIXME: allow origin offsets along tag?
 	VectorCopy( parent->origin, entity->origin );
@@ -341,7 +341,7 @@ static qboolean UI_PositionRotatedEntityOnTag( refEntity_t *entity, const refEnt
 	returnValue = trap_R_LerpTagFrameModel( &lerped, parentModel,
 		parent->oldframeModel, parent->oldframe,
 		parent->frameModel, parent->frame,
-		1.0 - parent->backlerp, tagName );
+		1.0 - parent->backlerp, tagName, NULL );
 
 	// FIXME: allow origin offsets along tag?
 	VectorCopy( parent->origin, entity->origin );

@@ -77,7 +77,7 @@ int trap_R_ModelBounds( clipHandle_t handle, vec3_t mins, vec3_t maxs, int start
 int trap_R_LerpTag( orientation_t *tag, clipHandle_t handle, int startFrame, int endFrame,
 					   float frac, const char *tagName );
 int trap_R_LerpTagFrameModel( orientation_t *tag, clipHandle_t mod, clipHandle_t frameModel, int startFrame, clipHandle_t endFrameModel, int endFrame,
-					   float frac, const char *tagName );
+					   float frac, const char *tagName, int *tagIndex );
 
 int		trap_BotLibSetup( void );
 int		trap_BotLibShutdown( void );

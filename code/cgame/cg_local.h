@@ -1632,7 +1632,7 @@ qboolean CG_AnyScoreboardShowing( void );
 void CG_TextInit( void );
 void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth );
 void CG_InitBitmapNumberFont( fontInfo_t *font, int charHeight, int charWidth );
-qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font );
+qboolean CG_InitTrueTypeFont( const char *name, int pointSize, float borderWidth, fontInfo_t *font );
 fontInfo_t *CG_FontForScale( float scale );
 
 const glyphInfo_t *Text_GetGlyph( const fontInfo_t *font, unsigned long index );

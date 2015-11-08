@@ -59,19 +59,19 @@ void CG_TextInit( void ) {
 	//smallBitmapSize = smallSize;
 	//giantBitmapSize = giantSize;
 
-	if ( !CG_InitTrueTypeFont( "fonts/tinyfont", tinySize, &cgs.media.tinyFont ) ) {
+	if ( !CG_InitTrueTypeFont( "fonts/tinyfont", tinySize, 0, &cgs.media.tinyFont ) ) {
 		CG_InitBitmapFont( &cgs.media.tinyFont, tinySize, tinySize );
 	}
 
-	if ( !CG_InitTrueTypeFont( "fonts/smallfont", smallSize, &cgs.media.smallFont ) ) {
+	if ( !CG_InitTrueTypeFont( "fonts/smallfont", smallSize, 0, &cgs.media.smallFont ) ) {
 		CG_InitBitmapFont( &cgs.media.smallFont, smallBitmapSize, smallBitmapSize * 0.5f );
 	}
 
-	if ( !CG_InitTrueTypeFont( "fonts/font", bigSize, &cgs.media.textFont ) ) {
+	if ( !CG_InitTrueTypeFont( "fonts/font", bigSize, 0, &cgs.media.textFont ) ) {
 		CG_InitBitmapFont( &cgs.media.textFont, bigSize, bigSize );
 	}
 
-	if ( !CG_InitTrueTypeFont( "fonts/bigfont", giantSize, &cgs.media.bigFont ) ) {
+	if ( !CG_InitTrueTypeFont( "fonts/bigfont", giantSize, 0, &cgs.media.bigFont ) ) {
 		// quake 3 bitmap style
 		CG_InitBitmapFont( &cgs.media.bigFont, giantBitmapSize, ceil( giantBitmapSize * 0.666666f ) );
 		// team arena truetype style
@@ -79,7 +79,7 @@ void CG_TextInit( void ) {
 	}
 
 	// note: the original Q3 number bitmaps look like font1_prop
-	if ( !CG_InitTrueTypeFont( "fonts/numberfont", numberSize, &cgs.media.numberFont ) ) {
+	if ( !CG_InitTrueTypeFont( "fonts/numberfont", numberSize, 0, &cgs.media.numberFont ) ) {
 		CG_InitBitmapNumberFont( &cgs.media.numberFont, numberSize, ceil( numberSize * 0.666666f ) );
 	}
 }
@@ -175,12 +175,13 @@ void CG_InitBitmapNumberFont( fontInfo_t *font, int charHeight, int charWidth ) 
 	}
 }
 
-qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font ) {
+// borderWidth is in screen-pixels, not scaled with resolution
+qboolean CG_InitTrueTypeFont( const char *name, int pointSize, float borderWidth, fontInfo_t *font ) {
 	if ( cg_forceBitmapFonts.integer ) {
 		return qfalse;
 	}
 
-	trap_R_RegisterFont( name, pointSize, font );
+	trap_R_RegisterFont( name, pointSize, borderWidth, qfalse, font );
 
 	if ( !font->name[0] ) {
 		return qfalse;

@@ -347,7 +347,7 @@ typedef struct {
   void (*clearScene) ( void );
   void (*addRefEntityToScene) (const refEntity_t *re );
   void (*renderScene) ( const refdef_t *fd );
-  void (*registerFont) (const char *pFontname, int pointSize, fontInfo_t *font);
+  void (*registerFont) (const char *pFontname, int pointSize, float borderWidth, qboolean forceAutoHint, fontInfo_t *font);
   void (*ownerDrawItem) (float x, float y, float w, float h, float text_x, float text_y, int ownerDraw, int ownerDrawFlags, int align, float special, float scale, vec4_t color, qhandle_t shader, int textStyle);
 	float (*getValue) (int ownerDraw);
 	qboolean (*ownerDrawVisible) (int flags);
@@ -458,7 +458,5 @@ qboolean UI_OutOfMemory( void );
 void Controls_GetConfig( void );
 void Controls_SetConfig(qboolean restart);
 void Controls_SetDefaults( void );
-
-qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font );
 
 #endif

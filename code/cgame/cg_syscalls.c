@@ -354,8 +354,8 @@ qhandle_t trap_R_RegisterShaderNoMip( const char *name ) {
 	return syscall( CG_R_REGISTERSHADERNOMIP, name );
 }
 
-void trap_R_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font) {
-	syscall(CG_R_REGISTERFONT, fontName, pointSize, font, sizeof ( fontInfo_t ) );
+void trap_R_RegisterFont(const char *fontName, int pointSize, float borderWidth, qboolean forceAutoHint, fontInfo_t *font) {
+	syscall( CG_R_REGISTERFONT, fontName, pointSize, PASSFLOAT( borderWidth ), forceAutoHint, font, sizeof ( fontInfo_t ) );
 }
 
 qhandle_t	trap_R_AllocSkinSurface( const char *surface, qhandle_t hShader ) {

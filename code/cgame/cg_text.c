@@ -162,9 +162,9 @@ void CG_InitBitmapNumberFont( fontInfo_t *font, int charHeight, int charWidth ) 
 		font->glyphs[i].height = 48;
 		font->glyphs[i].top = 48;
 		font->glyphs[i].left = 0;
-		font->glyphs[i].pitch = 32*aspect;
-		font->glyphs[i].xSkip = 32*aspect;
-		font->glyphs[i].imageWidth = 32*aspect;
+		font->glyphs[i].pitch = 48*aspect; // 32
+		font->glyphs[i].xSkip = 48*aspect; // 32
+		font->glyphs[i].imageWidth = 48*aspect; // 32
 		font->glyphs[i].imageHeight = 48;
 		font->glyphs[i].s = 0;
 		font->glyphs[i].t = 0;

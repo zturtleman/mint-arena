@@ -185,8 +185,19 @@ void		trap_R_Add2dPolys( polyVert_t* verts, int numverts, qhandle_t hShader );
 int			trap_R_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac );
 int			trap_R_LerpTag( orientation_t *tag, clipHandle_t mod, int startFrame, int endFrame, 
 					   float frac, const char *tagName );
-int			trap_R_LerpTagFrameModel( orientation_t *tag, clipHandle_t mod, clipHandle_t frameModel, int startFrame, clipHandle_t endFrameModel, int endFrame,
-					   float frac, const char *tagName, int *tagIndex );
+int			trap_R_LerpTagFrameModel( orientation_t *tag, clipHandle_t mod,
+					   clipHandle_t frameModel, int startFrame,
+					   clipHandle_t endFrameModel, int endFrame,
+					   float frac, const char *tagName,
+					   int *tagIndex );
+int			trap_R_LerpTagTorso( orientation_t *tag, clipHandle_t mod,
+					   clipHandle_t frameModel, int startFrame,
+					   clipHandle_t endFrameModel, int endFrame,
+					   float frac, const char *tagName,
+					   int *tagIndex, const vec3_t *torsoAxis,
+					   qhandle_t torsoFrameModel, int torsoFrame,
+					   qhandle_t oldTorsoFrameModel, int oldTorsoFrame,
+					   float torsoFrac );
 void		trap_R_RemapShader( const char *oldShader, const char *newShader, const char *timeOffset );
 qboolean	trap_R_inPVS( const vec3_t p1, const vec3_t p2 );
 void		trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );

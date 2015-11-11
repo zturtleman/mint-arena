@@ -382,7 +382,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_tracerLength, "cg_tracerlength", "100", CVAR_CHEAT, RANGE_ALL },
 	{ &cg_splitviewVertical, "cg_splitviewVertical", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_splitviewThirdEqual, "cg_splitviewThirdEqual", "1", CVAR_ARCHIVE, RANGE_BOOL },
-	{ &cg_splitviewTextScale, "cg_splitviewTextScale", "2", CVAR_ARCHIVE, RANGE_FLOAT( 0.1, 5 ) },
+	{ &cg_splitviewTextScale, "cg_splitviewTextScale", "1", CVAR_ARCHIVE, RANGE_FLOAT( 0.1, 5 ) },
 	{ &cg_hudTextScale, "cg_hudTextScale", "1", CVAR_ARCHIVE, RANGE_FLOAT( 0.1, 5 ) },
 	{ &cg_teamChatTime, "cg_teamChatTime", "3000", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", CVAR_ARCHIVE, RANGE_INT( 0, TEAMCHAT_HEIGHT ) },

@@ -61,6 +61,7 @@ enum {
 	ID_DRAWTEAMOVERLAY,
 	ID_ALLOWDOWNLOAD,
 	ID_SPLITVERTICAL,
+	ID_SPLITTEXTSIZE,
 	ID_ATMEFFECTS,
 
 	ID_NUM_ITEMS,
@@ -91,6 +92,7 @@ typedef struct {
 	menulist_s			drawteamoverlay;
 	menuradiobutton_s	allowdownload;
 	menulist_s			splitvertical;
+	menulist_s			splittextsize;
 	menulist_s			atmeffects;
 	menubitmap_s		back;
 
@@ -115,6 +117,14 @@ static const char *splitvertical_names[] =
 	NULL
 };
 
+static const char *splittextsize_names[] =
+{
+	"small",
+	"medium",
+	"large",
+	NULL
+};
+
 static const char *atmeffects_names[] =
 {
 	"off",
@@ -124,6 +134,8 @@ static const char *atmeffects_names[] =
 };
 
 static void Preferences_SetMenuItems( void ) {
+	float textScale;
+
 	s_preferences.crosshair.curvalue		= (int)trap_Cvar_VariableValue( "cg_drawCrosshair" ) % NUM_CROSSHAIRS;
 	s_preferences.viewbob.curvalue			= trap_Cvar_VariableValue( "cg_viewbob" ) != 0;
 	s_preferences.simpleitems.curvalue		= trap_Cvar_VariableValue( "cg_simpleItems" ) != 0;
@@ -137,6 +149,15 @@ static void Preferences_SetMenuItems( void ) {
 	s_preferences.drawteamoverlay.curvalue	= Com_Clamp( 0, 3, trap_Cvar_VariableValue( "cg_drawTeamOverlay" ) );
 	s_preferences.allowdownload.curvalue	= trap_Cvar_VariableValue( "cl_allowDownload" ) != 0;
 	s_preferences.splitvertical.curvalue	= trap_Cvar_VariableValue( "cg_splitviewVertical" ) != 0;
+
+	textScale = trap_Cvar_VariableValue( "cg_splitviewTextScale" );
+	if ( textScale <= 1.0f ) {
+		s_preferences.splittextsize.curvalue	= 0;
+	} else if ( textScale <= 1.5f ) {
+		s_preferences.splittextsize.curvalue	= 1;
+	} else {
+		s_preferences.splittextsize.curvalue	= 2;
+	}
 
 	s_preferences.atmeffects.curvalue		= 2*trap_Cvar_VariableValue( "cg_atmosphericEffects" );
 	if (s_preferences.atmeffects.curvalue < 0)
@@ -206,6 +227,10 @@ static void Preferences_Event( void* ptr, int notification ) {
 
 	case ID_SPLITVERTICAL:
 		trap_Cvar_SetValue( "cg_splitviewVertical", s_preferences.splitvertical.curvalue );
+		break;
+
+	case ID_SPLITTEXTSIZE:
+		trap_Cvar_SetValue( "cg_splitviewTextScale", 1.0f + (float)s_preferences.splittextsize.curvalue/2.0f );
 		break;
 
 	case ID_ATMEFFECTS:
@@ -427,6 +452,16 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.splitvertical.itemnames			= splitvertical_names;
 
 	y += BIGCHAR_HEIGHT+2;
+	s_preferences.splittextsize.generic.type		= MTYPE_SPINCONTROL;
+	s_preferences.splittextsize.generic.name		= "Splitscreen Text:";
+	s_preferences.splittextsize.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	s_preferences.splittextsize.generic.callback	= Preferences_Event;
+	s_preferences.splittextsize.generic.id			= ID_SPLITTEXTSIZE;
+	s_preferences.splittextsize.generic.x			= PREFERENCES_X_POS;
+	s_preferences.splittextsize.generic.y			= y;
+	s_preferences.splittextsize.itemnames			= splittextsize_names;
+
+	y += BIGCHAR_HEIGHT+2;
 	s_preferences.atmeffects.generic.type		= MTYPE_SPINCONTROL;
 	s_preferences.atmeffects.generic.name		= "Snow/Rain:";
 	s_preferences.atmeffects.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
@@ -464,6 +499,7 @@ static void Preferences_MenuInit( void ) {
 	Menu_AddItem( &s_preferences.menu, &s_preferences.drawteamoverlay );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.allowdownload );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.splitvertical );
+	Menu_AddItem( &s_preferences.menu, &s_preferences.splittextsize );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.atmeffects );
 
 	Menu_AddItem( &s_preferences.menu, &s_preferences.back );

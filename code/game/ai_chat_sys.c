@@ -1511,6 +1511,46 @@ int BotFindMatch(char *str, bot_match_t *match, unsigned long int context)
 } //end of the function BotFindMatch
 //===========================================================================
 //
+// Check if string is exists in any match template
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+int BotMatchTemplatesContainsString(const char *findstr)
+{
+	bot_matchtemplate_t *mt;
+	bot_matchpiece_t *mp;
+	bot_matchstring_t *ms;
+
+	//compare the string with all the match strings
+	for (mt = matchtemplates; mt; mt = mt->next)
+	{
+		//if (!(mt->context & context)) continue;
+
+		for (mp = mt->first; mp; mp = mp->next)
+		{
+			//if it is a piece of string
+			if (mp->type == MT_STRING)
+			{
+				for (ms = mp->firststring; ms; ms = ms->next)
+				{
+					if (!strlen(ms->string))
+					{
+						break;
+					} //end if
+					//Log_Write("MT_STRING: %s", mp->string);
+					if (strstr(ms->string, findstr) != NULL) {
+						return qtrue;
+					} //end if
+				} //end for
+			} //end if
+		} //end for
+	} //end for
+	return qfalse;
+} //end of the function BotFindMatch
+//===========================================================================
+//
 // Parameter:				-
 // Returns:					-
 // Changes Globals:		-

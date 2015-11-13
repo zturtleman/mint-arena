@@ -30,6 +30,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 #include "g_local.h"
 
+// for checking if EC is used by match templates
+#include "ai_chat_sys.h"
+
 #ifdef MISSIONPACK
 #include "../../ui/menudef.h"			// for the voice chats
 #endif
@@ -882,9 +885,23 @@ static qboolean G_SayTo( gentity_t *ent, gentity_t *other, int mode ) {
 	return qtrue;
 }
 
+// escape character for botfiles/match.c parsing
 #define EC		"\x19"
 
+static void G_RemoveChatEscapeChar( char *text ) {
+	int i, l;
+
+	l = 0;
+	for ( i = 0; text[i]; i++ ) {
+		if (text[i] == '\x19')
+			continue;
+		text[l++] = text[i];
+	}
+	text[l] = '\0';
+}
+
 void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) {
+	static int	useChatEscapeCharacter = -1;
 	int			i, j;
 	gentity_t	*other;
 	int			color;
@@ -927,6 +944,15 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		color = COLOR_MAGENTA;
 		cmd = "tell";
 		break;
+	}
+
+	// if botfiles/match.c doesn't have EC (unpatched/demo Q3), it needs to be
+	// removed for bots to be able to recognize the message.
+	if ( useChatEscapeCharacter == -1 ) {
+		useChatEscapeCharacter = BotMatchTemplatesContainsString( EC );
+	}
+	if ( !useChatEscapeCharacter ) {
+		G_RemoveChatEscapeChar( name );
 	}
 
 	Q_strncpyz( text, chatText, sizeof(text) );

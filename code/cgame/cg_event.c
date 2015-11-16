@@ -456,23 +456,28 @@ Returns waterlevel for entity origin
 int CG_WaterLevel(centity_t *cent) {
 	vec3_t point;
 	int contents, sample1, sample2, anim, waterlevel;
+	int viewheight;
 
-	// get waterlevel, accounting for ducking
-	waterlevel = 0;
-	VectorCopy(cent->lerpOrigin, point);
-	point[2] += MINS_Z + 1;
 	anim = cent->currentState.legsAnim & ~ANIM_TOGGLEBIT;
 
 	if (anim == LEGS_WALKCR || anim == LEGS_IDLECR) {
-		point[2] += CROUCH_VIEWHEIGHT;
+		viewheight = CROUCH_VIEWHEIGHT;
 	} else {
-		point[2] += DEFAULT_VIEWHEIGHT;
+		viewheight = DEFAULT_VIEWHEIGHT;
 	}
 
+	//
+	// get waterlevel, accounting for ducking
+	//
+	waterlevel = 0;
+
+	point[0] = cent->lerpOrigin[0];
+	point[1] = cent->lerpOrigin[1];
+	point[2] = cent->lerpOrigin[2] + MINS_Z + 1;
 	contents = CG_PointContents(point, -1);
 
 	if (contents & MASK_WATER) {
-		sample2 = point[2] - MINS_Z;
+		sample2 = viewheight - MINS_Z;
 		sample1 = sample2 / 2;
 		waterlevel = 1;
 		point[2] = cent->lerpOrigin[2] + MINS_Z + sample1;
@@ -517,7 +522,7 @@ void CG_PainEvent( centity_t *cent, int health ) {
 		snd = "*pain100_1.wav";
 	}
 	// play a gurp sound instead of a normal pain sound
-	if (CG_WaterLevel(cent) >= 1) {
+	if (CG_WaterLevel(cent) == 3) {
 		if (rand()&1) {
 			trap_S_StartSound(NULL, cent->currentState.number, CHAN_VOICE, CG_CustomSound(cent->currentState.number, "sound/player/gurp1.wav"));
 		} else {
@@ -551,7 +556,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	int				playerNum;
 	playerInfo_t	*pi;
 	int				i;
-	int				thisClientNum;
 
 	es = &cent->currentState;
 	event = es->event & ~EV_EVENT_BITS;
@@ -570,8 +574,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		playerNum = 0;
 	}
 	pi = &cgs.playerinfo[ playerNum ];
-
-	thisClientNum = cg.snap->pss[0].playerNum;
 
 	switch ( event ) {
 	//
@@ -824,7 +826,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				break;
 			}
 			// powerup pickups are global
-			trap_S_StartSound (NULL, thisClientNum, CHAN_AUTO, cgs.media.itemPickupSounds[ index ] );
+			trap_S_StartLocalSound( cgs.media.itemPickupSounds[ index ], CHAN_AUTO );
 
 			// show icon and name on status bar
 			for (i = 0; i < CG_MaxSplitView(); i++) {
@@ -1002,7 +1004,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		// if the end was on a nomark surface, don't make an explosion
 		if ( es->eventParm != 255 ) {
 			ByteToDir( es->eventParm, dir );
-			CG_MissileHitWall( es->weapon, es->playerNum, position, dir, IMPACTSOUND_DEFAULT );
+			CG_MissileHitWall( es->weapon, playerNum, position, dir, IMPACTSOUND_DEFAULT );
 		}
 		break;
 
@@ -1032,17 +1034,17 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		}
 		break;
 
-	case EV_GLOBAL_SOUND:	// play from the player's head so it never diminishes
+	case EV_GLOBAL_SOUND:	// play as a local sound so it never diminishes
 		DEBUGNAME("EV_GLOBAL_SOUND");
 		if ( cgs.gameSounds[ es->eventParm ] ) {
-			trap_S_StartSound (NULL, thisClientNum, CHAN_AUTO, cgs.gameSounds[ es->eventParm ] );
+			trap_S_StartLocalSound( cgs.gameSounds[ es->eventParm ], CHAN_AUTO );
 		} else {
 			s = CG_ConfigString( CS_SOUNDS + es->eventParm );
-			trap_S_StartSound (NULL, thisClientNum, CHAN_AUTO, CG_CustomSound( es->number, s ) );
+			trap_S_StartLocalSound( CG_CustomSound( es->number, s ), CHAN_AUTO );
 		}
 		break;
 
-	case EV_GLOBAL_TEAM_SOUND:	// play from the player's head so it never diminishes
+	case EV_GLOBAL_TEAM_SOUND:	// play as a local sound so it never diminishes
 		DEBUGNAME("EV_GLOBAL_TEAM_SOUND");
 		{
 			qboolean blueTeam			= qfalse;
@@ -1100,6 +1102,14 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 					CG_AddBufferedSound( cgs.media.blueFlagReturnedSound );
 					break;
 				case GTS_BLUE_RETURN: // CTF red flag returned, 1FCTF: neutral flag returned
+#ifdef MISSIONPACK
+					if ( cgs.gametype == GT_1FCTF ) {
+						CG_AddBufferedSound( cgs.media.returnOpponentSound );
+						CG_AddBufferedSound( cgs.media.neutralFlagReturnedSound );
+						break;
+					}
+#endif
+
 					if ( blueTeam )
 						CG_AddBufferedSound( cgs.media.returnYourTeamSound );
 					else
@@ -1242,7 +1252,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			}
 		}
 
-		if (CG_WaterLevel(cent) >= 1) {
+		if (CG_WaterLevel(cent) == 3) {
 			trap_S_StartSound(NULL, es->number, CHAN_VOICE, CG_CustomSound(es->number, "*drown.wav"));
 		} else {
 			trap_S_StartSound(NULL, es->number, CHAN_VOICE, CG_CustomSound(es->number, va("*death%i.wav", event - EV_DEATH1 + 1)));

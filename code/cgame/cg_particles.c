@@ -839,9 +839,9 @@ void CG_AddParticleToScene (cparticle_t *p, vec3_t org, float alpha)
 	}
 
 	if (p->type == P_WEATHER || p->type == P_WEATHER_TURBULENT || p->type == P_WEATHER_FLURRY)
-		trap_R_AddPolyToScene( p->pshader, 3, TRIverts, 0 );
+		trap_R_AddPolyToScene( p->pshader, 3, TRIverts, 0, 0 );
 	else
-		trap_R_AddPolyToScene( p->pshader, 4, verts, 0 );
+		trap_R_AddPolyToScene( p->pshader, 4, verts, 0, 0 );
 
 }
 
@@ -1028,10 +1028,6 @@ void CG_ParticleSnowFlurry (qhandle_t pshader, centity_t *cent)
 		p->vel[2] = -10;
 	
 	VectorCopy(cent->currentState.origin, p->org);
-
-	p->org[0] = p->org[0];
-	p->org[1] = p->org[1];
-	p->org[2] = p->org[2];
 
 	p->vel[0] = p->vel[1] = 0;
 	

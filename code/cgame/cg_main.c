@@ -91,13 +91,13 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_VOIP_STRING:
 		return (intptr_t)CG_VoIPString(arg0);
 	case CG_KEY_EVENT:
-		CG_DistributeKeyEvent(arg0, arg1, arg2, arg3, 0);
+		CG_DistributeKeyEvent(arg0, arg1, arg2, arg3, -1, 0);
 		return 0;
 	case CG_CHAR_EVENT:
 		CG_DistributeCharEvent(arg0, arg1);
 		return 0;
 	case CG_MOUSE_EVENT:
-		if ( cg.connected && ( trap_Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
+		if ( cg.connected && ( Key_GetCatcher( ) & KEYCATCH_CGAME ) ) {
 			CG_MouseEvent(arg0, arg1, arg2);
 		} else {
 			UI_MouseEvent(arg0, arg1, arg2);
@@ -201,7 +201,10 @@ vmCvar_t	cg_simpleItems;
 vmCvar_t	cg_fov;
 vmCvar_t	cg_zoomFov;
 vmCvar_t	cg_splitviewVertical;
-vmCvar_t	cg_lagometer;
+vmCvar_t	cg_splitviewThirdEqual;
+vmCvar_t	cg_splitviewTextScale;
+vmCvar_t	cg_hudTextScale;
+vmCvar_t	cg_drawLagometer;
 vmCvar_t	cg_drawAttacker;
 vmCvar_t	cg_synchronousClients;
 vmCvar_t	cg_singlePlayer;
@@ -262,6 +265,8 @@ vmCvar_t	cg_drawScores;
 vmCvar_t	cg_oldBubbles;
 vmCvar_t	cg_smoothBodySink;
 vmCvar_t	cg_antiLag;
+vmCvar_t	cg_forceBitmapFonts;
+
 vmCvar_t	cg_introPlayed;
 vmCvar_t	cg_joystickDebug;
 vmCvar_t	ui_stretch;
@@ -287,6 +292,7 @@ vmCvar_t	cg_thirdPerson[MAX_SPLITVIEW];
 vmCvar_t	cg_thirdPersonRange[MAX_SPLITVIEW];
 vmCvar_t	cg_thirdPersonAngle[MAX_SPLITVIEW];
 vmCvar_t	cg_thirdPersonHeight[MAX_SPLITVIEW];
+vmCvar_t	cg_thirdPersonSmooth[MAX_SPLITVIEW];
 
 #ifdef MISSIONPACK
 vmCvar_t	cg_currentSelectedPlayer[MAX_SPLITVIEW];
@@ -342,14 +348,14 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_drawCrosshair, "cg_drawCrosshair", "4", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_drawCrosshairNames, "cg_drawCrosshairNames", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_drawRewards, "cg_drawRewards", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_drawLagometer, "cg_drawLagometer", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_crosshairSize, "cg_crosshairSize", "24", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_crosshairHealth, "cg_crosshairHealth", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_crosshairHealth, "cg_crosshairHealth", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_crosshairX, "cg_crosshairX", "0", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_crosshairY, "cg_crosshairY", "0", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_brassTime, "cg_brassTime", "2500", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_simpleItems, "cg_simpleItems", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_addMarks, "cg_marks", "1", CVAR_ARCHIVE, RANGE_BOOL },
-	{ &cg_lagometer, "cg_lagometer", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_railTrailTime, "cg_railTrailTime", "400", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_gun_x, "cg_gunX", "0", CVAR_CHEAT, RANGE_ALL },
 	{ &cg_gun_y, "cg_gunY", "0", CVAR_CHEAT, RANGE_ALL },
@@ -375,6 +381,9 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_tracerWidth, "cg_tracerwidth", "1", CVAR_CHEAT, RANGE_ALL },
 	{ &cg_tracerLength, "cg_tracerlength", "100", CVAR_CHEAT, RANGE_ALL },
 	{ &cg_splitviewVertical, "cg_splitviewVertical", "0", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_splitviewThirdEqual, "cg_splitviewThirdEqual", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_splitviewTextScale, "cg_splitviewTextScale", "1", CVAR_ARCHIVE, RANGE_FLOAT( 0.1, 5 ) },
+	{ &cg_hudTextScale, "cg_hudTextScale", "1", CVAR_ARCHIVE, RANGE_FLOAT( 0.1, 5 ) },
 	{ &cg_teamChatTime, "cg_teamChatTime", "3000", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", CVAR_ARCHIVE, RANGE_INT( 0, TEAMCHAT_HEIGHT ) },
 	{ &cg_forceModel, "cg_forceModel", "0", CVAR_ARCHIVE, RANGE_BOOL },
@@ -385,7 +394,11 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_deferPlayers, "cg_deferPlayers", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #endif
 	{ &cg_drawTeamOverlay, "cg_drawTeamOverlay", "0", CVAR_ARCHIVE, RANGE_INT(0, 3) },
+#ifdef MISSIONPACK_HUD
+	{ &cg_teamOverlayUserinfo, "teamoverlay", "1", CVAR_ROM | CVAR_USERINFO_ALL, RANGE_ALL },
+#else
 	{ &cg_teamOverlayUserinfo, "teamoverlay", "0", CVAR_ROM | CVAR_USERINFO_ALL, RANGE_ALL },
+#endif
 	{ &cg_stats, "cg_stats", "0", 0, RANGE_ALL },
 	{ &cg_drawFriend, "cg_drawFriend", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_teamChatsOnly, "cg_teamChatsOnly", "0", CVAR_ARCHIVE, RANGE_BOOL },
@@ -404,8 +417,8 @@ static cvarTable_t cgameCvarTable[] = {
 #ifdef MISSIONPACK
 	{ &cg_redTeamName, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, RANGE_ALL },
 	{ &cg_blueTeamName, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, RANGE_ALL },
-	{ &cg_enableDust, "g_enableDust", "0", CVAR_SYSTEMINFO, RANGE_BOOL },
-	{ &cg_enableBreath, "g_enableBreath", "0", CVAR_SYSTEMINFO, RANGE_BOOL },
+	{ &cg_enableDust, "cg_enableDust", "0", 0, RANGE_BOOL },
+	{ &cg_enableBreath, "cg_enableBreath", "0", 0, RANGE_BOOL },
 	{ &cg_recordSPDemo, "ui_recordSPDemo", "0", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_recordSPDemoName, "ui_recordSPDemoName", "", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SYSTEMINFO, RANGE_ALL },
@@ -451,6 +464,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_oldBubbles, "cg_oldBubbles", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_smoothBodySink, "cg_smoothBodySink", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_antiLag, "cg_antiLag", "0", CVAR_USERINFO_ALL | CVAR_ARCHIVE, RANGE_INT( 0, 2 ) },
+	{ &cg_forceBitmapFonts, "cg_forceBitmapFonts", "0", CVAR_ARCHIVE | CVAR_LATCH, RANGE_BOOL },
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
 
 	{ &cg_introPlayed, "com_introPlayed", "0", CVAR_ARCHIVE, RANGE_BOOL },
@@ -471,6 +485,7 @@ static userCvarTable_t userCvarTable[] = {
 	{ cg_thirdPersonRange, "cg_thirdPersonRange", "40", CVAR_CHEAT, RANGE_ALL },
 	{ cg_thirdPersonAngle, "cg_thirdPersonAngle", "0", CVAR_CHEAT, RANGE_ALL },
 	{ cg_thirdPersonHeight, "cg_thirdPersonHeight", "24", 0, RANGE_INT( 0, 32 ) },
+	{ cg_thirdPersonSmooth, "cg_thirdPersonSmooth", "0", 0, RANGE_ALL }, // this cvar exists because it's behavior is too buggy to enable by default
 
 #ifdef MISSIONPACK
 	{ cg_currentSelectedPlayer, "cg_currentSelectedPlayer", "0", CVAR_ARCHIVE, RANGE_ALL },
@@ -663,6 +678,7 @@ void CG_UpdateCvars( void ) {
 
 	// check for modications here
 
+#ifndef MISSIONPACK_HUD
 	// If team overlay is on, ask for updates from the server.  If it's off,
 	// let the server know so we don't receive it
 	if ( drawTeamOverlayModificationCount != cg_drawTeamOverlay.modificationCount ) {
@@ -674,6 +690,7 @@ void CG_UpdateCvars( void ) {
 			trap_Cvar_SetValue( "teamoverlay", 0 );
 		}
 	}
+#endif
 
 #ifdef MISSIONPACK
 	// if force model or a team name changed
@@ -785,13 +802,13 @@ void CG_AddNotifyText( int realTime, qboolean restoredText ) {
 
 	CG_ConsolePrint( buffer );
 
-	if ( skipnotify || restoredText || ( trap_Key_GetCatcher() & KEYCATCH_CONSOLE ) ) {
+	if ( skipnotify || restoredText || ( Key_GetCatcher() & KEYCATCH_CONSOLE ) ) {
 		return;
 	}
 
 	// [player #] perfix for text that only shows up in notify area for one local player
-	if ( !Q_strncmp( buffer, "[player ", 8 ) && isdigit(buffer[8]) && buffer[9] == ']' ) {
-		localPlayerBits = 1 << ( atoi( &buffer[8] ) - 1 );
+	if ( !Q_strncmp( buffer, "[player ", 8 ) && buffer[8] >= '1' && buffer[8] < '1'+MAX_SPLITVIEW && buffer[9] == ']' ) {
+		localPlayerBits = 1 << ( buffer[8] - '1' );
 
 		buffer += 10;
 	} else {
@@ -807,12 +824,17 @@ void CG_AddNotifyText( int realTime, qboolean restoredText ) {
 
 		player = &cg.localPlayers[i];
 
-		if( player->numConsoleLines == MAX_CONSOLE_LINES )
+		if ( player->numConsoleLines == MAX_CONSOLE_LINES ) {
 			CG_RemoveNotifyLine( player );
+		}
 
 		// free lines until there is enough space to fit buffer
 		while ( strlen( player->consoleText ) + bufferLen > MAX_CONSOLE_TEXT ) {
 			CG_RemoveNotifyLine( player );
+		}
+
+		if ( player->numConsoleLines == MAX_CONSOLE_LINES ) {
+			continue; // this shouldn't ever happen
 		}
 
 		Q_strcat( player->consoleText, MAX_CONSOLE_TEXT, buffer );
@@ -1125,7 +1147,10 @@ static void CG_RegisterSounds( void ) {
 
 	if ( cgs.gametype >= GT_TEAM || cg_buildScript.integer ) {
 
-		cgs.media.captureAwardSound = trap_S_RegisterSound( "sound/teamplay/flagcapture_yourteam.wav", qtrue );
+		// ZTM: Disabled capture award sound because it causes capture sound to play twice
+		//      this might make sense if it was a different sound, but you'd probably want to
+		//      silence GTS_*_CAPTURE which is a callange of its own
+		//cgs.media.captureAwardSound = trap_S_RegisterSound( "sound/teamplay/flagcapture_yourteam.wav", qtrue );
 		cgs.media.redLeadsSound = trap_S_RegisterSound( "sound/feedback/redleads.wav", qtrue );
 		cgs.media.blueLeadsSound = trap_S_RegisterSound( "sound/feedback/blueleads.wav", qtrue );
 		cgs.media.teamsTiedSound = trap_S_RegisterSound( "sound/feedback/teamstied.wav", qtrue );
@@ -1153,7 +1178,7 @@ static void CG_RegisterSounds( void ) {
 #ifdef MISSIONPACK
 		if ( cgs.gametype == GT_1FCTF || cg_buildScript.integer ) {
 			// FIXME: get a replacement for this sound ?
-			cgs.media.neutralFlagReturnedSound = trap_S_RegisterSound( "sound/teamplay/flagreturn_opponent.wav", qtrue );
+			cgs.media.neutralFlagReturnedSound = 0; //trap_S_RegisterSound( "sound/teamplay/voc_red_returned.wav", qtrue );
 			cgs.media.yourTeamTookTheFlagSound = trap_S_RegisterSound( "sound/teamplay/voc_team_1flag.wav", qtrue );
 			cgs.media.enemyTookTheFlagSound = trap_S_RegisterSound( "sound/teamplay/voc_enemy_1flag.wav", qtrue );
 		}
@@ -1366,19 +1391,6 @@ This function may execute for a couple of minutes with a slow disk.
 static void CG_RegisterGraphics( void ) {
 	int			i;
 	char		items[MAX_ITEMS+1];
-	static char		*sb_nums[11] = {
-		"gfx/2d/numbers/zero_32b",
-		"gfx/2d/numbers/one_32b",
-		"gfx/2d/numbers/two_32b",
-		"gfx/2d/numbers/three_32b",
-		"gfx/2d/numbers/four_32b",
-		"gfx/2d/numbers/five_32b",
-		"gfx/2d/numbers/six_32b",
-		"gfx/2d/numbers/seven_32b",
-		"gfx/2d/numbers/eight_32b",
-		"gfx/2d/numbers/nine_32b",
-		"gfx/2d/numbers/minus_32b",
-	};
 
 	// clear any references to old media
 	memset( &cg.refdef, 0, sizeof( cg.refdef ) );
@@ -1394,10 +1406,6 @@ static void CG_RegisterGraphics( void ) {
 
 	// precache status bar pics
 	CG_LoadingString( "game media" );
-
-	for ( i=0 ; i<11 ; i++) {
-		cgs.media.numberShaders[i] = trap_R_RegisterShader( sb_nums[i] );
-	}
 
 	cgs.media.botSkillShaders[0] = trap_R_RegisterShader( "menu/art/skill1.tga" );
 	cgs.media.botSkillShaders[1] = trap_R_RegisterShader( "menu/art/skill2.tga" );
@@ -1691,6 +1699,8 @@ void CG_LocalPlayerRemoved(int localPlayerNum) {
 	if (cg.localPlayers[localPlayerNum].playerNum == -1)
 		return;
 
+	Com_Memset( &cg.localPlayers[localPlayerNum], 0, sizeof ( cg.localPlayers[0] ) );
+
 	cg.localPlayers[localPlayerNum].playerNum = -1;
 }
 
@@ -1903,7 +1913,9 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.textFont);
+			if (!CG_InitTrueTypeFont(tempStr, pointSize, 0, &cgDC.Assets.textFont)) {
+				CG_InitBitmapFont(&cgDC.Assets.textFont, pointSize, pointSize / 2);
+			}
 			continue;
 		}
 
@@ -1913,7 +1925,9 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.smallFont);
+			if (!CG_InitTrueTypeFont(tempStr, pointSize, 0, &cgDC.Assets.smallFont)) {
+				CG_InitBitmapFont(&cgDC.Assets.smallFont, pointSize, pointSize / 2);
+			}
 			continue;
 		}
 
@@ -1923,7 +1937,9 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.bigFont);
+			if (!CG_InitTrueTypeFont(tempStr, pointSize, 0, &cgDC.Assets.bigFont)) {
+				CG_InitBitmapFont(&cgDC.Assets.bigFont, pointSize, pointSize / 2);
+			}
 			continue;
 		}
 
@@ -2561,7 +2577,7 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 	CG_ConsoleInit();
 
 	if ( cg_dedicated.integer ) {
-		trap_Key_SetCatcher( KEYCATCH_CONSOLE );
+		Key_SetCatcher( KEYCATCH_CONSOLE );
 		return;
 	}
 
@@ -2744,10 +2760,15 @@ Draw the frame
 =================
 */
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime ) {
+	int i;
 
 	CG_SetConnectionState( state );
 	cg.realFrameTime = realTime - cg.realTime;
 	cg.realTime = realTime;
+
+	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+		CG_UpdateMouseState( i );
+	}
 
 	// update cvars
 	CG_UpdateCvars();
@@ -2775,7 +2796,7 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 		CG_DrawActiveFrame( serverTime, stereoView, demoPlayback );
 	}
 
-	if ( ( state > CA_DISCONNECTED && state <= CA_LOADING ) || (trap_Key_GetCatcher() & KEYCATCH_UI) ) {
+	if ( ( state > CA_DISCONNECTED && state <= CA_LOADING ) || ( Key_GetCatcher() & KEYCATCH_UI ) ) {
 		if ( ui_stretch.integer ) {
 			CG_SetScreenPlacement( PLACE_STRETCH, PLACE_STRETCH );
 		} else {
@@ -2800,7 +2821,7 @@ Returns qtrue if bind command should be executed while user interface is shown
 ===================
 */
 static qboolean CG_BindUICommand( const char *cmd ) {
-	if ( trap_Key_GetCatcher( ) & KEYCATCH_CONSOLE )
+	if ( Key_GetCatcher( ) & KEYCATCH_CONSOLE )
 		return qfalse;
 
 	if ( !Q_stricmp( cmd, "toggleconsole" ) )
@@ -2824,7 +2845,7 @@ an action started before a mode switch.
 
 ===================
 */
-void CG_ParseBinding( int key, qboolean down, unsigned time, connstate_t state, int keyCatcher, int axisNum )
+void CG_ParseBinding( int key, qboolean down, unsigned time, connstate_t state, int keyCatcher, int joystickNum, int axisNum )
 {
 	char buf[ MAX_STRING_CHARS ], *p = buf, *end;
 	qboolean allCommands, allowUpCmds;
@@ -2857,8 +2878,8 @@ void CG_ParseBinding( int key, qboolean down, unsigned time, connstate_t state, 
 			// subframe corrected
 			if ( allCommands || ( allowUpCmds && !down ) ) {
 				char cmd[1024];
-				Com_sprintf( cmd, sizeof( cmd ), "%c%s %d %d %d\n",
-					( down ) ? '+' : '-', p + 1, key, time, axisNum );
+				Com_sprintf( cmd, sizeof( cmd ), "%c%s %d %d %d %d\n",
+					( down ) ? '+' : '-', p + 1, key, time, joystickNum, axisNum );
 				trap_Cmd_ExecuteText( EXEC_APPEND, cmd );
 			}
 		}
@@ -2897,7 +2918,7 @@ void Message_Key( int key, qboolean down ) {
 	}
 
 	if ( key == K_ESCAPE ) {
-		trap_Key_SetCatcher( trap_Key_GetCatcher( ) & ~KEYCATCH_MESSAGE );
+		Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_MESSAGE );
 		MField_Clear( &cg.messageField );
 		return;
 	}
@@ -2909,7 +2930,7 @@ void Message_Key( int key, qboolean down ) {
 			trap_SendClientCommand( buffer );
 		}
 
-		trap_Key_SetCatcher( trap_Key_GetCatcher( ) & ~KEYCATCH_MESSAGE );
+		Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_MESSAGE );
 		MField_Clear( &cg.messageField );
 		return;
 	}
@@ -2922,7 +2943,7 @@ void Message_Key( int key, qboolean down ) {
 CG_DistributeKeyEvent
 ================
 */
-void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state, int axisNum ) {
+void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state, int joystickNum, int axisNum ) {
 	int keyCatcher;
 
 	CG_SetConnectionState( state );
@@ -2956,8 +2977,7 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 		return;
 	}
 
-	// reduce redundent system calls
-	keyCatcher = trap_Key_GetCatcher( );
+	keyCatcher = Key_GetCatcher();
 
 	// keys can still be used for bound actions
 	if ( ( key < 128 || key == K_MOUSE1
@@ -2988,7 +3008,7 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 		keyCatcher &= ~KEYCATCH_CONSOLE;
 	} else {
 		// send the bound action
-		CG_ParseBinding( key, down, time, state, keyCatcher, axisNum );
+		CG_ParseBinding( key, down, time, state, keyCatcher, joystickNum, axisNum );
 	}
 
 	// distribute the key down event to the apropriate handler
@@ -3015,8 +3035,7 @@ void CG_DistributeCharEvent( int character, connstate_t state ) {
 
 	key = ( character | K_CHAR_FLAG );
 
-	// reduce redundent system calls
-	keyCatcher = trap_Key_GetCatcher( );
+	keyCatcher = Key_GetCatcher();
 
 	// distribute the character event to the apropriate handler
 	if ( keyCatcher & KEYCATCH_CONSOLE ) {
@@ -3036,20 +3055,27 @@ CG_UpdateMouseState
 ====================
 */
 void CG_UpdateMouseState( int localPlayerNum ) {
-	int state;
+	int state = 0;
 
-	if ( ( Key_GetCatcher() & KEYCATCH_CONSOLE ) || ( cg.connState != CA_DISCONNECTED && cg.connState != CA_ACTIVE )
-		|| trap_GetDemoState() == DS_PLAYBACK ) {
+	if ( Key_GetCatcher() & KEYCATCH_CONSOLE ) {
 		// no grab, show system cursor
-		state = MOUSE_SYSTEMCURSOR;
-	} else {
-		state = 0;
+		state |= MOUSE_SYSTEMCURSOR;
 	}
 
+	// controling UI mouse cursor
 	if ( Key_GetCatcher() & KEYCATCH_UI ) {
 		// call mouse move event, no grab, hide system cursor
 		state |= MOUSE_CGAME;
-	} else if ( !( state & MOUSE_SYSTEMCURSOR ) ) {
+	}
+	// not controlling view angles
+	else if ( cg.demoPlayback || cg.connState != CA_ACTIVE
+			|| ( cg.snap && ( cg.snap->pss[localPlayerNum].pm_flags & (PMF_FOLLOW|PMF_SCOREBOARD) ) ) ) {
+		// no grab, show system cursor
+		state |= MOUSE_SYSTEMCURSOR;
+	}
+	// if console isn't open, not UI, and not other non-view angle modes
+	else if ( state == 0 )
+	{
 		// change viewangles, grab mouse, hide system cursor
 		state = MOUSE_CLIENT;
 	}
@@ -3230,11 +3256,11 @@ void CG_JoystickAxisEvent( int localPlayerNum, int axis, int value, unsigned tim
 	if ( value == 0 || !!( value < 0 ) != !!( oldvalue < 0 ) ) {
 		if ( oldvalue < 0 ) {
 			if ( negKey != -1 ) {
-				CG_DistributeKeyEvent( negKey, qfalse, time, state, -(axis+1) );
+				CG_DistributeKeyEvent( negKey, qfalse, time, state, localPlayerNum, -(axis+1) );
 			}
 		} else if ( oldvalue > 0 ) {
 			if ( posKey != -1 ) {
-				CG_DistributeKeyEvent( posKey, qfalse, time, state, axis+1 );
+				CG_DistributeKeyEvent( posKey, qfalse, time, state, localPlayerNum, axis+1 );
 			}
 		}
 	}
@@ -3243,12 +3269,12 @@ void CG_JoystickAxisEvent( int localPlayerNum, int axis, int value, unsigned tim
 	if ( value < 0 && oldvalue >= 0 ) {
 		CG_JoystickEvent( localPlayerNum, &negEvent );
 		if ( negKey != -1 ) {
-			CG_DistributeKeyEvent( negKey, qtrue, time, state, -(axis+1) );
+			CG_DistributeKeyEvent( negKey, qtrue, time, state, localPlayerNum, -(axis+1) );
 		}
 	} else if ( value > 0 && oldvalue <= 0 ) {
 		CG_JoystickEvent( localPlayerNum, &posEvent );
 		if ( posKey != -1 ) {
-			CG_DistributeKeyEvent( posKey, qtrue, time, state, axis+1 );
+			CG_DistributeKeyEvent( posKey, qtrue, time, state, localPlayerNum, axis+1 );
 		}
 	}
 }
@@ -3278,7 +3304,7 @@ void CG_JoystickButtonEvent( int localPlayerNum, int button, qboolean down, unsi
 	}
 
 	if ( key != -1 ) {
-		CG_DistributeKeyEvent( key, down, time, state, 0 );
+		CG_DistributeKeyEvent( key, down, time, state, localPlayerNum, 0 );
 	}
 }
 
@@ -3327,7 +3353,7 @@ void CG_JoystickHatEvent( int localPlayerNum, int hat, int value, unsigned time,
 	for ( i = 0; i < 4; i++ ) {
 		if ( ( oldvalue & (1<<i) ) && !( value & (1<<i) ) ) {
 			if ( hatKeys[i] != -1 ) {
-				CG_DistributeKeyEvent( hatKeys[i], qfalse, time, state, 0 );
+				CG_DistributeKeyEvent( hatKeys[i], qfalse, time, state, localPlayerNum, 0 );
 			}
 		}
 	}
@@ -3349,7 +3375,7 @@ void CG_JoystickHatEvent( int localPlayerNum, int hat, int value, unsigned time,
 		if ( !( oldvalue & (1<<i) ) && ( value & (1<<i) ) ) {
 			CG_JoystickEvent( localPlayerNum, &hatEvent[i] );
 			if ( hatKeys[i] != -1 ) {
-				CG_DistributeKeyEvent( hatKeys[i], qtrue, time, state, 0 );
+				CG_DistributeKeyEvent( hatKeys[i], qtrue, time, state, localPlayerNum, 0 );
 			}
 		}
 	}

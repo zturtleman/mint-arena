@@ -312,9 +312,26 @@ int trap_R_LerpTag( orientation_t *tag, clipHandle_t handle, int startFrame, int
 	return syscall( G_R_LERPTAG, tag, handle, startFrame, endFrame, PASSFLOAT(frac), tagName );
 }
 
-int trap_R_LerpTagFrameModel( orientation_t *tag, clipHandle_t mod, clipHandle_t frameModel, int startFrame, clipHandle_t endFrameModel, int endFrame,
-					   float frac, const char *tagName ) {
-	return syscall( G_R_LERPTAG_FRAMEMODEL, tag, mod, frameModel, startFrame, endFrameModel, endFrame, PASSFLOAT(frac), tagName );
+int		trap_R_LerpTagFrameModel( orientation_t *tag, clipHandle_t mod,
+					   clipHandle_t frameModel, int startFrame,
+					   clipHandle_t endFrameModel, int endFrame,
+					   float frac, const char *tagName,
+					   int *tagIndex )
+{
+	return syscall( G_R_LERPTAG_FRAMEMODEL, tag, mod, frameModel, startFrame, endFrameModel, endFrame, PASSFLOAT(frac), tagName, tagIndex );
+}
+
+int		trap_R_LerpTagTorso( orientation_t *tag, clipHandle_t mod,
+					   clipHandle_t frameModel, int startFrame,
+					   clipHandle_t endFrameModel, int endFrame,
+					   float frac, const char *tagName,
+					   int *tagIndex, const vec3_t *torsoAxis,
+					   qhandle_t torsoFrameModel, int torsoFrame,
+					   qhandle_t oldTorsoFrameModel, int oldTorsoFrame,
+					   float torsoFrac )
+{
+	return syscall( G_R_LERPTAG_TORSO, tag, mod, frameModel, startFrame, endFrameModel, endFrame, PASSFLOAT(frac), tagName, tagIndex,
+										torsoAxis, torsoFrameModel, torsoFrame, oldTorsoFrameModel, oldTorsoFrame, PASSFLOAT(torsoFrac) );
 }
 
 int trap_R_ModelBounds( clipHandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac ) {

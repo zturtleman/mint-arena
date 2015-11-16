@@ -31,6 +31,59 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "cg_local.h"
 #include "../qcommon/q_unicode.h"
 
+// Q3A UI also uses additional fonts (font1_prop, font2_prop, ..)
+// Team Arena HUD/UI also use separate fonts (specified in .menu files).
+// The truetype font names here are the same as in Team Arena
+//   (except tiny and number fonts that do not exist)
+void CG_TextInit( void ) {
+	int tinySize;
+	int smallSize;
+	int bigSize;
+	int giantSize;
+	int numberSize;
+	int smallBitmapSize;
+	int giantBitmapSize;
+
+	// TrueType font sizes
+	tinySize = 8;
+	smallSize = 12;
+	bigSize = 16;
+	giantSize = 20;
+	numberSize = 48;
+
+	// Bitmap font sizes
+	smallBitmapSize = 16;
+	giantBitmapSize = 48;
+
+	// Make bitmap fonts use TrueType sizes
+	//smallBitmapSize = smallSize;
+	//giantBitmapSize = giantSize;
+
+	if ( !CG_InitTrueTypeFont( "fonts/tinyfont", tinySize, 0, &cgs.media.tinyFont ) ) {
+		CG_InitBitmapFont( &cgs.media.tinyFont, tinySize, tinySize );
+	}
+
+	if ( !CG_InitTrueTypeFont( "fonts/smallfont", smallSize, 0, &cgs.media.smallFont ) ) {
+		CG_InitBitmapFont( &cgs.media.smallFont, smallBitmapSize, smallBitmapSize * 0.5f );
+	}
+
+	if ( !CG_InitTrueTypeFont( "fonts/font", bigSize, 0, &cgs.media.textFont ) ) {
+		CG_InitBitmapFont( &cgs.media.textFont, bigSize, bigSize );
+	}
+
+	if ( !CG_InitTrueTypeFont( "fonts/bigfont", giantSize, 0, &cgs.media.bigFont ) ) {
+		// quake 3 bitmap style
+		CG_InitBitmapFont( &cgs.media.bigFont, giantBitmapSize, ceil( giantBitmapSize * 0.666666f ) );
+		// team arena truetype style
+		//CG_InitBitmapFont( &cgs.media.bigFont, giantSize, giantSize * 0.5f );
+	}
+
+	// note: the original Q3 number bitmaps look like font1_prop
+	if ( !CG_InitTrueTypeFont( "fonts/numberfont", numberSize, 0, &cgs.media.numberFont ) ) {
+		CG_InitBitmapNumberFont( &cgs.media.numberFont, numberSize, ceil( numberSize * 0.666666f ) );
+	}
+}
+
 // 256x256 image with characters that are 16x16
 void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth ) {
 	int			i, col, row;
@@ -43,6 +96,8 @@ void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth ) {
 
 	Com_sprintf( font->name, sizeof ( font->name ), "bitmapfont_%dx%d", charHeight, charWidth );
 	font->glyphScale = 48.0f / 16;
+	font->pointSize = charHeight;
+	font->flags = FONTFLAG_CURSORS;
 
 	aspect = (float)charWidth / (float)charHeight;
 
@@ -67,372 +122,422 @@ void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth ) {
 	}
 }
 
-qboolean CG_InitTrueTypeFont( const char *name, int pointSize, fontInfo_t *font ) {
-	int i;
-	qboolean oldFont;
+// Status bar number font, separeate 32x32 images for 0-9 and minus
+void CG_InitBitmapNumberFont( fontInfo_t *font, int charHeight, int charWidth ) {
+	int			i, index;
+	const char	*shaderName;
+	float		aspect;
+	static char	*sb_nums[11] = {
+		"gfx/2d/numbers/zero_32b",
+		"gfx/2d/numbers/one_32b",
+		"gfx/2d/numbers/two_32b",
+		"gfx/2d/numbers/three_32b",
+		"gfx/2d/numbers/four_32b",
+		"gfx/2d/numbers/five_32b",
+		"gfx/2d/numbers/six_32b",
+		"gfx/2d/numbers/seven_32b",
+		"gfx/2d/numbers/eight_32b",
+		"gfx/2d/numbers/nine_32b",
+		"gfx/2d/numbers/minus_32b",
+	};
 
-	trap_R_RegisterFont( name, pointSize, font );
+	Com_Memset( font, 0, sizeof( fontInfo_t ) );
+
+	Com_sprintf( font->name, sizeof ( font->name ), "numberfont_%dx%d", charHeight, charWidth );
+	font->glyphScale = 48.0f / 48;
+	font->pointSize = charHeight;
+	font->flags = 0;
+
+	aspect = (float)charWidth / (float)charHeight;
+
+	for ( index = 0; index < 11; index++ ) {
+		shaderName = sb_nums[index];
+
+		if ( index == 10 ) {
+			i = '-';
+		} else {
+			i = '0' + index;
+		}
+
+		font->glyphs[i].height = 48;
+		font->glyphs[i].top = 48;
+		font->glyphs[i].left = 0;
+		font->glyphs[i].pitch = 48*aspect; // 32
+		font->glyphs[i].xSkip = 48*aspect; // 32
+		font->glyphs[i].imageWidth = 48*aspect; // 32
+		font->glyphs[i].imageHeight = 48;
+		font->glyphs[i].s = 0;
+		font->glyphs[i].t = 0;
+		font->glyphs[i].s2 = 1;
+		font->glyphs[i].t2 = 1;
+		font->glyphs[i].glyph = trap_R_RegisterShader( shaderName );
+		Q_strncpyz( font->glyphs[i].shaderName, shaderName, sizeof ( font->glyphs[i].shaderName ) );
+	}
+}
+
+// borderWidth is in screen-pixels, not scaled with resolution
+qboolean CG_InitTrueTypeFont( const char *name, int pointSize, float borderWidth, fontInfo_t *font ) {
+	if ( cg_forceBitmapFonts.integer ) {
+		return qfalse;
+	}
+
+	trap_R_RegisterFont( name, pointSize, borderWidth, qfalse, font );
 
 	if ( !font->name[0] ) {
 		return qfalse;
 	}
 
-	// check if it's a dynamicly rendered font (which has cursors)
-	oldFont = qtrue;
-	for ( i = 0; i < GLYPHS_PER_FONT; i++ ) {
-		if ( font->glyphs[i].left != 0 ) {
-			oldFont = qfalse;
-			break;
-		}
-	}
-
-	if ( oldFont ) {
+	// fallback if missing Q3 bigchars-like cursors only present in Spearmint rendered fonts
+	if ( !( font->flags & FONTFLAG_CURSORS ) ) {
 		// Team Arena per-rendered fonts don't have cursor characters (they're just transparent space)
 		Com_Memcpy( &font->glyphs[10], &font->glyphs[(int)'_'], sizeof ( glyphInfo_t ) );
 		Com_Memcpy( &font->glyphs[11], &font->glyphs[(int)'|'], sizeof ( glyphInfo_t ) );
 
+		// Make the '|' into a full width block
+		font->glyphs[11].glyph = cgs.media.whiteShader;
+		font->glyphs[11].imageWidth = font->glyphs[(int)'M'].left + font->glyphs[(int)'M'].xSkip;
+		font->glyphs[11].s = 0;
+		font->glyphs[11].s2 = 1;
+
 		// character 13 is used as a selection marker in q3_ui
 		Com_Memcpy( &font->glyphs[13], &font->glyphs[(int)'>'], sizeof ( glyphInfo_t ) );
-
-		// Team Arena's fonts don't have character 255,
-		// it's suppose to be a lowercase y with two dots over it
-		if ( font->glyphs[255].shaderName[0] == '\0' ) {
-			Com_Memcpy( &font->glyphs[255], &font->glyphs[(int)'y'], sizeof ( glyphInfo_t ) );
-		}
 	}
 
 	return qtrue;
 }
 
-// Q3A UI also uses additional fonts (font1_prop, font2_prop, ..)
-// Team Arena HUD/UI also use separate fonts (specified in .menu files).
-// The truetype font names here are the same as in Team Arena (except tiny font that does not exist)
-void CG_TextInit( void ) {
-	cgs.media.smallFontHeight = 12;
-	cgs.media.bigFontHeight = 20;
-
-	if ( !CG_InitTrueTypeFont( "fonts/tinyfont", 8, &cgs.media.tinyFont ) ) {
-		CG_InitBitmapFont( &cgs.media.tinyFont, 8, 8 );
-	}
-
-	if ( !CG_InitTrueTypeFont( "fonts/smallfont", 12, &cgs.media.smallFont ) ) {
-		// quake 3 bitmap style
-		cgs.media.smallFontHeight = 16;
-		CG_InitBitmapFont( &cgs.media.smallFont, 16, 8 );
-		// team arena truetype style
-		//CG_InitBitmapFont( &cgs.media.smallFont, 12, 6 );
-	}
-
-	if ( !CG_InitTrueTypeFont( "fonts/font", 16, &cgs.media.textFont ) ) {
-		CG_InitBitmapFont( &cgs.media.textFont, 16, 16 );
-	}
-
-	if ( !CG_InitTrueTypeFont( "fonts/bigfont", 20, &cgs.media.bigFont ) ) {
-		// quake 3 bitmap style
-		cgs.media.bigFontHeight = 48;
-		CG_InitBitmapFont( &cgs.media.bigFont, 48, 32 );
-		// team arena truetype style
-		//CG_InitBitmapFont( &cgs.media.bigFont, 20, 10 );
-	}
-}
-
 const glyphInfo_t *Text_GetGlyph( const fontInfo_t *font, unsigned long index ) {
-	if ( index == 0 || index >= GLYPHS_PER_FONT )
+	if ( index == 0 || index >= GLYPHS_PER_FONT ) {
 		return &font->glyphs[(int)'.'];
+	}
 
 	return &font->glyphs[index];
 }
 
-int Text_Width(const char *text, const fontInfo_t *font, float scale, int limit) {
-  int count,len;
+float Text_Width( const char *text, const fontInfo_t *font, float scale, int limit ) {
+	int count,len;
 	float out;
 	const glyphInfo_t *glyph;
 	float useScale;
-	unsigned long cp;
-	const char *s = text;
+	const char *s;
+
+	if ( !text ) {
+		return 0;
+	}
 
 	useScale = scale * font->glyphScale;
-  out = 0;
-  if (text) {
-		len = Q_UTF8_PrintStrlen(text);
-		if (limit > 0 && len > limit) {
-			len = limit;
+	out = 0;
+
+	len = Q_UTF8_PrintStrlen( text );
+	if ( limit > 0 && len > limit ) {
+		len = limit;
+	}
+
+	s = text;
+	count = 0;
+	while ( s && *s && count < len ) {
+		if ( Q_IsColorString( s ) ) {
+			s += 2;
+			continue;
 		}
-		count = 0;
-		while (s && *s && count < len) {
-			if ( Q_IsColorString(s) ) {
-				s += 2;
-				continue;
-			} else {
-				cp = Q_UTF8_CodePoint( &s );
-				glyph = Text_GetGlyph( font, cp );
-				out += glyph->xSkip;
-				count++;
-			}
-    }
-  }
-  return out * useScale;
+
+		glyph = Text_GetGlyph( font, Q_UTF8_CodePoint( &s ) );
+		out += glyph->xSkip;
+		count++;
+	}
+
+	return out * useScale;
 }
 
-int Text_Height(const char *text, const fontInfo_t *font, float scale, int limit) {
-  int len, count;
+float Text_Height( const char *text, const fontInfo_t *font, float scale, int limit ) {
+	int len, count;
 	float max;
 	const glyphInfo_t *glyph;
 	float useScale;
-	unsigned long cp;
-	const char *s = text;
+	const char *s;
+
+	if ( !text ) {
+		return 0;
+	}
 
 	useScale = scale * font->glyphScale;
-  max = 0;
-  if (text) {
-		len = Q_UTF8_PrintStrlen(text);
-		if (limit > 0 && len > limit) {
-			len = limit;
+	max = 0;
+
+	len = Q_UTF8_PrintStrlen( text );
+	if ( limit > 0 && len > limit ) {
+		len = limit;
+	}
+
+	s = text;
+	count = 0;
+	while ( s && *s && count < len ) {
+		if ( Q_IsColorString( s ) ) {
+			s += 2;
+			continue;
 		}
-		count = 0;
-		while (s && *s && count < len) {
-			if ( Q_IsColorString(s) ) {
-				s += 2;
-				continue;
-			} else {
-				cp = Q_UTF8_CodePoint( &s );
-				glyph = Text_GetGlyph( font, cp );
-	      if (max < glyph->height) {
-		      max = glyph->height;
-			  }
-				count++;
-			}
-    }
-  }
-  return max * useScale;
+
+		glyph = Text_GetGlyph( font, Q_UTF8_CodePoint( &s ) );
+		if ( max < glyph->height ) {
+			max = glyph->height;
+		}
+		count++;
+	}
+
+	return max * useScale;
 }
 
-void Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader) {
-  float w, h;
-  w = width * scale;
-  h = height * scale;
-  CG_AdjustFrom640( &x, &y, &w, &h );
-  trap_R_DrawStretchPic( x, y, w, h, s, t, s2, t2, hShader );
+// Note: scale must be multiplied by font->glyphScale
+void Text_PaintChar( float x, float y, float width, float height, float useScale, float s, float t, float s2, float t2, qhandle_t hShader ) {
+	float w, h;
+
+	w = width * useScale;
+	h = height * useScale;
+
+	CG_AdjustFrom640( &x, &y, &w, &h );
+	trap_R_DrawStretchPic( x, y, w, h, s, t, s2, t2, hShader );
 }
 
-void Text_Paint(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, qboolean forceColor) {
-  int len, count;
+// Note: scale must be multiplied by font->glyphScale
+void Text_PaintGlyph( float x, float y, float useScale, const glyphInfo_t *glyph, float *gradientColor ) {
+	float w, h;
+
+	w = glyph->imageWidth * useScale;
+	h = glyph->imageHeight * useScale;
+
+	CG_AdjustFrom640( &x, &y, &w, &h );
+
+	if ( gradientColor ) {
+		trap_R_DrawStretchPicGradient( x, y, w, h, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph, gradientColor );
+	} else {
+		trap_R_DrawStretchPic( x, y, w, h, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph );
+	}
+}
+
+void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor ) {
+	int len, count;
 	vec4_t newColor;
+	vec4_t gradientColor;
 	const glyphInfo_t *glyph;
+	const char *s;
 	float yadj, xadj;
 	float useScale;
-	unsigned long cp;
+
+	if ( !text ) {
+		return;
+	}
 
 	useScale = scale * font->glyphScale;
-  if (text) {
-    const char *s = text;
-		trap_R_SetColor( color );
-		memcpy(&newColor[0], &color[0], sizeof(vec4_t));
-		len = Q_UTF8_PrintStrlen(text);
-		if (limit > 0 && len > limit) {
-			len = limit;
-		}
-		count = 0;
-		while (s && *s && count < len) {
-      //int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
-      //float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
-			if ( Q_IsColorString( s ) ) {
-				if ( !forceColor ) {
-					memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
-					newColor[3] = color[3];
-					trap_R_SetColor( newColor );
-				}
-				s += 2;
-				continue;
+
+	trap_R_SetColor( color );
+	Vector4Copy( color, newColor );
+
+	gradientColor[0] = Com_Clamp( 0, 1, newColor[0] - gradient );
+	gradientColor[1] = Com_Clamp( 0, 1, newColor[1] - gradient );
+	gradientColor[2] = Com_Clamp( 0, 1, newColor[2] - gradient );
+	gradientColor[3] = color[3];
+
+	len = Q_UTF8_PrintStrlen( text );
+	if ( limit > 0 && len > limit ) {
+		len = limit;
+	}
+
+	s = text;
+	count = 0;
+	while ( s && *s && count < len ) {
+		if ( Q_IsColorString( s ) ) {
+			if ( !forceColor ) {
+				VectorCopy( g_color_table[ColorIndex(*(s+1))], newColor );
+				newColor[3] = color[3];
+				trap_R_SetColor( newColor );
+
+				gradientColor[0] = Com_Clamp( 0, 1, newColor[0] - gradient );
+				gradientColor[1] = Com_Clamp( 0, 1, newColor[1] - gradient );
+				gradientColor[2] = Com_Clamp( 0, 1, newColor[2] - gradient );
+				gradientColor[3] = color[3];
 			}
+			s += 2;
+			continue;
+		}
 
-			cp = Q_UTF8_CodePoint( &s );
-			glyph = Text_GetGlyph( font, cp );
+		glyph = Text_GetGlyph( font, Q_UTF8_CodePoint( &s ) );
 
-				yadj = useScale * glyph->top;
-				xadj = useScale * glyph->left;
-				if (shadowOffset) {
-					colorBlack[3] = newColor[3];
-					trap_R_SetColor( colorBlack );
-					Text_PaintChar(x + xadj + shadowOffset, y - yadj + shadowOffset,
-														glyph->imageWidth,
-														glyph->imageHeight,
-														useScale,
-														glyph->s,
-														glyph->t,
-														glyph->s2,
-														glyph->t2,
-														glyph->glyph);
-					trap_R_SetColor( newColor );
-					colorBlack[3] = 1.0;
-				}
-				Text_PaintChar(x + xadj, y - yadj, 
-													glyph->imageWidth,
-													glyph->imageHeight,
-													useScale,
-													glyph->s,
-													glyph->t,
-													glyph->s2,
-													glyph->t2,
-													glyph->glyph);
+		yadj = useScale * glyph->top;
+		xadj = useScale * glyph->left;
+		if ( shadowOffset ) {
+			colorBlack[3] = newColor[3];
+			trap_R_SetColor( colorBlack );
+			Text_PaintGlyph( x + xadj + shadowOffset, y - yadj + shadowOffset, useScale, glyph, NULL );
+			trap_R_SetColor( newColor );
+			colorBlack[3] = 1.0f;
+		}
+		Text_PaintGlyph( x + xadj, y - yadj, useScale, glyph, ( gradient != 0 ) ? gradientColor : NULL );
 
-				x += (glyph->xSkip * useScale) + adjust;
-				count++;
-    }
-	  trap_R_SetColor( NULL );
-  }
+		x += ( glyph->xSkip * useScale ) + adjust;
+		count++;
+	}
+
+	trap_R_SetColor( NULL );
 }
 
-void Text_PaintWithCursor(float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, qboolean forceColor) {
-  int len, count;
+void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor ) {
+	int len, count;
 	vec4_t newColor;
+	vec4_t gradientColor;
 	const glyphInfo_t *glyph, *glyph2;
 	float yadj, xadj;
 	float useScale;
-	unsigned long cp;
+	const char *s;
+
+	if ( !text ) {
+		return;
+	}
 
 	useScale = scale * font->glyphScale;
-  if (text) {
-    const char *s = text;
-		trap_R_SetColor( color );
-		memcpy(&newColor[0], &color[0], sizeof(vec4_t));
-		len = Q_UTF8_Strlen(text); // note: doesn't use Q_UTF8_PrintStrlen because this function draws color codes
-		if (limit > 0 && len > limit) {
-			len = limit;
-		}
-		count = 0;
-		glyph2 = &font->glyphs[cursor & 255];
-		while (s && *s && count < len) {
-      //int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
-      //float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
-			if ( Q_IsColorString( s ) ) {
-				if ( !forceColor ) {
-					memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
-					newColor[3] = color[3];
-					trap_R_SetColor( newColor );
-				}
-				// display color codes in edit fields
-				//s += 2;
-				//continue;
-			}
 
-			cp = Q_UTF8_CodePoint( &s );
-			glyph = Text_GetGlyph( font, cp );
+	trap_R_SetColor( color );
+	Vector4Copy( color, newColor );
 
-				yadj = useScale * glyph->top;
-				xadj = useScale * glyph->left;
-				if (shadowOffset) {
-					colorBlack[3] = newColor[3];
-					trap_R_SetColor( colorBlack );
-					Text_PaintChar(x + xadj + shadowOffset, y - yadj + shadowOffset,
-														glyph->imageWidth,
-														glyph->imageHeight,
-														useScale,
-														glyph->s,
-														glyph->t,
-														glyph->s2,
-														glyph->t2,
-														glyph->glyph);
-					colorBlack[3] = 1.0;
-					trap_R_SetColor( newColor );
-				}
-				Text_PaintChar(x + xadj, y - yadj, 
-													glyph->imageWidth,
-													glyph->imageHeight,
-													useScale, 
-													glyph->s,
-													glyph->t,
-													glyph->s2,
-													glyph->t2,
-													glyph->glyph);
+	gradientColor[0] = Com_Clamp( 0, 1, newColor[0] - gradient );
+	gradientColor[1] = Com_Clamp( 0, 1, newColor[1] - gradient );
+	gradientColor[2] = Com_Clamp( 0, 1, newColor[2] - gradient );
+	gradientColor[3] = color[3];
 
-	      yadj = useScale * glyph2->top;
-		    if (count == cursorPos && !((cg.realTime/BLINK_DIVISOR) & 1)) {
-					Text_PaintChar(x, y - yadj, 
-														glyph2->imageWidth,
-														glyph2->imageHeight,
-														useScale, 
-														glyph2->s,
-														glyph2->t,
-														glyph2->s2,
-														glyph2->t2,
-														glyph2->glyph);
-				}
+	// note: doesn't use Q_UTF8_PrintStrlen because this function draws color codes
+	len = Q_UTF8_Strlen( text );
+	if ( limit > 0 && len > limit ) {
+		len = limit;
+	}
 
-				x += (glyph->xSkip * useScale) + adjust;
-				count++;
-    }
-    // need to paint cursor at end of text
-    if (cursorPos == len && !((cg.realTime/BLINK_DIVISOR) & 1)) {
-        yadj = useScale * glyph2->top;
-        Text_PaintChar(x, y - yadj, 
-                          glyph2->imageWidth,
-                          glyph2->imageHeight,
-                          useScale, 
-                          glyph2->s,
-                          glyph2->t,
-                          glyph2->s2,
-                          glyph2->t2,
-                          glyph2->glyph);
+	s = text;
+	count = 0;
+	glyph2 = Text_GetGlyph( font, cursor );
 
-    }
-
-	  trap_R_SetColor( NULL );
-  }
-}
-
-
-void Text_Paint_Limit(float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit) {
-  int len, count;
-	vec4_t newColor;
-	const glyphInfo_t *glyph;
-  if (text) {
-    const char *s = text;
-		float max = *maxX;
-		float yadj, xadj;
-		float useScale;
-		unsigned long cp;
-
-		useScale = scale * font->glyphScale;
-		trap_R_SetColor( color );
-		len = Q_UTF8_PrintStrlen(text);
-		if (limit > 0 && len > limit) {
-			len = limit;
-		}
-		count = 0;
-		while (s && *s && count < len) {
-			if ( Q_IsColorString( s ) ) {
-				memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
+	while ( s && *s && count < len ) {
+		if ( Q_IsColorString( s ) ) {
+			if ( !forceColor ) {
+				VectorCopy( g_color_table[ColorIndex(*(s+1))], newColor );
 				newColor[3] = color[3];
 				trap_R_SetColor( newColor );
-				s += 2;
-				continue;
+
+				gradientColor[0] = Com_Clamp( 0, 1, newColor[0] - gradient );
+				gradientColor[1] = Com_Clamp( 0, 1, newColor[1] - gradient );
+				gradientColor[2] = Com_Clamp( 0, 1, newColor[2] - gradient );
+				gradientColor[3] = color[3];
 			}
-
-			cp = Q_UTF8_CodePoint( &s );
-			glyph = Text_GetGlyph( font, cp );
-
-				yadj = useScale * glyph->top;
-				xadj = useScale * glyph->left;
-				if (Text_Width(s, font, useScale, 1) + x > max) {
-					*maxX = 0;
-					break;
-				}
-		    Text_PaintChar(x + xadj, y - yadj, 
-			                 glyph->imageWidth,
-				               glyph->imageHeight,
-				               useScale, 
-						           glyph->s,
-								       glyph->t,
-								       glyph->s2,
-									     glyph->t2,
-										   glyph->glyph);
-	      x += (glyph->xSkip * useScale) + adjust;
-				*maxX = x;
-				count++;
+			// display color codes in edit fields instead of skipping them
 		}
-	  trap_R_SetColor( NULL );
-  }
 
+		glyph = Text_GetGlyph( font, Q_UTF8_CodePoint( &s ) );
+
+		if ( count == cursorPos && ( ( cg.realTime / BLINK_DIVISOR ) & 1 ) == 0 ) {
+			yadj = useScale * glyph2->top;
+
+			Text_PaintChar( x, y - yadj,
+							glyph->left + glyph->xSkip, // use horizontal width of text character
+							glyph2->imageHeight,
+							useScale,
+							glyph2->s,
+							glyph2->t,
+							glyph2->s2,
+							glyph2->t2,
+							glyph2->glyph );
+		}
+
+		yadj = useScale * glyph->top;
+		xadj = useScale * glyph->left;
+
+		if ( shadowOffset ) {
+			colorBlack[3] = newColor[3];
+			trap_R_SetColor( colorBlack );
+			Text_PaintGlyph( x + xadj + shadowOffset, y - yadj + shadowOffset, useScale, glyph, NULL );
+			trap_R_SetColor( newColor );
+			colorBlack[3] = 1.0f;
+		}
+
+		// make overstrike cursor invert color
+		if ( count == cursorPos && !( ( cg.realTime / BLINK_DIVISOR ) & 1 ) && cursor == 11 ) {
+			// invert color
+			vec4_t invertedColor;
+
+			invertedColor[0] = 1.0f - newColor[0];
+			invertedColor[1] = 1.0f - newColor[1];
+			invertedColor[2] = 1.0f - newColor[2];
+			invertedColor[3] = color[3];
+
+			trap_R_SetColor( invertedColor );
+
+			Text_PaintGlyph( x + xadj, y - yadj, useScale, glyph, NULL );
+		} else {
+			Text_PaintGlyph( x + xadj, y - yadj, useScale, glyph, ( gradient != 0 ) ? gradientColor : NULL );
+		}
+
+		if ( count == cursorPos && !( ( cg.realTime / BLINK_DIVISOR ) & 1 ) && cursor == 11 ) {
+			// restore color
+			trap_R_SetColor( newColor );
+		}
+
+		x += ( glyph->xSkip * useScale ) + adjust;
+		count++;
+	}
+
+	// need to paint cursor at end of text
+	if ( cursorPos == len && !( ( cg.realTime / BLINK_DIVISOR ) & 1 ) ) {
+		yadj = useScale * glyph2->top;
+		Text_PaintGlyph( x, y - yadj, useScale, glyph2, NULL );
+	}
+
+	trap_R_SetColor( NULL );
+}
+
+void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit ) {
+	int len, count;
+	vec4_t newColor;
+	const glyphInfo_t *glyph;
+	const char *s;
+	float max;
+	float yadj, xadj;
+	float useScale;
+
+	if ( !text || !maxX ) {
+		return;
+	}
+
+	max = *maxX;
+
+	useScale = scale * font->glyphScale;
+	trap_R_SetColor( color );
+
+	len = Q_UTF8_PrintStrlen( text );
+	if ( limit > 0 && len > limit ) {
+		len = limit;
+	}
+
+	s = text;
+	count = 0;
+	while ( s && *s && count < len ) {
+		if ( Q_IsColorString( s ) ) {
+			VectorCopy( g_color_table[ColorIndex(*(s+1))], newColor );
+			newColor[3] = color[3];
+			trap_R_SetColor( newColor );
+			s += 2;
+			continue;
+		}
+
+		glyph = Text_GetGlyph( font, Q_UTF8_CodePoint( &s ) );
+
+		if ( x + ( glyph->xSkip * useScale ) > max ) {
+			*maxX = 0;
+			break;
+		}
+
+		yadj = useScale * glyph->top;
+		xadj = useScale * glyph->left;
+
+		Text_PaintGlyph( x + xadj, y - yadj, useScale, glyph, NULL );
+		x += ( glyph->xSkip * useScale ) + adjust;
+		*maxX = x;
+		count++;
+	}
+	trap_R_SetColor( NULL );
 }
 

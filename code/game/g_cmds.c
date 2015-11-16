@@ -30,6 +30,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 #include "g_local.h"
 
+// for checking if EC is used by match templates
+#include "ai_chat_sys.h"
+
 #ifdef MISSIONPACK
 #include "../../ui/menudef.h"			// for the voice chats
 #endif
@@ -619,8 +622,8 @@ void SetTeam( gentity_t *ent, const char *s ) {
 	// execute the team change
 	//
 
-	// if the player was dead leave the body
-	if ( player->ps.stats[STAT_HEALTH] <= 0 ) {
+	// if the player was dead leave the body, but only if they're actually in game
+	if ( player->ps.stats[STAT_HEALTH] <= 0 && player->pers.connected == CON_CONNECTED ) {
 		CopyToBodyQue(ent);
 	}
 
@@ -701,22 +704,10 @@ void Cmd_Team_f( gentity_t *ent ) {
 	int			oldTeam;
 	char		s[MAX_TOKEN_CHARS];
 
+	oldTeam = ent->player->sess.sessionTeam;
+
 	if ( trap_Argc() != 2 ) {
-		oldTeam = ent->player->sess.sessionTeam;
-		switch ( oldTeam ) {
-		case TEAM_BLUE:
-			trap_SendServerCommand( ent-g_entities, "print \"Blue team\n\"" );
-			break;
-		case TEAM_RED:
-			trap_SendServerCommand( ent-g_entities, "print \"Red team\n\"" );
-			break;
-		case TEAM_FREE:
-			trap_SendServerCommand( ent-g_entities, "print \"Free team\n\"" );
-			break;
-		case TEAM_SPECTATOR:
-			trap_SendServerCommand( ent-g_entities, "print \"Spectator team\n\"" );
-			break;
-		}
+		trap_SendServerCommand( ent-g_entities, va( "print \"You are on the %s team.\n\"", TeamName( oldTeam ) ) );
 		return;
 	}
 
@@ -735,7 +726,9 @@ void Cmd_Team_f( gentity_t *ent ) {
 
 	SetTeam( ent, s );
 
-	ent->player->switchTeamTime = level.time + 5000;
+	if ( oldTeam != ent->player->sess.sessionTeam ) {
+		ent->player->switchTeamTime = level.time + 5000;
+	}
 }
 
 
@@ -892,9 +885,23 @@ static qboolean G_SayTo( gentity_t *ent, gentity_t *other, int mode ) {
 	return qtrue;
 }
 
+// escape character for botfiles/match.c parsing
 #define EC		"\x19"
 
+static void G_RemoveChatEscapeChar( char *text ) {
+	int i, l;
+
+	l = 0;
+	for ( i = 0; text[i]; i++ ) {
+		if (text[i] == '\x19')
+			continue;
+		text[l++] = text[i];
+	}
+	text[l] = '\0';
+}
+
 void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) {
+	static int	useChatEscapeCharacter = -1;
 	int			i, j;
 	gentity_t	*other;
 	int			color;
@@ -937,6 +944,15 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		color = COLOR_MAGENTA;
 		cmd = "tell";
 		break;
+	}
+
+	// if botfiles/match.c doesn't have EC (unpatched/demo Q3), it needs to be
+	// removed for bots to be able to recognize the message.
+	if ( useChatEscapeCharacter == -1 ) {
+		useChatEscapeCharacter = BotMatchTemplatesContainsString( EC );
+	}
+	if ( !useChatEscapeCharacter ) {
+		G_RemoveChatEscapeChar( name );
 	}
 
 	Q_strncpyz( text, chatText, sizeof(text) );

@@ -5257,7 +5257,7 @@ qboolean MenuParse_font( itemDef_t *item, int handle ) {
 		return qfalse;
 	}
 	if (!DC->Assets.fontRegistered) {
-		DC->registerFont(menu->font, 48, &DC->Assets.textFont);
+		DC->registerFont(menu->font, 48, 0, qfalse, &DC->Assets.textFont);
 		DC->Assets.fontRegistered = qtrue;
 	}
 	return qtrue;
@@ -5821,5 +5821,9 @@ static qboolean Menu_OverActiveItem(menuDef_t *menu, float x, float y) {
 		}
 	}
 	return qfalse;
+}
+
+qboolean Display_DebugMode( void ) {
+	return debugMode;
 }
 

@@ -1233,6 +1233,7 @@ static sfxHandle_t Controls_MenuKey( int key )
 {
 	int			id;
 	int			i;
+	int			startJoyKey;
 	qboolean	found;
 	bind_t*		bindptr;
 	found = qfalse;
@@ -1271,6 +1272,39 @@ static sfxHandle_t Controls_MenuKey( int key )
 	
 			case '`':
 				goto ignorekey;
+		}
+
+		// Bind control to joystick for the active player instead of whatever
+		// joystick the key was pressed on. This seems more intuitive since
+		// the user might not know which is the correct joystick and it's unlikely
+		// that a user wants binds for multiple players on a single joystick.
+		switch ( s_controls.localPlayerNum ) {
+			default:
+			case 0:
+				startJoyKey = K_FIRST_JOY;
+				break;
+			case 1:
+				startJoyKey = K_FIRST_2JOY;
+				break;
+			case 2:
+				startJoyKey = K_FIRST_3JOY;
+				break;
+			case 3:
+				startJoyKey = K_FIRST_4JOY;
+				break;
+		}
+
+		if ( key >= K_FIRST_JOY && key <= K_LAST_JOY ) {
+			key = startJoyKey + key - K_FIRST_JOY;
+		}
+		else if ( key >= K_FIRST_2JOY && key <= K_LAST_2JOY ) {
+			key = startJoyKey + key - K_FIRST_2JOY;
+		}
+		else if ( key >= K_FIRST_3JOY && key <= K_LAST_3JOY ) {
+			key = startJoyKey + key - K_FIRST_3JOY;
+		}
+		else if ( key >= K_FIRST_4JOY && key <= K_LAST_4JOY ) {
+			key = startJoyKey + key - K_FIRST_4JOY;
 		}
 	}
 

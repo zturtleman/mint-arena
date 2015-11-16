@@ -86,9 +86,9 @@ static void SpecifyServer_Event( void* ptr, int event )
 
 			if (s_specifyserver.domain.field.buffer[0])
 			{
-				strcpy(buff, MField_Buffer( &s_specifyserver.domain.field ) );
+				Q_strncpyz( buff, MField_Buffer( &s_specifyserver.domain.field ), sizeof (buff) );
 				if (s_specifyserver.port.field.buffer[0])
-					Com_sprintf( buff+strlen(buff), 128, ":%s", MField_Buffer( &s_specifyserver.port.field ) );
+					Q_strcat( buff, sizeof (buff), va( ":%s", MField_Buffer( &s_specifyserver.port.field ) ) );
 
 				trap_Cmd_ExecuteText( EXEC_APPEND, va( "connect %s\n", buff ) );
 			}

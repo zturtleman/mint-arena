@@ -76,8 +76,19 @@ qhandle_t trap_R_RegisterModel( const char *name );
 int trap_R_ModelBounds( clipHandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac );
 int trap_R_LerpTag( orientation_t *tag, clipHandle_t handle, int startFrame, int endFrame,
 					   float frac, const char *tagName );
-int trap_R_LerpTagFrameModel( orientation_t *tag, clipHandle_t mod, clipHandle_t frameModel, int startFrame, clipHandle_t endFrameModel, int endFrame,
-					   float frac, const char *tagName );
+int			trap_R_LerpTagFrameModel( orientation_t *tag, clipHandle_t mod,
+					   clipHandle_t frameModel, int startFrame,
+					   clipHandle_t endFrameModel, int endFrame,
+					   float frac, const char *tagName,
+					   int *tagIndex );
+int			trap_R_LerpTagTorso( orientation_t *tag, clipHandle_t mod,
+					   clipHandle_t frameModel, int startFrame,
+					   clipHandle_t endFrameModel, int endFrame,
+					   float frac, const char *tagName,
+					   int *tagIndex, const vec3_t *torsoAxis,
+					   qhandle_t torsoFrameModel, int torsoFrame,
+					   qhandle_t oldTorsoFrameModel, int oldTorsoFrame,
+					   float torsoFrac );
 
 int		trap_BotLibSetup( void );
 int		trap_BotLibShutdown( void );

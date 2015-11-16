@@ -41,6 +41,7 @@ typedef struct {
 	int		current;		// line where next message will be printed
 	int		display;		// bottom of console displays this line
 	int		x;			// offset in current line for next print
+	int		startx;		// initial index in current line. it's 2 if colored line wrapped around
 
 	int		topline; // 0 <= topline < CON_MAXLINES
 
@@ -51,6 +52,8 @@ typedef struct {
 
 	int		sideMargin;
 	int		screenFakeWidth; // width in fake 640x480, it can be more than 640
+
+	int		lineSplit;		// current line wrapped around without a terminating newline
 } console_t;
 
 console_t	con;
@@ -93,7 +96,7 @@ Con_ToggleConsole_f
 */
 void Con_ToggleConsole_f (void) {
 	// Can't toggle the console when it's the only thing available
-	if ( cg.connState == CA_DISCONNECTED && trap_Key_GetCatcher( ) == KEYCATCH_CONSOLE ) {
+	if ( cg.connState == CA_DISCONNECTED && Key_GetCatcher() == KEYCATCH_CONSOLE ) {
 		return;
 	}
 
@@ -103,7 +106,7 @@ void Con_ToggleConsole_f (void) {
 
 	g_consoleField.widthInChars = g_console_field_width;
 
-	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_CONSOLE );
+	Key_SetCatcher( Key_GetCatcher() ^ KEYCATCH_CONSOLE );
 }
 
 /*
@@ -111,11 +114,11 @@ void Con_ToggleConsole_f (void) {
 Con_LineFeed
 ================
 */
-void Con_LineFeed( qboolean keepColor ) {
+void Con_LineFeed( qboolean artificalBreak ) {
 	char color = 0;
 	int i;
 
-	if ( keepColor ) {
+	if ( artificalBreak ) {
 		// find last color char on line
 		for ( i = con.x-1; i >= 0; i-- ) {
 			if ( Q_IsColorString( &con.lines[con.current % CON_MAXLINES][i] ) ) {
@@ -131,12 +134,12 @@ void Con_LineFeed( qboolean keepColor ) {
 	con.current++;
 
 	// add last color at start of new line. ignore white, it's the default.
-	if ( keepColor && color != 0 && color != COLOR_WHITE ) {
+	if ( color != 0 && color != COLOR_WHITE ) {
 		con.lines[con.current % CON_MAXLINES][0] = Q_COLOR_ESCAPE;
 		con.lines[con.current % CON_MAXLINES][1] = color;
-		con.x = 2;
+		con.x = con.startx = 2;
 	} else {
-		con.x = 0;
+		con.x = con.startx = 0;
 	}
 
 	con.lines[con.current % CON_MAXLINES][con.x] = '\0';
@@ -144,6 +147,8 @@ void Con_LineFeed( qboolean keepColor ) {
 	if ( con.current < CON_MAXLINES ) {
 		con.topline = con.current;
 	}
+
+	con.lineSplit = artificalBreak;
 }
 
 /*
@@ -152,9 +157,10 @@ CG_ConsolePrint
 ================
 */
 void CG_ConsolePrint( const char *p ) {
-	int lineDrawLen, wordDrawLen, charDrawLen;
+	char lastWord[CON_LINELENGTH];
+	float lineDrawLen, wordDrawLen, charDrawLen;
 	int wordLen;
-	int i;
+	int i, j;
 
 	while ( *p != '\0' ) {
 		if ( *p == '\r' ) {
@@ -176,7 +182,13 @@ void CG_ConsolePrint( const char *p ) {
 				continue;
 			}
 
-			if ( p[i] == '\0' || p[i] == '\r' || p[i] == '\n' || p[i] == ' ' ) {
+			// handled at beginning of loop will only happen if i > 0
+			if ( p[i] == '\0' || p[i] == '\r' || p[i] == '\n' ) {
+				break;
+			}
+
+			// word spliter (include space at end of word)
+			if ( i > 0 && p[i-1] == ' ' ) {
 				break;
 			}
 
@@ -188,7 +200,7 @@ void CG_ConsolePrint( const char *p ) {
 			charDrawLen = CG_DrawStrlenEx( &p[i], UI_SMALLFONT, 1 );
 
 			// make sure the word will fit on screen, even if it needs a whole line to do so.
-			if ( wordDrawLen + charDrawLen > con.screenFakeWidth - ( con.sideMargin * 2 ) ) {
+			if ( wordDrawLen + charDrawLen >= con.screenFakeWidth - ( con.sideMargin * 2 ) ) {
 				break;
 			}
 
@@ -203,14 +215,44 @@ void CG_ConsolePrint( const char *p ) {
 			wordLen = i;
 		}
 
-		if ( con.x + wordLen > CON_LINELENGTH ) {
-			Con_LineFeed( qtrue );
-		} else  if ( lineDrawLen + wordDrawLen > con.screenFakeWidth - ( con.sideMargin * 2 ) ) {
-			Con_LineFeed( qtrue );
+		// check if word fits in buffer / on screen
+		if ( con.x + wordLen > CON_LINELENGTH
+			|| lineDrawLen + wordDrawLen >= con.screenFakeWidth - ( con.sideMargin * 2 ) ) {
+			// check if this is appending to text
+			if ( con.lineSplit && con.x > con.startx /*&& con.lines[con.current % CON_MAXLINES][strlen(con.lines[con.current % CON_MAXLINES])-1] != ' '*/ ) {
+				qboolean foundBreak = qfalse;
+
+				for ( j = con.x - 1; j > con.startx ; j-- ) {
+					if ( con.lines[con.current % CON_MAXLINES][j-1] == ' ' ) {
+						foundBreak = qtrue;
+						break;
+					}
+				}
+
+				if ( foundBreak ) {
+					// remove last word from console buffer
+					Q_strncpyz( lastWord, &con.lines[con.current % CON_MAXLINES][j], con.x-j+1 );
+					con.x = j;
+					con.lines[con.current % CON_MAXLINES][con.x] = '\0';
+
+					// restore word on new line
+					Con_LineFeed( qtrue );
+					Q_strncpyz( &con.lines[con.current % CON_MAXLINES][con.x], lastWord, strlen( lastWord )+1 );
+					con.x += strlen( lastWord );
+				} else {
+					Con_LineFeed( qtrue );
+				}
+			} else {
+				Con_LineFeed( qtrue );
+			}
 		}
 
-		Q_strncpyz( &con.lines[con.current % CON_MAXLINES][con.x], p, wordLen+1 );
-		con.x += wordLen;
+		if ( con.lineSplit && con.x == con.startx && i == 0 && p[0] == ' ' ) {
+			// don't add spaces to beginning of wrapped around lines
+		} else {
+			Q_strncpyz( &con.lines[con.current % CON_MAXLINES][con.x], p, wordLen+1 );
+			con.x += wordLen;
+		}
 		p += wordLen;
 	}
 }
@@ -235,7 +277,7 @@ Draw the editline after a ] prompt
 void Con_DrawInput ( connstate_t state, int lines ) {
 	int		y;
 
-	if ( state != CA_DISCONNECTED && !(trap_Key_GetCatcher( ) & KEYCATCH_CONSOLE ) ) {
+	if ( state != CA_DISCONNECTED && !( Key_GetCatcher() & KEYCATCH_CONSOLE ) ) {
 		return;
 	}
 
@@ -342,7 +384,7 @@ Con_DrawConsole
 void Con_DrawConsole( connstate_t state ) {
 	// if disconnected, render console full screen
 	if ( state == CA_DISCONNECTED ) {
-		if ( !( trap_Key_GetCatcher( ) & KEYCATCH_UI) ) {
+		if ( !( Key_GetCatcher() & KEYCATCH_UI ) ) {
 			Con_DrawSolidConsole( state, 1.0f );
 			return;
 		}
@@ -364,7 +406,7 @@ Scroll it up or down and draw it
 */
 void CG_RunConsole( connstate_t state ) {
 	// decide on the destination height of the console
-	if ( trap_Key_GetCatcher( ) & KEYCATCH_CONSOLE )
+	if ( Key_GetCatcher() & KEYCATCH_CONSOLE )
 		con.finalFrac = 0.5;		// half screen
 	else
 		con.finalFrac = 0;				// none visible
@@ -416,7 +458,7 @@ void Con_Bottom( void ) {
 
 void CG_CloseConsole( void ) {
 	MField_Clear( &g_consoleField );
-	trap_Key_SetCatcher( trap_Key_GetCatcher( ) & ~KEYCATCH_CONSOLE );
+	Key_SetCatcher( Key_GetCatcher() & ~KEYCATCH_CONSOLE );
 	con.finalFrac = 0;				// none visible
 	con.displayFrac = 0;
 }

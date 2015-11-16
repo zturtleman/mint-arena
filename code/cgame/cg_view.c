@@ -210,7 +210,9 @@ void CG_CalcVrect (void) {
 				cg.viewportY += cg.viewportHeight;
 			}
 		}
-	} else if (cg.numViewports == 3) {
+	}
+	// if third view port should be half of the window instead of a quarter
+	else if (cg.numViewports == 3 && !cg_splitviewThirdEqual.integer) {
 		if (cg_splitviewVertical.integer) {
 			if (cg.viewport == 2) {
 				cg.viewportWidth *= 0.5f;
@@ -236,7 +238,8 @@ void CG_CalcVrect (void) {
 				}
 			}
 		}
-	} else if (cg.numViewports > 1 && cg.numViewports <= 4) {
+	}
+	else if (cg.numViewports > 1 && cg.numViewports <= 4) {
 		cg.viewportWidth *= 0.5f;
 		cg.viewportHeight *= 0.5f;
 
@@ -335,7 +338,9 @@ static void CG_OffsetThirdPersonView( void ) {
 	}
 	AngleVectors( focusAngles, forward, NULL, NULL );
 
-	CG_StepOffset( cg.refdef.vieworg );
+	if ( cg_thirdPersonSmooth[cg.cur_localPlayerNum].integer ) {
+		CG_StepOffset( cg.refdef.vieworg );
+	}
 
 	VectorMA( cg.refdef.vieworg, FOCUS_DISTANCE, forward, focusPoint );
 
@@ -1165,6 +1170,19 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		cg.deferredPlayerLoading = 0;
 	} else if ( ++cg.deferredPlayerLoading > 10 ) {
 		CG_LoadDeferredPlayers();
+	}
+
+	// if there are 3 viewports of equal size, fill the fourth quarter of the window
+	if ( cg.numViewports == 3 && cg_splitviewThirdEqual.integer ) {
+		// Setup forth viewport
+		cg.numViewports = 4;
+		cg.viewport = 3;
+
+		// calculate size of viewport
+		CG_CalcVrect();
+
+		CG_ClearViewport();
+		CG_DrawTourneyScoreboard();
 	}
 
 	if (cg.numViewports != 1) {

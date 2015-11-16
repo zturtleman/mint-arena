@@ -149,7 +149,7 @@ qhandle_t	trap_R_RegisterModel( const char *name );			// returns rgb axis if not
 qhandle_t	trap_R_RegisterShaderEx( const char *name, int lightmapIndex, qboolean mipRawImage ); // returns all white if not found
 qhandle_t	trap_R_RegisterShader( const char *name );			// returns all white if not found
 qhandle_t	trap_R_RegisterShaderNoMip( const char *name );			// returns all white if not found
-void		trap_R_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font);
+void		trap_R_RegisterFont(const char *fontName, int pointSize, float borderWidth, qboolean forceAutoHint, fontInfo_t *font);
 
 // skin (entity model surface remap) management
 qhandle_t	trap_R_AllocSkinSurface( const char *surface, qhandle_t hShader );
@@ -163,11 +163,14 @@ void		trap_R_AddRefEntityToScene( const refEntity_t *re );
 // polys are intended for simple wall marks, not really for doing
 // significant construction
 void		trap_R_AddPolyRefEntityToScene( const refEntity_t *re, int numVerts, const polyVert_t *verts, int numPolys );
-void		trap_R_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int bmodelNum );
-void		trap_R_AddPolysToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum );
+void		trap_R_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int bmodelNum, int sortLevel );
+void		trap_R_AddPolysToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum, int sortLevel );
 void        trap_R_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
-void		trap_R_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
+void		trap_R_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b, qhandle_t hShader );
 void		trap_R_AddAdditiveLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
+void		trap_R_AddVertexLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
+void		trap_R_AddJuniorLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
+void		trap_R_AddDirectedLightToScene( const vec3_t normal, float intensity, float r, float g, float b );
 void		trap_R_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible, qhandle_t hShader );
 int			trap_R_LightForPoint( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir );
 void		trap_R_RenderScene( const refdef_t *fd );
@@ -177,13 +180,24 @@ void		trap_R_DrawStretchPic( float x, float y, float w, float h,
 				float s1, float t1, float s2, float t2, qhandle_t hShader );
 void		trap_R_DrawRotatedPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader, float angle );
 void		trap_R_DrawStretchPicGradient( float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader,
-				const float *gradientColor, int gradientType );
+				const float *gradientColor );
 void		trap_R_Add2dPolys( polyVert_t* verts, int numverts, qhandle_t hShader );
 int			trap_R_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac );
 int			trap_R_LerpTag( orientation_t *tag, clipHandle_t mod, int startFrame, int endFrame, 
 					   float frac, const char *tagName );
-int			trap_R_LerpTagFrameModel( orientation_t *tag, clipHandle_t mod, clipHandle_t frameModel, int startFrame, clipHandle_t endFrameModel, int endFrame,
-					   float frac, const char *tagName );
+int			trap_R_LerpTagFrameModel( orientation_t *tag, clipHandle_t mod,
+					   clipHandle_t frameModel, int startFrame,
+					   clipHandle_t endFrameModel, int endFrame,
+					   float frac, const char *tagName,
+					   int *tagIndex );
+int			trap_R_LerpTagTorso( orientation_t *tag, clipHandle_t mod,
+					   clipHandle_t frameModel, int startFrame,
+					   clipHandle_t endFrameModel, int endFrame,
+					   float frac, const char *tagName,
+					   int *tagIndex, const vec3_t *torsoAxis,
+					   qhandle_t torsoFrameModel, int torsoFrame,
+					   qhandle_t oldTorsoFrameModel, int oldTorsoFrame,
+					   float torsoFrac );
 void		trap_R_RemapShader( const char *oldShader, const char *newShader, const char *timeOffset );
 qboolean	trap_R_inPVS( const vec3_t p1, const vec3_t p2 );
 void		trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );

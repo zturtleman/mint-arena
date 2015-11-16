@@ -341,6 +341,12 @@ void SP_worldspawn( void ) {
 		CG_Error( "SP_worldspawn: The first entity isn't 'worldspawn'" );
 	}
 
+	CG_SpawnString( "enableDust", "0", &s );
+	trap_Cvar_Set( "cg_enableDust", s );
+
+	CG_SpawnString( "enableBreath", "0", &s );
+	trap_Cvar_Set( "cg_enableBreath", s );
+
 	if ( CG_SpawnVector2D( "mapcoordsmins", "-128 128", cg.mapcoordsMins ) &&  // top left
 		 CG_SpawnVector2D( "mapcoordsmaxs", "128 -128", cg.mapcoordsMaxs ) ) { // bottom right
 		cg.mapcoordsValid = qtrue;

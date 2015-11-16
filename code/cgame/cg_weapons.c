@@ -852,8 +852,7 @@ void CG_RegisterItemVisuals( int itemNum ) {
 	//
 	// powerups have an accompanying ring or sphere
 	//
-	if ( item->giType == IT_POWERUP || item->giType == IT_HEALTH || 
-		item->giType == IT_ARMOR || item->giType == IT_HOLDABLE ) {
+	if ( item->giType == IT_POWERUP || item->giType == IT_HEALTH ) {
 		if ( item->world_model[1] ) {
 			itemInfo->models[1] = trap_R_RegisterModel( item->world_model[1] );
 		}
@@ -1339,7 +1338,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 		if ( weapon->flashDlightColor[0] || weapon->flashDlightColor[1] || weapon->flashDlightColor[2] ) {
 			trap_R_AddLightToScene( flash.origin, 300 + (rand()&31), 1.0f, weapon->flashDlightColor[0],
-				weapon->flashDlightColor[1], weapon->flashDlightColor[2] );
+				weapon->flashDlightColor[1], weapon->flashDlightColor[2], 0 );
 		}
 	}
 }
@@ -1513,7 +1512,7 @@ void CG_DrawWeaponSelect( void ) {
 	if ( cg_weapons[ cg.cur_lc->weaponSelect ].item ) {
 		name = cg_weapons[ cg.cur_lc->weaponSelect ].item->pickup_name;
 		if ( name ) {
-			CG_DrawString( SCREEN_WIDTH / 2, y - BIGCHAR_HEIGHT - 6, name, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color );
+			CG_DrawString( SCREEN_WIDTH / 2, y - 6, name, UI_CENTER|UI_VA_BOTTOM|UI_DROPSHADOW|UI_BIGFONT, color );
 		}
 	}
 
@@ -2183,7 +2182,7 @@ void CG_Tracer( vec3_t source, vec3_t dest ) {
 	verts[3].modulate[2] = 255;
 	verts[3].modulate[3] = 255;
 
-	trap_R_AddPolyToScene( cgs.media.tracerShader, 4, verts, 0 );
+	trap_R_AddPolyToScene( cgs.media.tracerShader, 4, verts, 0, 0 );
 
 	midpoint[0] = ( start[0] + finish[0] ) * 0.5;
 	midpoint[1] = ( start[1] + finish[1] ) * 0.5;

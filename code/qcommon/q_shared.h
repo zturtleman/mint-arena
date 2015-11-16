@@ -511,6 +511,13 @@ void ClearBounds( vec3_t mins, vec3_t maxs );
 void AddPointToBounds( const vec3_t v, vec3_t mins, vec3_t maxs );
 
 #if !defined( Q3_VM ) || ( defined( Q3_VM ) && defined( __Q3_VM_MATH ) )
+static ID_INLINE int VectorEmpty( const vec3_t v ) {
+	if (v[0] != 0 || v[1] != 0 || v[2] != 0) {
+		return 0;
+	}
+	return 1;
+}
+
 static ID_INLINE int VectorCompare( const vec3_t v1, const vec3_t v2 ) {
 	if (v1[0] != v2[0] || v1[1] != v2[1] || v1[2] != v2[2]) {
 		return 0;
@@ -594,6 +601,8 @@ static ID_INLINE float IntAsFloat( int i ) {
 }
 
 #else
+int VectorEmpty( const vec3_t v );
+
 int VectorCompare( const vec3_t v1, const vec3_t v2 );
 
 // VectorCompareEpsilon
@@ -635,6 +644,7 @@ void AnglesToAxis( const vec3_t angles, vec3_t axis[3] );
 
 void AxisClear( vec3_t axis[3] );
 void AxisCopy( vec3_t in[3], vec3_t out[3] );
+int AxisEmpty( vec3_t *axis );
 
 void SetPlaneSignbits( struct cplane_s *out );
 int BoxOnPlaneSide (vec3_t emins, vec3_t emaxs, struct cplane_s *plane);
@@ -1000,6 +1010,7 @@ struct cvar_s {
 	qboolean	integral;
 	float			min;
 	float			max;
+	char			*description;
 
 	cvar_t *next;
 	cvar_t *prev;
@@ -1046,8 +1057,6 @@ COLLISION DETECTION
 
 ==============================================================
 */
-
-#include "surfaceflags.h"			// shared with the q3map utility
 
 // plane types are used to speed some tests
 // 0-2 are axial planes
@@ -1336,4 +1345,3 @@ typedef enum {
 #define LUMA( red, green, blue ) ( 0.2126f * ( red ) + 0.7152f * ( green ) + 0.0722f * ( blue ) )
 
 #endif	// __Q_SHARED_H
-

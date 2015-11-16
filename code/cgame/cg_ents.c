@@ -72,7 +72,7 @@ qboolean CG_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *parent,
 	returnValue = trap_R_LerpTagFrameModel( &lerped, parentModel,
 		parent->oldframeModel, parent->oldframe,
 		parent->frameModel, parent->frame,
-		1.0 - parent->backlerp, tagName );
+		1.0 - parent->backlerp, tagName, NULL );
 
 	// FIXME: allow origin offsets along tag?
 	VectorCopy( parent->origin, entity->origin );
@@ -108,7 +108,7 @@ qboolean CG_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *
 	returnValue = trap_R_LerpTagFrameModel( &lerped, parentModel,
 		parent->oldframeModel, parent->oldframe,
 		parent->frameModel, parent->frame,
-		1.0 - parent->backlerp, tagName );
+		1.0 - parent->backlerp, tagName, NULL );
 
 	// FIXME: allow origin offsets along tag?
 	VectorCopy( parent->origin, entity->origin );
@@ -170,7 +170,7 @@ void CG_AddLightstyle( centity_t *cent ) {
 	int otime;
 	int lastch, nextch;
 
-	if ( !cent->dl_stylestring ) {
+	if ( !cent->dl_stylestring[0] ) {
 		return;
 	}
 
@@ -233,18 +233,21 @@ void CG_AddLightstyle( centity_t *cent ) {
 
 	// ydnar: if the dlight has angles, then it is a directional global dlight
 	if ( cent->currentState.angles[ 0 ] || cent->currentState.angles[ 1 ] || cent->currentState.angles[ 2 ] ) {
-#if 0 // ZTM: FIXME: add support for directed dlights
 		vec3_t normal;
 
+		// ZTM: NOTE: Lightning on ET's Radar map is too bright with multiple light passes
+		//            (enabled with r_dynamiclight 2 in vanilla ET, currently always done in Spearmint)
+		//            so scale the light values down.
+		lightval *= 0.25f;
+
 		AngleVectors( cent->currentState.angles, normal, NULL, NULL );
-		trap_R_AddDirectedLightToScene( normal, 256, lightval,
-								(float) r / 255.0f, (float) r / 255.0f, (float) r / 255.0f );
-#endif
+		trap_R_AddDirectedLightToScene( normal, lightval,
+								(float) r / 255.0f, (float) g / 255.0f, (float) b / 255.0f );
 	}
 	// normal global dlight
 	else
 	{
-		trap_R_AddLightToScene( cent->lerpOrigin, 256, lightval,
+		trap_R_AddVertexLightToScene( cent->lerpOrigin, 256, lightval,
 								(float) r / 255.0f, (float) g / 255.0f, (float) b / 255.0f );
 	}
 }
@@ -287,7 +290,7 @@ static void CG_EntityEffects( centity_t *cent ) {
 			g = (float) ((cl >> 8) & 0xFF) / 255.0;
 			b = (float) ((cl >> 16) & 0xFF) / 255.0;
 			i = (float) ((cl >> 24) & 0xFF) * 4.0;
-			trap_R_AddLightToScene(cent->lerpOrigin, i, 1.0f, r, g, b);
+			trap_R_AddLightToScene(cent->lerpOrigin, i, 1.0f, r, g, b, 0);
 		}
 	}
 
@@ -577,13 +580,13 @@ static void CG_Missile( centity_t *cent ) {
 	// add dynamic light
 	if ( weapon->missileDlight ) {
 		trap_R_AddLightToScene(cent->lerpOrigin, weapon->missileDlight, 1.0f,
-			weapon->missileDlightColor[col][0], weapon->missileDlightColor[col][1], weapon->missileDlightColor[col][2] );
+			weapon->missileDlightColor[col][0], weapon->missileDlightColor[col][1], weapon->missileDlightColor[col][2], 0 );
 	}
 */
 	// add dynamic light
 	if ( weapon->missileDlight ) {
 		trap_R_AddLightToScene(cent->lerpOrigin, weapon->missileDlight, 1.0f,
-			weapon->missileDlightColor[0], weapon->missileDlightColor[1], weapon->missileDlightColor[2] );
+			weapon->missileDlightColor[0], weapon->missileDlightColor[1], weapon->missileDlightColor[2], 0 );
 	}
 
 	// add missile sound
@@ -712,6 +715,7 @@ static void CG_Mover( centity_t *cent ) {
 	VectorCopy( cent->lerpOrigin, ent.oldorigin);
 	AnglesToAxis( cent->lerpAngles, ent.axis );
 
+	ent.reType = RT_MODEL;
 	ent.renderfx = RF_NOSHADOW;
 
 	// flicker between two skins (FIXME?)

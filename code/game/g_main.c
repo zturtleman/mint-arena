@@ -111,8 +111,6 @@ vmCvar_t	g_obeliskRespawnDelay;
 vmCvar_t	g_cubeTimeout;
 vmCvar_t	g_redteam;
 vmCvar_t	g_blueteam;
-vmCvar_t	g_enableDust;
-vmCvar_t	g_enableBreath;
 vmCvar_t	g_proxMineTimeout;
 #endif
 vmCvar_t	g_playerCapsule;
@@ -189,8 +187,6 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_redteam, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, GCF_TRACK_CHANGE | GCF_TEAM_SHADER, RANGE_ALL },
 	{ &g_blueteam, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, GCF_TRACK_CHANGE | GCF_TEAM_SHADER, RANGE_ALL },
 
-	{ &g_enableDust, "g_enableDust", "0", CVAR_SYSTEMINFO, GCF_TRACK_CHANGE, RANGE_BOOL },
-	{ &g_enableBreath, "g_enableBreath", "0", CVAR_SYSTEMINFO, GCF_TRACK_CHANGE, RANGE_BOOL },
 	{ &g_proxMineTimeout, "g_proxMineTimeout", "20000", 0, 0, RANGE_ALL },
 #endif
 	{ &g_playerCapsule, "g_playerCapsule", "0", 0, 0, RANGE_BOOL },
@@ -689,8 +685,10 @@ int G_MapRestart( int levelTime, int restartTime ) {
 	if ( trap_Argc() > 1 ) {
 		trap_Argv( 1, buf, sizeof (buf) );
 		delay = atoi( buf );
-	}
-	else {
+	} else if ( g_doWarmup.integer ) {
+		// warmup delays using g_warmup after map restart
+		delay = 0;
+	} else {
 		delay = 5;
 	}
 
@@ -706,11 +704,6 @@ int G_MapRestart( int levelTime, int restartTime ) {
 	// don't let user change restart time
 	if ( restartTime ) {
 		return restartTime;
-	}
-
-	// warmup delays using g_warmup after map restart
-	if ( g_doWarmup.integer ) {
-		return 0;
 	}
 
 	restartTime = levelTime + delay * 1000;
@@ -1381,7 +1374,7 @@ void LogExit( const char *string ) {
 		if (g_singlePlayer.integer && !(g_entities[cl - level.players].r.svFlags & SVF_BOT)) {
 			team = cl->sess.sessionTeam;
 		}
-		if (g_singlePlayer.integer && g_gametype.integer == GT_TOURNAMENT) {
+		if (g_singlePlayer.integer && g_gametype.integer < GT_TEAM) {
 			if (g_entities[cl - level.players].r.svFlags & SVF_BOT && cl->ps.persistant[PERS_RANK] == 0) {
 				won = qfalse;
 			}
@@ -1392,7 +1385,7 @@ void LogExit( const char *string ) {
 
 #ifdef MISSIONPACK
 	if (g_singlePlayer.integer) {
-		if (g_gametype.integer >= GT_CTF) {
+		if (g_gametype.integer >= GT_TEAM) {
 			if (team == TEAM_BLUE) {
 				won = level.teamScores[TEAM_BLUE] > level.teamScores[TEAM_RED];
 			} else {
@@ -1685,7 +1678,7 @@ void CheckTournament( void ) {
 		int		counts[TEAM_NUM_TEAMS];
 		qboolean	notEnough = qfalse;
 
-		if ( g_gametype.integer > GT_TEAM ) {
+		if ( g_gametype.integer >= GT_TEAM ) {
 			counts[TEAM_BLUE] = TeamCount( -1, TEAM_BLUE );
 			counts[TEAM_RED] = TeamCount( -1, TEAM_RED );
 

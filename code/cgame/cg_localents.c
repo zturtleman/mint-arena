@@ -99,8 +99,6 @@ localEntity_t	*CG_AllocLocalEntity( void ) {
 
 	memset( le, 0, sizeof( *le ) );
 
-	le->firstPersonEntity = -1;
-
 	// link into the active list
 	le->next = cg_activeLocalEntities.next;
 	le->prev = &cg_activeLocalEntities;
@@ -333,6 +331,8 @@ void CG_AddFragment( localEntity_t *le ) {
 		}
 		BG_EvaluateTrajectory( &le->pos, oldTime, origin );
 
+		VectorClear( angles );
+
 		// add the distance mover has moved since then
 		CG_AdjustPositionForMover( origin, trace.entityNum,
 			oldTime, cg.time, origin, angles, angles );
@@ -527,19 +527,21 @@ static void CG_AddFallScaleFade( localEntity_t *le ) {
 CG_AddExplosion
 ================
 */
-static void CG_AddExplosion( localEntity_t *ex ) {
+static void CG_AddExplosion( localEntity_t *le ) {
 	refEntity_t	*ent;
 
-	ent = &ex->refEntity;
+	ent = &le->refEntity;
 
 	// add the entity
 	CG_AddRefEntityWithMinLight(ent);
 
 	// add the dlight
-	if ( ex->light ) {
+	if ( le->light ) {
 		float		light;
+		float		radius;
+		float		intensity;
 
-		light = (float)( cg.time - ex->startTime ) / ( ex->endTime - ex->startTime );
+		light = (float)( cg.time - le->startTime ) / ( le->endTime - le->startTime );
 		if ( light < 0.5 ) {
 			light = 1.0;
 		} else {
@@ -547,11 +549,14 @@ static void CG_AddExplosion( localEntity_t *ex ) {
 		}
 
 		if ( cg_fadeExplosions.integer ) {
-			trap_R_AddLightToScene(ent->origin, ex->light, light, ex->lightColor[0], ex->lightColor[1], ex->lightColor[2] );
+			radius = le->light;
+			intensity = light;
 		} else {
-			light = ex->light * light;
-			trap_R_AddLightToScene(ent->origin, light, 1.0f, ex->lightColor[0], ex->lightColor[1], ex->lightColor[2] );
+			radius = le->light * light;
+			intensity = 1;
 		}
+
+		trap_R_AddLightToScene( le->refEntity.origin, radius, intensity, le->lightColor[0], le->lightColor[1], le->lightColor[2], 0 );
 	}
 }
 
@@ -584,6 +589,8 @@ static void CG_AddSpriteExplosion( localEntity_t *le ) {
 	// add the dlight
 	if ( le->light ) {
 		float		light;
+		float		radius;
+		float		intensity;
 
 		light = (float)( cg.time - le->startTime ) / ( le->endTime - le->startTime );
 		if ( light < 0.5 ) {
@@ -593,11 +600,14 @@ static void CG_AddSpriteExplosion( localEntity_t *le ) {
 		}
 
 		if ( cg_fadeExplosions.integer ) {
-			trap_R_AddLightToScene(re.origin, le->light, light, le->lightColor[0], le->lightColor[1], le->lightColor[2] );
+			radius = le->light;
+			intensity = light;
 		} else {
-			light = le->light * light;
-			trap_R_AddLightToScene(re.origin, light, 1.0f, le->lightColor[0], le->lightColor[1], le->lightColor[2] );
+			radius = le->light * light;
+			intensity = 1;
 		}
+
+		trap_R_AddLightToScene( le->refEntity.origin, radius, intensity, le->lightColor[0], le->lightColor[1], le->lightColor[2], 0 );
 	}
 }
 
@@ -683,7 +693,7 @@ void CG_AddKamikaze( localEntity_t *le ) {
 
 		CG_AddRefEntityWithMinLight( re );
 		// add the dlight
-		trap_R_AddLightToScene( re->origin, c * 1000.0, 1.0, 1.0, 1.0, c );
+		trap_R_AddLightToScene( re->origin, c * 1000.0, 1.0, 1.0, 1.0, c, 0 );
 	}
 
 	if (t > KAMI_SHOCKWAVE2_STARTTIME && t < KAMI_SHOCKWAVE2_ENDTIME) {
@@ -779,13 +789,11 @@ void CG_AddRefEntity( localEntity_t *le ) {
 CG_AddScorePlum
 ===================
 */
-#define NUMBER_SIZE		8
-
 void CG_AddScorePlum( localEntity_t *le ) {
 	refEntity_t	*re;
 	vec3_t		origin, delta, dir, vec, up = {0, 0, 1};
 	float		c, len;
-	int			i, score, digits[10], numdigits, negative;
+	int			score;
 
 	re = &le->refEntity;
 
@@ -817,8 +825,6 @@ void CG_AddScorePlum( localEntity_t *le ) {
 	else
 		re->shaderRGBA[3] = 0xff;
 
-	re->radius = NUMBER_SIZE / 2;
-
 	VectorCopy(le->pos.trBase, origin);
 	origin[2] += 110 - c * 100;
 
@@ -837,27 +843,10 @@ void CG_AddScorePlum( localEntity_t *le ) {
 		return;
 	}
 
-	negative = qfalse;
-	if (score < 0) {
-		negative = qtrue;
-		score = -score;
-	}
-
-	for (numdigits = 0; !(numdigits && !score); numdigits++) {
-		digits[numdigits] = score % 10;
-		score = score / 10;
-	}
-
-	if (negative) {
-		digits[numdigits] = 10;
-		numdigits++;
-	}
-
-	for (i = 0; i < numdigits; i++) {
-		VectorMA(origin, (float) (((float) numdigits / 2) - i) * NUMBER_SIZE, vec, re->origin);
-		re->customShader = cgs.media.numberShaders[digits[numdigits-1-i]];
-		trap_R_AddRefEntityToScene( re );
-	}
+	VectorCopy( origin, re->origin );
+	VectorCopy( origin, re->oldorigin );
+	AxisCopy( cg.refdef.viewaxis, re->axis );
+	CG_SurfaceText( re, &cgs.media.numberFont, 1, va( "%d", score ), 0, 0, 0.4f, qfalse );
 }
 
 /*
@@ -899,7 +888,9 @@ CG_AddLocalEntities
 */
 void CG_AddLocalEntities( void ) {
 	localEntity_t	*le, *next;
-	qboolean forceOnlyMirror;
+	leViewFlags_t	viewFlags;
+	int				i;
+	int				forceRenderfx;
 	int oldPhysicsTime;
 
 	// have local entities interact with movers (submodels) at their render position
@@ -919,18 +910,35 @@ void CG_AddLocalEntities( void ) {
 			continue;
 		}
 
-		// Check if local entity should be rendered by this player.
-		if (le->localPlayerBits && !(le->localPlayerBits & (1<<cg.cur_localPlayerNum))) {
+		// Check if local entity should be rendered for this player.
+		viewFlags = le->defaultViewFlags;
+		for ( i = 0; i < le->numPlayerEffects; i++ ) {
+			if ( le->playerEffects[i].playerNum == cg.snap->pss[cg.cur_localPlayerNum].playerNum ) {
+				viewFlags = le->playerEffects[i].viewFlags;
+				break;
+			}
+		}
+
+		if ( viewFlags & LEVF_NO_DRAW ) {
 			continue;
 		}
 
-		forceOnlyMirror = (!(le->refEntity.renderfx & RF_ONLY_MIRROR) &&
-				!cg.cur_lc->renderingThirdPerson &&
-				cg.snap->pss[cg.cur_localPlayerNum].playerNum == le->firstPersonEntity);
-
-		if ( forceOnlyMirror ) {
-			le->refEntity.renderfx |= RF_ONLY_MIRROR;
+		if ( ( viewFlags & LEVF_THIRD_PERSON_NO_DRAW ) && cg.cur_lc->renderingThirdPerson ) {
+			continue;
 		}
+
+		if ( ( viewFlags & LEVF_FIRST_PERSON_NO_DRAW ) && !cg.cur_lc->renderingThirdPerson ) {
+			continue;
+		}
+
+		if ( ( viewFlags & LEVF_FIRST_PERSON_MIRROR ) && !cg.cur_lc->renderingThirdPerson ) {
+			forceRenderfx = RF_ONLY_MIRROR;
+		} else {
+			forceRenderfx = 0;
+		}
+
+		forceRenderfx &= ~le->refEntity.renderfx;
+		le->refEntity.renderfx |= forceRenderfx;
 
 		switch ( le->leType ) {
 		default:
@@ -992,9 +1000,7 @@ void CG_AddLocalEntities( void ) {
 #endif
 		}
 
-		if ( forceOnlyMirror ) {
-			le->refEntity.renderfx &= ~RF_ONLY_MIRROR;
-		}
+		le->refEntity.renderfx &= ~forceRenderfx;
 	}
 
 	cg.physicsTime = oldPhysicsTime;

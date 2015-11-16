@@ -137,27 +137,22 @@ static void CG_ClipMoveToEntities ( const vec3_t start, const vec3_t mins,
 			cmodel = trap_CM_TempCapsuleModel( ent->mins, ent->maxs, ent->contents );
 			VectorCopy( vec3_origin, angles );
 			VectorCopy( cent->lerpOrigin, origin );
-		} else {
+		} else /* if ( ent->collisionType == CT_AABB ) */ {
 			cmodel = trap_CM_TempBoxModel( ent->mins, ent->maxs, ent->contents );
 			VectorCopy( vec3_origin, angles );
 			VectorCopy( cent->lerpOrigin, origin );
 		}
 
 
-		if( traceType == TT_CAPSULE )
-		{
-			trap_CM_TransformedCapsuleTrace ( &trace, start, end,
-					mins, maxs, cmodel,  mask, origin, angles );
-		}
-		else if( traceType == TT_AABB )
-		{
-			trap_CM_TransformedBoxTrace ( &trace, start, end,
-					mins, maxs, cmodel,  mask, origin, angles );
-		}
-		else if( traceType == TT_BISPHERE )
-		{
+		if ( traceType == TT_BISPHERE ) {
 			trap_CM_TransformedBiSphereTrace( &trace, start, end,
 					mins[ 0 ], maxs[ 0 ], cmodel, mask, origin );
+		} else if ( traceType == TT_CAPSULE ) {
+			trap_CM_TransformedCapsuleTrace ( &trace, start, end,
+					mins, maxs, cmodel,  mask, origin, angles );
+		} else /* if ( traceType == TT_AABB ) */ {
+			trap_CM_TransformedBoxTrace ( &trace, start, end,
+					mins, maxs, cmodel,  mask, origin, angles );
 		}
 
 		if (trace.allsolid || trace.fraction < tr->fraction) {

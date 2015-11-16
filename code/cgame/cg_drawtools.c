@@ -97,11 +97,27 @@ void CG_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 
 		if (cg.numViewports == 2) {
 			if (cg.viewport == 1) {
-				down = qtrue;
+				if (cg_splitviewVertical.integer) {
+					right = qtrue;
+				} else {
+					down = qtrue;
+				}
 			}
 		}
-		else if (cg.numViewports == 3 && cg.viewport == 2) {
-			down = qtrue;
+		else if (cg.numViewports == 3 && !cg_splitviewThirdEqual.integer) {
+			if (cg.viewport == 2) {
+				if (cg_splitviewVertical.integer) {
+					right = qtrue;
+				} else {
+					down = qtrue;
+				}
+			} else if (cg.viewport == 1) {
+				if (!cg_splitviewVertical.integer) {
+					right = qtrue;
+				} else {
+					down = qtrue;
+				}
+			}
 		}
 		else if (cg.numViewports <= 4) {
 			if (cg.viewport == 1 || cg.viewport == 3) {
@@ -110,11 +126,6 @@ void CG_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 			if (cg.viewport == 2 || cg.viewport == 3) {
 				down = qtrue;
 			}
-		}
-
-		if (cg.viewport != 0 && (cg.numViewports == 2 || cg.numViewports == 3) && cg_splitviewVertical.integer) {
-			right = !right;
-			down = !down;
 		}
 
 		if (right) {
@@ -363,18 +374,20 @@ Draws a multi-colored string with a drop shadow, optionally forcing
 to a fixed color.
 
 Coordinates are at 640 by 480 virtual resolution
+
+Gradient value is how much to darken color at bottom of text.
 ==================
 */
 void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color ) {
-	CG_DrawStringExtWithCursor( x, y, str, style, color, 0, 0, 0, -1, -1 );
+	CG_DrawStringExtWithCursor( x, y, str, style, color, 0, 0, 0, 0, -1, -1 );
 }
 void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const vec4_t color, int cursorPos, int cursorChar ) {
-	CG_DrawStringExtWithCursor( x, y, str, style, color, 0, 0, 0, cursorPos, cursorChar );
+	CG_DrawStringExtWithCursor( x, y, str, style, color, 0, 0, 0, 0, cursorPos, cursorChar );
 }
 void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset ) {
-	CG_DrawStringExtWithCursor( x, y, str, style, color, scale, maxChars, shadowOffset, -1, -1 );
+	CG_DrawStringExtWithCursor( x, y, str, style, color, scale, maxChars, shadowOffset, 0, -1, -1 );
 }
-void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, int cursorPos, int cursorChar ) {
+void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar ) {
 	int		charh;
 	vec4_t	newcolor;
 	vec4_t	lowlight;
@@ -393,31 +406,61 @@ void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const
 	if ((style & UI_BLINK) && ((cg.realTime/BLINK_DIVISOR) & 1))
 		return;
 
-	if (style & UI_TINYFONT)
+	switch (style & UI_FONTMASK)
 	{
-		font = &cgs.media.tinyFont;
-		charh =	TINYCHAR_HEIGHT;
+		case UI_TINYFONT:
+			font = &cgs.media.tinyFont;
+			break;
+
+		case UI_SMALLFONT:
+			font = &cgs.media.smallFont;
+			break;
+
+		case UI_BIGFONT:
+		default:
+			font = &cgs.media.textFont;
+			break;
+
+		case UI_GIANTFONT:
+			font = &cgs.media.bigFont;
+			break;
+
+		case UI_NUMBERFONT:
+			font = &cgs.media.numberFont;
+
+			// the original number bitmaps already have a gradient
+			if ( font->glyphs[(int)'a'].xSkip == 0 ) {
+				style &= ~UI_GRADIENT;
+			}
+			break;
 	}
-	else if (style & UI_SMALLFONT)
-	{
-		font = &cgs.media.smallFont;
-		charh =	SMALLCHAR_HEIGHT;
+
+	charh = font->pointSize;
+
+	if ( shadowOffset == 0 && ( style & UI_DROPSHADOW ) ) {
+		shadowOffset = 2;
 	}
-	else if (style & UI_GIANTFONT)
-	{
-		font = &cgs.media.bigFont;
-		charh =	GIANTCHAR_HEIGHT;
-	}
-	else
-	{
-		font = &cgs.media.textFont;
-		charh =	BIGCHAR_HEIGHT;
+
+	if ( gradient == 0 && ( style & UI_GRADIENT ) ) {
+		gradient = 0.4f;
 	}
 
 	if ( scale <= 0 ) {
 		scale = charh / 48.0f;
 	} else {
 		charh = 48 * scale;
+	}
+
+	if ( !( style & UI_NOSCALE ) && cg.cur_lc ) {
+		if ( cg.numViewports != 1 ) {
+			shadowOffset *= cg_splitviewTextScale.value;
+			scale *= cg_splitviewTextScale.value;
+			charh *= cg_splitviewTextScale.value;
+		} else {
+			shadowOffset *= cg_hudTextScale.value;
+			scale *= cg_hudTextScale.value;
+			charh *= cg_hudTextScale.value;
+		}
 	}
 
 	if (style & UI_PULSE)
@@ -444,22 +487,44 @@ void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const
 			x = x - Text_Width( str, font, scale, 0 );
 			break;
 
+		case UI_LEFT:
 		default:
 			// left justify at x
 			break;
 	}
 
-	if ( shadowOffset == 0 && ( style & UI_DROPSHADOW ) ) {
-		shadowOffset = 2;
+	switch (style & UI_VA_FORMATMASK)
+	{
+		case UI_VA_CENTER:
+			// center justify at y
+			y = y - charh /*Text_Height( str, font, scale, 0 )*/ / 2;
+			break;
+
+		case UI_VA_BOTTOM:
+			// bottom justify at y
+			y = y - charh /*Text_Height( str, font, scale, 0 )*/;
+			break;
+
+		case UI_VA_TOP:
+		default:
+			// top justify at y
+			break;
 	}
 
+	//
 	// This function expects that y is top of line, text_paint expects at baseline
+	//
 	decent = -font->glyphs[(int)'g'].top + font->glyphs[(int)'g'].height;
 	y = y + charh - decent * scale * font->glyphScale;
+	if ( decent != 0 ) {
+		// Make TrueType fonts line up with bigchars bitmap font which has 2 transparent pixels above glyphs at 16 point font size
+		y += 2.0f * charh / 16.0f;
+	}
+
 	if ( cursorChar >= 0 ) {
-		Text_PaintWithCursor( x, y, font, scale, drawcolor, str, cursorPos, cursorChar, 0, maxChars, shadowOffset, ( style & UI_FORCECOLOR ) );
+		Text_PaintWithCursor( x, y, font, scale, drawcolor, str, cursorPos, cursorChar, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ) );
 	} else {
-		Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, ( style & UI_FORCECOLOR ) );
+		Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ) );
 	}
 }
 
@@ -494,29 +559,42 @@ CG_DrawStrlenEx
 Returns draw width, skiping color escape codes
 =================
 */
-int CG_DrawStrlenEx( const char *str, int style, int maxchars ) {
+float CG_DrawStrlenEx( const char *str, int style, int maxchars ) {
 	const fontInfo_t *font;
 	int charh;
 
-	if (style & UI_TINYFONT)
+	switch (style & UI_FONTMASK)
 	{
-		font = &cgs.media.tinyFont;
-		charh =	TINYCHAR_HEIGHT;
+		case UI_TINYFONT:
+			font = &cgs.media.tinyFont;
+			break;
+
+		case UI_SMALLFONT:
+			font = &cgs.media.smallFont;
+			break;
+
+		case UI_BIGFONT:
+		default:
+			font = &cgs.media.textFont;
+			break;
+
+		case UI_GIANTFONT:
+			font = &cgs.media.bigFont;
+			break;
+
+		case UI_NUMBERFONT:
+			font = &cgs.media.numberFont;
+			break;
 	}
-	else if (style & UI_SMALLFONT)
-	{
-		font = &cgs.media.smallFont;
-		charh =	SMALLCHAR_HEIGHT;
-	}
-	else if (style & UI_GIANTFONT)
-	{
-		font = &cgs.media.bigFont;
-		charh =	GIANTCHAR_HEIGHT;
-	}
-	else
-	{
-		font = &cgs.media.textFont;
-		charh =	BIGCHAR_HEIGHT;
+
+	charh = font->pointSize;
+
+	if ( !( style & UI_NOSCALE ) && cg.cur_lc ) {
+		if ( cg.numViewports != 1 ) {
+			charh *= cg_splitviewTextScale.value;
+		} else {
+			charh *= cg_hudTextScale.value;
+		}
 	}
 
 	return Text_Width( str, font, charh / 48.0f, maxchars );
@@ -529,32 +607,101 @@ CG_DrawStrlen
 Returns draw width, skiping color escape codes
 =================
 */
-int CG_DrawStrlen( const char *str, int style ) {
+float CG_DrawStrlen( const char *str, int style ) {
 	const fontInfo_t *font;
 	int charh;
 
-	if (style & UI_TINYFONT)
+	switch (style & UI_FONTMASK)
 	{
-		font = &cgs.media.tinyFont;
-		charh =	TINYCHAR_HEIGHT;
+		case UI_TINYFONT:
+			font = &cgs.media.tinyFont;
+			break;
+
+		case UI_SMALLFONT:
+			font = &cgs.media.smallFont;
+			break;
+
+		case UI_BIGFONT:
+		default:
+			font = &cgs.media.textFont;
+			break;
+
+		case UI_GIANTFONT:
+			font = &cgs.media.bigFont;
+			break;
+
+		case UI_NUMBERFONT:
+			font = &cgs.media.numberFont;
+			break;
 	}
-	else if (style & UI_SMALLFONT)
-	{
-		font = &cgs.media.smallFont;
-		charh =	SMALLCHAR_HEIGHT;
-	}
-	else if (style & UI_GIANTFONT)
-	{
-		font = &cgs.media.bigFont;
-		charh =	GIANTCHAR_HEIGHT;
-	}
-	else
-	{
-		font = &cgs.media.textFont;
-		charh =	BIGCHAR_HEIGHT;
+
+	charh = font->pointSize;
+
+	if ( !( style & UI_NOSCALE ) && cg.cur_lc ) {
+		if ( cg.numViewports != 1 ) {
+			charh *= cg_splitviewTextScale.value;
+		} else {
+			charh *= cg_hudTextScale.value;
+		}
 	}
 
 	return Text_Width( str, font, charh / 48.0f, 0 );
+}
+
+/*
+=================
+CG_DrawStringLineHeight
+
+Returns draw height of text line for drawing multiple lines of text
+=================
+*/
+int CG_DrawStringLineHeight( int style ) {
+	const fontInfo_t *font;
+	int lineHeight;
+	int charh;
+	int gap;
+
+	gap = 0;
+
+	switch (style & UI_FONTMASK)
+	{
+		case UI_TINYFONT:
+			font = &cgs.media.tinyFont;
+			break;
+
+		case UI_SMALLFONT:
+			font = &cgs.media.smallFont;
+			gap = 2;
+			break;
+
+		case UI_BIGFONT:
+		default:
+			font = &cgs.media.textFont;
+			gap = 2;
+			break;
+
+		case UI_GIANTFONT:
+			font = &cgs.media.bigFont;
+			gap = 6;
+			break;
+
+		case UI_NUMBERFONT:
+			font = &cgs.media.numberFont;
+			break;
+	}
+
+	charh = font->pointSize;
+	lineHeight = charh + gap;
+
+	if ( !( style & UI_NOSCALE ) && cg.cur_lc ) {
+		if ( cg.numViewports != 1 ) {
+			lineHeight *= cg_splitviewTextScale.value;
+		} else {
+			lineHeight *= cg_hudTextScale.value;
+		}
+	}
+
+	return lineHeight;
 }
 
 /*

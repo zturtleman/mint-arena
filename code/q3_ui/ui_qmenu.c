@@ -1264,6 +1264,7 @@ void ScrollList_Draw( menulist_s *l )
 				style = UI_LEFT|UI_SMALLFONT;
 			}
 			if( l->generic.flags & QMF_CENTER_JUSTIFY ) {
+				style &= ~UI_FORMATMASK;
 				style |= UI_CENTER;
 			}
 

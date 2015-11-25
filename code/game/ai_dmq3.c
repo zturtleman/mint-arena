@@ -3327,14 +3327,13 @@ BotCountTeamMates
 Counts all teammates inside a specific range, regardless if they are visible or not.
 ==================
 */
-void BotCountTeamMates(bot_state_t *bs, int *teammates, float range) {
+int BotCountTeamMates(bot_state_t *bs, float range) {
 	int i;
 	aas_entityinfo_t entinfo;
 	vec3_t dir;
+	int teammates;
 
-	if (teammates) {
-		*teammates = 0;
-	}
+	teammates = 0;
 
 	for (i = 0; i < level.maxplayers; i++) {
 		if (i == bs->playernum) {
@@ -3354,11 +3353,11 @@ void BotCountTeamMates(bot_state_t *bs, int *teammates, float range) {
 		}
 		// if on the same team
 		if (BotSameTeam(bs, i)) {
-			if (teammates) {
-				(*teammates)++;
-			}
+			teammates++;
 		}
 	}
+
+	return teammates;
 }
 #ifdef MISSIONPACK
 /*
@@ -4593,7 +4592,7 @@ void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult, float speed) {
 BotCheckBlockedTeammates
 ==================
 */
-void BotCheckBlockedTeammates(bot_state_t* bs) {
+void BotCheckBlockedTeammates(bot_state_t *bs) {
 	bot_moveresult_t moveresult;
 	int movetype, i;
 	aas_entityinfo_t entinfo;
@@ -4652,7 +4651,7 @@ void BotCheckBlockedTeammates(bot_state_t* bs) {
 		// teammates with an important item needs even more space, and stay away from dangerous teammates (mined/burning players).
 		if (EntityCarriesFlag(&entinfo)
 #ifdef MISSIONPACK
-		 || EntityCarriesCubes(&entinfo) || bs->inventory[INVENTORY_SCOUT] || entinfo.flags & EF_TICKING
+		 || EntityCarriesCubes(&entinfo) || bs->inventory[INVENTORY_SCOUT] || ( entinfo.flags & EF_TICKING )
 #endif
 		 ) {
 			mindist = 128;

@@ -119,7 +119,7 @@ int BotTeamFlagCarrierVisible(bot_state_t *bs);
 //returns visible enemy flag carrier if available
 int BotEnemyFlagCarrierVisible(bot_state_t *bs);
 //get the number of all teammates
-void BotCountTeamMates(bot_state_t *bs, int *teammates, float range);
+int BotCountTeamMates(bot_state_t *bs, float range);
 //get the number of visible teammates and enemies
 void BotVisibleTeamMatesAndEnemies(bot_state_t *bs, int *teammates, int *enemies, float range);
 //returns true if within the field of vision for the given angles

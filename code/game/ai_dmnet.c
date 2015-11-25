@@ -416,7 +416,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		//get entity information of the companion
 		BotEntityInfo(bs->teammate, &entinfo);
 		VectorSubtract(entinfo.origin, bs->origin, dir);
-		BotCountTeamMates(bs, &teammates, 256);
+		teammates = BotCountTeamMates(bs, 256);
 
 		if (VectorLengthSquared(dir) < Square(bs->formation_dist + (teammates * bs->formation_dist - bs->formation_dist))) {
 			//check if the bot wants to crouch, don't crouch if crouched less than 5 seconds ago
@@ -638,7 +638,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		}
 		//if really near the camp spot
 		VectorSubtract(goal->origin, bs->origin, dir);
-		BotCountTeamMates(bs, &teammates, 256);
+		teammates = BotCountTeamMates(bs, 256);
 
 		if (VectorLengthSquared(dir) < Square(60 + (teammates * 60 - 60))) {
 			//if not arrived yet

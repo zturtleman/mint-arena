@@ -406,8 +406,8 @@ void UI_GetResolutions( void ) {
 
 	// Add display resolution video mode
 	Com_sprintf( displayRes, sizeof (displayRes), "Auto (%dx%d)", cgs.glconfig.displayWidth, cgs.glconfig.displayHeight );
-	cp_resolution[i].type = CVT_INT;
-	cp_resolution[i].value = "-2";
+	cp_resolution[i].type = CVT_CMD;
+	cp_resolution[i].value = "r_mode -2;";
 	cp_resolution[i].string = displayRes;
 	if ( currentMode == -2 ) {
 		uis.currentResPair = i;
@@ -435,9 +435,9 @@ void UI_GetResolutions( void ) {
 			}
 
 			if ( builtinResolutions[ builtin ] ) {
-				Com_sprintf( cmdBuf[i], sizeof (cmdBuf[i]), "%d", builtin );
+				Com_sprintf( cmdBuf[i], sizeof (cmdBuf[i]), "r_mode %d;", builtin );
 
-				cp_resolution[i].type = CVT_INT;
+				cp_resolution[i].type = CVT_CMD;
 				cp_resolution[i].value = cmdBuf[i];
 
 				if ( currentMode == builtin ) {
@@ -467,9 +467,9 @@ void UI_GetResolutions( void ) {
 		for ( builtin = 0; builtinResolutions[builtin]; builtin++ ) {
 			cp_resolution[i].string = builtinResolutions[i];
 
-			Com_sprintf( cmdBuf[i], sizeof (cmdBuf[i]), "%d", builtin );
+			Com_sprintf( cmdBuf[i], sizeof (cmdBuf[i]), "r_mode %d;", builtin );
 
-			cp_resolution[i].type = CVT_INT;
+			cp_resolution[i].type = CVT_CMD;
 			cp_resolution[i].value = cmdBuf[i];
 
 			if ( currentMode == builtin ) {

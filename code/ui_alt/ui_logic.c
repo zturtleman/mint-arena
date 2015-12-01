@@ -501,6 +501,11 @@ void UI_RegisterMenuCvars( currentMenu_t *current ) {
 	for ( i = 0, item = current->items; i < current->numItems; i++, item++ ) {
 		item->cvarPair = 0;
 
+		// HACK: need to override this for resolution (r_mode)
+		if ( item->cvarPairs == cp_resolution ) {
+			item->cvarPair = uis.currentResPair;
+		}
+
 		if ( !item->cvarName ) {
 			continue;
 		}
@@ -512,12 +517,7 @@ void UI_RegisterMenuCvars( currentMenu_t *current ) {
 		item->vmCvar.value = atof( item->vmCvar.string );
 		item->vmCvar.integer = atoi( item->vmCvar.string );
 
-		// HACK: need to override this for resolution (r_mode)
-		if ( item->cvarPairs == cp_resolution ) {
-			item->cvarPair = uis.currentResPair;
-		} else {
-			UI_SetMenuCvarValue( item );
-		}
+		UI_SetMenuCvarValue( item );
 
 		// cvar for demos/mods/cinematics list box needs to be set initially
 		if ( item->widgetType == UIW_LISTBOX ) {

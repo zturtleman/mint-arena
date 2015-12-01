@@ -3391,5 +3391,9 @@ static void CG_UpdateGlconfig( qboolean initial ) {
 		cg.numViewports = 1;
 		CG_CalcVrect();
 	}
+
+	if ( resized ) {
+		UI_WindowResized();
+	}
 }
 

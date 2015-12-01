@@ -355,42 +355,42 @@ void CG_AddBoundingBox( centity_t *cent ) {
 	VectorCopy( corners[1], verts[1].xyz );
 	VectorCopy( corners[2], verts[2].xyz );
 	VectorCopy( corners[3], verts[3].xyz );
-	trap_R_AddPolyToScene( bboxShader, 4, verts, 0 );
+	trap_R_AddPolyToScene( bboxShader, 4, verts, 0, 0 );
 
 	// bottom
 	VectorCopy( corners[7], verts[0].xyz );
 	VectorCopy( corners[6], verts[1].xyz );
 	VectorCopy( corners[5], verts[2].xyz );
 	VectorCopy( corners[4], verts[3].xyz );
-	trap_R_AddPolyToScene( bboxShader, 4, verts, 0 );
+	trap_R_AddPolyToScene( bboxShader, 4, verts, 0, 0 );
 
 	// top side
 	VectorCopy( corners[3], verts[0].xyz );
 	VectorCopy( corners[2], verts[1].xyz );
 	VectorCopy( corners[6], verts[2].xyz );
 	VectorCopy( corners[7], verts[3].xyz );
-	trap_R_AddPolyToScene( bboxShader_nocull, 4, verts, 0 );
+	trap_R_AddPolyToScene( bboxShader_nocull, 4, verts, 0, 0 );
 
 	// left side
 	VectorCopy( corners[2], verts[0].xyz );
 	VectorCopy( corners[1], verts[1].xyz );
 	VectorCopy( corners[5], verts[2].xyz );
 	VectorCopy( corners[6], verts[3].xyz );
-	trap_R_AddPolyToScene( bboxShader_nocull, 4, verts, 0 );
+	trap_R_AddPolyToScene( bboxShader_nocull, 4, verts, 0, 0 );
 
 	// right side
 	VectorCopy( corners[0], verts[0].xyz );
 	VectorCopy( corners[3], verts[1].xyz );
 	VectorCopy( corners[7], verts[2].xyz );
 	VectorCopy( corners[4], verts[3].xyz );
-	trap_R_AddPolyToScene( bboxShader_nocull, 4, verts, 0 );
+	trap_R_AddPolyToScene( bboxShader_nocull, 4, verts, 0, 0 );
 
 	// bottom side
 	VectorCopy( corners[1], verts[0].xyz );
 	VectorCopy( corners[0], verts[1].xyz );
 	VectorCopy( corners[4], verts[2].xyz );
 	VectorCopy( corners[5], verts[3].xyz );
-	trap_R_AddPolyToScene( bboxShader_nocull, 4, verts, 0 );
+	trap_R_AddPolyToScene( bboxShader_nocull, 4, verts, 0, 0 );
 }
 
 #endif

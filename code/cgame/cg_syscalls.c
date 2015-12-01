@@ -354,8 +354,8 @@ qhandle_t trap_R_RegisterShaderNoMip( const char *name ) {
 	return syscall( CG_R_REGISTERSHADERNOMIP, name );
 }
 
-void trap_R_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font) {
-	syscall(CG_R_REGISTERFONT, fontName, pointSize, font, sizeof ( fontInfo_t ) );
+void trap_R_RegisterFont(const char *fontName, int pointSize, float borderWidth, qboolean forceAutoHint, fontInfo_t *font) {
+	syscall( CG_R_REGISTERFONT, fontName, pointSize, PASSFLOAT( borderWidth ), forceAutoHint, font, sizeof ( fontInfo_t ) );
 }
 
 qhandle_t	trap_R_AllocSkinSurface( const char *surface, qhandle_t hShader ) {
@@ -382,24 +382,36 @@ void	trap_R_AddRefEntityToScene( const refEntity_t *re ) {
 	syscall( CG_R_ADDREFENTITYTOSCENE, re, sizeof ( refEntity_t ) );
 }
 
-void	trap_R_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int bmodelNum ) {
-	syscall( CG_R_ADDPOLYTOSCENE, hShader, numVerts, verts, bmodelNum );
+void	trap_R_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int bmodelNum, int sortLevel ) {
+	syscall( CG_R_ADDPOLYTOSCENE, hShader, numVerts, verts, bmodelNum, sortLevel );
 }
 
-void	trap_R_AddPolysToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum ) {
-	syscall( CG_R_ADDPOLYSTOSCENE, hShader, numVerts, verts, numPolys, bmodelNum );
+void	trap_R_AddPolysToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys, int bmodelNum, int sortLevel ) {
+	syscall( CG_R_ADDPOLYSTOSCENE, hShader, numVerts, verts, numPolys, bmodelNum, sortLevel );
 }
 
 void    trap_R_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer ) {
 	syscall( CG_R_ADDPOLYBUFFERTOSCENE, pPolyBuffer );
 }
 
-void	trap_R_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b ) {
-	syscall( CG_R_ADDLIGHTTOSCENE, org, PASSFLOAT( radius ), PASSFLOAT( intensity ), PASSFLOAT( r ), PASSFLOAT( g ), PASSFLOAT( b ) );
+void	trap_R_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b, qhandle_t hShader ) {
+	syscall( CG_R_ADDLIGHTTOSCENE, org, PASSFLOAT( radius ), PASSFLOAT( intensity ), PASSFLOAT( r ), PASSFLOAT( g ), PASSFLOAT( b ), hShader );
 }
 
 void	trap_R_AddAdditiveLightToScene( const vec3_t org, float radius,float intensity, float r, float g, float b ) {
 	syscall( CG_R_ADDADDITIVELIGHTTOSCENE, org, PASSFLOAT( radius ), PASSFLOAT(intensity), PASSFLOAT(r), PASSFLOAT(g), PASSFLOAT(b) );
+}
+
+void	trap_R_AddVertexLightToScene( const vec3_t org, float radius,float intensity, float r, float g, float b ) {
+	syscall( CG_R_ADDVERTEXLIGHTTOSCENE, org, PASSFLOAT( radius ), PASSFLOAT(intensity), PASSFLOAT(r), PASSFLOAT(g), PASSFLOAT(b) );
+}
+
+void	trap_R_AddJuniorLightToScene( const vec3_t org, float radius,float intensity, float r, float g, float b ) {
+	syscall( CG_R_ADDJUNIORLIGHTTOSCENE, org, PASSFLOAT( radius ), PASSFLOAT(intensity), PASSFLOAT(r), PASSFLOAT(g), PASSFLOAT(b) );
+}
+
+void	trap_R_AddDirectedLightToScene( const vec3_t normal, float intensity, float r, float g, float b ) {
+	syscall( CG_R_ADDDIRECTEDLIGHTTOSCENE, normal, PASSFLOAT(intensity), PASSFLOAT(r), PASSFLOAT(g), PASSFLOAT(b) );
 }
 
 void	trap_R_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible, qhandle_t hShader ) {
@@ -432,8 +444,8 @@ void	trap_R_DrawRotatedPic( float x, float y, float w, float h, float s1, float 
 }
 
 void	trap_R_DrawStretchPicGradient(  float x, float y, float w, float h, float s1, float t1, float s2, float t2, qhandle_t hShader,
-										const float *gradientColor, int gradientType ) {
-	syscall( CG_R_DRAWSTRETCHPIC_GRADIENT, PASSFLOAT( x ), PASSFLOAT( y ), PASSFLOAT( w ), PASSFLOAT( h ), PASSFLOAT( s1 ), PASSFLOAT( t1 ), PASSFLOAT( s2 ), PASSFLOAT( t2 ), hShader, gradientColor, gradientType  );
+										const float *gradientColor ) {
+	syscall( CG_R_DRAWSTRETCHPIC_GRADIENT, PASSFLOAT( x ), PASSFLOAT( y ), PASSFLOAT( w ), PASSFLOAT( h ), PASSFLOAT( s1 ), PASSFLOAT( t1 ), PASSFLOAT( s2 ), PASSFLOAT( t2 ), hShader, gradientColor );
 }
 
 void	trap_R_Add2dPolys( polyVert_t *verts, int numverts, qhandle_t hShader ) {
@@ -449,9 +461,26 @@ int		trap_R_LerpTag( orientation_t *tag, clipHandle_t mod, int startFrame, int e
 	return syscall( CG_R_LERPTAG, tag, mod, startFrame, endFrame, PASSFLOAT(frac), tagName );
 }
 
-int		trap_R_LerpTagFrameModel( orientation_t *tag, clipHandle_t mod, clipHandle_t frameModel, int startFrame, clipHandle_t endFrameModel, int endFrame,
-					   float frac, const char *tagName ) {
-	return syscall( CG_R_LERPTAG_FRAMEMODEL, tag, mod, frameModel, startFrame, endFrameModel, endFrame, PASSFLOAT(frac), tagName );
+int		trap_R_LerpTagFrameModel( orientation_t *tag, clipHandle_t mod,
+					   clipHandle_t frameModel, int startFrame,
+					   clipHandle_t endFrameModel, int endFrame,
+					   float frac, const char *tagName,
+					   int *tagIndex )
+{
+	return syscall( CG_R_LERPTAG_FRAMEMODEL, tag, mod, frameModel, startFrame, endFrameModel, endFrame, PASSFLOAT(frac), tagName, tagIndex );
+}
+
+int		trap_R_LerpTagTorso( orientation_t *tag, clipHandle_t mod,
+					   clipHandle_t frameModel, int startFrame,
+					   clipHandle_t endFrameModel, int endFrame,
+					   float frac, const char *tagName,
+					   int *tagIndex, const vec3_t *torsoAxis,
+					   qhandle_t torsoFrameModel, int torsoFrame,
+					   qhandle_t oldTorsoFrameModel, int oldTorsoFrame,
+					   float torsoFrac )
+{
+	return syscall( CG_R_LERPTAG_TORSO, tag, mod, frameModel, startFrame, endFrameModel, endFrame, PASSFLOAT(frac), tagName, tagIndex,
+										torsoAxis, torsoFrameModel, torsoFrame, oldTorsoFrameModel, oldTorsoFrame, PASSFLOAT(torsoFrac) );
 }
 
 void	trap_R_RemapShader( const char *oldShader, const char *newShader, const char *timeOffset ) {

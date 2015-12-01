@@ -81,7 +81,7 @@ static void CG_ClearPolyPool( void ) {
 
 static void CG_RenderPolyPool( void ) {
 	if ( numParticlesInFrame ) {
-		trap_R_AddPolysToScene( atmPolyShader, 3, atmPolyPool, numParticlesInFrame );
+		trap_R_AddPolysToScene( atmPolyShader, 3, atmPolyPool, numParticlesInFrame, 0, 0 );
 		CG_ClearPolyPool();
 	}
 }

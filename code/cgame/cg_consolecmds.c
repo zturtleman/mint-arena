@@ -835,8 +835,8 @@ CG_ToggleMenu_f
 ===================
 */
 void CG_ToggleMenu_f( void ) {
-	CG_DistributeKeyEvent( K_ESCAPE, qtrue, trap_Milliseconds(), cg.connState, 0 );
-	CG_DistributeKeyEvent( K_ESCAPE, qfalse, trap_Milliseconds(), cg.connState, 0 );
+	CG_DistributeKeyEvent( K_ESCAPE, qtrue, trap_Milliseconds(), cg.connState, -1, 0 );
+	CG_DistributeKeyEvent( K_ESCAPE, qfalse, trap_Milliseconds(), cg.connState, -1, 0 );
 }
 
 static consoleCommand_t	cg_commands[] = {

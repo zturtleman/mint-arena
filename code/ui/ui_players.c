@@ -310,7 +310,7 @@ static qboolean UI_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *
 	returnValue = trap_R_LerpTagFrameModel( &lerped, parentModel,
 		parent->oldframeModel, parent->oldframe,
 		parent->frameModel, parent->frame,
-		1.0 - parent->backlerp, tagName );
+		1.0 - parent->backlerp, tagName, NULL );
 
 	// FIXME: allow origin offsets along tag?
 	VectorCopy( parent->origin, entity->origin );
@@ -342,7 +342,7 @@ static qboolean UI_PositionRotatedEntityOnTag( refEntity_t *entity, const refEnt
 	returnValue = trap_R_LerpTagFrameModel( &lerped, parentModel,
 		parent->oldframeModel, parent->oldframe,
 		parent->frameModel, parent->frame,
-		1.0 - parent->backlerp, tagName );
+		1.0 - parent->backlerp, tagName, NULL );
 
 	// FIXME: allow origin offsets along tag?
 	VectorCopy( parent->origin, entity->origin );
@@ -905,7 +905,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int 
 
 		// make a dlight for the flash
 		if ( pi->flashDlightColor[0] || pi->flashDlightColor[1] || pi->flashDlightColor[2] ) {
-			trap_R_AddLightToScene( flash.origin, 200 + (rand()&31), 1.0f, pi->flashDlightColor[0],
+			trap_R_AddJuniorLightToScene( flash.origin, 200 + (rand()&31), 1.0f, pi->flashDlightColor[0],
 				pi->flashDlightColor[1], pi->flashDlightColor[2] );
 		}
 	}
@@ -923,12 +923,12 @@ void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int 
 	origin[0] -= 100;	// + = behind, - = in front
 	origin[1] += 100;	// + = left, - = right
 	origin[2] += 100;	// + = above, - = below
-	trap_R_AddLightToScene( origin, 500, 1.0, 1.0, 1.0, 1.0 );
+	trap_R_AddJuniorLightToScene( origin, 500, 1.0, 1.0, 1.0, 1.0 );
 
 	origin[0] -= 100;
 	origin[1] -= 100;
 	origin[2] -= 100;
-	trap_R_AddLightToScene( origin, 500, 1.0, 1.0, 0.0, 0.0 );
+	trap_R_AddJuniorLightToScene( origin, 500, 1.0, 1.0, 0.0, 0.0 );
 
 	trap_R_RenderScene( &refdef );
 }

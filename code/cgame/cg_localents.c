@@ -527,19 +527,21 @@ static void CG_AddFallScaleFade( localEntity_t *le ) {
 CG_AddExplosion
 ================
 */
-static void CG_AddExplosion( localEntity_t *ex ) {
+static void CG_AddExplosion( localEntity_t *le ) {
 	refEntity_t	*ent;
 
-	ent = &ex->refEntity;
+	ent = &le->refEntity;
 
 	// add the entity
 	CG_AddRefEntityWithMinLight(ent);
 
 	// add the dlight
-	if ( ex->light ) {
+	if ( le->light ) {
 		float		light;
+		float		radius;
+		float		intensity;
 
-		light = (float)( cg.time - ex->startTime ) / ( ex->endTime - ex->startTime );
+		light = (float)( cg.time - le->startTime ) / ( le->endTime - le->startTime );
 		if ( light < 0.5 ) {
 			light = 1.0;
 		} else {
@@ -547,11 +549,14 @@ static void CG_AddExplosion( localEntity_t *ex ) {
 		}
 
 		if ( cg_fadeExplosions.integer ) {
-			trap_R_AddLightToScene(ent->origin, ex->light, light, ex->lightColor[0], ex->lightColor[1], ex->lightColor[2] );
+			radius = le->light;
+			intensity = light;
 		} else {
-			light = ex->light * light;
-			trap_R_AddLightToScene(ent->origin, light, 1.0f, ex->lightColor[0], ex->lightColor[1], ex->lightColor[2] );
+			radius = le->light * light;
+			intensity = 1;
 		}
+
+		trap_R_AddLightToScene( le->refEntity.origin, radius, intensity, le->lightColor[0], le->lightColor[1], le->lightColor[2], 0 );
 	}
 }
 
@@ -584,6 +589,8 @@ static void CG_AddSpriteExplosion( localEntity_t *le ) {
 	// add the dlight
 	if ( le->light ) {
 		float		light;
+		float		radius;
+		float		intensity;
 
 		light = (float)( cg.time - le->startTime ) / ( le->endTime - le->startTime );
 		if ( light < 0.5 ) {
@@ -593,11 +600,14 @@ static void CG_AddSpriteExplosion( localEntity_t *le ) {
 		}
 
 		if ( cg_fadeExplosions.integer ) {
-			trap_R_AddLightToScene(re.origin, le->light, light, le->lightColor[0], le->lightColor[1], le->lightColor[2] );
+			radius = le->light;
+			intensity = light;
 		} else {
-			light = le->light * light;
-			trap_R_AddLightToScene(re.origin, light, 1.0f, le->lightColor[0], le->lightColor[1], le->lightColor[2] );
+			radius = le->light * light;
+			intensity = 1;
 		}
+
+		trap_R_AddLightToScene( le->refEntity.origin, radius, intensity, le->lightColor[0], le->lightColor[1], le->lightColor[2], 0 );
 	}
 }
 
@@ -683,7 +693,7 @@ void CG_AddKamikaze( localEntity_t *le ) {
 
 		CG_AddRefEntityWithMinLight( re );
 		// add the dlight
-		trap_R_AddLightToScene( re->origin, c * 1000.0, 1.0, 1.0, 1.0, c );
+		trap_R_AddLightToScene( re->origin, c * 1000.0, 1.0, 1.0, 1.0, c, 0 );
 	}
 
 	if (t > KAMI_SHOCKWAVE2_STARTTIME && t < KAMI_SHOCKWAVE2_ENDTIME) {

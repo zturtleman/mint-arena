@@ -1264,6 +1264,7 @@ void ScrollList_Draw( menulist_s *l )
 				style = UI_LEFT|UI_SMALLFONT;
 			}
 			if( l->generic.flags & QMF_CENTER_JUSTIFY ) {
+				style &= ~UI_FORMATMASK;
 				style |= UI_CENTER;
 			}
 
@@ -1757,13 +1758,13 @@ Menu_Cache
 */
 void Menu_Cache( void )
 {
-	if ( !CG_InitTrueTypeFont( "fonts/font1_prop", PROP_HEIGHT, &uis.fontProp ) ) {
+	if ( !CG_InitTrueTypeFont( "fonts/font1_prop", PROP_HEIGHT, 0, &uis.fontProp ) ) {
 		UI_InitPropFont( &uis.fontProp, qfalse );
 	}
-	if ( !CG_InitTrueTypeFont( "fonts/font1_prop_glo", PROP_HEIGHT, &uis.fontPropGlow ) ) {
+	if ( !CG_InitTrueTypeFont( "fonts/font1_prop_glo", PROP_HEIGHT, 0, &uis.fontPropGlow ) ) {
 		UI_InitPropFont( &uis.fontPropGlow, qtrue );
 	}
-	if ( !CG_InitTrueTypeFont( "fonts/font2_prop", PROPB_HEIGHT, &uis.fontPropB ) ) {
+	if ( !CG_InitTrueTypeFont( "fonts/font2_prop", PROPB_HEIGHT, 0, &uis.fontPropB ) ) {
 		UI_InitBannerFont( &uis.fontPropB );
 	}
 

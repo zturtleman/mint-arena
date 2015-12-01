@@ -133,6 +133,10 @@ qboolean UI_WantsBindKeys( void ) {
 	return Display_WantsBindKeys();
 }
 
+void UI_WindowResized( void ) {
+
+}
+
 void AssetCache( void ) {
 	int n;
 	//if (Assets.textFont == NULL) {

@@ -3374,13 +3374,26 @@ CG_UpdateGlconfig
 ================
 */
 static void CG_UpdateGlconfig( qboolean initial ) {
+	int oldWidth, oldHeight;
+	qboolean resized;
+
+	oldWidth = cgs.glconfig.vidWidth;
+	oldHeight = cgs.glconfig.vidHeight;
+
 	trap_GetGlconfig( &cgs.glconfig );
 
-	if ( initial || cg.connState != CA_ACTIVE ) {
+	resized = !initial && ( oldWidth != cgs.glconfig.vidWidth
+						 || oldHeight != cgs.glconfig.vidHeight );
+
+	if ( initial || ( resized && cg.connState != CA_ACTIVE ) ) {
 		// Viewport scale and offset
 		cg.viewport = 0;
 		cg.numViewports = 1;
 		CG_CalcVrect();
+	}
+
+	if ( resized ) {
+		UI_WindowResized();
 	}
 }
 

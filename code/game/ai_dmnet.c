@@ -418,7 +418,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		VectorSubtract(entinfo.origin, bs->origin, dir);
 		teammates = BotCountTeamMates(bs, 256);
 
-		if (VectorLengthSquared(dir) < Square(bs->formation_dist + (teammates * bs->formation_dist - bs->formation_dist))) {
+		if (VectorLengthSquared(dir) < Square(bs->formation_dist + (teammates * bs->formation_dist))) {
 			//check if the bot wants to crouch, don't crouch if crouched less than 5 seconds ago
 			if (bs->attackcrouch_time < FloatTime() - 5) {
 				croucher = Characteristic_BFloat(bs->character, CHARACTERISTIC_CROUCHER, 0, 1);
@@ -640,7 +640,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		VectorSubtract(goal->origin, bs->origin, dir);
 		teammates = BotCountTeamMates(bs, 256);
 
-		if (VectorLengthSquared(dir) < Square(60 + (teammates * 60 - 60))) {
+		if (VectorLengthSquared(dir) < Square(60 + (teammates * 60))) {
 			//if not arrived yet
 			if (!bs->arrive_time) {
 				if (bs->ltgtype == LTG_CAMPORDER) {

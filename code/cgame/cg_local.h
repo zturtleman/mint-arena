@@ -1863,6 +1863,7 @@ void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int p
 void CG_PlayBufferedVoiceChats( void );
 #endif
 int CG_LocalPlayerBitsForTeam( team_t );
+void CG_ReplaceCharacter( char *str, char old, char new );
 
 //
 // cg_playerstate.c

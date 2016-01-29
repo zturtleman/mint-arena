@@ -2821,37 +2821,6 @@ static void CG_DrawWarmup( void ) {
 
 /*
 =====================
-CG_DrawSmallWrappedText
-
-Draw multiline text
-=====================
-*/
-void CG_DrawSmallWrappedText(int x, int y, const char *textPtr) {
-	const char *p, *start;
-	char buff[1024];
-	int lineHeight;
-
-	if (!textPtr || *textPtr == '\0') {
-		return;
-	}
-
-	lineHeight = CG_DrawStringLineHeight( UI_SMALLFONT );
-
-	start = textPtr;
-	p = strchr(textPtr, '\n');
-	while (p && *p) {
-		strncpy(buff, start, p-start+1);
-		buff[p-start] = '\0';
-		CG_DrawSmallString(x, y, buff, 1.0f );
-		y += lineHeight;
-		start += p - start + 1;
-		p = strchr(p+1, '\n');
-	}
-	CG_DrawSmallString(x, y, start, 1.0f );
-}
-
-/*
-=====================
 CG_DrawNotify
 
 Draw console notify area.
@@ -2870,7 +2839,7 @@ void CG_DrawNotify( void ) {
 		x = 0;
 
 	CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
-	CG_DrawSmallWrappedText(x, 2, cg.cur_lc->consoleText);
+	CG_DrawStringAutoWrap( x, 2, cg.cur_lc->consoleText, UI_SMALLFONT, NULL, 0, 0, 0, cgs.screenFakeWidth - x );
 }
 
 //==================================================================================

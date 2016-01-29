@@ -2744,7 +2744,7 @@ void CG_DrawNotify( void ) {
 		x = 0;
 
 	CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
-	CG_DrawStringAutoWrap( x, 2, cg.cur_lc->consoleText, UI_SMALLFONT, NULL, 0, 0, 0, cgs.screenFakeWidth - x );
+	CG_DrawStringAutoWrap( x, 2, cg.cur_lc->consoleText, UI_SMALLFONT, NULL, 0, 0, 0, cgs.screenFakeWidth - x - 64 );
 }
 
 //==================================================================================

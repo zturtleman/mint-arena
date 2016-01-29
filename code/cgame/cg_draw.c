@@ -1793,7 +1793,7 @@ static void CG_DrawCenterString( void ) {
 	while ( 1 ) {
 		char linebuffer[1024];
 
-		for ( l = 0; l < 50; l++ ) {
+		for ( l = 0; l < sizeof(linebuffer)-1; l++ ) {
 			if ( !start[l] || start[l] == '\n' ) {
 				break;
 			}

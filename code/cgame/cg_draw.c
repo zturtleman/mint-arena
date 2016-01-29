@@ -1726,7 +1726,6 @@ for a few moments
 */
 void CG_CenterPrint( int localPlayerNum, const char *str, int y, float charScale ) {
 	localPlayer_t *player;
-	char *s;
 
 	player = &cg.localPlayers[localPlayerNum];
 
@@ -1741,15 +1740,6 @@ void CG_CenterPrint( int localPlayerNum, const char *str, int y, float charScale
 	player->centerPrintTime = cg.time;
 	player->centerPrintY = y;
 	player->centerPrintCharScale = charScale;
-
-	// count the number of lines for centering
-	player->centerPrintLines = 1;
-	s = player->centerPrint;
-	while( *s ) {
-		if (*s == '\n')
-			player->centerPrintLines++;
-		s++;
-	}
 }
 
 
@@ -1759,12 +1749,7 @@ CG_DrawCenterString
 ===================
 */
 static void CG_DrawCenterString( void ) {
-	char	*start;
-	int		l;
-	int		y;
-	int		charHeight;
 	float	*color;
-	float	scale;
 
 	if ( !cg.cur_lc->centerPrintTime ) {
 		return;
@@ -1777,41 +1762,9 @@ static void CG_DrawCenterString( void ) {
 
 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 
-	start = cg.cur_lc->centerPrint;
-
-	scale = cg.cur_lc->centerPrintCharScale;
-	charHeight = GIANTCHAR_HEIGHT;
-
-	if ( scale <= 0 ) {
-		scale = charHeight / 48.0f;
-	} else {
-		charHeight = 48 * scale;
-	}
-
-	y = cg.cur_lc->centerPrintY - cg.cur_lc->centerPrintLines * charHeight / 2;
-
-	while ( 1 ) {
-		char linebuffer[1024];
-
-		for ( l = 0; l < sizeof(linebuffer)-1; l++ ) {
-			if ( !start[l] || start[l] == '\n' ) {
-				break;
-			}
-			linebuffer[l] = start[l];
-		}
-		linebuffer[l] = 0;
-
-		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT|UI_NOSCALE, color, scale, 0, 0 );
-		y += charHeight + 6;
-
-		while ( *start && ( *start != '\n' ) ) {
-			start++;
-		}
-		if ( !*start ) {
-			break;
-		}
-		start++;
-	}
+	CG_DrawStringAutoWrap( SCREEN_WIDTH / 2, cg.cur_lc->centerPrintY, cg.cur_lc->centerPrint,
+			UI_CENTER|UI_VA_CENTER|UI_DROPSHADOW|UI_GIANTFONT|UI_NOSCALE, color,
+			cg.cur_lc->centerPrintCharScale, 0, 0, cgs.screenFakeWidth - 64 );
 }
 
 
@@ -1824,8 +1777,6 @@ for a few moments
 ==============
 */
 void CG_GlobalCenterPrint( const char *str, int y, float charScale ) {
-	char	*s;
-
 	if ( cg.numViewports != 1 ) {
 		charScale *= cg_splitviewTextScale.value;
 	} else {
@@ -1837,15 +1788,6 @@ void CG_GlobalCenterPrint( const char *str, int y, float charScale ) {
 	cg.centerPrintTime = cg.time;
 	cg.centerPrintY = y;
 	cg.centerPrintCharScale = charScale;
-
-	// count the number of lines for centering
-	cg.centerPrintLines = 1;
-	s = cg.centerPrint;
-	while( *s ) {
-		if (*s == '\n')
-			cg.centerPrintLines++;
-		s++;
-	}
 }
 
 
@@ -1855,12 +1797,7 @@ CG_DrawGlobalCenterString
 ===================
 */
 static void CG_DrawGlobalCenterString( void ) {
-	char	*start;
-	int		l;
-	int		y;
-	int		charHeight;
 	float	*color;
-	float	scale;
 
 	if ( !cg.centerPrintTime ) {
 		return;
@@ -1873,41 +1810,9 @@ static void CG_DrawGlobalCenterString( void ) {
 
 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 
-	start = cg.centerPrint;
-
-	scale = cg.centerPrintCharScale;
-	charHeight = GIANTCHAR_HEIGHT;
-
-	if ( scale <= 0 ) {
-		scale = charHeight / 48.0f;
-	} else {
-		charHeight = 48 * scale;
-	}
-
-	y = cg.centerPrintY - cg.centerPrintLines * charHeight / 2;
-
-	while ( 1 ) {
-		char linebuffer[1024];
-
-		for ( l = 0; l < 50; l++ ) {
-			if ( !start[l] || start[l] == '\n' ) {
-				break;
-			}
-			linebuffer[l] = start[l];
-		}
-		linebuffer[l] = 0;
-
-		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT|UI_NOSCALE, color, scale, 0, 0 );
-		y += charHeight + 6;
-
-		while ( *start && ( *start != '\n' ) ) {
-			start++;
-		}
-		if ( !*start ) {
-			break;
-		}
-		start++;
-	}
+	CG_DrawStringAutoWrap( SCREEN_WIDTH / 2, cg.centerPrintY, cg.centerPrint,
+			UI_CENTER|UI_VA_CENTER|UI_DROPSHADOW|UI_GIANTFONT|UI_NOSCALE, color,
+			cg.centerPrintCharScale, 0, 0, cgs.screenFakeWidth - 64 );
 }
 
 

@@ -533,9 +533,19 @@ void CG_DrawStringDirect( int x, int y, const char* str, int style, const vec4_t
 	if ( cursorChar >= 0 ) {
 		Text_PaintWithCursor( x, y, font, scale, drawcolor, str, cursorPos, cursorChar, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ) );
 	} else if ( wrapX > 0 ) {
-		int lineHeight = CG_DrawStringLineHeight( style );
+		// replace 'char height' in line height with our scaled charh
+		// ZTM: TODO: This text gap handling is kind of messy. Passing scale to CG_DrawStringLineHeight might make cleaner code here.
+		int gap = CG_DrawStringLineHeight( style ) - font->pointSize;
 
-		Text_Paint_AutoWrapped( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ), wrapX, lineHeight );
+		if ( !( style & UI_NOSCALE ) && cg.cur_lc ) {
+			if ( cg.numViewports != 1 ) {
+				gap *= cg_splitviewTextScale.value;
+			} else {
+				gap *= cg_hudTextScale.value;
+			}
+		}
+
+		Text_Paint_AutoWrapped( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ), wrapX, charh + gap, style );
 	} else {
 		Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ) );
 	}

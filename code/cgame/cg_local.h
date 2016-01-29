@@ -579,7 +579,6 @@ typedef struct {
 	float		centerPrintCharScale;
 	int			centerPrintY;
 	char		centerPrint[1024];
-	int			centerPrintLines;
 
 	// low ammo warning state
 	int			lowAmmoWarning;		// 1 = low, 2 = empty
@@ -776,7 +775,6 @@ typedef struct {
 	float		centerPrintCharScale;
 	int			centerPrintY;
 	char		centerPrint[1024];
-	int			centerPrintLines;
 
 	// say, say_team, ...
 	char		messageCommand[32];
@@ -1646,7 +1644,7 @@ void Text_PaintGlyph( float x, float y, float useScale, const glyphInfo_t *glyph
 void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor );
 void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor );
 void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit );
-void Text_Paint_AutoWrapped( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *str, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, float xmax, float ystep );
+void Text_Paint_AutoWrapped( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *str, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, float xmax, float ystep, int style );
 
 void CG_Text_Paint( float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle );
 void CG_Text_PaintWithCursor( float x, float y, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, int textStyle );

@@ -563,25 +563,18 @@ CG_GrappleTrail
 */
 void CG_GrappleTrail( centity_t *ent, const weaponInfo_t *wi ) {
 	vec3_t	origin;
-	entityState_t	*es;
-	vec3_t			forward, up;
 	refEntity_t		beam;
 
-	es = &ent->currentState;
-
-	BG_EvaluateTrajectory( &es->pos, cg.time, origin );
+	VectorCopy( ent->lerpOrigin, origin );
 	ent->trailTime = cg.time;
 
 	memset( &beam, 0, sizeof( beam ) );
-	//FIXME adjust for muzzle position
-	VectorCopy ( cg_entities[ ent->currentState.otherEntityNum ].lerpOrigin, beam.origin );
-	beam.origin[2] += 26;
-	AngleVectors( cg_entities[ ent->currentState.otherEntityNum ].lerpAngles, forward, NULL, up );
-	VectorMA( beam.origin, -6, up, beam.origin );
+	if ( !cg.cur_lc->renderingThirdPerson && cg.cur_ps->playerNum == ent->currentState.otherEntityNum ) {
+		VectorCopy( cg.cur_lc->flashOrigin, beam.origin );
+	} else {
+		VectorCopy( cg_entities[ ent->currentState.otherEntityNum ].pe.flashOrigin, beam.origin );
+	}
 	VectorCopy( origin, beam.oldorigin );
-
-	if (Distance( beam.origin, beam.oldorigin ) < 64 )
-		return; // Don't draw if close
 
 	beam.reType = RT_LIGHTNING;
 	beam.customShader = cgs.media.lightningShader;
@@ -1235,6 +1228,15 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		Byte4Copy( pi->c1RGBA, gun.shaderRGBA );
 	}
 
+	// make sure we aren't looking at cg.cur_lc->predictedPlayerEntity for LG
+	nonPredictedCent = &cg_entities[cent->currentState.playerNum];
+
+	if ( !weapon->weaponModel || !weapon->flashModel ) {
+		// use default flash origin when no flash model
+		VectorCopy( cent->lerpOrigin, nonPredictedCent->pe.flashOrigin );
+		nonPredictedCent->pe.flashOrigin[2] += DEFAULT_VIEWHEIGHT - 6;
+	}
+
 	gun.hModel = weapon->weaponModel;
 	if (!gun.hModel) {
 		return;
@@ -1289,26 +1291,11 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		CG_AddWeaponWithPowerups( &barrel, cent->currentState.powerups );
 	}
 
-	// make sure we aren't looking at cg.cur_lc->predictedPlayerEntity for LG
-	nonPredictedCent = &cg_entities[cent->currentState.playerNum];
-
 	// if the index of the nonPredictedCent is not the same as the playerNum
 	// then this is a fake player (like on teh single player podiums), so
 	// go ahead and use the cent
 	if( ( nonPredictedCent - cg_entities ) != cent->currentState.playerNum ) {
 		nonPredictedCent = cent;
-	}
-
-	// add the flash
-	if ( ( weaponNum == WP_LIGHTNING || weaponNum == WP_GAUNTLET || weaponNum == WP_GRAPPLING_HOOK )
-		&& ( nonPredictedCent->currentState.eFlags & EF_FIRING ) ) 
-	{
-		// continuous flash
-	} else {
-		// impulse flash
-		if ( cg.time - cent->muzzleFlashTime > MUZZLE_FLASH_TIME ) {
-			return;
-		}
 	}
 
 	memset( &flash, 0, sizeof( flash ) );
@@ -1329,6 +1316,26 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	Byte4Copy( pi->c1RGBA, flash.shaderRGBA );
 
 	CG_PositionRotatedEntityOnTag( &flash, &gun, weapon->weaponModel, "tag_flash");
+
+	// udate muzzle origin
+	if ( ps ) {
+		VectorCopy( flash.origin, cg.cur_lc->flashOrigin );
+	} else {
+		VectorCopy( flash.origin, nonPredictedCent->pe.flashOrigin );
+	}
+
+	// add the flash
+	if ( ( weaponNum == WP_LIGHTNING || weaponNum == WP_GAUNTLET || weaponNum == WP_GRAPPLING_HOOK )
+		&& ( nonPredictedCent->currentState.eFlags & EF_FIRING ) )
+	{
+		// continuous flash
+	} else {
+		// impulse flash
+		if ( cg.time - cent->muzzleFlashTime > MUZZLE_FLASH_TIME ) {
+			return;
+		}
+	}
+
 	CG_AddRefEntityWithMinLight( &flash );
 
 	if ( ps || cg.cur_lc->renderingThirdPerson ||
@@ -1375,13 +1382,13 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 
 	// allow the gun to be completely removed
 	if ( !cg_drawGun[cg.cur_localPlayerNum].integer ) {
-		vec3_t		origin;
+		// use default flash origin
+		VectorCopy( cg_entities[cg.cur_ps->playerNum].lerpOrigin, cg.cur_lc->flashOrigin );
+		cg.cur_lc->flashOrigin[2] += DEFAULT_VIEWHEIGHT - 6;
 
 		if ( cg.cur_lc->predictedPlayerState.eFlags & EF_FIRING ) {
 			// special hack for lightning gun...
-			VectorCopy( cg.refdef.vieworg, origin );
-			VectorMA( origin, -8, cg.refdef.viewaxis[2], origin );
-			CG_LightningBolt( &cg_entities[ps->playerNum], origin );
+			CG_LightningBolt( &cg_entities[ps->playerNum], cg.cur_lc->flashOrigin );
 		}
 		return;
 	}

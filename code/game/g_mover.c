@@ -336,6 +336,19 @@ qboolean G_MoverPush( gentity_t *pusher, vec3_t move, vec3_t amove, gentity_t **
 	for ( e = 0 ; e < listedEntities ; e++ ) {
 		check = &g_entities[ entityList[ e ] ];
 
+		if ( check->s.eType == ET_GRAPPLE ) {
+			// if this grappling hook is attached to this mover try to move it with the pusher
+			if ( check->enemy == pusher ) {
+				if (!G_TryPushingProxMine( check, pusher, move, amove )) {
+					// remove hook
+					if ( check->parent && check->parent->player && check->parent->player->hook == check) {
+						Weapon_HookFree(check);
+					}
+				}
+			}
+			continue;
+		}
+
 #ifdef MISSIONPACK
 		if ( check->s.eType == ET_MISSILE ) {
 			// if it is a prox mine

@@ -680,6 +680,11 @@ static void CG_Grapple( centity_t *cent ) {
 	// Will draw cable if needed
 	CG_GrappleTrail ( cent, weapon );
 
+	if ( s1->groundEntityNum < MAX_CLIENTS ) {
+		// don't draw hook at center of player hook is attached to
+		return;
+	}
+
 	// create the render entity
 	memset (&ent, 0, sizeof(ent));
 	VectorCopy( cent->lerpOrigin, ent.origin);
@@ -690,10 +695,7 @@ static void CG_Grapple( centity_t *cent ) {
 	ent.hModel = weapon->missileModel;
 	ent.renderfx = RF_NOSHADOW;
 
-	// convert direction of travel into axis
-	if ( VectorNormalize2( s1->pos.trDelta, ent.axis[0] ) == 0 ) {
-		ent.axis[0][2] = 1;
-	}
+	AnglesToAxis( cent->lerpAngles, ent.axis );
 
 	CG_AddRefEntityWithMinLight( &ent );
 }

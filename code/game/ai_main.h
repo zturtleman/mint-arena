@@ -40,8 +40,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define BOTFILESBASEFOLDER		"botfiles"
 
-#define CTF
-
 #define MAX_ITEMS					256
 //bot flags
 #define BFL_STRAFERIGHT				1	//strafe to the right

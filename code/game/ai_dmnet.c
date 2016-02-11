@@ -747,7 +747,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		memcpy(goal, &bs->curpatrolpoint->goal, sizeof(bot_goal_t));
 		return qtrue;
 	}
-#ifdef CTF
+
 	if (gametype == GT_CTF) {
 		//if going for enemy flag
 		if (bs->ltgtype == LTG_GETFLAG) {
@@ -832,7 +832,6 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			return qtrue;
 		}
 	}
-#endif //CTF
 #ifdef MISSIONPACK
 	else if (gametype == GT_1FCTF) {
 		if (bs->ltgtype == LTG_GETFLAG) {
@@ -1871,13 +1870,11 @@ int AINode_Seek_LTG(bot_state_t *bs)
 		if (bs->ltgtype == LTG_DEFENDKEYAREA) range = 400;
 		else range = 150;
 		//
-#ifdef CTF
 		if (gametype == GT_CTF) {
 			//if carrying a flag the bot shouldn't be distracted too much
 			if (BotCTFCarryingFlag(bs))
 				range = 50;
 		}
-#endif //CTF
 #ifdef MISSIONPACK
 		else if (gametype == GT_1FCTF) {
 			if (Bot1FCTFCarryingFlag(bs))
@@ -2393,13 +2390,11 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	if (bs->check_time < FloatTime()) {
 		bs->check_time = FloatTime() + 1;
 		range = 150;
-#ifdef CTF
 		if (gametype == GT_CTF) {
 			//if carrying a flag the bot shouldn't be distracted too much
 			if (BotCTFCarryingFlag(bs))
 				range = 50;
 		}
-#endif //CTF
 #ifdef MISSIONPACK
 		else if (gametype == GT_1FCTF) {
 			if (Bot1FCTFCarryingFlag(bs))

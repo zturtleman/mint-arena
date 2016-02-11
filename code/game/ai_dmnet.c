@@ -66,9 +66,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 // for the voice chats
 #include "../../ui/menudef.h"
 
-//goal flag, see ../botlib/be_ai_goal.h for the other GFL_*
-#define GFL_AIR			128
-
 int numnodeswitches;
 char nodeswitch[MAX_NODESWITCHES+1][144];
 

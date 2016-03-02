@@ -1094,6 +1094,10 @@ static qboolean UI_ParseAnimationFile( const char *filename, animation_t *animat
 				break;
 			}
 			continue;
+		} else if ( !Q_stricmp( token, "fixedlegs" ) ) {
+			continue;
+		} else if ( !Q_stricmp( token, "fixedtorso" ) ) {
+			continue;
 		}
 
 		// if it is a number, start parsing animations

@@ -544,6 +544,7 @@ typedef struct {
 	qboolean			demoversion;
 	qboolean			firstdraw;
 	int					maxSplitView;
+	qboolean			bannerNumbers;
 } uiStatic_t;
 
 extern void			UI_LerpColor(vec4_t a, vec4_t b, vec4_t c, float t);

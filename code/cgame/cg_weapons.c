@@ -1317,7 +1317,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 	CG_PositionRotatedEntityOnTag( &flash, &gun, weapon->weaponModel, "tag_flash");
 
-	// udate muzzle origin
+	// update muzzle origin
 	if ( ps ) {
 		VectorCopy( flash.origin, cg.cur_lc->flashOrigin );
 	} else {

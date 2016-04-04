@@ -142,7 +142,7 @@ BUILD_DEFINES =
 endif
 
 ifndef COPYDIR
-COPYDIR="/usr/local/games/quake3"
+COPYDIR="/usr/local/games/spearmint"
 endif
 
 ifndef COPYBINDIR

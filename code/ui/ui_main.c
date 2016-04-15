@@ -3459,14 +3459,15 @@ serverStatusCvar_t serverStatusCvars[] = {
 	{"sv_hostname", "Name"},
 	{"Address", ""},
 	{"gamename", "Game name"},
-	{"sv_gametypeName", "Game type name"},
-	{"sv_gametypeNetName", "Game type short name"},
+	{"sv_gametypeName", "Game type"},
+	{"sv_gametypeNetName", "Game type abbr"},
 	{"g_gametype", "Game type number"},
 	{"mapname", "Map"},
 	{"version", ""},
 	{"protocol", ""},
 	{"timelimit", ""},
 	{"fraglimit", ""},
+	{"capturelimit", ""},
 	{NULL, NULL}
 };
 

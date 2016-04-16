@@ -144,6 +144,21 @@ void CG_MessageMode4_f( void ) {
 
 
 /*
+===================
+CG_CenterEcho_f
+===================
+*/
+void CG_CenterEcho_f( int localPlayerNum ) {
+	char text[1024];
+
+	trap_Args( text, sizeof( text ) );
+
+	CG_ReplaceCharacter( text, '\\', '\n' );
+
+	CG_CenterPrint( localPlayerNum, text, SCREEN_HEIGHT * 0.30, 0.5 );
+}
+
+/*
 =============
 CG_Viewpos_f
 
@@ -945,6 +960,7 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "-strafe", IN_StrafeUp, 0 },
 	{ "+zoom", CG_ZoomDown_f, CMD_INGAME },
 	{ "-zoom", CG_ZoomUp_f, CMD_INGAME },
+	{ "centerecho", CG_CenterEcho_f, CMD_INGAME },
 	{ "centerview", IN_CenterView, 0 },
 	{ "tcmd", CG_TargetCommand_f, CMD_INGAME },
 	{ "tell_target", CG_TellTarget_f, CMD_INGAME },

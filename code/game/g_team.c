@@ -1282,8 +1282,8 @@ static void ObeliskTouch( gentity_t *self, gentity_t *other, trace_t *trace ) {
 		return;
 	}
 
-	trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE "\nbrought in %i %s skull%s.\n\"",
-					other->player->pers.netname, tokens, TeamName( otherTeam ), tokens ? "s" : "" ));
+	trap_SendServerCommand( -1, va( "cp \"%s" S_COLOR_WHITE "\nbrought in %i %s %s.\n\"",
+					other->player->pers.netname, tokens, TeamName( otherTeam ), ( tokens == 1 ) ? "skull" : "skulls" ) );
 
 	AddTeamScore(self->s.pos.trBase, other->player->sess.sessionTeam, tokens);
 	Team_ForceGesture(other->player->sess.sessionTeam);

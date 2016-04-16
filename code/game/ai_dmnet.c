@@ -66,9 +66,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 // for the voice chats
 #include "../../ui/menudef.h"
 
-//goal flag, see ../botlib/be_ai_goal.h for the other GFL_*
-#define GFL_AIR			128
-
 int numnodeswitches;
 char nodeswitch[MAX_NODESWITCHES+1][144];
 
@@ -418,7 +415,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		VectorSubtract(entinfo.origin, bs->origin, dir);
 		teammates = BotCountTeamMates(bs, 256);
 
-		if (VectorLengthSquared(dir) < Square(bs->formation_dist + (teammates * bs->formation_dist - bs->formation_dist))) {
+		if (VectorLengthSquared(dir) < Square(bs->formation_dist + (teammates * bs->formation_dist))) {
 			//check if the bot wants to crouch, don't crouch if crouched less than 5 seconds ago
 			if (bs->attackcrouch_time < FloatTime() - 5) {
 				croucher = Characteristic_BFloat(bs->character, CHARACTERISTIC_CROUCHER, 0, 1);
@@ -640,7 +637,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		VectorSubtract(goal->origin, bs->origin, dir);
 		teammates = BotCountTeamMates(bs, 256);
 
-		if (VectorLengthSquared(dir) < Square(60 + (teammates * 60 - 60))) {
+		if (VectorLengthSquared(dir) < Square(60 + (teammates * 60))) {
 			//if not arrived yet
 			if (!bs->arrive_time) {
 				if (bs->ltgtype == LTG_CAMPORDER) {
@@ -747,7 +744,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		memcpy(goal, &bs->curpatrolpoint->goal, sizeof(bot_goal_t));
 		return qtrue;
 	}
-#ifdef CTF
+
 	if (gametype == GT_CTF) {
 		//if going for enemy flag
 		if (bs->ltgtype == LTG_GETFLAG) {
@@ -832,7 +829,6 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			return qtrue;
 		}
 	}
-#endif //CTF
 #ifdef MISSIONPACK
 	else if (gametype == GT_1FCTF) {
 		if (bs->ltgtype == LTG_GETFLAG) {
@@ -1871,13 +1867,11 @@ int AINode_Seek_LTG(bot_state_t *bs)
 		if (bs->ltgtype == LTG_DEFENDKEYAREA) range = 400;
 		else range = 150;
 		//
-#ifdef CTF
 		if (gametype == GT_CTF) {
 			//if carrying a flag the bot shouldn't be distracted too much
 			if (BotCTFCarryingFlag(bs))
 				range = 50;
 		}
-#endif //CTF
 #ifdef MISSIONPACK
 		else if (gametype == GT_1FCTF) {
 			if (Bot1FCTFCarryingFlag(bs))
@@ -2393,13 +2387,11 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	if (bs->check_time < FloatTime()) {
 		bs->check_time = FloatTime() + 1;
 		range = 150;
-#ifdef CTF
 		if (gametype == GT_CTF) {
 			//if carrying a flag the bot shouldn't be distracted too much
 			if (BotCTFCarryingFlag(bs))
 				range = 50;
 		}
-#endif //CTF
 #ifdef MISSIONPACK
 		else if (gametype == GT_1FCTF) {
 			if (Bot1FCTFCarryingFlag(bs))

@@ -388,6 +388,12 @@ void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t co
 	CG_DrawStringExtWithCursor( x, y, str, style, color, scale, maxChars, shadowOffset, 0, -1, -1 );
 }
 void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar ) {
+	CG_DrawStringDirect( x, y, str, style, color, scale, maxChars, shadowOffset, gradient, cursorPos, cursorChar, 0 );
+}
+void CG_DrawStringAutoWrap( int x, int y, const char* str, int style, const vec4_t color, float scale, float shadowOffset, float gradient, float wrapX ) {
+	CG_DrawStringDirect( x, y, str, style, color, scale, 0, shadowOffset, gradient, -1, -1, wrapX );
+}
+void CG_DrawStringDirect( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar, float wrapX ) {
 	int		charh;
 	vec4_t	newcolor;
 	vec4_t	lowlight;
@@ -475,40 +481,43 @@ void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const
 	else
 		drawcolor = color;
 
-	switch (style & UI_FORMATMASK)
+	if ( wrapX <= 0 )
 	{
-		case UI_CENTER:
-			// center justify at x
-			x = x - Text_Width( str, font, scale, 0 ) / 2;
-			break;
+		switch (style & UI_FORMATMASK)
+		{
+			case UI_CENTER:
+				// center justify at x
+				x = x - Text_Width( str, font, scale, 0 ) / 2;
+				break;
 
-		case UI_RIGHT:
-			// right justify at x
-			x = x - Text_Width( str, font, scale, 0 );
-			break;
+			case UI_RIGHT:
+				// right justify at x
+				x = x - Text_Width( str, font, scale, 0 );
+				break;
 
-		case UI_LEFT:
-		default:
-			// left justify at x
-			break;
-	}
+			case UI_LEFT:
+			default:
+				// left justify at x
+				break;
+		}
 
-	switch (style & UI_VA_FORMATMASK)
-	{
-		case UI_VA_CENTER:
-			// center justify at y
-			y = y - charh /*Text_Height( str, font, scale, 0 )*/ / 2;
-			break;
+		switch (style & UI_VA_FORMATMASK)
+		{
+			case UI_VA_CENTER:
+				// center justify at y
+				y = y - charh /*Text_Height( str, font, scale, 0 )*/ / 2;
+				break;
 
-		case UI_VA_BOTTOM:
-			// bottom justify at y
-			y = y - charh /*Text_Height( str, font, scale, 0 )*/;
-			break;
+			case UI_VA_BOTTOM:
+				// bottom justify at y
+				y = y - charh /*Text_Height( str, font, scale, 0 )*/;
+				break;
 
-		case UI_VA_TOP:
-		default:
-			// top justify at y
-			break;
+			case UI_VA_TOP:
+			default:
+				// top justify at y
+				break;
+		}
 	}
 
 	//
@@ -523,6 +532,20 @@ void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const
 
 	if ( cursorChar >= 0 ) {
 		Text_PaintWithCursor( x, y, font, scale, drawcolor, str, cursorPos, cursorChar, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ) );
+	} else if ( wrapX > 0 ) {
+		// replace 'char height' in line height with our scaled charh
+		// ZTM: TODO: This text gap handling is kind of messy. Passing scale to CG_DrawStringLineHeight might make cleaner code here.
+		int gap = CG_DrawStringLineHeight( style ) - font->pointSize;
+
+		if ( !( style & UI_NOSCALE ) && cg.cur_lc ) {
+			if ( cg.numViewports != 1 ) {
+				gap *= cg_splitviewTextScale.value;
+			} else {
+				gap *= cg_hudTextScale.value;
+			}
+		}
+
+		Text_Paint_AutoWrapped( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ), wrapX, charh + gap, style );
 	} else {
 		Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ) );
 	}

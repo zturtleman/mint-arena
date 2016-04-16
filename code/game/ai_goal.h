@@ -44,6 +44,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define GFL_ITEM				1
 #define GFL_ROAM				2
 #define GFL_DROPPED				4
+#define GFL_AIR					8
 
 //a bot goal
 typedef struct bot_goal_s

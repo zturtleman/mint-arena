@@ -598,6 +598,10 @@ static void CG_Missile( centity_t *cent ) {
 		trap_S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, velocity, weapon->missileSound );
 	}
 
+	if ( cent->currentState.weapon == WP_GRAPPLING_HOOK && !cg_drawGrappleHook.integer ) {
+		return;
+	}
+
 	// create the render entity
 	memset (&ent, 0, sizeof(ent));
 	VectorCopy( cent->lerpOrigin, ent.origin);
@@ -680,6 +684,15 @@ static void CG_Grapple( centity_t *cent ) {
 	// Will draw cable if needed
 	CG_GrappleTrail ( cent, weapon );
 
+	if ( !cg_drawGrappleHook.integer ) {
+		return;
+	}
+
+	if ( s1->groundEntityNum < MAX_CLIENTS ) {
+		// don't draw hook at center of player hook is attached to
+		return;
+	}
+
 	// create the render entity
 	memset (&ent, 0, sizeof(ent));
 	VectorCopy( cent->lerpOrigin, ent.origin);
@@ -690,10 +703,7 @@ static void CG_Grapple( centity_t *cent ) {
 	ent.hModel = weapon->missileModel;
 	ent.renderfx = RF_NOSHADOW;
 
-	// convert direction of travel into axis
-	if ( VectorNormalize2( s1->pos.trDelta, ent.axis[0] ) == 0 ) {
-		ent.axis[0][2] = 1;
-	}
+	AnglesToAxis( cent->lerpAngles, ent.axis );
 
 	CG_AddRefEntityWithMinLight( &ent );
 }

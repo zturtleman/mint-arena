@@ -273,6 +273,8 @@ void CG_CalcVrect (void) {
 		cgs.screenXBias = 0;
 	}
 
+	cgs.screenFakeWidth = cg.viewportWidth / cgs.screenXScale;
+
 	// the intermission should always be full screen
 	if ( !cg.cur_ps || cg.cur_ps->pm_type == PM_INTERMISSION ) {
 		size = 100;

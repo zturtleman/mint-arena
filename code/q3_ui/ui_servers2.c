@@ -155,7 +155,7 @@ static char* netnames[] = {
 	NULL
 };
 
-static char quake3worldMessage[] = "Visit www.quake3world.com - News, Community, Events, Files";
+static char communityMessage[] = "Visit http://clover.moe for News and Updates";
 
 typedef struct {
 	char	adrstr[MAX_ADDRESSLENGTH];
@@ -466,7 +466,7 @@ static void ArenaServers_UpdateMenu( void ) {
 
 			// update status bar
 			if( g_servertype >= UIAS_GLOBAL1 && g_servertype <= UIAS_GLOBAL5 ) {
-				g_arenaservers.statusbar.string = quake3worldMessage;
+				g_arenaservers.statusbar.string = communityMessage;
 			}
 			else {
 				g_arenaservers.statusbar.string = "";
@@ -501,7 +501,7 @@ static void ArenaServers_UpdateMenu( void ) {
 
 			// update status bar
 			if( g_servertype >= UIAS_GLOBAL1 && g_servertype <= UIAS_GLOBAL5 ) {
-				g_arenaservers.statusbar.string = quake3worldMessage;
+				g_arenaservers.statusbar.string = communityMessage;
 			}
 			else {
 				g_arenaservers.statusbar.string = "";

@@ -464,6 +464,7 @@ G_InitGame
 
 ============
 */
+void SV_BotInitBotLib( void );
 void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	int					i, j;
 
@@ -472,6 +473,8 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	G_DPrintf ("gamedate: %s\n", __DATE__);
 
 	srand( randomSeed );
+
+	SV_BotInitBotLib();
 
 	G_RegisterCvars();
 

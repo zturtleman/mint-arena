@@ -39,6 +39,28 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 //#define MEMDEBUG
 
+#if 0
+//allocate a memory block of the given size
+#define GetMemory(size) NULL
+//allocate a memory block of the given size and clear it
+#define GetClearedMemory(size) NULL
+//allocate a memory block of the given size
+#define GetHunkMemory(size) NULL
+//allocate a memory block of the given size and clear it
+#define GetClearedHunkMemory(size) NULL
+//free the given memory block
+#define FreeMemory(ptr)
+//returns the amount available memory
+#define AvailableMemory() 0
+//prints the total used memory size
+#define PrintUsedMemorySize()
+//print all memory blocks with label
+#define PrintMemoryLabels()
+//returns the size of the memory block in bytes
+#define MemoryByteSize(ptr) 0
+//free all allocated memory
+#define DumpMemory()
+#else
 #ifdef MEMDEBUG
 #define GetMemory(size)				GetMemoryDebug(size, #size, __FILE__, __LINE__);
 #define GetClearedMemory(size)		GetClearedMemoryDebug(size, #size, __FILE__, __LINE__);
@@ -82,3 +104,4 @@ void PrintMemoryLabels(void);
 int MemoryByteSize(void *ptr);
 //free all allocated memory
 void DumpMemory(void);
+#endif

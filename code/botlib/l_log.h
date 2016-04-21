@@ -37,6 +37,13 @@ Suite 120, Rockville, Maryland 20850 USA.
  *
  *****************************************************************************/
 
+#if 1
+#define Log_Open(x)
+#define Log_Close()
+#define Log_Shutdown()
+#define Log_Write Com_Printf
+#define Log_WriteTimeStamped Com_Printf
+#else
 //open a log file
 void Log_Open(char *filename);
 //close the current log file
@@ -51,4 +58,5 @@ void QDECL Log_WriteTimeStamped(char *fmt, ...) __attribute__ ((format (printf, 
 FILE *Log_FilePointer(void);
 //flush log file
 void Log_Flush(void);
+#endif
 

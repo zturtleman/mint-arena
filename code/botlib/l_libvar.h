@@ -48,24 +48,37 @@ typedef struct libvar_s
 	struct	libvar_s *next;
 } libvar_t;
 
+#if 0
+#define LibVarDeAllocAll()
+#define LibVarGet( var_name ) NULL
+#define LibVarGetString( var_name ) NULL
+#define LibVarGetValue( var_name ) 0
+#define LibVar( var_name, value ) NULL
+#define LibVarValue( var_name, value ) atof( value )
+#define LibVarString( var_name, value ) value
+#define LibVarSet( var_name, value ) do { } while (0);
+#define LibVarChanged( var_name ) 0
+#define LibVarSetNotModified( var_name )
+#else
 //removes all library variables
 void LibVarDeAllocAll(void);
 //gets the library variable with the given name
-libvar_t *LibVarGet(char *var_name);
+libvar_t *LibVarGet(const char *var_name);
 //gets the string of the library variable with the given name
-char *LibVarGetString(char *var_name);
+char *LibVarGetString(const char *var_name);
 //gets the value of the library variable with the given name
-float LibVarGetValue(char *var_name);
+float LibVarGetValue(const char *var_name);
 //creates the library variable if not existing already and returns it
-libvar_t *LibVar(char *var_name, char *value);
+libvar_t *LibVar(const char *var_name, const char *value);
 //creates the library variable if not existing already and returns the value
-float LibVarValue(char *var_name, char *value);
+float LibVarValue(const char *var_name, const char *value);
 //creates the library variable if not existing already and returns the value string
-char *LibVarString(char *var_name, char *value);
+char *LibVarString(const char *var_name, const char *value);
 //sets the library variable
-void LibVarSet(char *var_name, char *value);
+void LibVarSet(const char *var_name, const char *value);
 //returns true if the library variable has been modified
-qboolean LibVarChanged(char *var_name);
+qboolean LibVarChanged(const char *var_name);
 //sets the library variable to unmodified
-void LibVarSetNotModified(char *var_name);
+void LibVarSetNotModified(const char *var_name);
+#endif
 

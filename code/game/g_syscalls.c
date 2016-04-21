@@ -342,37 +342,434 @@ void trap_ClientCommand(int playerNum, const char *command) {
 	syscall( G_CLIENT_COMMAND, playerNum, command );
 }
 
+#include "../botlib/botlib.h"
+extern vmCvar_t bot_developer;
+
+botlib_export_t *botlib_export;
+qboolean bot_enable = qtrue;
+
+/*
+==================
+BotImport_Print
+==================
+*/
+static __attribute__ ((format (printf, 2, 3))) void QDECL BotImport_Print(int type, char *fmt, ...)
+{
+	char str[2048];
+	va_list ap;
+
+	va_start(ap, fmt);
+	Q_vsnprintf(str, sizeof(str), fmt, ap);
+	va_end(ap);
+
+	switch(type) {
+		case PRT_DEVELOPER: {
+			if (bot_developer.integer) {
+				Com_Printf("%s", str);
+			}
+			break;
+		}
+		case PRT_MESSAGE: {
+			Com_Printf("%s", str);
+			break;
+		}
+		case PRT_WARNING: {
+			Com_Printf(S_COLOR_YELLOW "Warning: %s", str);
+			break;
+		}
+		case PRT_ERROR: {
+			Com_Printf(S_COLOR_RED "Error: %s", str);
+			break;
+		}
+		case PRT_FATAL: {
+			Com_Printf(S_COLOR_RED "Fatal: %s", str);
+			break;
+		}
+		case PRT_EXIT: {
+			Com_Error(ERR_DROP, S_COLOR_RED "Exit: %s", str);
+			break;
+		}
+		default: {
+			Com_Printf("unknown print type\n");
+			break;
+		}
+	}
+}
+
+/*
+==================
+BotImport_Trace
+==================
+*/
+static void BotImport_Trace(bsp_trace_t *bsptrace, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int passent, int contentmask) {
+	trap_Trace(bsptrace, start, mins, maxs, end, passent, contentmask);
+}
+
+/*
+==================
+BotImport_EntityTrace
+==================
+*/
+static void BotImport_EntityTrace(bsp_trace_t *bsptrace, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int entnum, int contentmask) {
+	trap_ClipToEntities(bsptrace, start, mins, maxs, end, entnum, contentmask);
+}
+
+
+/*
+==================
+BotImport_PointContents
+==================
+*/
+static int BotImport_PointContents(vec3_t point) {
+	return trap_PointContents(point, -1);
+}
+
+/*
+==================
+BotImport_inPVS
+==================
+*/
+static int BotImport_inPVS(vec3_t p1, vec3_t p2) {
+	return trap_InPVS(p1, p2);
+}
+
+/*
+==================
+BotImport_BSPEntityData
+==================
+*/
+static char *BotImport_BSPEntityData(void) {
+#if 1 // ZTM: FIXME: BOTLIBPORT
+	return NULL;
+#else
+	return CM_EntityString();
+#endif
+}
+
+/*
+==================
+BotImport_BSPModelMinsMaxsOrigin
+==================
+*/
+static void BotImport_BSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t outmins, vec3_t outmaxs, vec3_t origin) {
+#if 0 // ZTM: FIXME: BOTLIBPORT
+	clipHandle_t h;
+	vec3_t mins, maxs;
+	float max;
+	int	i;
+
+	h = CM_InlineModel(modelnum);
+	CM_ModelBounds(h, mins, maxs);
+	//if the model is rotated
+	if ((angles[0] || angles[1] || angles[2])) {
+		// expand for rotation
+
+		max = RadiusFromBounds(mins, maxs);
+		for (i = 0; i < 3; i++) {
+			mins[i] = -max;
+			maxs[i] = max;
+		}
+	}
+	if (outmins) VectorCopy(mins, outmins);
+	if (outmaxs) VectorCopy(maxs, outmaxs);
+	if (origin) VectorClear(origin);
+#endif
+}
+
+/*
+==================
+BotImport_GetMemory
+==================
+*/
+static void *BotImport_GetMemory(int size) {
+#if 1
+	return trap_Alloc( size, NULL );
+#else
+	void *ptr;
+
+	ptr = Z_TagMalloc( size, TAG_BOTLIB );
+	return ptr;
+#endif
+}
+
+/*
+==================
+BotImport_FreeMemory
+==================
+*/
+static void BotImport_FreeMemory(void *ptr) {
+#if 0
+	Z_Free(ptr);
+#endif
+}
+
+/*
+=================
+BotImport_HunkAlloc
+=================
+*/
+static void *BotImport_HunkAlloc( int size ) {
+#if 1
+	return trap_Alloc( size, NULL );
+#else
+	if( Hunk_CheckMark() ) {
+		Com_Error( ERR_DROP, "SV_Bot_HunkAlloc: Alloc with marks already set" );
+	}
+	return Hunk_Alloc( size, h_high );
+#endif
+}
+
+/*
+==================
+BotImport_DebugPolygonCreate
+==================
+*/
+int BotImport_DebugPolygonCreate(int color, int numPoints, vec3_t *points) {
+#if 1
+	return 0;
+#else
+	bot_debugpoly_t *poly;
+	int i;
+
+	if (!debugpolygons)
+		return 0;
+
+	for (i = 1; i < bot_maxdebugpolys; i++) 	{
+		if (!debugpolygons[i].inuse)
+			break;
+	}
+	if (i >= bot_maxdebugpolys)
+		return 0;
+	poly = &debugpolygons[i];
+	poly->inuse = qtrue;
+	poly->color = color;
+	poly->numPoints = numPoints;
+	Com_Memcpy(poly->points, points, numPoints * sizeof(vec3_t));
+	//
+	return i;
+#endif
+}
+
+/*
+==================
+BotImport_DebugPolygonShow
+==================
+*/
+static void BotImport_DebugPolygonShow(int id, int color, int numPoints, vec3_t *points) {
+#if 0
+	bot_debugpoly_t *poly;
+
+	if (!debugpolygons) return;
+	poly = &debugpolygons[id];
+	poly->inuse = qtrue;
+	poly->color = color;
+	poly->numPoints = numPoints;
+	Com_Memcpy(poly->points, points, numPoints * sizeof(vec3_t));
+#endif
+}
+
+/*
+==================
+BotImport_DebugPolygonDelete
+==================
+*/
+void BotImport_DebugPolygonDelete(int id)
+{
+#if 0
+	if (!debugpolygons) return;
+	debugpolygons[id].inuse = qfalse;
+#endif
+}
+
+/*
+==================
+BotImport_DebugLineCreate
+==================
+*/
+static int BotImport_DebugLineCreate(void) {
+	vec3_t points[1];
+	return BotImport_DebugPolygonCreate(0, 0, points);
+}
+
+/*
+==================
+BotImport_DebugLineDelete
+==================
+*/
+static void BotImport_DebugLineDelete(int line) {
+#if 0
+	BotImport_DebugPolygonDelete(line);
+#endif
+}
+
+/*
+==================
+BotImport_DebugLineShow
+==================
+*/
+static void BotImport_DebugLineShow(int line, vec3_t start, vec3_t end, int color) {
+#if 0
+	vec3_t points[4], dir, cross, up = {0, 0, 1};
+	float dot;
+
+	VectorCopy(start, points[0]);
+	VectorCopy(start, points[1]);
+	//points[1][2] -= 2;
+	VectorCopy(end, points[2]);
+	//points[2][2] -= 2;
+	VectorCopy(end, points[3]);
+
+
+	VectorSubtract(end, start, dir);
+	VectorNormalize(dir);
+	dot = DotProduct(dir, up);
+	if (dot > 0.99 || dot < -0.99) VectorSet(cross, 1, 0, 0);
+	else CrossProduct(dir, up, cross);
+
+	VectorNormalize(cross);
+
+	VectorMA(points[0], 2, cross, points[0]);
+	VectorMA(points[1], -2, cross, points[1]);
+	VectorMA(points[2], -2, cross, points[2]);
+	VectorMA(points[3], 2, cross, points[3]);
+
+	BotImport_DebugPolygonShow(line, color, 4, points);
+#endif
+}
+
+int Z_AvailableMemory( void ) {
+	return 0;
+}
+
+/*
+==================
+SV_BotInitBotLib
+==================
+*/
+void SV_BotInitBotLib(void) {
+	botlib_import_t	botlib_import;
+
+/*
+	if (debugpolygons) Z_Free(debugpolygons);
+	bot_maxdebugpolys = Cvar_VariableIntegerValue("bot_maxdebugpolys");
+	debugpolygons = Z_Malloc(sizeof(bot_debugpoly_t) * bot_maxdebugpolys);
+*/
+
+	botlib_import.Print = BotImport_Print;
+	botlib_import.Trace = BotImport_Trace;
+	botlib_import.EntityTrace = BotImport_EntityTrace;
+	botlib_import.PointContents = BotImport_PointContents;
+	botlib_import.inPVS = BotImport_inPVS;
+	botlib_import.BSPEntityData = BotImport_BSPEntityData;
+	botlib_import.BSPModelMinsMaxsOrigin = BotImport_BSPModelMinsMaxsOrigin;
+	botlib_import.BotClientCommand = trap_ClientCommand; // SV_ForceClientCommand;
+
+	//memory management
+	botlib_import.GetMemory = BotImport_GetMemory;
+	botlib_import.FreeMemory = BotImport_FreeMemory;
+	botlib_import.AvailableMemory = Z_AvailableMemory;
+	botlib_import.HunkAlloc = BotImport_HunkAlloc;
+
+	// file system access
+	botlib_import.FS_FOpenFile = trap_FS_FOpenFile;
+	botlib_import.FS_Read = trap_FS_Read;
+	botlib_import.FS_Write = trap_FS_Write;
+	botlib_import.FS_FCloseFile = trap_FS_FCloseFile;
+	botlib_import.FS_Seek = trap_FS_Seek;
+
+	//debug lines
+	botlib_import.DebugLineCreate = BotImport_DebugLineCreate;
+	botlib_import.DebugLineDelete = BotImport_DebugLineDelete;
+	botlib_import.DebugLineShow = BotImport_DebugLineShow;
+
+	//debug polygons
+	botlib_import.DebugPolygonCreate = BotImport_DebugPolygonCreate;
+	botlib_import.DebugPolygonDelete = BotImport_DebugPolygonDelete;
+
+	botlib_export = (botlib_export_t *)GetBotLibAPI( BOTLIB_API_VERSION, &botlib_import );
+#ifndef Q3_VM
+	assert(botlib_export); 	// somehow we end up with a zero import.
+#endif
+}
+
+/*
+===============
+SV_BotLibSetup
+===============
+*/
+int SV_BotLibSetup( void ) {
+	char basedir[MAX_STRING_CHARS];
+	char homedir[MAX_STRING_CHARS];
+	char gamedir[MAX_STRING_CHARS];
+
+	if (!bot_enable) {
+		return 0;
+	}
+
+	if ( !botlib_export ) {
+		Com_Printf( S_COLOR_RED "Error: SV_BotLibSetup without SV_BotInitBotLib\n" );
+		return -1;
+	}
+
+	trap_Cvar_VariableStringBuffer( "fs_basepath", basedir, sizeof( basedir ) );
+	trap_Cvar_VariableStringBuffer( "fs_homepath", homedir, sizeof( homedir ) );
+	trap_Cvar_VariableStringBuffer( "fs_game", gamedir, sizeof( gamedir ) );
+
+	botlib_export->BotLibVarSet( "basedir", basedir );
+	botlib_export->BotLibVarSet( "homedir", homedir );
+	botlib_export->BotLibVarSet( "gamedir", gamedir );
+
+	return botlib_export->BotLibSetup();
+}
+
+/*
+===============
+SV_ShutdownBotLib
+
+Called when either the entire server is being killed, or
+it is changing to a different game directory.
+===============
+*/
+int SV_BotLibShutdown( void ) {
+
+	if ( !botlib_export ) {
+		return -1;
+	}
+
+	return botlib_export->BotLibShutdown();
+}
+
 // BotLib traps start here
 int trap_BotLibSetup( void ) {
-	return syscall( BOTLIB_SETUP );
+	return SV_BotLibSetup();
 }
 
 int trap_BotLibShutdown( void ) {
-	return syscall( BOTLIB_SHUTDOWN );
+	return SV_BotLibShutdown();
 }
 
 int trap_BotLibVarSet(const char *var_name, char *value) {
-	return syscall( BOTLIB_LIBVAR_SET, var_name, value );
+	return botlib_export->BotLibVarSet( var_name, value );
 }
 
 int trap_BotLibVarGet(const char *var_name, char *value, int size) {
-	return syscall( BOTLIB_LIBVAR_GET, var_name, value, size );
+	return botlib_export->BotLibVarGet( var_name, value, size );
 }
 
 int trap_BotLibStartFrame(float time) {
-	return syscall( BOTLIB_START_FRAME, PASSFLOAT( time ) );
+	return botlib_export->BotLibStartFrame( time );
 }
 
 int trap_BotLibLoadMap(const char *mapname) {
-	return syscall( BOTLIB_LOAD_MAP, mapname );
+	return botlib_export->BotLibLoadMap( mapname );
 }
 
 int trap_BotLibUpdateEntity(int ent, void /* struct bot_updateentity_s */ *bue) {
-	return syscall( BOTLIB_UPDATENTITY, ent, bue );
+	return botlib_export->BotLibUpdateEntity( ent, bue );
 }
 
 int trap_BotLibTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3) {
-	return syscall( BOTLIB_TEST, parm0, parm1, parm2, parm3 );
+	return botlib_export->Test( parm0, parm1, parm2, parm3 );
 }
 
 int trap_BotGetSnapshotEntity( int playerNum, int sequence ) {
@@ -388,200 +785,199 @@ void trap_BotUserCommand(int playerNum, usercmd_t *ucmd) {
 }
 
 int trap_AAS_Loaded(void) {
-	return syscall( BOTLIB_AAS_LOADED );
+	return botlib_export->aas.AAS_Loaded();
 }
 
 int trap_AAS_Initialized(void) {
-	return syscall( BOTLIB_AAS_INITIALIZED );
+	return botlib_export->aas.AAS_Initialized();
 }
 
 void trap_AAS_PresenceTypeBoundingBox(int presencetype, vec3_t mins, vec3_t maxs) {
-	syscall( BOTLIB_AAS_PRESENCE_TYPE_BOUNDING_BOX, presencetype, mins, maxs );
+	botlib_export->aas.AAS_PresenceTypeBoundingBox( presencetype, mins, maxs );
 }
 
 float trap_AAS_Time(void) {
-	floatint_t fi;
-	fi.i = syscall( BOTLIB_AAS_TIME );
-	return fi.f;
+	return botlib_export->aas.AAS_Time();
 }
 
 int trap_AAS_PointAreaNum(vec3_t point) {
-	return syscall( BOTLIB_AAS_POINT_AREA_NUM, point );
+	return botlib_export->aas.AAS_PointAreaNum( point );
 }
 
 int trap_AAS_PointReachabilityAreaIndex(vec3_t point) {
-	return syscall( BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX, point );
+	return botlib_export->aas.AAS_PointReachabilityAreaIndex( point );
 }
 
 void trap_AAS_TracePlayerBBox(void /* aas_trace_t */ *trace, vec3_t start, vec3_t end, int presencetype, int passent, int contentmask) {
-	syscall( BOTLIB_AAS_TRACE_PLAYER_BBOX, trace, start, end, presencetype, passent, contentmask );
+	botlib_export->aas.AAS_TracePlayerBBox( trace, start, end, presencetype, passent, contentmask );
 }
 
 int trap_AAS_TraceAreas(vec3_t start, vec3_t end, int *areas, vec3_t *points, int maxareas) {
-	return syscall( BOTLIB_AAS_TRACE_AREAS, start, end, areas, points, maxareas );
+	return botlib_export->aas.AAS_TraceAreas( start, end, areas, points, maxareas );
 }
 
 int trap_AAS_BBoxAreas(vec3_t absmins, vec3_t absmaxs, int *areas, int maxareas) {
-	return syscall( BOTLIB_AAS_BBOX_AREAS, absmins, absmaxs, areas, maxareas );
+	return botlib_export->aas.AAS_BBoxAreas( absmins, absmaxs, areas, maxareas );
 }
 
 int trap_AAS_AreaInfo( int areanum, void /* struct aas_areainfo_s */ *info ) {
-	return syscall( BOTLIB_AAS_AREA_INFO, areanum, info );
+	return botlib_export->aas.AAS_AreaInfo( areanum, info );
 }
 
 int trap_AAS_PointContents(vec3_t point) {
-	return syscall( BOTLIB_AAS_POINT_CONTENTS, point );
+	return botlib_export->aas.AAS_PointContents( point );
 }
 
 int trap_AAS_NextBSPEntity(int ent) {
-	return syscall( BOTLIB_AAS_NEXT_BSP_ENTITY, ent );
+	return botlib_export->aas.AAS_NextBSPEntity( ent );
 }
 
 int trap_AAS_ValueForBSPEpairKey(int ent, char *key, char *value, int size) {
-	return syscall( BOTLIB_AAS_VALUE_FOR_BSP_EPAIR_KEY, ent, key, value, size );
+	return botlib_export->aas.AAS_ValueForBSPEpairKey( ent, key, value, size );
 }
 
 int trap_AAS_VectorForBSPEpairKey(int ent, char *key, vec3_t v) {
-	return syscall( BOTLIB_AAS_VECTOR_FOR_BSP_EPAIR_KEY, ent, key, v );
+	return botlib_export->aas.AAS_VectorForBSPEpairKey( ent, key, v );
 }
 
 int trap_AAS_FloatForBSPEpairKey(int ent, char *key, float *value) {
-	return syscall( BOTLIB_AAS_FLOAT_FOR_BSP_EPAIR_KEY, ent, key, value );
+	return botlib_export->aas.AAS_FloatForBSPEpairKey( ent, key, value );
 }
 
 int trap_AAS_IntForBSPEpairKey(int ent, char *key, int *value) {
-	return syscall( BOTLIB_AAS_INT_FOR_BSP_EPAIR_KEY, ent, key, value );
+	return botlib_export->aas.AAS_IntForBSPEpairKey( ent, key, value );
 }
 
 
 
 int trap_AAS_AreaReachability(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_REACHABILITY, areanum );
+	return botlib_export->aas.AAS_AreaReachability( areanum );
 }
 
 int trap_AAS_BestReachableArea(vec3_t origin, vec3_t mins, vec3_t maxs, vec3_t goalorigin) {
-	return syscall( BOTLIB_AAS_BEST_REACHABLE_AREA, origin, mins, maxs, goalorigin );
+	return botlib_export->aas.AAS_BestReachableArea( origin, mins, maxs, goalorigin );
 }
 
 int trap_AAS_BestReachableFromJumpPadArea(vec3_t origin, vec3_t mins, vec3_t maxs) {
-	return syscall( BOTLIB_AAS_BEST_REACHABLE_FROM_JUMP_PAD_AREA, origin, mins, maxs );
+	return botlib_export->aas.AAS_BestReachableFromJumpPadArea( origin, mins, maxs );
 }
 
 int trap_AAS_NextModelReachability(int num, int modelnum) {
-	return syscall( BOTLIB_AAS_NEXT_MODEL_REACHABILITY, num, modelnum );
+	return botlib_export->aas.AAS_NextModelReachability( num, modelnum );
 }
 
 float trap_AAS_AreaGroundFaceArea(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_GROUND_FACE_AREA, areanum );
+	return botlib_export->aas.AAS_AreaGroundFaceArea( areanum );
 }
 
 int trap_AAS_AreaCrouch(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_CROUCH, areanum );
+	return botlib_export->aas.AAS_AreaCrouch( areanum );
 }
 
 int trap_AAS_AreaSwim(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_SWIM, areanum );
+	return botlib_export->aas.AAS_AreaSwim( areanum );
 }
 
 int trap_AAS_AreaLiquid(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_LIQUID, areanum );
+	return botlib_export->aas.AAS_AreaLiquid( areanum );
 }
 
 int trap_AAS_AreaLava(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_LAVA, areanum );
+	return botlib_export->aas.AAS_AreaLava( areanum );
 }
 
 int trap_AAS_AreaSlime(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_SLIME, areanum );
+	return botlib_export->aas.AAS_AreaSlime( areanum );
 }
 
 int trap_AAS_AreaGrounded(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_GROUNDED, areanum );
+	return botlib_export->aas.AAS_AreaGrounded( areanum );
 }
 
 int trap_AAS_AreaLadder(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_LADDER, areanum );
+	return botlib_export->aas.AAS_AreaLadder( areanum );
 }
 
 int trap_AAS_AreaJumpPad(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_JUMP_PAD, areanum );
+	return botlib_export->aas.AAS_AreaJumpPad( areanum );
 }
 
 int trap_AAS_AreaDoNotEnter(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_DO_NOT_ENTER, areanum );
+	return botlib_export->aas.AAS_AreaDoNotEnter( areanum );
 }
 
 
 int trap_AAS_TravelFlagForType( int traveltype ) {
-	return syscall( BOTLIB_AAS_TRAVEL_FLAG_FOR_TYPE, traveltype );
+	return botlib_export->aas.AAS_TravelFlagForType( traveltype );
 }
 
 int trap_AAS_AreaContentsTravelFlags( int areanum ) {
-	return syscall( BOTLIB_AAS_AREA_CONTENTS_TRAVEL_FLAGS, areanum );
+	return botlib_export->aas.AAS_AreaContentsTravelFlags( areanum );
 }
 
 int trap_AAS_NextAreaReachability( int areanum, int reachnum ) {
-	return syscall( BOTLIB_AAS_NEXT_AREA_REACHABILITY, areanum, reachnum );
+	return botlib_export->aas.AAS_NextAreaReachability( areanum, reachnum );
 }
 
 int trap_AAS_ReachabilityFromNum( int num, void /*struct aas_reachability_s*/ *reach ) {
-	return syscall( BOTLIB_AAS_REACHABILITY_FROM_NUM, num, reach );
+	botlib_export->aas.AAS_ReachabilityFromNum( num, reach );
+	return 0;
 }
 
 int trap_AAS_RandomGoalArea( int areanum, int travelflags, int contentmask, int *goalareanum, vec3_t goalorigin ) {
-	return syscall( BOTLIB_AAS_RANDOM_GOAL_AREA, areanum, travelflags, contentmask, goalareanum, goalorigin );
+	return botlib_export->aas.AAS_RandomGoalArea( areanum, travelflags, contentmask, goalareanum, goalorigin );
 }
 
 int trap_AAS_EnableRoutingArea( int areanum, int enable ) {
-	return syscall( BOTLIB_AAS_ENABLE_ROUTING_AREA, areanum, enable );
+	return botlib_export->aas.AAS_EnableRoutingArea( areanum, enable );
 }
 
 unsigned short int trap_AAS_AreaTravelTime(int areanum, vec3_t start, vec3_t end) {
-	return syscall( BOTLIB_AAS_AREA_TRAVEL_TIME, areanum, start, end );
+	return botlib_export->aas.AAS_AreaTravelTime( areanum, start, end );
 }
 
 int trap_AAS_AreaTravelTimeToGoalArea(int areanum, vec3_t origin, int goalareanum, int travelflags) {
-	return syscall( BOTLIB_AAS_AREA_TRAVEL_TIME_TO_GOAL_AREA, areanum, origin, goalareanum, travelflags );
+	return botlib_export->aas.AAS_AreaTravelTimeToGoalArea( areanum, origin, goalareanum, travelflags );
 }
 
 int trap_AAS_PredictRoute(void /*struct aas_predictroute_s*/ *route, int areanum, vec3_t origin,
 							int goalareanum, int travelflags, int maxareas, int maxtime,
 							int stopevent, int stopcontents, int stoptfl, int stopareanum) {
-	return syscall( BOTLIB_AAS_PREDICT_ROUTE, route, areanum, origin, goalareanum, travelflags, maxareas, maxtime, stopevent, stopcontents, stoptfl, stopareanum );
+	return botlib_export->aas.AAS_PredictRoute( route, areanum, origin, goalareanum, travelflags, maxareas, maxtime, stopevent, stopcontents, stoptfl, stopareanum );
 }
 
 int trap_AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, int goalareanum, int travelflags,
 										void /*struct aas_altroutegoal_s*/ *altroutegoals, int maxaltroutegoals,
 										int type) {
-	return syscall( BOTLIB_AAS_ALTERNATIVE_ROUTE_GOAL, start, startareanum, goal, goalareanum, travelflags, altroutegoals, maxaltroutegoals, type );
+	return botlib_export->aas.AAS_AlternativeRouteGoals( start, startareanum, goal, goalareanum, travelflags, altroutegoals, maxaltroutegoals, type );
 }
 
 
 int trap_AAS_PredictPlayerMovement(void /* struct aas_clientmove_s */ *move, int entnum, vec3_t origin, int presencetype, int onground, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize, int contentmask) {
-	return syscall( BOTLIB_AAS_PREDICT_PLAYER_MOVEMENT, move, entnum, origin, presencetype, onground, velocity, cmdmove, cmdframes, maxframes, PASSFLOAT(frametime), stopevent, stopareanum, visualize, contentmask );
+	return botlib_export->aas.AAS_PredictPlayerMovement( move, entnum, origin, presencetype, onground, velocity, cmdmove, cmdframes, maxframes, PASSFLOAT(frametime), stopevent, stopareanum, visualize, contentmask );
 }
 
 int trap_AAS_OnGround(vec3_t origin, int presencetype, int passent, int contentmask) {
-	return syscall( BOTLIB_AAS_ON_GROUND, origin, presencetype, passent, contentmask );
+	return botlib_export->aas.AAS_OnGround( origin, presencetype, passent, contentmask );
 }
 
 int trap_AAS_Swimming(vec3_t origin) {
-	return syscall( BOTLIB_AAS_SWIMMING, origin );
+	return botlib_export->aas.AAS_Swimming( origin );
 }
 
 void trap_AAS_JumpReachRunStart(void /* struct aas_reachability_s */ *reach, vec3_t runstart, int contentmask) {
-	syscall( BOTLIB_AAS_JUMP_REACH_RUN_START, reach, runstart, contentmask );
+	botlib_export->aas.AAS_JumpReachRunStart( reach, runstart, contentmask );
 }
 
 int trap_AAS_AgainstLadder(vec3_t origin) {
-	return syscall( BOTLIB_AAS_AGAINST_LADDER, origin );
+	return botlib_export->aas.AAS_AgainstLadder( origin );
 }
 
 int trap_AAS_HorizontalVelocityForJump(float zvel, vec3_t start, vec3_t end, float *velocity) {
-	return syscall( BOTLIB_AAS_HORIZONTAL_VELOCITY_FOR_JUMP, PASSFLOAT( zvel ), start, end, velocity );
+	return botlib_export->aas.AAS_HorizontalVelocityForJump( zvel, start, end, velocity );
 }
 int trap_AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs, int passent, int contentmask) {
-	return syscall( BOTLIB_AAS_DROP_TO_FLOOR, origin, mins, maxs, passent, contentmask );
+	return botlib_export->aas.AAS_DropToFloor( origin, mins, maxs, passent, contentmask );
 }
 
 

@@ -39,9 +39,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "../qcommon/q_shared.h"
 #include "l_memory.h"
-#include "l_script.h"
-#include "l_precomp.h"
-#include "l_struct.h"
 #include "aasfile.h"
 #include "botlib.h"
 #include "be_aas.h"
@@ -336,6 +333,10 @@ void AAS_FreeBSPEntities(void)
 //===========================================================================
 void AAS_ParseBSPEntities(void)
 {
+#if 1
+	Com_Printf( "STUBBED: AAS_ParseBSPEntities\n" );
+	bspworld.numentities = 0;
+#else
 	script_t *script;
 	token_t token;
 	bsp_entity_t *ent;
@@ -398,6 +399,7 @@ void AAS_ParseBSPEntities(void)
 		} //end if
 	} //end while
 	FreeScript(script);
+#endif
 } //end of the function AAS_ParseBSPEntities
 //===========================================================================
 //
@@ -436,9 +438,15 @@ void AAS_DumpBSPData(void)
 int AAS_LoadBSPFile(void)
 {
 	AAS_DumpBSPData();
+#if 1 // ZTM: FIXME: BOTLIBPORT
+	bspworld.entdatasize = 0; //strlen(botimport.BSPEntityData()) + 1;
+	bspworld.dentdata = NULL; //(char *) GetClearedHunkMemory(bspworld.entdatasize);
+	//Com_Memcpy(bspworld.dentdata, botimport.BSPEntityData(), bspworld.entdatasize);
+#else
 	bspworld.entdatasize = strlen(botimport.BSPEntityData()) + 1;
 	bspworld.dentdata = (char *) GetClearedHunkMemory(bspworld.entdatasize);
 	Com_Memcpy(bspworld.dentdata, botimport.BSPEntityData(), bspworld.entdatasize);
+#endif
 	AAS_ParseBSPEntities();
 	bspworld.loaded = qtrue;
 	return BLERR_NOERROR;

@@ -38,6 +38,7 @@ Suite 120, Rockville, Maryland 20850 USA.
  *****************************************************************************/
 
 #include "../qcommon/q_shared.h"
+#include "../game/bg_public.h"
 #include "l_log.h"
 #include "l_libvar.h"
 #include "aasfile.h"
@@ -71,11 +72,7 @@ int botlibsetup = qfalse;
 //===========================================================================
 int Sys_MilliSeconds(void)
 {
-#if 1 // ZTM: FIXME
-	return 1000;
-#else
-	return clock() * 1000 / CLOCKS_PER_SEC;
-#endif
+	return trap_Milliseconds();
 } //end of the function Sys_MilliSeconds
 //===========================================================================
 //

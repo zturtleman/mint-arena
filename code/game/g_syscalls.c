@@ -954,7 +954,7 @@ int trap_AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, 
 
 
 int trap_AAS_PredictPlayerMovement(void /* struct aas_clientmove_s */ *move, int entnum, vec3_t origin, int presencetype, int onground, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize, int contentmask) {
-	return botlib_export->aas.AAS_PredictPlayerMovement( move, entnum, origin, presencetype, onground, velocity, cmdmove, cmdframes, maxframes, PASSFLOAT(frametime), stopevent, stopareanum, visualize, contentmask );
+	return botlib_export->aas.AAS_PredictPlayerMovement( move, entnum, origin, presencetype, onground, velocity, cmdmove, cmdframes, maxframes, frametime, stopevent, stopareanum, visualize, contentmask );
 }
 
 int trap_AAS_OnGround(vec3_t origin, int presencetype, int passent, int contentmask) {

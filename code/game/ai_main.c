@@ -1191,8 +1191,8 @@ int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean re
 		return qfalse;
 	}
 
-	if (!trap_AAS_Initialized()) {
-		BotAI_Print(PRT_FATAL, "AAS not initialized\n");
+	if (!trap_AAS_Loaded()) {
+		BotAI_Print(PRT_FATAL, "AAS not loaded\n");
 		return qfalse;
 	}
 
@@ -1383,10 +1383,8 @@ int BotAILoadMap( int restart ) {
 	int			i;
 	vmCvar_t	mapname;
 
-	if (!restart) {
-		trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
-		trap_BotLibLoadMap( mapname.string );
-	}
+	trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+	trap_BotLibLoadMap( mapname.string );
 
 	//initialize physics
 	BotInitPhysicsSettings();	//ai_move.h
@@ -1698,14 +1696,11 @@ int BotAISetup( int restart ) {
 
 	level.botReportModificationCount = bot_report.modificationCount;
 
-	//if the game isn't restarted for a tournament
-	if (!restart) {
-		//initialize the bot states
-		memset( botstates, 0, sizeof(botstates) );
+	//initialize the bot states
+	memset( botstates, 0, sizeof(botstates) );
 
-		errnum = BotInitLibrary();
-		if (errnum != BLERR_NOERROR) return qfalse;
-	}
+	errnum = BotInitLibrary();
+	if (errnum != BLERR_NOERROR) return qfalse;
 
 	errnum = EA_Setup();			//ai_ea.c
 	if (errnum != BLERR_NOERROR) return qfalse;
@@ -1737,11 +1732,9 @@ int BotAIShutdown( int restart ) {
 				BotAIShutdownPlayer(botstates[i]->playernum, restart);
 			}
 		}
-		//don't shutdown the bot library
 	}
-	else {
-		trap_BotLibShutdown();
-	}
+
+	trap_BotLibShutdown();
 
 	//
 	BotShutdownCharacters();	//ai_char.c

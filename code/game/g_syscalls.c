@@ -439,14 +439,12 @@ BotImport_BSPModelMinsMaxsOrigin
 ==================
 */
 static void BotImport_BSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t outmins, vec3_t outmaxs, vec3_t origin) {
-#if 0 // ZTM: FIXME: BOTLIBPORT
-	clipHandle_t h;
 	vec3_t mins, maxs;
 	float max;
 	int	i;
 
-	h = CM_InlineModel(modelnum);
-	CM_ModelBounds(h, mins, maxs);
+	trap_GetBrushBounds( modelnum, mins, maxs );
+
 	//if the model is rotated
 	if ((angles[0] || angles[1] || angles[2])) {
 		// expand for rotation
@@ -460,7 +458,6 @@ static void BotImport_BSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t
 	if (outmins) VectorCopy(mins, outmins);
 	if (outmaxs) VectorCopy(maxs, outmaxs);
 	if (origin) VectorClear(origin);
-#endif
 }
 
 /*

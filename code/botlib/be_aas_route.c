@@ -1624,10 +1624,12 @@ int AAS_AreaRouteToGoalArea(int areanum, vec3_t origin, int goalareanum, int tra
 		} //end if
 		return qfalse;
 	} //end if
+#if 0 // ZTM: FIXME: Game VM tells botlib there is 0 available and doesn't free memory so this just leaks memory and causes a big performance hit
 	// make sure the routing cache doesn't grow to large
 	while(AvailableMemory() < 1 * 1024 * 1024) {
 		if (!AAS_FreeOldestCache()) break;
 	}
+#endif
 	//
 	if (AAS_AreaDoNotEnter(areanum) || AAS_AreaDoNotEnter(goalareanum))
 	{

@@ -38,7 +38,6 @@ Suite 120, Rockville, Maryland 20850 USA.
  *****************************************************************************/
 
 #include "../qcommon/q_shared.h"
-#include "../game/bg_public.h"
 #include "l_memory.h"
 #include "l_libvar.h"
 #include "aasfile.h"
@@ -387,7 +386,7 @@ int AAS_LoadAASFile(char *filename)
 		AAS_DData((unsigned char *) &header + 8, sizeof(aas_header_t) - 8);
 	} //end if
 	//
-	aasworld.bspchecksum = trap_Cvar_VariableIntegerValue( "sv_mapChecksum");
+	aasworld.bspchecksum = atoi(LibVarGetString( "sv_mapChecksum"));
 	if (LittleLong(header.bspchecksum) != aasworld.bspchecksum)
 	{
 		AAS_Error("aas file %s is out of date\n", filename);

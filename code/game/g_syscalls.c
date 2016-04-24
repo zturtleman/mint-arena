@@ -435,19 +435,6 @@ static int BotImport_inPVS(vec3_t p1, vec3_t p2) {
 
 /*
 ==================
-BotImport_BSPEntityData
-==================
-*/
-static char *BotImport_BSPEntityData(void) {
-#if 1 // ZTM: FIXME: BOTLIBPORT
-	return NULL;
-#else
-	return CM_EntityString();
-#endif
-}
-
-/*
-==================
 BotImport_BSPModelMinsMaxsOrigin
 ==================
 */
@@ -660,7 +647,7 @@ void SV_BotInitBotLib(void) {
 	botlib_import.EntityTrace = BotImport_EntityTrace;
 	botlib_import.PointContents = BotImport_PointContents;
 	botlib_import.inPVS = BotImport_inPVS;
-	botlib_import.BSPEntityData = BotImport_BSPEntityData;
+	botlib_import.GetEntityToken = trap_GetEntityToken;
 	botlib_import.BSPModelMinsMaxsOrigin = BotImport_BSPModelMinsMaxsOrigin;
 	botlib_import.BotClientCommand = trap_ClientCommand; // SV_ForceClientCommand;
 

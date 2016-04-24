@@ -48,18 +48,6 @@ typedef struct libvar_s
 	struct	libvar_s *next;
 } libvar_t;
 
-#if 0
-#define LibVarDeAllocAll()
-#define LibVarGet( var_name ) NULL
-#define LibVarGetString( var_name ) NULL
-#define LibVarGetValue( var_name ) 0
-#define LibVar( var_name, value ) NULL
-#define LibVarValue( var_name, value ) atof( value )
-#define LibVarString( var_name, value ) value
-#define LibVarSet( var_name, value ) do { } while (0);
-#define LibVarChanged( var_name ) 0
-#define LibVarSetNotModified( var_name )
-#else
 //removes all library variables
 void LibVarDeAllocAll(void);
 //gets the library variable with the given name
@@ -80,5 +68,4 @@ void LibVarSet(const char *var_name, const char *value);
 qboolean LibVarChanged(const char *var_name);
 //sets the library variable to unmodified
 void LibVarSetNotModified(const char *var_name);
-#endif
 

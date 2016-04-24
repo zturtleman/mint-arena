@@ -97,6 +97,8 @@ typedef struct bot_entitystate_s
 //bot AI library exported functions
 typedef struct botlib_import_s
 {
+	//get time for measuring time lapse
+	int			(*MilliSeconds)(void);
 	//print messages from the bot library
 	void		(QDECL *Print)(int type, char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
 	//trace a bbox through the world
@@ -108,7 +110,7 @@ typedef struct botlib_import_s
 	//check if the point is in potential visible sight
 	int			(*inPVS)(vec3_t p1, vec3_t p2);
 	//retrieve the BSP entity data lump
-	char		*(*BSPEntityData)(void);
+	qboolean	(*GetEntityToken)(char *token, int tokenSize);
 	//
 	void		(*BSPModelMinsMaxsOrigin)(int modelnum, vec3_t angles, vec3_t mins, vec3_t maxs, vec3_t origin);
 	//send a bot client command
@@ -225,18 +227,9 @@ typedef struct botlib_export_s
 	//shutdown the bot library, returns BLERR_
 	int (*BotLibShutdown)(void);
 	//sets a library variable returns BLERR_
-	int (*BotLibVarSet)(const char *var_name, char *value);
+	int (*BotLibVarSet)(const char *var_name, const char *value);
 	//gets a library variable returns BLERR_
 	int (*BotLibVarGet)(const char *var_name, char *value, int size);
-
-	//sets a C-like define returns BLERR_
-	int (*PC_AddGlobalDefine)(char *string);
-	void (*PC_RemoveAllGlobalDefines)(void);
-	int (*PC_LoadSourceHandle)(const char *filename, const char *basepath);
-	int (*PC_FreeSourceHandle)(int handle);
-	int (*PC_ReadTokenHandle)(int handle, pc_token_t *pc_token);
-	void (*PC_UnreadLastTokenHandle)(int handle);
-	int (*PC_SourceFileAndLine)(int handle, char *filename, int *line);
 
 	//start a frame in the bot library
 	int (*BotLibStartFrame)(float time);

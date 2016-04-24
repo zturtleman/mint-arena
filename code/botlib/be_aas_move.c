@@ -240,7 +240,6 @@ int AAS_Swimming(vec3_t origin)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-
 void AAS_SetMovedir(vec3_t angles, vec3_t movedir)
 {
 	static vec3_t VEC_UP			= {0, -1,  0};

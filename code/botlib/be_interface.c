@@ -38,7 +38,6 @@ Suite 120, Rockville, Maryland 20850 USA.
  *****************************************************************************/
 
 #include "../qcommon/q_shared.h"
-#include "../game/bg_public.h"
 #include "l_log.h"
 #include "l_libvar.h"
 #include "aasfile.h"
@@ -64,16 +63,6 @@ int botlibsetup = qfalse;
 //
 //===========================================================================
 
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-int Sys_MilliSeconds(void)
-{
-	return trap_Milliseconds();
-} //end of the function Sys_MilliSeconds
 //===========================================================================
 //
 // Parameter:				-
@@ -183,10 +172,6 @@ int Export_BotLibShutdown(void)
 	AAS_Shutdown();
 	//free all libvars
 	LibVarDeAllocAll();
-#if 0 // ZTM: Leave precomp in engine
-	//remove all global defines from the pre compiler
-	PC_RemoveAllGlobalDefines();
-#endif
 
 	//dump all allocated memory
 //	DumpMemory();
@@ -198,10 +183,6 @@ int Export_BotLibShutdown(void)
 	//
 	botlibsetup = qfalse;
 	botlibglobals.botlibsetup = qfalse;
-#if 0 // ZTM: Leave precomp in engine
-	// print any files still open
-	PC_CheckOpenSourceHandles();
-#endif
 	//
 	return BLERR_NOERROR;
 } //end of the function Export_BotLibShutdown
@@ -211,7 +192,7 @@ int Export_BotLibShutdown(void)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int Export_BotLibVarSet(const char *var_name, char *value)
+int Export_BotLibVarSet(const char *var_name, const char *value)
 {
 	LibVarSet(var_name, value);
 	return BLERR_NOERROR;
@@ -251,7 +232,7 @@ int Export_BotLibStartFrame(float time)
 int Export_BotLibLoadMap(const char *mapname)
 {
 #ifdef DEBUG
-	int starttime = Sys_MilliSeconds();
+	int starttime = botimport.MilliSeconds();
 #endif
 	int errnum;
 
@@ -264,7 +245,7 @@ int Export_BotLibLoadMap(const char *mapname)
 	//
 	botimport.Print(PRT_DEVELOPER, "-------------------------------------\n");
 #ifdef DEBUG
-	botimport.Print(PRT_DEVELOPER, "map loaded in %d msec\n", Sys_MilliSeconds() - starttime);
+	botimport.Print(PRT_DEVELOPER, "map loaded in %d msec\n", botimport.MilliSeconds() - starttime);
 #endif
 	//
 	return BLERR_NOERROR;
@@ -761,16 +742,6 @@ botlib_export_t *GetBotLibAPI(int apiVersion, botlib_import_t *import) {
 	be_botlib_export.BotLibShutdown = Export_BotLibShutdown;
 	be_botlib_export.BotLibVarSet = Export_BotLibVarSet;
 	be_botlib_export.BotLibVarGet = Export_BotLibVarGet;
-
-/*
-	be_botlib_export.PC_AddGlobalDefine = PC_AddGlobalDefine;
-	be_botlib_export.PC_RemoveAllGlobalDefines = PC_RemoveAllGlobalDefines;
-	be_botlib_export.PC_LoadSourceHandle = PC_LoadSourceHandle;
-	be_botlib_export.PC_FreeSourceHandle = PC_FreeSourceHandle;
-	be_botlib_export.PC_ReadTokenHandle = PC_ReadTokenHandle;
-	be_botlib_export.PC_UnreadLastTokenHandle = PC_UnreadLastTokenHandle;
-	be_botlib_export.PC_SourceFileAndLine = PC_SourceFileAndLine;
-*/
 
 	be_botlib_export.BotLibStartFrame = Export_BotLibStartFrame;
 	be_botlib_export.BotLibLoadMap = Export_BotLibLoadMap;

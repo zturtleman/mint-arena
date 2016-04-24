@@ -52,7 +52,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define CRC_INIT_VALUE	0xffff
 #define CRC_XOR_VALUE	0x0000
 
-// ZTM: LCC doesn't support initialized shorts
+// use int instead of short because LCC doesn't support initialized shorts
 unsigned int crctable[257] =
 {
 	0x0000,	0x1021,	0x2042,	0x3063,	0x4084,	0x50a5,	0x60c6,	0x70e7,

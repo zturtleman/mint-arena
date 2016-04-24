@@ -37,13 +37,6 @@ Suite 120, Rockville, Maryland 20850 USA.
  *
  *****************************************************************************/
 
-#if 1
-#define Log_Open(x)
-#define Log_Close()
-#define Log_Shutdown()
-#define Log_Write Com_Printf
-#define Log_WriteTimeStamped Com_Printf
-#else
 //open a log file
 void Log_Open(char *filename);
 //close the current log file
@@ -54,9 +47,8 @@ void Log_Shutdown(void);
 void QDECL Log_Write(char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 //write to the current opened log file with a time stamp
 void QDECL Log_WriteTimeStamped(char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
-//returns a pointer to the log file
-FILE *Log_FilePointer(void);
+//returns a handle to the log file
+qhandle_t Log_FileHandle(void);
 //flush log file
 void Log_Flush(void);
-#endif
 

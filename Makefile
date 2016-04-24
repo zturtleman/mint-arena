@@ -1280,18 +1280,11 @@ Q3GOBJ = \
   $(B)/$(BASEGAME)/botlib/be_interface.o \
   $(B)/$(BASEGAME)/botlib/l_crc.o \
   $(B)/$(BASEGAME)/botlib/l_libvar.o \
+  $(B)/$(BASEGAME)/botlib/l_log.o \
   $(B)/$(BASEGAME)/botlib/l_memory.o \
   \
   $(B)/$(BASEGAME)/qcommon/q_math.o \
   $(B)/$(BASEGAME)/qcommon/q_shared.o
-
-  #$(B)/$(BASEGAME)/botlib/l_crc.o \
-  #$(B)/$(BASEGAME)/botlib/l_libvar.o \
-  #$(B)/$(BASEGAME)/botlib/l_log.o \
-  #$(B)/$(BASEGAME)/botlib/l_memory.o \
-  #$(B)/$(BASEGAME)/botlib/l_precomp.o \
-  #$(B)/$(BASEGAME)/botlib/l_script.o \
-  #$(B)/$(BASEGAME)/botlib/l_struct.o \
 
 Q3GVMOBJ = $(Q3GOBJ:%.o=%.asm)
 
@@ -1365,6 +1358,7 @@ MPGOBJ = \
   $(B)/$(MISSIONPACK)/botlib/be_interface.o \
   $(B)/$(MISSIONPACK)/botlib/l_crc.o \
   $(B)/$(MISSIONPACK)/botlib/l_libvar.o \
+  $(B)/$(MISSIONPACK)/botlib/l_log.o \
   $(B)/$(MISSIONPACK)/botlib/l_memory.o \
   \
   $(B)/$(MISSIONPACK)/qcommon/q_math.o \

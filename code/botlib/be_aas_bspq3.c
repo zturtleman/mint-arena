@@ -45,6 +45,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "be_aas_funcs.h"
 #include "be_aas_def.h"
 
+#ifndef BSPC
+#include "../game/g_local.h" // for G_Error and trap_GetEntityToken
+#endif
+
 extern botlib_import_t botimport;
 
 //#define TRACE_DEBUG
@@ -333,9 +337,61 @@ void AAS_FreeBSPEntities(void)
 //===========================================================================
 void AAS_ParseBSPEntities(void)
 {
-#if 1
-	Com_Printf( "STUBBED: AAS_ParseBSPEntities\n" );
-	bspworld.numentities = 0;
+#ifndef BSPC
+	// ZTM: TODO: add botimport.GetEntityToken and make BSPC use the same code path
+	// ZTM: TODO: replace G_Error with what function?
+	char		keyname[MAX_TOKEN_CHARS];
+	char		com_token[MAX_TOKEN_CHARS];
+	bsp_entity_t    *ent;
+	bsp_epair_t     *epair;
+
+	bspworld.numentities = 1;
+
+	while ( 1 ) {
+		// parse the opening brace
+		if ( !trap_GetEntityToken( com_token, sizeof( com_token ) ) ) {
+			// end of spawn string
+			return;
+		}
+		if ( com_token[0] != '{' ) {
+			G_Error( "AAS_ParseBSPEntities: found %s when expecting {", com_token );
+		}
+
+		ent = &bspworld.entities[bspworld.numentities];
+		bspworld.numentities++;
+		ent->epairs = NULL;
+
+		// go through all the key / value pairs
+		while ( 1 ) {	
+			// parse key
+			if ( !trap_GetEntityToken( keyname, sizeof( keyname ) ) ) {
+				G_Error( "G_ParseSpawnVars: EOF without closing brace" );
+			}
+
+			if ( keyname[0] == '}' ) {
+				break;
+			}
+
+			// parse value	
+			if ( !trap_GetEntityToken( com_token, sizeof( com_token ) ) ) {
+				G_Error( "G_ParseSpawnVars: EOF without closing brace" );
+			}
+
+			if ( com_token[0] == '}' ) {
+				G_Error( "G_ParseSpawnVars: closing brace without data" );
+			}
+
+			epair = (bsp_epair_t *) GetClearedHunkMemory(sizeof(bsp_epair_t));
+			epair->next = ent->epairs;
+			ent->epairs = epair;
+
+			epair->key = (char *) GetHunkMemory(strlen(keyname) + 1);
+			strcpy(epair->key, keyname);
+
+			epair->value = (char *) GetHunkMemory(strlen(com_token) + 1);
+			strcpy(epair->value, com_token);
+		}
+	}
 #else
 	script_t *script;
 	token_t token;
@@ -437,16 +493,21 @@ void AAS_DumpBSPData(void)
 //===========================================================================
 int AAS_LoadBSPFile(void)
 {
+	const char *bspEntityData;
+
 	AAS_DumpBSPData();
-#if 1 // ZTM: FIXME: BOTLIBPORT
-	bspworld.entdatasize = 0; //strlen(botimport.BSPEntityData()) + 1;
-	bspworld.dentdata = NULL; //(char *) GetClearedHunkMemory(bspworld.entdatasize);
-	//Com_Memcpy(bspworld.dentdata, botimport.BSPEntityData(), bspworld.entdatasize);
-#else
+
+	// Game VM doesn't use this but BSPC might need it?
+	bspEntityData = botimport.BSPEntityData();
+	if ( bspEntityData != NULL ) {
+		bspworld.entdatasize = strlen(bspEntityData) + 1;
+		bspworld.dentdata = (char *) GetClearedHunkMemory(bspworld.entdatasize);
+		Com_Memcpy(bspworld.dentdata, bspEntityData, bspworld.entdatasize);
+	}
+
 	bspworld.entdatasize = strlen(botimport.BSPEntityData()) + 1;
 	bspworld.dentdata = (char *) GetClearedHunkMemory(bspworld.entdatasize);
 	Com_Memcpy(bspworld.dentdata, botimport.BSPEntityData(), bspworld.entdatasize);
-#endif
 	AAS_ParseBSPEntities();
 	bspworld.loaded = qtrue;
 	return BLERR_NOERROR;

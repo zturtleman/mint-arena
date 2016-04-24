@@ -433,6 +433,7 @@ typedef struct {
 	char		*spawnVars[MAX_SPAWN_VARS][2];	// key / value pairs
 	int			numSpawnVarChars;
 	char		spawnVarChars[MAX_SPAWN_VARS_CHARS];
+	int			spawnEntityOffset;
 
 	// intermission state
 	int			intermissionQueued;		// intermission was qualified, but

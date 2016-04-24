@@ -1285,6 +1285,7 @@ typedef struct {
 	vec3_t		globalFogColor;
 	float		globalFogDepthForOpaque;
 	float		globalFogDensity;
+	float		globalFogFarClip;
 
 	cg_gamemodel_t miscGameModels[MAX_STATIC_GAMEMODELS];
 

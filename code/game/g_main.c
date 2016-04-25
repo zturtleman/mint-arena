@@ -474,6 +474,8 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	srand( randomSeed );
 
+	Swap_Init();
+
 	SV_BotInitBotLib();
 
 	G_RegisterCvars();

@@ -3154,6 +3154,10 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			if (EntityIsInvisible(&curbotinfo) && bs->ltgtype == LTG_GETFLAG) {
 				continue;
 			}
+			// if trying to activate an entity, ignore enemies
+			if ( bs->ainode == AINode_Seek_ActivateEntity ) {
+				continue;
+			}
 			//check if we can avoid this enemy
 			VectorSubtract(bs->origin, entinfo.origin, dir);
 			vectoangles(dir, angles);

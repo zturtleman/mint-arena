@@ -137,9 +137,9 @@ void BotCheckAttack(bot_state_t *bs);
 //check if the bot is blocking a teammate
 void BotCheckBlockedTeammates(bot_state_t *bs);
 //AI when the bot is blocked
-void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate);
+void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t activatedonefunc);
 //AI to predict obstacles
-int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal);
+int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal, bot_aienter_t activatedonefunc);
 //enable or disable the areas the blocking entity is in
 void BotEnableActivateGoalAreas(bot_activategoal_t *activategoal, int enable);
 //pop an activate goal from the stack

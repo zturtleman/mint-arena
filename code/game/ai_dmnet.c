@@ -1447,6 +1447,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 	int targetvisible;
 	bsp_trace_t bsptrace;
 	aas_entityinfo_t entinfo;
+	qboolean activated;
 
 	if (BotIsObserver(bs)) {
 		BotClearActivateGoalStack(bs);
@@ -1482,6 +1483,8 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 	}
 	//
 	goal = &bs->activatestack->goal;
+	// initialize entity being activated to false
+	activated = qfalse;
 	// initialize target being visible to false
 	targetvisible = qfalse;
 	// if the bot has to shoot at a target to activate something
@@ -1510,6 +1513,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 		if (!VectorCompare(bs->activatestack->origin, entinfo.origin)) {
 			BotAI_Print(PRT_DEVELOPER, "hit shootable button or trigger\n");
 			bs->activatestack->time = 0;
+			activated = qtrue;
 		}
 		// if the activate goal has been activated or the bot takes too long
 		if (bs->activatestack->time < FloatTime()) {
@@ -1519,7 +1523,16 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 				bs->activatestack->time = FloatTime() + 10;
 				return qfalse;
 			}
-			AIEnter_Seek_NBG(bs, "activate entity: time out");
+			// if activated entity to get nbg, give more time to reach it
+			if (activated) {
+				if (bs->nbg_time) {
+					bs->nbg_time = FloatTime() + 10;
+				}
+				AIEnter_Seek_NBG(bs, "activate entity: activated");
+			} else {
+				bs->nbg_time = 0;
+				AIEnter_Seek_NBG(bs, "activate entity: time out");
+			}
 			return qfalse;
 		}
 		memset(&moveresult, 0, sizeof(bot_moveresult_t));
@@ -1535,6 +1548,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 			if (BotTouchingGoal(bs->origin, goal)) {
 				BotAI_Print(PRT_DEVELOPER, "touched button or trigger\n");
 				bs->activatestack->time = 0;
+				activated = qtrue;
 			}
 		}
 		// if the activate goal has been activated or the bot takes too long
@@ -1545,7 +1559,16 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 				bs->activatestack->time = FloatTime() + 10;
 				return qfalse;
 			}
-			AIEnter_Seek_NBG(bs, "activate entity: activated");
+			// if activated entity to get nbg, give more time to reach it
+			if (activated) {
+				if (bs->nbg_time) {
+					bs->nbg_time = FloatTime() + 10;
+				}
+				AIEnter_Seek_NBG(bs, "activate entity: activated");
+			} else {
+				bs->nbg_time = 0;
+				AIEnter_Seek_NBG(bs, "activate entity: time out");
+			}
 			return qfalse;
 		}
 		//predict obstacles

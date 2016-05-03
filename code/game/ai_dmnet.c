@@ -2227,6 +2227,9 @@ int AINode_Battle_Chase(bot_state_t *bs)
 	}
 	//
 	BotUpdateBattleInventory(bs, bs->enemy);
+	//predict obstacles
+	if (BotAIPredictObstacles(bs, &goal))
+		return qfalse;
 	//initialize the movement state
 	BotSetupForMovement(bs);
 	//move towards the goal
@@ -2239,7 +2242,7 @@ int AINode_Battle_Chase(bot_state_t *bs)
 		bs->ltg_time = 0;
 	}
 	//
-	BotAIBlocked(bs, &moveresult, qfalse);
+	BotAIBlocked(bs, &moveresult, qtrue);
 	//
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEWSET|MOVERESULT_MOVEMENTVIEW|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
@@ -2411,6 +2414,9 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 			return qfalse;
 		}
 	}
+	//predict obstacles
+	if (BotAIPredictObstacles(bs, &goal))
+		return qfalse;
 	//initialize the movement state
 	BotSetupForMovement(bs);
 	//move towards the goal
@@ -2423,7 +2429,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		bs->ltg_time = 0;
 	}
 	//
-	BotAIBlocked(bs, &moveresult, qfalse);
+	BotAIBlocked(bs, &moveresult, qtrue);
 	//choose the best weapon to fight with
 	BotChooseWeapon(bs);
 	//if the view is fixed for the movement
@@ -2555,6 +2561,9 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		//
 		return qfalse;
 	}
+	//predict obstacles
+	if (BotAIPredictObstacles(bs, &goal))
+		return qfalse;
 	//initialize the movement state
 	BotSetupForMovement(bs);
 	//move towards the goal
@@ -2567,7 +2576,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		bs->nbg_time = 0;
 	}
 	//
-	BotAIBlocked(bs, &moveresult, qfalse);
+	BotAIBlocked(bs, &moveresult, qtrue);
 	//update the attack inventory values
 	BotUpdateBattleInventory(bs, bs->enemy);
 	//choose the best weapon to fight with

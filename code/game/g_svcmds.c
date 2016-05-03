@@ -453,6 +453,57 @@ void	Svcmd_ForceTeam_f( void ) {
 
 /*
 ===================
+Svcmd_Teleport_f
+
+teleport <player> <x> <y> <z> [yaw]
+===================
+*/
+void	Svcmd_Teleport_f( void ) {
+	gplayer_t	*player;
+	gentity_t	*ent;
+	char		str[MAX_TOKEN_CHARS];
+	vec3_t		position, angles;
+
+	if ( !g_cheats.integer ) {
+		G_Printf("Cheats are not enabled on this server.\n");
+		return;
+	}
+
+	if ( trap_Argc() < 3 ) {
+		G_Printf("Usage: teleport <player> <x> <y> <z> [yaw]\n");
+		return;
+	}
+
+	// find the player
+	trap_Argv( 1, str, sizeof( str ) );
+	player = PlayerForString( str );
+	if ( !player ) {
+		return;
+	}
+
+	// set the position
+	trap_Argv( 2, str, sizeof( str ) );
+	position[0] = atoi( str );
+
+	trap_Argv( 3, str, sizeof( str ) );
+	position[1] = atoi( str );
+
+	trap_Argv( 4, str, sizeof( str ) );
+	position[2] = atoi( str );
+
+	ent = &g_entities[player - level.players];
+	VectorCopy( ent->s.angles, angles );
+
+	if ( trap_Argc() > 5 ) {
+		trap_Argv( 5, str, sizeof( str ) );
+		angles[YAW] = atoi( str );
+	}
+
+	TeleportPlayer( ent, position, angles );
+}
+
+/*
+===================
 Svcmd_ListIPs_f
 ===================
 */
@@ -487,6 +538,7 @@ struct svcmd
   { "listip", qfalse, Svcmd_ListIPs_f },
   { "removeip", qfalse, Svcmd_RemoveIP_f },
   //{ "say", qtrue, Svcmd_Say_f },
+  { "teleport", qfalse, Svcmd_Teleport_f },
 };
 
 const size_t numSvCmds = ARRAY_LEN(svcmds);

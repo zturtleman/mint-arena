@@ -4787,8 +4787,9 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 		if (!strcmp(ent->classname, "func_button") && (ent->moverState == MOVER_POS1)) {
 			return;
 		}
-		// if the bot wants to activate the bsp entity
-		if (activate) {
+		// if the bot wants to activate the bsp entity and not predicting obstacles
+		// (it's better to activate the entity if it's blocking route than if bot touched it)
+		if (activate && !bot_predictobstacles.integer) {
 			// find the bsp entity which should be activated in order to get the blocking entity out of the way
 			bspent = BotGetActivateGoal(bs, entinfo.number, &activategoal);
 
@@ -4877,13 +4878,13 @@ int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal) {
 
 	// always predict when the goal change or at regular intervals
 	if (bs->predictobstacles_goalareanum == goal->areanum &&
-		bs->predictobstacles_time > FloatTime() - 6) {
+		bs->predictobstacles_time > FloatTime() - 0.5) {
 		return qfalse;
 	}
 	bs->predictobstacles_goalareanum = goal->areanum;
 	bs->predictobstacles_time = FloatTime();
 
-	// predict at most 100 areas or 10 seconds ahead
+	// predict at most 100 areas or 1 second ahead
 	trap_AAS_PredictRoute(&route, bs->areanum, bs->origin,
 							goal->areanum, bs->tfl, 100, 1000,
 							RSE_USETRAVELTYPE|RSE_ENTERCONTENTS,

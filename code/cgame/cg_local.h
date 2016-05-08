@@ -747,6 +747,7 @@ typedef struct {
 	char        *spawnVars[MAX_SPAWN_VARS][2];  // key / value pairs
 	int numSpawnVarChars;
 	char spawnVarChars[MAX_SPAWN_VARS_CHARS];
+	int spawnEntityOffset;
 
 	vec2_t mapcoordsMins;
 	vec2_t mapcoordsMaxs;
@@ -858,6 +859,7 @@ typedef struct {
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
 	qhandle_t	nodrawShader;
+	qhandle_t	whiteDynamicShader;
 
 #ifdef MISSIONPACK
 	qhandle_t	redCubeModel;
@@ -1422,6 +1424,7 @@ extern	vmCvar_t		cg_smoothBodySink;
 extern	vmCvar_t		cg_antiLag;
 extern	vmCvar_t		cg_forceBitmapFonts;
 extern	vmCvar_t		cg_drawGrappleHook;
+extern	vmCvar_t		cg_drawBBox;
 extern	vmCvar_t		ui_stretch;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;
@@ -1982,4 +1985,9 @@ void IN_Button13Down( int localPlayerNum );
 void IN_Button13Up( int localPlayerNum );
 void IN_Button14Down( int localPlayerNum );
 void IN_Button14Up( int localPlayerNum );
+
+//
+// cg_unlagged.c
+//
+void CG_DrawBBox( centity_t *cent, float *color );
 

@@ -3154,6 +3154,10 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			if (EntityIsInvisible(&curbotinfo) && bs->ltgtype == LTG_GETFLAG) {
 				continue;
 			}
+			// if trying to activate an entity, ignore enemies
+			if ( bs->ainode == AINode_Seek_ActivateEntity ) {
+				continue;
+			}
 			//check if we can avoid this enemy
 			VectorSubtract(bs->origin, entinfo.origin, dir);
 			vectoangles(dir, angles);
@@ -4508,13 +4512,16 @@ int BotGetActivateGoal(bot_state_t *bs, int entitynum, bot_activategoal_t *activ
 BotGoForActivateGoal
 ==================
 */
-int BotGoForActivateGoal(bot_state_t *bs, bot_activategoal_t *activategoal) {
+int BotGoForActivateGoal(bot_state_t *bs, bot_activategoal_t *activategoal, bot_aienter_t aienter) {
 	aas_entityinfo_t activateinfo;
+
+	assert( aienter );
 
 	activategoal->inuse = qtrue;
 	if (!activategoal->time)
 		activategoal->time = FloatTime() + 10;
 	activategoal->start_time = FloatTime();
+	activategoal->aienter = aienter;
 	BotEntityInfo(activategoal->goal.entitynum, &activateinfo);
 	VectorCopy(activateinfo.origin, activategoal->origin);
 	//
@@ -4715,7 +4722,7 @@ Before the bot ends in this part of the AI it should predict which doors to
 open, which buttons to activate etc.
 ==================
 */
-void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
+void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t activatedonefunc) {
 #ifdef OBSTACLEDEBUG
 	char netname[MAX_NETNAME];
 #endif
@@ -4783,8 +4790,9 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 		if (!strcmp(ent->classname, "func_button") && (ent->moverState == MOVER_POS1)) {
 			return;
 		}
-		// if the bot wants to activate the bsp entity
-		if (activate) {
+		// if the bot wants to activate the bsp entity and not predicting obstacles
+		// (it's better to activate the entity if it's blocking route than if bot touched it)
+		if (activatedonefunc != NULL && !bot_predictobstacles.integer) {
 			// find the bsp entity which should be activated in order to get the blocking entity out of the way
 			bspent = BotGetActivateGoal(bs, entinfo.number, &activategoal);
 
@@ -4794,7 +4802,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 				}
 				// if not already trying to activate this entity
 				if (!BotIsGoingToActivateEntity(bs, activategoal.goal.entitynum)) {
-					BotGoForActivateGoal(bs, &activategoal);
+					BotGoForActivateGoal(bs, &activategoal, activatedonefunc);
 				}
 				// if ontop of an obstacle or if the bot is not in a reachability area it'll still need some dynamic obstacle avoidance
 				if (!(moveresult->flags & MOVERESULT_ONTOPOFOBSTACLE) && trap_AAS_AreaReachability(bs->areanum)) {
@@ -4841,7 +4849,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 		}
 	}
 	//
-	if (!activate) {
+	if (activatedonefunc == NULL) {
 		if (bs->notblocked_time < FloatTime() - 0.4) {
 			// just reset goals and hope the bot will go into another direction
 			if (bs->ainode == AINode_Seek_NBG) {
@@ -4863,7 +4871,7 @@ on its path the bot should figure out if they can be removed
 by activating certain entities.
 ==================
 */
-int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal) {
+int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal, bot_aienter_t activatedonefunc) {
 	int modelnum, entitynum, bspent;
 	bot_activategoal_t activategoal;
 	aas_predictroute_t route;
@@ -4873,13 +4881,13 @@ int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal) {
 
 	// always predict when the goal change or at regular intervals
 	if (bs->predictobstacles_goalareanum == goal->areanum &&
-		bs->predictobstacles_time > FloatTime() - 6) {
+		bs->predictobstacles_time > FloatTime() - 0.5) {
 		return qfalse;
 	}
 	bs->predictobstacles_goalareanum = goal->areanum;
 	bs->predictobstacles_time = FloatTime();
 
-	// predict at most 100 areas or 10 seconds ahead
+	// predict at most 100 areas or 1 second ahead
 	trap_AAS_PredictRoute(&route, bs->areanum, bs->origin,
 							goal->areanum, bs->tfl, 100, 1000,
 							RSE_USETRAVELTYPE|RSE_ENTERCONTENTS,
@@ -4905,7 +4913,7 @@ int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal) {
 							//
 							//BotAI_Print(PRT_MESSAGE, "blocked by mover model %d, entity %d ?\n", modelnum, entitynum);
 							//
-							BotGoForActivateGoal(bs, &activategoal);
+							BotGoForActivateGoal(bs, &activategoal, activatedonefunc);
 							return qtrue;
 						}
 						else {

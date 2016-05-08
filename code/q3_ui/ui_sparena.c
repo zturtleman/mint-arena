@@ -33,11 +33,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 void UI_SPArena_Start( const char *arenaInfo ) {
 	char	*map;
 	int		level;
-	int		n;
 	char	*txt;
 
-	n = (int)trap_Cvar_VariableValue( "sv_maxclients" );
-	if ( n < 8 ) {
+	if ( trap_Cvar_VariableIntegerValue( "sv_maxclients" ) < 8 ) {
 		trap_Cvar_SetValue( "sv_maxclients", 8 );
 	}
 
@@ -59,4 +57,39 @@ void UI_SPArena_Start( const char *arenaInfo ) {
 
 	map = Info_ValueForKey( arenaInfo, "map" );
 	trap_Cmd_ExecuteText( EXEC_APPEND, va( "map %s\n", map ) );
+}
+
+void UI_SPMap_f( void ) {
+	char		command[16];
+	char		map[MAX_QPATH];
+	char		expanded[MAX_QPATH];
+	qboolean	cheats;
+
+	trap_Argv( 0, command, sizeof( command ) );
+	trap_Argv( 1, map, sizeof( map ) );
+
+	cheats = !Q_stricmp( command, "spdevmap" );
+
+	if ( !*map ) {
+		Com_Printf("Usage: %s <mapname>\n", command );
+		return;
+	}
+
+	// don't enable ui_singlePlayerActive if map does not exist because it will
+	// cause the value to be left set (won't be cleared until disconnect or server shutdown).
+	Com_sprintf (expanded, sizeof(expanded), "maps/%s.bsp", map);
+	if ( trap_FS_FOpenFile( expanded, NULL, FS_READ ) <= 0 ) {
+		Com_Printf ("%s can't find map %s\n", command, expanded);
+		return;
+	}
+
+	if ( trap_Cvar_VariableIntegerValue( "sv_maxclients" ) < 8 ) {
+		trap_Cvar_SetValue( "sv_maxclients", 8 );
+	}
+
+	trap_Cvar_SetValue( "ui_singlePlayerActive", 1 );
+	trap_Cvar_SetValue( "g_gametype", GT_SINGLE_PLAYER );
+	trap_Cvar_SetValue( "g_doWarmup", 0 );
+
+	trap_Cmd_ExecuteText( EXEC_APPEND, va( "%s %s\n", cheats ? "devmap" : "map", map ) );
 }

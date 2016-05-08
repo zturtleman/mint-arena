@@ -141,7 +141,7 @@ int			trap_CM_MarkFragments( int numPoints, const vec3_t *points,
 			int maxFragments, markFragment_t *fragmentBuffer );
 
 void		trap_R_LoadWorldMap( const char *mapname );
-qboolean	trap_GetEntityToken( char *buffer, int bufferSize );
+qboolean	trap_GetEntityToken( int *parseOffset, char *buffer, int bufferSize );
 
 // all media should be registered during level startup to prevent
 // hitches during gameplay

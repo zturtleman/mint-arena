@@ -509,74 +509,11 @@ static void *BotImport_HunkAlloc( int size ) {
 
 /*
 ==================
-BotImport_DebugPolygonCreate
-==================
-*/
-int BotImport_DebugPolygonCreate(int color, int numPoints, vec3_t *points) {
-#if 1
-	return 0;
-#else
-	bot_debugpoly_t *poly;
-	int i;
-
-	if (!debugpolygons)
-		return 0;
-
-	for (i = 1; i < bot_maxdebugpolys; i++) 	{
-		if (!debugpolygons[i].inuse)
-			break;
-	}
-	if (i >= bot_maxdebugpolys)
-		return 0;
-	poly = &debugpolygons[i];
-	poly->inuse = qtrue;
-	poly->color = color;
-	poly->numPoints = numPoints;
-	Com_Memcpy(poly->points, points, numPoints * sizeof(vec3_t));
-	//
-	return i;
-#endif
-}
-
-/*
-==================
-BotImport_DebugPolygonShow
-==================
-*/
-static void BotImport_DebugPolygonShow(int id, int color, int numPoints, vec3_t *points) {
-#if 0
-	bot_debugpoly_t *poly;
-
-	if (!debugpolygons) return;
-	poly = &debugpolygons[id];
-	poly->inuse = qtrue;
-	poly->color = color;
-	poly->numPoints = numPoints;
-	Com_Memcpy(poly->points, points, numPoints * sizeof(vec3_t));
-#endif
-}
-
-/*
-==================
-BotImport_DebugPolygonDelete
-==================
-*/
-void BotImport_DebugPolygonDelete(int id)
-{
-#if 0
-	if (!debugpolygons) return;
-	debugpolygons[id].inuse = qfalse;
-#endif
-}
-
-/*
-==================
 BotImport_DebugLineCreate
 ==================
 */
-static int BotImport_DebugLineCreate(void) {
-	vec3_t points[1];
-	return BotImport_DebugPolygonCreate(0, 0, points);
+static int BotImport_DebugLineCreate( void ) {
+	return trap_DebugPolygonCreate( 0, 0, NULL );
 }
 
 /*
@@ -584,10 +521,8 @@ static int BotImport_DebugLineCreate(void) {
 BotImport_DebugLineDelete
 ==================
 */
-static void BotImport_DebugLineDelete(int line) {
-#if 0
-	BotImport_DebugPolygonDelete(line);
-#endif
+static void BotImport_DebugLineDelete( int line ) {
+	trap_DebugPolygonDelete( line );
 }
 
 /*
@@ -596,7 +531,6 @@ BotImport_DebugLineShow
 ==================
 */
 static void BotImport_DebugLineShow(int line, vec3_t start, vec3_t end, int color) {
-#if 0
 	vec3_t points[4], dir, cross, up = {0, 0, 1};
 	float dot;
 
@@ -621,8 +555,7 @@ static void BotImport_DebugLineShow(int line, vec3_t start, vec3_t end, int colo
 	VectorMA(points[2], -2, cross, points[2]);
 	VectorMA(points[3], 2, cross, points[3]);
 
-	BotImport_DebugPolygonShow(line, color, 4, points);
-#endif
+	trap_DebugPolygonShow(line, color, 4, points);
 }
 
 int Z_AvailableMemory( void ) {
@@ -637,12 +570,6 @@ SV_BotInitBotLib
 void SV_BotInitBotLib(void) {
 	botlib_import_t	botlib_import;
 
-/*
-	if (debugpolygons) Z_Free(debugpolygons);
-	bot_maxdebugpolys = Cvar_VariableIntegerValue("bot_maxdebugpolys");
-	debugpolygons = Z_Malloc(sizeof(bot_debugpoly_t) * bot_maxdebugpolys);
-*/
-
 	botlib_import.Print = BotImport_Print;
 	botlib_import.Trace = BotImport_Trace;
 	botlib_import.EntityTrace = BotImport_EntityTrace;
@@ -650,7 +577,7 @@ void SV_BotInitBotLib(void) {
 	botlib_import.inPVS = BotImport_inPVS;
 	botlib_import.GetEntityToken = trap_GetEntityToken;
 	botlib_import.BSPModelMinsMaxsOrigin = BotImport_BSPModelMinsMaxsOrigin;
-	botlib_import.BotClientCommand = trap_ClientCommand; // SV_ForceClientCommand;
+	botlib_import.BotClientCommand = trap_ClientCommand;
 
 	//memory management
 	botlib_import.GetMemory = BotImport_GetMemory;
@@ -671,13 +598,11 @@ void SV_BotInitBotLib(void) {
 	botlib_import.DebugLineShow = BotImport_DebugLineShow;
 
 	//debug polygons
-	botlib_import.DebugPolygonCreate = BotImport_DebugPolygonCreate;
-	botlib_import.DebugPolygonDelete = BotImport_DebugPolygonDelete;
+	botlib_import.DebugPolygonCreate = trap_DebugPolygonCreate;
+	botlib_import.DebugPolygonDelete = trap_DebugPolygonDelete;
 
 	botlib_export = (botlib_export_t *)GetBotLibAPI( BOTLIB_API_VERSION, &botlib_import );
-#ifndef Q3_VM
 	assert(botlib_export); 	// somehow we end up with a zero import.
-#endif
 }
 
 /*

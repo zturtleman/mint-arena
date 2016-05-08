@@ -2562,6 +2562,19 @@ void CG_Player( centity_t *cent ) {
 		}
 	}
 
+	if ( renderfx != RF_ONLY_MIRROR ) {
+		float bboxColor[4] = { 0, 0, 0, 0.375f };
+
+		if ( pi->team == TEAM_RED ) {
+			bboxColor[0] = 0.625f;
+		} else if ( pi->team == TEAM_BLUE ) {
+			bboxColor[2] = 0.75f;
+		} else {
+			bboxColor[1] = 0.5f;
+		}
+
+		CG_DrawBBox( cent, bboxColor );
+	}
 
 	memset( &legs, 0, sizeof(legs) );
 	memset( &torso, 0, sizeof(torso) );

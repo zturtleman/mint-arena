@@ -747,6 +747,7 @@ typedef struct {
 	char        *spawnVars[MAX_SPAWN_VARS][2];  // key / value pairs
 	int numSpawnVarChars;
 	char spawnVarChars[MAX_SPAWN_VARS_CHARS];
+	int spawnEntityOffset;
 
 	vec2_t mapcoordsMins;
 	vec2_t mapcoordsMaxs;

@@ -334,8 +334,8 @@ void	trap_R_LoadWorldMap( const char *mapname ) {
 	syscall( CG_R_LOADWORLDMAP, mapname );
 }
 
-qboolean trap_GetEntityToken( char *buffer, int bufferSize ) {
-	return syscall( CG_GET_ENTITY_TOKEN, buffer, bufferSize );
+qboolean trap_GetEntityToken( int *parseOffset, char *buffer, int bufferSize ) {
+	return syscall( CG_GET_ENTITY_TOKEN, parseOffset, buffer, bufferSize );
 }
 
 qhandle_t trap_R_RegisterModel( const char *name ) {

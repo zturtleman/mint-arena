@@ -283,6 +283,10 @@ int trap_DebugPolygonCreate(int color, int numPoints, vec3_t *points) {
 	return syscall( G_DEBUG_POLYGON_CREATE, color, numPoints, points );
 }
 
+void trap_DebugPolygonShow(int id, int color, int numPoints, vec3_t *points) {
+	syscall( G_DEBUG_POLYGON_SHOW, id, color, numPoints, points );
+}
+
 void trap_DebugPolygonDelete(int id) {
 	syscall( G_DEBUG_POLYGON_DELETE, id );
 }

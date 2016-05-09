@@ -2,7 +2,7 @@
 
 To use this you'll need the [Spearmint engine](https://github.com/zturtleman/spearmint).
 
-  * On Windows, install MinGW.
+  * On Windows, install [Cygwin and mingw-w64](https://github.com/zturtleman/spearmint/wiki/Compiling#windows).
   * Get the source for Spearmint and build it using `make`.
   * Get the source for this repo and build it using `make`.
   * Copy the pak?.pk3 files for baseq3 and missionpack into the directories in `mint-arena/build/release-mingw32-x86/`.

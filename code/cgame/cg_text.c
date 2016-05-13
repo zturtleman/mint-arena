@@ -31,6 +31,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "cg_local.h"
 #include "../qcommon/q_unicode.h"
 
+static vec4_t lastTextColor = { 0, 0, 0, 1 };
+
 // Q3A UI also uses additional fonts (font1_prop, font2_prop, ..)
 // Team Arena HUD/UI also use separate fonts (specified in .menu files).
 // The truetype font names here are the same as in Team Arena
@@ -330,6 +332,7 @@ void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const ve
 
 	trap_R_SetColor( color );
 	Vector4Copy( color, newColor );
+	Vector4Copy( color, lastTextColor );
 
 	gradientColor[0] = Com_Clamp( 0, 1, newColor[0] - gradient );
 	gradientColor[1] = Com_Clamp( 0, 1, newColor[1] - gradient );
@@ -349,6 +352,7 @@ void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const ve
 				VectorCopy( g_color_table[ColorIndex(*(s+1))], newColor );
 				newColor[3] = color[3];
 				trap_R_SetColor( newColor );
+				Vector4Copy( newColor, lastTextColor );
 
 				gradientColor[0] = Com_Clamp( 0, 1, newColor[0] - gradient );
 				gradientColor[1] = Com_Clamp( 0, 1, newColor[1] - gradient );
@@ -396,6 +400,7 @@ void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale
 
 	trap_R_SetColor( color );
 	Vector4Copy( color, newColor );
+	Vector4Copy( color, lastTextColor );
 
 	gradientColor[0] = Com_Clamp( 0, 1, newColor[0] - gradient );
 	gradientColor[1] = Com_Clamp( 0, 1, newColor[1] - gradient );
@@ -418,6 +423,7 @@ void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale
 				VectorCopy( g_color_table[ColorIndex(*(s+1))], newColor );
 				newColor[3] = color[3];
 				trap_R_SetColor( newColor );
+				Vector4Copy( newColor, lastTextColor );
 
 				gradientColor[0] = Com_Clamp( 0, 1, newColor[0] - gradient );
 				gradientColor[1] = Com_Clamp( 0, 1, newColor[1] - gradient );
@@ -506,6 +512,7 @@ void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, fl
 
 	useScale = scale * font->glyphScale;
 	trap_R_SetColor( color );
+	Vector4Copy( color, lastTextColor );
 
 	len = Q_UTF8_PrintStrlen( text );
 	if ( limit > 0 && len > limit ) {
@@ -519,6 +526,7 @@ void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, fl
 			VectorCopy( g_color_table[ColorIndex(*(s+1))], newColor );
 			newColor[3] = color[3];
 			trap_R_SetColor( newColor );
+			Vector4Copy( newColor, lastTextColor );
 			s += 2;
 			continue;
 		}
@@ -539,5 +547,181 @@ void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, fl
 		count++;
 	}
 	trap_R_SetColor( NULL );
+}
+
+#define MAX_WRAP_BYTES 1024
+#define MAX_WRAP_LINES 1024
+
+void Text_Paint_AutoWrapped( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *str, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, float xmax, float ystep, int style ) {
+	int width;
+	char *s1, *s2, *s3;
+	char c_bcp;
+	char buf[MAX_WRAP_BYTES];
+	char wrapped[MAX_WRAP_BYTES + MAX_WRAP_LINES];
+	qboolean autoNewline[MAX_WRAP_LINES];
+	int numLines;
+	vec4_t newColor;
+	const char *p, *start;
+	float drawX;
+
+	if ( !str || str[0] == '\0' )
+		return;
+
+	//
+	// Wrap the text
+	//
+
+	Q_strncpyz( buf, str, sizeof(buf) );
+	s1 = s2 = s3 = buf;
+
+	wrapped[0] = 0;
+	numLines = 0;
+
+	while ( 1 ) {
+		do {
+			s3 += Q_UTF8_Width( s3 );
+		} while ( *s3 != '\n' && *s3 != ' ' && *s3 != '\0' );
+		c_bcp = *s3;
+		*s3 = '\0';
+		width = Text_Width( s1, font, scale, 0 );
+		*s3 = c_bcp;
+		if ( width > xmax ) {
+			if ( s1 == s2 )
+			{
+				// fuck, don't have a clean cut, we'll overflow
+				s2 = s3;
+			}
+			*s2 = '\0';
+
+			Q_strcat( wrapped, sizeof ( wrapped ), s1 );
+			Q_strcat( wrapped, sizeof ( wrapped ), "\n" );
+			if ( numLines < MAX_WRAP_LINES ) {
+				autoNewline[numLines] = qtrue;
+				numLines++;
+			}
+
+			if ( c_bcp == '\0' )
+			{
+				// that was the last word
+				// we could start a new loop, but that wouldn't be much use
+				// even if the word is too long, we would overflow it (see above)
+				// so just print it now if needed
+				s2 += Q_UTF8_Width( s2 );
+				if ( *s2 != '\0' && *s2 != '\n' ) // if we are printing an overflowing line we have s2 == s3
+				{
+					Q_strcat( wrapped, sizeof ( wrapped ), s2 );
+					Q_strcat( wrapped, sizeof ( wrapped ), "\n" );
+					if ( numLines < MAX_WRAP_LINES ) {
+						autoNewline[numLines] = qtrue;
+						numLines++;
+					}
+				}
+				break;
+			}
+			s2 += Q_UTF8_Width( s2 );
+			s1 = s2;
+			s3 = s2;
+		}
+		else if ( c_bcp == '\n' )
+		{
+			*s3 = '\0';
+
+			Q_strcat( wrapped, sizeof ( wrapped ), s1 );
+			Q_strcat( wrapped, sizeof ( wrapped ), "\n" );
+			if ( numLines < MAX_WRAP_LINES ) {
+				autoNewline[numLines] = qfalse;
+				numLines++;
+			}
+
+			s3 += Q_UTF8_Width( s3 );
+			s1 = s3;
+			s2 = s3;
+
+			if ( *s3 == '\0' ) // we reached the end
+			{
+				break;
+			}
+		}
+		else
+		{
+			s2 = s3;
+			if ( c_bcp == '\0' ) // we reached the end
+			{
+				Q_strcat( wrapped, sizeof ( wrapped ), s1 );
+				Q_strcat( wrapped, sizeof ( wrapped ), "\n" );
+				if ( numLines < MAX_WRAP_LINES ) {
+					autoNewline[numLines] = qfalse;
+					numLines++;
+				}
+				break;
+			}
+		}
+	}
+
+	//
+	// Draw the text
+	//
+
+	switch (style & UI_VA_FORMATMASK)
+	{
+		case UI_VA_CENTER:
+			// center justify at y
+			y = y - numLines * ystep / 2.0f;
+			break;
+
+		case UI_VA_BOTTOM:
+			// bottom justify at y
+			y = y - numLines * ystep;
+			break;
+
+		case UI_VA_TOP:
+		default:
+			// top justify at y
+			break;
+	}
+
+	numLines = 0;
+	Vector4Copy( color, newColor );
+
+	start = wrapped;
+	p = strchr(wrapped, '\n');
+	while (p && *p) {
+		strncpy(buf, start, p-start+1);
+		buf[p-start] = '\0';
+
+		switch (style & UI_FORMATMASK)
+		{
+			case UI_CENTER:
+				// center justify at x
+				drawX = x - Text_Width( buf, font, scale, 0 ) / 2;
+				break;
+
+			case UI_RIGHT:
+				// right justify at x
+				drawX = x - Text_Width( buf, font, scale, 0 );
+				break;
+
+			case UI_LEFT:
+			default:
+				// left justify at x
+				drawX = x;
+				break;
+		}
+
+		Text_Paint( drawX, y, font, scale, newColor, buf, adjust, 0, shadowOffset, gradient, forceColor );
+		y += ystep;
+
+		if ( numLines >= MAX_WRAP_LINES || autoNewline[numLines] ) {
+			Vector4Copy( lastTextColor, newColor );
+		} else {
+			// reset color after non-wrapped lines
+			Vector4Copy( color, newColor );
+		}
+
+		numLines++;
+
+		start += p - start + 1;
+		p = strchr(p+1, '\n');
+	}
 }
 

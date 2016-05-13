@@ -266,6 +266,8 @@ vmCvar_t	cg_oldBubbles;
 vmCvar_t	cg_smoothBodySink;
 vmCvar_t	cg_antiLag;
 vmCvar_t	cg_forceBitmapFonts;
+vmCvar_t	cg_drawGrappleHook;
+vmCvar_t	cg_drawBBox;
 
 vmCvar_t	cg_introPlayed;
 vmCvar_t	cg_joystickDebug;
@@ -465,6 +467,8 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_smoothBodySink, "cg_smoothBodySink", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_antiLag, "cg_antiLag", "0", CVAR_USERINFO_ALL | CVAR_ARCHIVE, RANGE_INT( 0, 2 ) },
 	{ &cg_forceBitmapFonts, "cg_forceBitmapFonts", "0", CVAR_ARCHIVE | CVAR_LATCH, RANGE_BOOL },
+	{ &cg_drawGrappleHook, "cg_drawGrappleHook", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_drawBBox, "cg_drawBBox", "0", CVAR_CHEAT, RANGE_BOOL },
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
 
 	{ &cg_introPlayed, "com_introPlayed", "0", CVAR_ARCHIVE, RANGE_BOOL },
@@ -2100,13 +2104,12 @@ qboolean CG_Load_Menu(char **p) {
 	while ( 1 ) {
 
 		token = COM_ParseExt(p, qtrue);
-    
-		if (Q_stricmp(token, "}") == 0) {
-			return qtrue;
+		if ( !token[0] ) {
+			return qfalse;
 		}
 
-		if ( !token || token[0] == 0 ) {
-			return qfalse;
+		if (Q_stricmp(token, "}") == 0) {
+			return qtrue;
 		}
 
 		CG_ParseMenu(token); 
@@ -2154,7 +2157,7 @@ void CG_LoadMenus(const char *menuFile) {
 
 	while ( 1 ) {
 		token = COM_ParseExt( &p, qtrue );
-		if( !token || token[0] == 0 || token[0] == '}') {
+		if ( !token[0] ) {
 			break;
 		}
 
@@ -2554,6 +2557,7 @@ Called after every cgame load, such as main menu, level change, or subsystem res
 =================
 */
 void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
+	Swap_Init();
 
 	// clear everything
 	CG_ClearState( qtrue, maxSplitView );
@@ -2568,6 +2572,7 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
 	cgs.media.consoleShader		= trap_R_RegisterShader( "console" );
 	cgs.media.nodrawShader		= trap_R_RegisterShaderEx( "nodraw", LIGHTMAP_NONE, qtrue );
+	cgs.media.whiteDynamicShader= trap_R_RegisterShaderEx( "white", LIGHTMAP_NONE, qtrue );
 
 	CG_TextInit();
 
@@ -3440,13 +3445,26 @@ CG_UpdateGlconfig
 ================
 */
 static void CG_UpdateGlconfig( qboolean initial ) {
+	int oldWidth, oldHeight;
+	qboolean resized;
+
+	oldWidth = cgs.glconfig.vidWidth;
+	oldHeight = cgs.glconfig.vidHeight;
+
 	trap_GetGlconfig( &cgs.glconfig );
 
-	if ( initial || cg.connState != CA_ACTIVE ) {
+	resized = !initial && ( oldWidth != cgs.glconfig.vidWidth
+						 || oldHeight != cgs.glconfig.vidHeight );
+
+	if ( initial || ( resized && cg.connState != CA_ACTIVE ) ) {
 		// Viewport scale and offset
 		cg.viewport = 0;
 		cg.numViewports = 1;
 		CG_CalcVrect();
+	}
+
+	if ( resized ) {
+		UI_WindowResized();
 	}
 }
 

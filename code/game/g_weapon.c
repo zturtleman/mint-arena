@@ -593,8 +593,15 @@ void Weapon_HookFree (gentity_t *ent)
 
 void Weapon_HookThink (gentity_t *ent)
 {
-	if (ent->enemy) {
+	ent->nextthink = level.time + FRAMETIME;
+
+	if (ent->enemy && ent->enemy->player) {
 		vec3_t v, oldorigin;
+
+		if ( ent->enemy->player->ps.pm_type == PM_DEAD ) {
+			Weapon_HookFree( ent );
+			return;
+		}
 
 		VectorCopy(ent->r.currentOrigin, oldorigin);
 		v[0] = ent->enemy->r.currentOrigin[0] + (ent->enemy->s.mins[0] + ent->enemy->s.maxs[0]) * 0.5;

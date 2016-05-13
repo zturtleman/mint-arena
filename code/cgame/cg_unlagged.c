@@ -229,75 +229,35 @@ void CG_PredictWeaponEffects( centity_t *cent ) {
 	}
 }
 
+#endif
+
 /*
 =================
-CG_AddBoundingBox
+CG_DrawBBox
 
-Draws a bounding box around a player.  Called from CG_Player.
+Draws a bounding box around an entity.
 =================
 */
-void CG_AddBoundingBox( centity_t *cent ) {
+void CG_DrawBBox( centity_t *cent, float *color ) {
 	polyVert_t verts[4];
-	clientInfo_t *ci;
 	int i;
-	vec3_t mins = {-15, -15, -24};
-	vec3_t maxs = {15, 15, 32};
+	vec3_t mins;
+	vec3_t maxs;
 	float extx, exty, extz;
 	vec3_t corners[8];
-	qhandle_t bboxShader, bboxShader_nocull;
 
 	if ( !cg_drawBBox.integer ) {
 		return;
 	}
 
-	// don't draw it if it's us in first-person
-	if ( cent->currentState.number == cg.predictedPlayerState.clientNum &&
-			!cg.renderingThirdPerson ) {
-		return;
-	}
-
-	// don't draw it for dead players
-	if ( cent->currentState.eFlags & EF_DEAD ) {
-		return;
-	}
-
-	// get the shader handles
-	bboxShader = trap_R_RegisterShader( "bbox" );
-	bboxShader_nocull = trap_R_RegisterShader( "bbox_nocull" );
-
-	// if they don't exist, forget it
-	if ( !bboxShader || !bboxShader_nocull ) {
-		return;
-	}
-
-	// get the player's client info
-	ci = &cgs.clientinfo[cent->currentState.clientNum];
-
-	// if it's us
-	if ( cent->currentState.number == cg.predictedPlayerState.clientNum ) {
-		// use the view height
-		maxs[2] = cg.predictedPlayerState.viewheight + 6;
-	}
-	else {
-		int x, zd, zu;
-
-		// otherwise grab the encoded bounding box
-		x = (cent->currentState.solid & 255);
-		zd = ((cent->currentState.solid>>8) & 255);
-		zu = ((cent->currentState.solid>>16) & 255) - 32;
-
-		mins[0] = mins[1] = -x;
-		maxs[0] = maxs[1] = x;
-		mins[2] = -zd;
-		maxs[2] = zu;
-	}
+	VectorCopy( cent->currentState.mins, mins );
+	VectorCopy( cent->currentState.maxs, maxs );
 
 	// get the extents (size)
 	extx = maxs[0] - mins[0];
 	exty = maxs[1] - mins[1];
 	extz = maxs[2] - mins[2];
 
-	
 	// set the polygon's texture coordinates
 	verts[0].st[0] = 0;
 	verts[0].st[1] = 0;
@@ -309,29 +269,11 @@ void CG_AddBoundingBox( centity_t *cent ) {
 	verts[3].st[1] = 0;
 
 	// set the polygon's vertex colors
-	if ( ci->team == TEAM_RED ) {
-		for ( i = 0; i < 4; i++ ) {
-			verts[i].modulate[0] = 160;
-			verts[i].modulate[1] = 0;
-			verts[i].modulate[2] = 0;
-			verts[i].modulate[3] = 255;
-		}
-	}
-	else if ( ci->team == TEAM_BLUE ) {
-		for ( i = 0; i < 4; i++ ) {
-			verts[i].modulate[0] = 0;
-			verts[i].modulate[1] = 0;
-			verts[i].modulate[2] = 192;
-			verts[i].modulate[3] = 255;
-		}
-	}
-	else {
-		for ( i = 0; i < 4; i++ ) {
-			verts[i].modulate[0] = 0;
-			verts[i].modulate[1] = 128;
-			verts[i].modulate[2] = 0;
-			verts[i].modulate[3] = 255;
-		}
+	for ( i = 0; i < 4; i++ ) {
+		verts[i].modulate[0] = 0xFF * color[0];
+		verts[i].modulate[1] = 0xFF * color[1];
+		verts[i].modulate[2] = 0xFF * color[2];
+		verts[i].modulate[3] = 0xFF * color[3];
 	}
 
 	VectorAdd( cent->lerpOrigin, maxs, corners[3] );
@@ -355,43 +297,41 @@ void CG_AddBoundingBox( centity_t *cent ) {
 	VectorCopy( corners[1], verts[1].xyz );
 	VectorCopy( corners[2], verts[2].xyz );
 	VectorCopy( corners[3], verts[3].xyz );
-	trap_R_AddPolyToScene( bboxShader, 4, verts, 0, 0 );
+	trap_R_AddPolyToScene( cgs.media.whiteDynamicShader, 4, verts, 0, 0 );
 
 	// bottom
 	VectorCopy( corners[7], verts[0].xyz );
 	VectorCopy( corners[6], verts[1].xyz );
 	VectorCopy( corners[5], verts[2].xyz );
 	VectorCopy( corners[4], verts[3].xyz );
-	trap_R_AddPolyToScene( bboxShader, 4, verts, 0, 0 );
+	trap_R_AddPolyToScene( cgs.media.whiteDynamicShader, 4, verts, 0, 0 );
 
 	// top side
-	VectorCopy( corners[3], verts[0].xyz );
-	VectorCopy( corners[2], verts[1].xyz );
-	VectorCopy( corners[6], verts[2].xyz );
-	VectorCopy( corners[7], verts[3].xyz );
-	trap_R_AddPolyToScene( bboxShader_nocull, 4, verts, 0, 0 );
+	VectorCopy( corners[3], verts[2].xyz );
+	VectorCopy( corners[2], verts[3].xyz );
+	VectorCopy( corners[6], verts[0].xyz );
+	VectorCopy( corners[7], verts[1].xyz );
+	trap_R_AddPolyToScene( cgs.media.whiteDynamicShader, 4, verts, 0, 0 );
 
 	// left side
-	VectorCopy( corners[2], verts[0].xyz );
-	VectorCopy( corners[1], verts[1].xyz );
-	VectorCopy( corners[5], verts[2].xyz );
-	VectorCopy( corners[6], verts[3].xyz );
-	trap_R_AddPolyToScene( bboxShader_nocull, 4, verts, 0, 0 );
+	VectorCopy( corners[2], verts[2].xyz );
+	VectorCopy( corners[1], verts[3].xyz );
+	VectorCopy( corners[5], verts[0].xyz );
+	VectorCopy( corners[6], verts[1].xyz );
+	trap_R_AddPolyToScene( cgs.media.whiteDynamicShader, 4, verts, 0, 0 );
 
 	// right side
-	VectorCopy( corners[0], verts[0].xyz );
-	VectorCopy( corners[3], verts[1].xyz );
-	VectorCopy( corners[7], verts[2].xyz );
-	VectorCopy( corners[4], verts[3].xyz );
-	trap_R_AddPolyToScene( bboxShader_nocull, 4, verts, 0, 0 );
+	VectorCopy( corners[0], verts[2].xyz );
+	VectorCopy( corners[3], verts[3].xyz );
+	VectorCopy( corners[7], verts[0].xyz );
+	VectorCopy( corners[4], verts[1].xyz );
+	trap_R_AddPolyToScene( cgs.media.whiteDynamicShader, 4, verts, 0, 0 );
 
 	// bottom side
-	VectorCopy( corners[1], verts[0].xyz );
-	VectorCopy( corners[0], verts[1].xyz );
-	VectorCopy( corners[4], verts[2].xyz );
-	VectorCopy( corners[5], verts[3].xyz );
-	trap_R_AddPolyToScene( bboxShader_nocull, 4, verts, 0, 0 );
+	VectorCopy( corners[1], verts[2].xyz );
+	VectorCopy( corners[0], verts[3].xyz );
+	VectorCopy( corners[4], verts[0].xyz );
+	VectorCopy( corners[5], verts[1].xyz );
+	trap_R_AddPolyToScene( cgs.media.whiteDynamicShader, 4, verts, 0, 0 );
 }
-
-#endif
 

@@ -544,6 +544,7 @@ typedef struct {
 	qboolean			demoversion;
 	qboolean			firstdraw;
 	int					maxSplitView;
+	qboolean			bannerNumbers;
 } uiStatic_t;
 
 extern void			UI_LerpColor(vec4_t a, vec4_t b, vec4_t c, float t);
@@ -579,6 +580,7 @@ void UI_SPLevelMenu_ReInit( void );
 // ui_spArena.c
 //
 void UI_SPArena_Start( const char *arenaInfo );
+void UI_SPMap_f( void );
 
 //
 // ui_spPostgame.c

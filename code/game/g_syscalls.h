@@ -66,10 +66,11 @@ qboolean trap_EntityContact( const vec3_t mins, const vec3_t maxs, const gentity
 int		trap_BotAllocateClient( void );
 void	trap_BotFreeClient( int clientNum );
 void	trap_GetUsercmd( int playerNum, usercmd_t *cmd );
-qboolean	trap_GetEntityToken( char *buffer, int bufferSize );
+qboolean	trap_GetEntityToken( int *parseOffset, char *buffer, int bufferSize );
 void	trap_ClientCommand(int playerNum, const char *command);
 
 int		trap_DebugPolygonCreate(int color, int numPoints, vec3_t *points);
+void	trap_DebugPolygonShow(int id, int color, int numPoints, vec3_t *points);
 void	trap_DebugPolygonDelete(int id);
 
 qhandle_t trap_R_RegisterModel( const char *name );

@@ -60,6 +60,7 @@ void	UI_DrawConnectScreen( qboolean overlay );
 // a GetClientState syscall will be made to get the current strings
 
 qboolean UI_WantsBindKeys( void );
+void UI_WindowResized( void );
 
 // used by cg_info.c
 void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color );

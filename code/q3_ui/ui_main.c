@@ -44,6 +44,10 @@ qboolean UI_WantsBindKeys( void ) {
 	return Controls_WantsBindKeys();
 }
 
+void UI_WindowResized( void ) {
+
+}
+
 
 /*
 ================

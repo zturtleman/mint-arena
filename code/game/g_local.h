@@ -37,9 +37,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 //==================================================================
 
-// the "gameversion" client command will print this plus compile date
-#define	GAMEVERSION	MODDIR
-
 #define BODY_QUEUE_SIZE		64
 
 #define	FRAMETIME			100					// msec
@@ -436,6 +433,7 @@ typedef struct {
 	char		*spawnVars[MAX_SPAWN_VARS][2];	// key / value pairs
 	int			numSpawnVarChars;
 	char		spawnVarChars[MAX_SPAWN_VARS_CHARS];
+	int			spawnEntityOffset;
 
 	// intermission state
 	int			intermissionQueued;		// intermission was qualified, but

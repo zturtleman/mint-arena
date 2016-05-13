@@ -62,7 +62,6 @@ static void UI_CreditMenu_Draw_ioq3( void ) {
 		S_COLOR_YELLOW "id Software",
 		S_COLOR_RED "ioquake3 contributors",
 		S_COLOR_GREEN "Spearmint contributors",
-		"Zack Middleton",
 		"",
 		"...and many, many others!",  // keep this one last.
 		NULL

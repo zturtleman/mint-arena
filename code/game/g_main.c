@@ -120,7 +120,7 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_cheats, "sv_cheats", "", 0, 0, RANGE_ALL },
 
 	// noset vars
-	{ NULL, "gamename", GAMEVERSION , CVAR_SERVERINFO | CVAR_ROM, 0, RANGE_ALL },
+	{ NULL, "gameversion", GAME_VERSION , CVAR_SERVERINFO | CVAR_ROM, 0, RANGE_ALL },
 	{ NULL, "gamedate", __DATE__ , CVAR_ROM, 0, RANGE_ALL },
 	{ &g_restarted, "g_restarted", "0", CVAR_ROM, 0, RANGE_ALL },
 
@@ -468,10 +468,12 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	int					i, j;
 
 	G_DPrintf ("------- Game Initialization -------\n");
-	G_DPrintf ("gamename: %s\n", GAMEVERSION);
+	G_DPrintf ("gameversion: %s\n", GAME_VERSION);
 	G_DPrintf ("gamedate: %s\n", __DATE__);
 
 	srand( randomSeed );
+
+	Swap_Init();
 
 	G_RegisterCvars();
 

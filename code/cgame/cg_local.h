@@ -195,6 +195,9 @@ typedef struct {
 	float			barrelAngle;
 	int				barrelTime;
 	qboolean		barrelSpinning;
+
+	// third person gun flash origin
+	vec3_t			flashOrigin;
 } playerEntity_t;
 
 
@@ -583,7 +586,6 @@ typedef struct {
 	float		centerPrintCharScale;
 	int			centerPrintY;
 	char		centerPrint[1024];
-	int			centerPrintLines;
 
 	// low ammo warning state
 	int			lowAmmoWarning;		// 1 = low, 2 = empty
@@ -658,6 +660,9 @@ typedef struct {
 	vec3_t		kick_origin;
 
 	qboolean	renderingThirdPerson;		// during deaths, chasecams, etc
+
+	// first person gun flash origin
+	vec3_t		flashOrigin;
 
 	//qboolean cameraMode;		// if rendering from a loaded camera
 
@@ -746,6 +751,7 @@ typedef struct {
 	char        *spawnVars[MAX_SPAWN_VARS][2];  // key / value pairs
 	int numSpawnVarChars;
 	char spawnVarChars[MAX_SPAWN_VARS_CHARS];
+	int spawnEntityOffset;
 
 	vec2_t mapcoordsMins;
 	vec2_t mapcoordsMaxs;
@@ -780,7 +786,6 @@ typedef struct {
 	float		centerPrintCharScale;
 	int			centerPrintY;
 	char		centerPrint[1024];
-	int			centerPrintLines;
 
 	// say, say_team, ...
 	char		messageCommand[32];
@@ -858,6 +863,7 @@ typedef struct {
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
 	qhandle_t	nodrawShader;
+	qhandle_t	whiteDynamicShader;
 
 #ifdef MISSIONPACK
 	qhandle_t	redCubeModel;
@@ -1214,6 +1220,7 @@ typedef struct {
 	float			screenYBias;
 	float			screenXScaleStretch;
 	float			screenYScaleStretch;
+	float			screenFakeWidth;	// width in fake 640x480 coords, it can be more than 640
 
 	int				maxSplitView;
 
@@ -1284,6 +1291,7 @@ typedef struct {
 	vec3_t		globalFogColor;
 	float		globalFogDepthForOpaque;
 	float		globalFogDensity;
+	float		globalFogFarClip;
 
 	cg_gamemodel_t miscGameModels[MAX_STATIC_GAMEMODELS];
 
@@ -1419,6 +1427,8 @@ extern	vmCvar_t		cg_oldBubbles;
 extern	vmCvar_t		cg_smoothBodySink;
 extern	vmCvar_t		cg_antiLag;
 extern	vmCvar_t		cg_forceBitmapFonts;
+extern	vmCvar_t		cg_drawGrappleHook;
+extern	vmCvar_t		cg_drawBBox;
 extern	vmCvar_t		ui_stretch;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;
@@ -1561,6 +1571,8 @@ void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color
 void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const vec4_t color, int cursorPos, int cursorChar );
 void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset );
 void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar );
+void CG_DrawStringAutoWrap( int x, int y, const char* str, int style, const vec4_t color, float scale, float shadowOffset, float gradient, float wrapX );
+void CG_DrawStringDirect( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar, float wrapX );
 void CG_DrawBigString( int x, int y, const char *s, float alpha );
 void CG_DrawBigStringColor( int x, int y, const char *s, vec4_t color );
 void CG_DrawSmallString( int x, int y, const char *s, float alpha );
@@ -1647,6 +1659,7 @@ void Text_PaintGlyph( float x, float y, float useScale, const glyphInfo_t *glyph
 void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor );
 void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor );
 void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit );
+void Text_Paint_AutoWrapped( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *str, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, float xmax, float ystep, int style );
 
 void CG_Text_Paint( float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle );
 void CG_Text_PaintWithCursor( float x, float y, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, int textStyle );
@@ -1867,6 +1880,7 @@ void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int p
 void CG_PlayBufferedVoiceChats( void );
 #endif
 int CG_LocalPlayerBitsForTeam( team_t );
+void CG_ReplaceCharacter( char *str, char old, char new );
 
 //
 // cg_playerstate.c
@@ -1975,4 +1989,9 @@ void IN_Button13Down( int localPlayerNum );
 void IN_Button13Up( int localPlayerNum );
 void IN_Button14Down( int localPlayerNum );
 void IN_Button14Up( int localPlayerNum );
+
+//
+// cg_unlagged.c
+//
+void CG_DrawBBox( centity_t *cent, float *color );
 

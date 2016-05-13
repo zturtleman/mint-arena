@@ -40,8 +40,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define BOTFILESBASEFOLDER		"botfiles"
 
-#define CTF
-
 #define MAX_ITEMS					256
 //bot flags
 #define BFL_STRAFERIGHT				1	//strafe to the right
@@ -108,6 +106,10 @@ typedef struct bot_waypoint_s
 #define MAX_ACTIVATESTACK		8
 #define MAX_ACTIVATEAREAS		32
 
+struct bot_state_s;
+
+typedef void (*bot_aienter_t)(struct bot_state_s *bs, char *s);
+
 typedef struct bot_activategoal_s
 {
 	int inuse;
@@ -122,6 +124,7 @@ typedef struct bot_activategoal_s
 	int areas[MAX_ACTIVATEAREAS];			//routing areas disabled by blocking entity
 	int numareas;							//number of disabled routing areas
 	int areasdisabled;						//true if the areas are disabled for the routing
+	bot_aienter_t aienter;					//function to call to return to AI node from before going to activate entity
 	struct bot_activategoal_s *next;		//next activate goal on stack
 } bot_activategoal_t;
 

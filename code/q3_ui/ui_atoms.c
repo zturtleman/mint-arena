@@ -813,13 +813,15 @@ void UI_Cache_f( void ) {
 
 
 consoleCommand_t	ui_commands[] = {
+	{ "iamacheater", UI_SPUnlock_f, 0 },
+	{ "iamamonkey", UI_SPUnlockMedals_f, 0 },
 	{ "levelselect", UI_SPLevelMenu_f, 0 },
 	{ "postgame", UI_SPPostgameMenu_f, CMD_INGAME },
+	{ "spdevmap", UI_SPMap_f, 0 },
+	{ "spmap", UI_SPMap_f, 0 },
 	{ "ui_cache", UI_Cache_f, 0 },
 	{ "ui_cinematics", UI_CinematicsMenu_f, 0 },
-	{ "ui_teamOrders", UI_TeamOrdersMenu_f, CMD_INGAME },
-	{ "iamacheater", UI_SPUnlock_f, 0 },
-	{ "iamamonkey", UI_SPUnlockMedals_f, 0 }
+	{ "ui_teamOrders", UI_TeamOrdersMenu_f, CMD_INGAME }
 };
 
 int ui_numCommands = ARRAY_LEN( ui_commands );

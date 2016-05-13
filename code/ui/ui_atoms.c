@@ -254,16 +254,11 @@ static void UI_Load_f( void ) {
 }
 
 consoleCommand_t	ui_commands[] = {
-	//{ "levelselect", UI_SPLevelMenu_f, 0 },
 	{ "postgame", UI_CalcPostGameStats, CMD_INGAME },
 	{ "ui_cache", UI_Cache_f, 0 },
-	//{ "ui_cinematics", UI_CinematicsMenu_f, 0 },
-	//{ "ui_teamOrders", UI_TeamOrdersMenu_f, CMD_INGAME },
-	//{ "iamacheater", UI_SPUnlock_f, 0 },
-	//{ "iamamonkey", UI_SPUnlockMedals_f, 0 },
-	{ "ui_test", UI_Test_f, CMD_INGAME },
+	{ "ui_load", UI_Load_f, 0 },
 	{ "ui_report", UI_Report, 0 },
-	{ "ui_load", UI_Load_f, 0 }
+	{ "ui_test", UI_Test_f, CMD_INGAME }
 };
 
 int ui_numCommands = ARRAY_LEN( ui_commands );

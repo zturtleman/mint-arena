@@ -604,7 +604,7 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 					//get the team goal time
 					bs->teamgoal_time = FloatTime() + TEAM_ACCOMPANY_TIME;
 					bs->ltgtype = LTG_TEAMACCOMPANY;
-					bs->formation_dist = 3.5 * 32;		//3.5 meter
+					bs->formation_dist = 128;
 					BotSetTeamStatus(bs);
 					bs->owndecision_time = FloatTime() + 5;
 				}
@@ -681,7 +681,7 @@ void BotCTFSeekGoals(bot_state_t *bs) {
 					//get the team goal time
 					bs->teamgoal_time = FloatTime() + TEAM_ACCOMPANY_TIME;
 					bs->ltgtype = LTG_TEAMACCOMPANY;
-					bs->formation_dist = 3.5 * 32;		//3.5 meter
+					bs->formation_dist = 128;
 					//
 					BotSetTeamStatus(bs);
 					bs->owndecision_time = FloatTime() + 5;
@@ -876,7 +876,7 @@ void Bot1FCTFSeekGoals(bot_state_t *bs) {
 					//get the team goal time
 					bs->teamgoal_time = FloatTime() + TEAM_ACCOMPANY_TIME;
 					bs->ltgtype = LTG_TEAMACCOMPANY;
-					bs->formation_dist = 3.5 * 32;		//3.5 meter
+					bs->formation_dist = 128;
 					BotSetTeamStatus(bs);
 					bs->owndecision_time = FloatTime() + 5;
 					return;
@@ -1263,7 +1263,7 @@ void BotHarvesterSeekGoals(bot_state_t *bs) {
 			//get the team goal time
 			bs->teamgoal_time = FloatTime() + TEAM_ACCOMPANY_TIME;
 			bs->ltgtype = LTG_TEAMACCOMPANY;
-			bs->formation_dist = 3.5 * 32;		//3.5 meter
+			bs->formation_dist = 128;
 			BotSetTeamStatus(bs);
 			return;
 		}
@@ -2740,7 +2740,11 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 	jumper = Characteristic_BFloat(bs->character, CHARACTERISTIC_JUMPER, 0, 1);
 	croucher = Characteristic_BFloat(bs->character, CHARACTERISTIC_CROUCHER, 0, 1);
 	//if the bot is really stupid
-	if (attack_skill < 0.2) return moveresult;
+	if (attack_skill < 0.2) {
+		//check blocked teammates
+		BotCheckBlockedTeammates(bs);
+		return moveresult;
+	}
 	//initialize the movement state
 	BotSetupForMovement(bs);
 	//get the enemy entity info
@@ -3150,6 +3154,10 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			if (EntityIsInvisible(&curbotinfo) && bs->ltgtype == LTG_GETFLAG) {
 				continue;
 			}
+			// if trying to activate an entity, ignore enemies
+			if ( bs->ainode == AINode_Seek_ActivateEntity ) {
+				continue;
+			}
 			//check if we can avoid this enemy
 			VectorSubtract(bs->origin, entinfo.origin, dir);
 			vectoangles(dir, angles);
@@ -3316,6 +3324,45 @@ void BotVisibleTeamMatesAndEnemies(bot_state_t *bs, int *teammates, int *enemies
 	}
 }
 
+/*
+==================
+BotCountTeamMates
+
+Counts all teammates inside a specific range, regardless if they are visible or not.
+==================
+*/
+int BotCountTeamMates(bot_state_t *bs, float range) {
+	int i;
+	aas_entityinfo_t entinfo;
+	vec3_t dir;
+	int teammates;
+
+	teammates = 0;
+
+	for (i = 0; i < level.maxplayers; i++) {
+		if (i == bs->playernum) {
+			continue;
+		}
+
+		BotEntityInfo(i, &entinfo);
+		// if this player is active
+		if (!entinfo.valid) {
+			continue;
+		}
+		// if not within range
+		VectorSubtract(entinfo.origin, bs->origin, dir);
+
+		if (VectorLengthSquared(dir) > Square(range)) {
+			continue;
+		}
+		// if on the same team
+		if (BotSameTeam(bs, i)) {
+			teammates++;
+		}
+	}
+
+	return teammates;
+}
 #ifdef MISSIONPACK
 /*
 ==================
@@ -4465,13 +4512,16 @@ int BotGetActivateGoal(bot_state_t *bs, int entitynum, bot_activategoal_t *activ
 BotGoForActivateGoal
 ==================
 */
-int BotGoForActivateGoal(bot_state_t *bs, bot_activategoal_t *activategoal) {
+int BotGoForActivateGoal(bot_state_t *bs, bot_activategoal_t *activategoal, bot_aienter_t aienter) {
 	aas_entityinfo_t activateinfo;
+
+	assert( aienter );
 
 	activategoal->inuse = qtrue;
 	if (!activategoal->time)
 		activategoal->time = FloatTime() + 10;
 	activategoal->start_time = FloatTime();
+	activategoal->aienter = aienter;
 	BotEntityInfo(activategoal->goal.entitynum, &activateinfo);
 	VectorCopy(activateinfo.origin, activategoal->origin);
 	//
@@ -4523,7 +4573,7 @@ void BotPrintActivateGoalInfo(bot_state_t *bs, bot_activategoal_t *activategoal,
 BotRandomMove
 ==================
 */
-void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult) {
+void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult, float speed) {
 	vec3_t dir, angles;
 	int i;
 
@@ -4534,7 +4584,7 @@ void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult) {
 	for (i = 0; i < 8; i++) {
 		AngleVectors(angles, dir, NULL, NULL);
 
-		if (BotMoveInDirection(bs->ms, dir, 400, MOVE_WALK)) {
+		if (BotMoveInDirection(bs->ms, dir, speed, MOVE_WALK)) {
 			break;
 		}
 
@@ -4543,6 +4593,122 @@ void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult) {
 
 	moveresult->failure = (i == 8);
 	VectorCopy(dir, moveresult->movedir);
+}
+/*
+==================
+BotCheckBlockedTeammates
+==================
+*/
+void BotCheckBlockedTeammates(bot_state_t *bs) {
+	bot_moveresult_t moveresult;
+	int movetype, i;
+	aas_entityinfo_t entinfo;
+	gentity_t *ent;
+	float mindist, speed;
+	vec3_t mins, maxs, end, v1, sideward, up = {0, 0, 1}, blocked_movedir;
+	trace_t trace;
+
+	if (g_gametype.integer < GT_TEAM) {
+		return;
+	}
+
+	if (BotCTFCarryingFlag(bs)) {
+		return;
+	}
+#ifdef MISSIONPACK
+	if (Bot1FCTFCarryingFlag(bs)) {
+		return;
+	}
+
+	if (BotHarvesterCarryingCubes(bs)) {
+		return;
+	}
+#endif
+	// initialize the movement state
+	BotSetupForMovement(bs);
+
+	for (i = 0; i < level.maxplayers; i++) {
+		if (i == bs->playernum) {
+			continue;
+		}
+		// if on the same team
+		if (!BotSameTeam(bs, i)) {
+			continue;
+		}
+		// get entity information of the teammate
+		BotEntityInfo(i, &entinfo);
+		// if this teammate is active
+		if (!entinfo.valid) {
+			continue;
+		}
+		// if the teammate isn't dead and the teammate isn't the bot self
+		if (EntityIsDead(&entinfo) || entinfo.number == bs->entitynum) {
+			continue;
+		}
+		// set some movement parameters
+		movetype = MOVE_WALK;
+		mindist = 8;
+		speed = 200;
+
+		ent = &g_entities[i];
+		// human players and facing teammates need more space
+		if ((!(ent->r.svFlags & SVF_BOT)) || BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 90, i)) {
+			mindist = 32;
+		}
+		// teammates with an important item needs even more space, and stay away from dangerous teammates (mined/burning players).
+		if (EntityCarriesFlag(&entinfo)
+#ifdef MISSIONPACK
+		 || EntityCarriesCubes(&entinfo) || bs->inventory[INVENTORY_SCOUT] || ( entinfo.flags & EF_TICKING )
+#endif
+		 ) {
+			mindist = 128;
+			speed = 400;
+		}
+		// safety check, don't force to reach the goal
+		if (mindist >= bs->formation_dist) {
+			bs->formation_dist *= 2;
+		}
+		// calculate the direction towards the teammate
+		v1[2] = 0;
+		VectorSubtract(entinfo.origin, bs->origin, v1);
+		VectorNormalize(v1);
+		// now check if the teammate is blocked, increase the distance accordingly
+		trap_AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
+		VectorMA(bs->origin, mindist, v1, end);
+		trap_ClipToEntities(&trace, bs->origin, mins, maxs, end, bs->entitynum, MASK_PLAYERSOLID);
+		// if the teammate is too close (blocked)
+		if (trace.entityNum == i && (trace.startsolid || trace.fraction < 1.0)) {
+			// stop crouching to gain speed
+			bs->attackcrouch_time = FloatTime() - 1;
+			// look into the direction of the blocked teammate
+			vectoangles(v1, bs->ideal_viewangles);
+			// get the sideward vector
+			CrossProduct(up, v1, sideward);
+			// get the direction the blocked player is moving
+			blocked_movedir[2] = 0;
+			VectorCopy(ent->player->ps.velocity, blocked_movedir);
+			// the blocked player is moving to his left side, so move to his right side (and vice versa)
+			if (DotProduct(blocked_movedir, sideward) > -50.0f) {
+				// flip the direction
+				VectorNegate(sideward, sideward);
+			}
+			// also go backwards a little
+			VectorMA(sideward, -1, v1, sideward);
+			// move sidwards
+			if (!BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
+				// flip the direction
+				VectorNegate(sideward, sideward);
+				// move in the other direction
+				if (!BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
+					// try to step back
+					if (!BotMoveInDirection(bs->ms, v1, speed, movetype)) {
+						// move in a random direction in the hope to get out
+						BotRandomMove(bs, &moveresult, speed);
+					}
+				}
+			}
+		}
+	}
 }
 
 /*
@@ -4556,10 +4722,11 @@ Before the bot ends in this part of the AI it should predict which doors to
 open, which buttons to activate etc.
 ==================
 */
-void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
+void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t activatedonefunc) {
 #ifdef OBSTACLEDEBUG
 	char netname[MAX_NETNAME];
 #endif
+	float speed;
 	int movetype, bspent;
 	vec3_t mins, maxs, end, v1, v2, hordir, sideward, angles, up = {0, 0, 1};
 	aas_entityinfo_t entinfo;
@@ -4572,11 +4739,16 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 		bs->notblocked_time = FloatTime();
 		return;
 	}
+
+	if (!BotWantsToWalk(bs)) {
+		speed = 400;
+	} else {
+		speed = 200;
+	}
 	// if stuck in a solid area
 	if ( moveresult->type == RESULTTYPE_INSOLIDAREA ) {
 		// move in a random direction in the hope to get out
-		BotRandomMove(bs, moveresult);
-		//
+		BotRandomMove(bs, moveresult, speed);
 		return;
 	}
 	// get info for the entity that is blocking the bot
@@ -4618,8 +4790,9 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 		if (!strcmp(ent->classname, "func_button") && (ent->moverState == MOVER_POS1)) {
 			return;
 		}
-		// if the bot wants to activate the bsp entity
-		if (activate) {
+		// if the bot wants to activate the bsp entity and not predicting obstacles
+		// (it's better to activate the entity if it's blocking route than if bot touched it)
+		if (activatedonefunc != NULL && !bot_predictobstacles.integer) {
 			// find the bsp entity which should be activated in order to get the blocking entity out of the way
 			bspent = BotGetActivateGoal(bs, entinfo.number, &activategoal);
 
@@ -4629,7 +4802,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 				}
 				// if not already trying to activate this entity
 				if (!BotIsGoingToActivateEntity(bs, activategoal.goal.entitynum)) {
-					BotGoForActivateGoal(bs, &activategoal);
+					BotGoForActivateGoal(bs, &activategoal, activatedonefunc);
 				}
 				// if ontop of an obstacle or if the bot is not in a reachability area it'll still need some dynamic obstacle avoidance
 				if (!(moveresult->flags & MOVERESULT_ONTOPOFOBSTACLE) && trap_AAS_AreaReachability(bs->areanum)) {
@@ -4661,22 +4834,22 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 		VectorNegate(sideward, sideward);
 	}
 	//try to crouch or jump over barrier
-	if (!BotMoveInDirection(bs->ms, hordir, 400, movetype)) {
+	if (!BotMoveInDirection(bs->ms, hordir, speed, movetype)) {
 		// try to move to the right
-		if (!BotMoveInDirection(bs->ms, sideward, 400, movetype)) {
+		if (!BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
 			// flip the avoid direction flag
 			bs->flags ^= BFL_AVOIDRIGHT;
 			// flip the direction
 			VectorNegate(sideward, sideward);
 			// try to move to the left
-			if (!BotMoveInDirection(bs->ms, sideward, 400, movetype)) {
+			if (!BotMoveInDirection(bs->ms, sideward, speed, movetype)) {
 				// move in a random direction in the hope to get out
-				BotRandomMove(bs, moveresult);
+				BotRandomMove(bs, moveresult, speed);
 			}
 		}
 	}
 	//
-	if (!activate) {
+	if (activatedonefunc == NULL) {
 		if (bs->notblocked_time < FloatTime() - 0.4) {
 			// just reset goals and hope the bot will go into another direction
 			if (bs->ainode == AINode_Seek_NBG) {
@@ -4698,7 +4871,7 @@ on its path the bot should figure out if they can be removed
 by activating certain entities.
 ==================
 */
-int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal) {
+int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal, bot_aienter_t activatedonefunc) {
 	int modelnum, entitynum, bspent;
 	bot_activategoal_t activategoal;
 	aas_predictroute_t route;
@@ -4708,13 +4881,13 @@ int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal) {
 
 	// always predict when the goal change or at regular intervals
 	if (bs->predictobstacles_goalareanum == goal->areanum &&
-		bs->predictobstacles_time > FloatTime() - 6) {
+		bs->predictobstacles_time > FloatTime() - 0.5) {
 		return qfalse;
 	}
 	bs->predictobstacles_goalareanum = goal->areanum;
 	bs->predictobstacles_time = FloatTime();
 
-	// predict at most 100 areas or 10 seconds ahead
+	// predict at most 100 areas or 1 second ahead
 	trap_AAS_PredictRoute(&route, bs->areanum, bs->origin,
 							goal->areanum, bs->tfl, 100, 1000,
 							RSE_USETRAVELTYPE|RSE_ENTERCONTENTS,
@@ -4740,7 +4913,7 @@ int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal) {
 							//
 							//BotAI_Print(PRT_MESSAGE, "blocked by mover model %d, entity %d ?\n", modelnum, entitynum);
 							//
-							BotGoForActivateGoal(bs, &activategoal);
+							BotGoForActivateGoal(bs, &activategoal, activatedonefunc);
 							return qtrue;
 						}
 						else {

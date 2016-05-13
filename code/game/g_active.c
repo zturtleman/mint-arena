@@ -329,7 +329,11 @@ void SpectatorThink( gentity_t *ent, usercmd_t *ucmd ) {
 	player = ent->player;
 
 	if ( player->sess.spectatorState != SPECTATOR_FOLLOW ) {
-		player->ps.pm_type = PM_SPECTATOR;
+		if ( player->noclip ) {
+			player->ps.pm_type = PM_NOCLIP;
+		} else {
+			player->ps.pm_type = PM_SPECTATOR;
+		}
 		player->ps.speed = 400;	// faster than normal
 
 		// set up for pmove

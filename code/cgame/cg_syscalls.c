@@ -334,8 +334,8 @@ void	trap_R_LoadWorldMap( const char *mapname ) {
 	syscall( CG_R_LOADWORLDMAP, mapname );
 }
 
-qboolean trap_GetEntityToken( char *buffer, int bufferSize ) {
-	return syscall( CG_GET_ENTITY_TOKEN, buffer, bufferSize );
+qboolean trap_GetEntityToken( int *parseOffset, char *buffer, int bufferSize ) {
+	return syscall( CG_GET_ENTITY_TOKEN, parseOffset, buffer, bufferSize );
 }
 
 qhandle_t trap_R_RegisterModel( const char *name ) {
@@ -491,12 +491,12 @@ qboolean trap_R_inPVS( const vec3_t p1, const vec3_t p2 ) {
 	return syscall( CG_R_INPVS, p1, p2 );
 }
 
-void trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
-	syscall( CG_R_GET_GLOBAL_FOG, type, color, depthForOpaque, density );
+void trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density, float *farClip ) {
+	syscall( CG_R_GET_GLOBAL_FOG, type, color, depthForOpaque, density, farClip );
 }
 
-void trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater ) {
-	syscall( CG_R_GET_VIEW_FOG, origin, type, color, depthForOpaque, density, inwater );
+void trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, float *farClip, qboolean inwater ) {
+	syscall( CG_R_GET_VIEW_FOG, origin, type, color, depthForOpaque, density, farClip, inwater );
 }
 
 void		trap_R_SetSurfaceShader( int surfaceNum, const char *name ) {

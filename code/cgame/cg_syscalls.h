@@ -141,7 +141,7 @@ int			trap_CM_MarkFragments( int numPoints, const vec3_t *points,
 			int maxFragments, markFragment_t *fragmentBuffer );
 
 void		trap_R_LoadWorldMap( const char *mapname );
-qboolean	trap_GetEntityToken( char *buffer, int bufferSize );
+qboolean	trap_GetEntityToken( int *parseOffset, char *buffer, int bufferSize );
 
 // all media should be registered during level startup to prevent
 // hitches during gameplay
@@ -200,8 +200,8 @@ int			trap_R_LerpTagTorso( orientation_t *tag, clipHandle_t mod,
 					   float torsoFrac );
 void		trap_R_RemapShader( const char *oldShader, const char *newShader, const char *timeOffset );
 qboolean	trap_R_inPVS( const vec3_t p1, const vec3_t p2 );
-void		trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
-void		trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater );
+void		trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density, float *farClip );
+void		trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, float *farClip, qboolean inwater );
 
 void		trap_R_SetSurfaceShader( int surfaceNum, const char *name );
 qhandle_t	trap_R_GetSurfaceShader( int surfaceNum, int lightmapIndex );

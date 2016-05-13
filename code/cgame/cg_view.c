@@ -663,6 +663,7 @@ void CG_DrawSkyBoxPortal( void ) {
 		cg.refdef.fogType = FT_LINEAR;
 		cg.refdef.fogDensity = 1.0f;
 		cg.refdef.fogDepthForOpaque = cg.skyPortalFogDepthForOpaque;
+		cg.refdef.farClip = 0;
 	}
 	VectorCopy( cg.skyPortalFogColor, cg.refdef.fogColor );
 

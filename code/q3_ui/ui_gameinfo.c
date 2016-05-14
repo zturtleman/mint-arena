@@ -825,10 +825,18 @@ UI_InitGameinfo
 ===============
 */
 void UI_InitGameinfo( void ) {
+	char gamedir[MAX_CVAR_VALUE_STRING];
 
 	UI_InitMemory();
 	UI_LoadArenas();
 	UI_LoadBots();
 
-	uis.demoversion = qfalse;
+	// check if demoq3 or demoq3test
+	trap_Cvar_VariableStringBuffer( "fs_game", gamedir, sizeof(gamedir) );
+
+	if ( strstr( gamedir, "demoq3" ) != NULL ) {
+		uis.demoversion = qtrue;
+	} else {
+		uis.demoversion = qfalse;
+	}
 }

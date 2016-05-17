@@ -70,7 +70,7 @@ BotImport_GetMemory
 ==================
 */
 static void *BotImport_GetMemory( int size ) {
-	return trap_Alloc( size, NULL );
+	return trap_HeapMalloc( size );
 }
 
 /*
@@ -79,7 +79,7 @@ BotImport_AvailableMemory
 =================
 */
 static int BotImport_AvailableMemory( void ) {
-	return 0;
+	return trap_HeapAvailable();
 }
 
 /*
@@ -88,7 +88,7 @@ BotImport_FreeMemory
 ==================
 */
 static void BotImport_FreeMemory( void *ptr ) {
-
+	trap_HeapFree( ptr );
 }
 
 /*
@@ -97,7 +97,7 @@ BotImport_HunkAlloc
 =================
 */
 static void *BotImport_HunkAlloc( int size ) {
-	return trap_Alloc( size, NULL );
+	return trap_HeapMalloc( size );
 }
 
 /*

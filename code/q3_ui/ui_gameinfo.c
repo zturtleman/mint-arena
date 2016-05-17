@@ -830,5 +830,5 @@ void UI_InitGameinfo( void ) {
 	UI_LoadArenas();
 	UI_LoadBots();
 
-	uis.demoversion = qfalse;
+	uis.demoversion = !!trap_Cvar_VariableIntegerValue( "ui_demoq3" );
 }

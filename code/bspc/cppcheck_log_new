@@ -1,0 +1,114 @@
+Checking _files.c...
+1/32 files checked 0% done
+Checking aas_areamerging.c...
+2/32 files checked 2% done
+Checking aas_cfg.c...
+3/32 files checked 4% done
+Checking aas_create.c...
+[aas_create.c:256]: (style) The scope of the variable 'tmpfaceside' can be reduced
+[aas_create.c:288]: (style) The scope of the variable 'prevside' can be reduced
+[aas_create.c:288]: (style) The scope of the variable 'nextside' can be reduced
+[aas_create.c:385]: (style) The scope of the variable 'sign2' can be reduced
+[aas_create.c:649]: (style) Variable 'areafaceflags' is assigned a value that is never used
+4/32 files checked 10% done
+Checking aas_edgemelting.c...
+5/32 files checked 11% done
+Checking aas_facemerging.c...
+6/32 files checked 12% done
+Checking aas_file.c...
+7/32 files checked 16% done
+Checking aas_gsubdiv.c...
+[aas_gsubdiv.c:428]: (style) The scope of the variable 'planenum' can be reduced
+8/32 files checked 20% done
+Checking aas_map.c...
+[aas_map.c:485]: (style) The scope of the variable 'i' can be reduced
+[aas_map.c:565]: (style) The scope of the variable 'newdist' can be reduced
+[aas_map.c:566]: (style) The scope of the variable 'i' can be reduced
+[aas_map.c:566]: (style) The scope of the variable 'notteam' can be reduced
+[aas_map.c:642]: (style) The scope of the variable 'i' can be reduced
+9/32 files checked 25% done
+Checking aas_prunenodes.c...
+10/32 files checked 25% done
+Checking aas_store.c...
+11/32 files checked 31% done
+Checking be_aas_bspc.c...
+[be_aas_bspc.c:182]: (style) The scope of the variable 'max' can be reduced
+[be_aas_bspc.c:183]: (style) The scope of the variable 'i' can be reduced
+12/32 files checked 33% done
+Checking brushbsp.c...
+13/32 files checked 41% done
+Checking bspc.c...
+14/32 files checked 45% done
+Checking cfgq3.c...
+15/32 files checked 46% done
+Checking csg.c...
+[csg.c:533]: (style) Variable 'c_faces' is assigned a value that is never used
+16/32 files checked 51% done
+Checking faces.c...
+[faces.c:630]: (style) The scope of the variable 'i' can be reduced
+17/32 files checked 54% done
+Checking l_bsp_ent.c...
+[l_bsp_ent.c:182]: (warning) scanf without field width limits can crash with huge input data
+18/32 files checked 55% done
+Checking l_bsp_q3.c...
+19/32 files checked 57% done
+Checking l_cmd.c...
+20/32 files checked 60% done
+Checking l_log.c...
+21/32 files checked 62% done
+Checking l_math.c...
+22/32 files checked 63% done
+Checking l_mem.c...
+23/32 files checked 65% done
+Checking l_poly.c...
+24/32 files checked 72% done
+Checking l_qfiles.c...
+25/32 files checked 74% done
+Checking l_threads.c...
+26/32 files checked 81% done
+Checking l_utils.c...
+27/32 files checked 82% done
+Checking leakfile.c...
+28/32 files checked 83% done
+Checking map.c...
+29/32 files checked 88% done
+Checking map_q3.c...
+[map_q3.c:217]: (style) The scope of the variable 'i' can be reduced
+30/32 files checked 92% done
+Checking portals.c...
+[portals.c:765]: (error) Possible null pointer dereference: node - otherwise it is redundant to check if node is null at line 766
+31/32 files checked 98% done
+Checking tree.c...
+32/32 files checked 100% done
+Checking usage of global functions..
+[aas_map.c:473]: (style) The function 'AAS_AlwaysTriggered' is never used
+[aas_create.c:438]: (style) The function 'AAS_CheckAreaWindingPlanes' is never used
+[aas_create.c:861]: (style) The function 'AAS_CheckSharedFaces' is never used
+[aas_map.c:233]: (style) The function 'AAS_FixMapBrush' is never used
+[aas_store.c:568]: (style) The function 'AAS_PlaneTypeForNormal' is never used
+[aas_create.c:796]: (style) The function 'AAS_PrintNumGroundFaces' is never used
+[aas_map.c:544]: (style) The function 'AAS_TransformPlane' is never used
+[brushbsp.c:278]: (style) The function 'BrushOutOfBounds' is never used
+[l_cmd.c:1029]: (style) The function 'FS_FOpenFileRead' is never used
+[l_cmd.c:1019]: (style) The function 'FS_FreeFile' is never used
+[l_cmd.c:1024]: (style) The function 'FS_ReadFileAndCache' is never used
+[faces.c:555]: (style) The function 'FixTjuncs' is never used
+[faces.c:609]: (style) The function 'FreeFace' is never used
+[faces.c:627]: (style) The function 'GetEdge2' is never used
+[l_mem.c:403]: (style) The function 'Hunk_ClearHigh' is never used
+[csg.c:402]: (style) The function 'IntersectBrush' is never used
+[csg.c:462]: (style) The function 'IntersectionContents' is never used
+[faces.c:966]: (style) The function 'MakeFaces' is never used
+[csg.c:279]: (style) The function 'MergeBrushes' is never used
+[tree.c:45]: (style) The function 'NodeForPoint' is never used
+[brushbsp.c:1543]: (style) The function 'NodeListSize' is never used
+[brushbsp.c:464]: (style) The function 'PointInLeaf' is never used
+[brushbsp.c:174]: (style) The function 'PrintBrush' is never used
+[portals.c:283]: (style) The function 'PrintPortal' is never used
+[map_q3.c:111]: (style) The function 'Q3_BrushContents' is never used
+[map_q3.c:199]: (style) The function 'Q3_DPlanes2MapPlanes' is never used
+[l_bsp_q3.c:74]: (style) The function 'Q3_PlaneFromPoints' is never used
+[brushbsp.c:604]: (style) The function 'QuickTestBrushToPlanenum' is never used
+[be_aas_bspc.c:77]: (style) The function 'Sys_MilliSeconds' is never used
+[l_mem.c:450]: (style) The function 'Z_Free' is never used
+[l_mem.c:440]: (style) The function 'Z_Malloc' is never used

@@ -1179,7 +1179,7 @@ int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean re
 	bot_state_t *bs;
 	int errnum;
 
-	if (!botstates[playernum]) botstates[playernum] = trap_Alloc(sizeof(bot_state_t), NULL);
+	if (!botstates[playernum]) botstates[playernum] = trap_HeapMalloc(sizeof(bot_state_t));
 	bs = botstates[playernum];
 
 	if (!bs) {

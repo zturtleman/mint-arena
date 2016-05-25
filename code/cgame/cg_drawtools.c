@@ -90,6 +90,7 @@ Adjusted for resolution and screen aspect ratio
 */
 void CG_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 	int viewXBias = 0;
+	int viewYBias = 0;
 
 	if (cg.numViewports != 1 && cg.snap && ( x != NULL || y != NULL ) ) {
 		qboolean right = qfalse;
@@ -135,6 +136,7 @@ void CG_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 			}
 		}
 		if (down) {
+			viewYBias = 2;
 			if ( y != NULL ) {
 				*y += SCREEN_HEIGHT;
 			}
@@ -190,6 +192,9 @@ void CG_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 			} else if (cg_verticalPlacement == PLACE_BOTTOM) {
 				*y += cgs.screenYBias*2;
 			}
+
+			// Offset for narrow-screen
+			*y += cgs.screenYBias*(viewYBias);
 		}
 	}
 }

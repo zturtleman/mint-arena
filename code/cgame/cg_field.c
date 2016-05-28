@@ -76,9 +76,9 @@ void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolea
 	if ( drawCursor ) {
 		// if overstrike and not at end of buffer
 		if ( trap_Key_GetOverstrikeMode() && edit->cursor != edit->len ) {
-			cursorChar = 11; // full block
+			cursorChar = GLYPH_OVERSTRIKE;
 		} else {
-			cursorChar = 10; // full width low line
+			cursorChar = GLYPH_INSERT;
 		}
 	} else {
 		cursorChar = -1;

@@ -3,18 +3,12 @@
 #
 # GNU Make required
 #
-
-COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]'|sed -e 's/\//_/g')
-
-COMPILE_ARCH=$(shell uname -m | sed -e s/i.86/x86/ | sed -e 's/^arm.*/arm/')
+COMPILE_PLATFORM=$(shell uname | sed -e 's/_.*//' | tr '[:upper:]' '[:lower:]' | sed -e 's/\//_/g')
+COMPILE_ARCH=$(shell uname -m | sed -e 's/i.86/x86/' | sed -e 's/^arm.*/arm/')
 
 ifeq ($(COMPILE_PLATFORM),sunos)
   # Solaris uname and GNU uname differ
-  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/x86/)
-endif
-ifeq ($(COMPILE_PLATFORM),darwin)
-  # Apple does some things a little differently...
-  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/x86/)
+  COMPILE_ARCH=$(shell uname -p | sed -e 's/i.86/x86/')
 endif
 
 ifndef BUILD_GAME_SO
@@ -169,7 +163,7 @@ GENERATE_DEPENDENCIES=1
 endif
 
 ifndef DEBUG_CFLAGS
-DEBUG_CFLAGS=-g -O0
+DEBUG_CFLAGS=-ggdb -O0
 endif
 
 #############################################################################
@@ -279,7 +273,7 @@ ifeq ($(PLATFORM),darwin)
   LIBS = -framework Cocoa
   OPTIMIZEVM=
 
-  BASE_CFLAGS = -Wall -Wimplicit -Wstrict-prototypes
+  BASE_CFLAGS += -mmacosx-version-min=10.7 -DMAC_OS_X_VERSION_MIN_REQUIRED=1070
 
   ifeq ($(ARCH),ppc)
     BASE_CFLAGS += -arch ppc -faltivec -mmacosx-version-min=10.2
@@ -317,11 +311,9 @@ ifeq ($(PLATFORM),darwin)
         $(error Architecture $(ARCH) is not supported when cross compiling)
       endif
     endif
-  else
-    TOOLS_CFLAGS += -DMACOS_X
   endif
 
-  BASE_CFLAGS += -fno-strict-aliasing -DMACOS_X -fno-common -pipe -DUSE_ICON
+  BASE_CFLAGS += -fno-strict-aliasing -fno-common -pipe
 
   BASE_CFLAGS += -D_THREAD_SAFE=1
 

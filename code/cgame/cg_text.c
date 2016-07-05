@@ -187,7 +187,7 @@ qboolean CG_InitTrueTypeFont( const char *name, int pointSize, float borderWidth
 
 	// fallback if missing Q3 bigchars-like cursors only present in Spearmint rendered fonts
 	if ( !( font->flags & FONTFLAG_CURSORS ) ) {
-		// Team Arena per-rendered fonts don't have cursor characters (they're just transparent space)
+		// Team Arena pre-rendered fonts don't have cursor characters (they're just transparent space)
 
 		// character 13 is used as a selection marker in q3_ui
 		Com_Memcpy( &font->glyphs[GLYPH_ARROW], &font->glyphs[(int)'>'], sizeof ( glyphInfo_t ) );

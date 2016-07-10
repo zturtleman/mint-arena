@@ -295,7 +295,7 @@ static void UI_TeamOrdersMenu_ListDraw( void *self ) {
 	x =	320;//l->generic.x;
 	y =	l->generic.y;
 	for( i = 0; i < l->numitems; i++ ) {
-		style = UI_LEFT|UI_SMALLFONT|UI_CENTER;
+		style = UI_SMALLFONT|UI_CENTER;
 		if( i == l->curvalue ) {
 			color = color_yellow;
 			if( hasfocus ) {

@@ -184,21 +184,18 @@ static void CG_ScoresDown_f(int localPlayerNum) {
 	CG_BuildSpectatorString();
 #endif
 	if ( cg.scoresRequestTime + 2000 < cg.time ) {
-		// the scores are more than two seconds out of data,
-		// so request new ones
+		// the scores are more than two seconds out of date, so request new ones
 		cg.scoresRequestTime = cg.time;
 		trap_SendClientCommand( "score" );
 
-		// leave the current scores up if they were already
-		// displayed, but if this is the first hit, clear them out
+		// leave the current scores up if they were already displayed, but if this is the first hit, clear them out
 		if ( !CG_AnyScoreboardShowing() ) {
 			cg.numScores = 0;
 		}
 
 		player->showScores = qtrue;
 	} else {
-		// show the cached contents even if they just pressed if it
-		// is within two seconds
+		// show the cached contents even if they just showed the scores within two seconds of showing them
 		player->showScores = qtrue;
 	}
 }
@@ -306,8 +303,7 @@ static int CG_ScrollScores( int scoreIndex, int dir ) {
 		}
 	}
 
-	// didn't find any more players on this team in this direction,
-	// wrap around and switch teams
+	// didn't find any more players on this team in this direction, wrap around and switch teams
 	if ( cgs.gametype >= GT_TEAM ) {
 		if ( team == TEAM_RED ) {
 			team = TEAM_BLUE;

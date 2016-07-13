@@ -62,9 +62,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "syn.h"				//synonyms
 #include "match.h"				//string matching types and vars
 
-#define GetClearedHunkMemory( _s ) trap_Alloc( _s, NULL )
-#define GetClearedMemory( _s ) trap_Alloc( _s, NULL )
-#define FreeMemory( x )
+#define GetClearedHunkMemory( _s ) trap_HeapMalloc( _s )
+#define GetClearedMemory( _s ) trap_HeapMalloc( _s )
+#define FreeMemory( _data ) trap_HeapFree( _data )
 
 
 //escape character

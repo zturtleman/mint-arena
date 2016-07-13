@@ -219,7 +219,7 @@ void BotDefaultCharacteristics(bot_character_t *ch, bot_character_t *defaultch)
 		else if (defaultch->c[i].type == CT_STRING)
 		{
 			ch->c[i].type = CT_STRING;
-			ch->c[i].value.string = (char *) trap_Alloc(strlen(defaultch->c[i].value.string)+1, NULL);
+			ch->c[i].value.string = (char *) trap_HeapMalloc(strlen(defaultch->c[i].value.string)+1);
 			strcpy(ch->c[i].value.string, defaultch->c[i].value.string);
 		} //end else if
 	} //end for
@@ -314,7 +314,7 @@ qboolean BotLoadCharacterFromFile(char *charfile, int skill, bot_character_t *ch
 					{
 						// ZTM: FIXME: ### I think I made this be done in the engine
 						//StripDoubleQuotes(token.string);
-						ch->c[index].value.string = trap_Alloc(strlen(token.string)+1, NULL);
+						ch->c[index].value.string = trap_HeapMalloc(strlen(token.string)+1);
 						strcpy(ch->c[index].value.string, token.string);
 						ch->c[index].type = CT_STRING;
 					} //end else if
@@ -547,7 +547,7 @@ int BotInterpolateCharacters(int handle1, int handle2, float desiredskill)
 		else if (ch1->c[i].type == CT_STRING)
 		{
 			out->c[i].type = CT_STRING;
-			out->c[i].value.string = (char *) trap_Alloc(strlen(ch1->c[i].value.string)+1, NULL);
+			out->c[i].value.string = (char *) trap_HeapMalloc(strlen(ch1->c[i].value.string)+1);
 			strcpy(out->c[i].value.string, ch1->c[i].value.string);
 		} //end else if
 	} //end for

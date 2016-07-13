@@ -33,54 +33,50 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 static vec4_t lastTextColor = { 0, 0, 0, 1 };
 
-// Q3A UI also uses additional fonts (font1_prop, font2_prop, ..)
-// Team Arena HUD/UI also use separate fonts (specified in .menu files).
-// The truetype font names here are the same as in Team Arena
-//   (except tiny and number fonts that do not exist)
+/*
+Load fonts for CGame and UI usage.
+
+q3_ui loads additional fonts (font1_prop, font1_prop_glo, font2_prop).
+Team Arena HUD/UI also use separate fonts (specified in .menu files).
+
+Try to load fonts specified by cg_font* cvars. Falls back to font names and
+sizes used by Team Arena's .menu files (fonts/smallfont:12, fonts/font:16,
+and fonts/bigfont:20) or Q3 gfx/2d/bigchars.tga bitmap font.
+
+Q3 gfx/2d/bigchars.tga bitmap font looks like Helvetica or Arial.
+number font, font1_prop, and font2_prop look similar to Impact Wide but not quite.
+Team Arena's fonts look like Impact.
+*/
 void CG_TextInit( void ) {
 	int tinySize;
 	int smallSize;
 	int bigSize;
 	int giantSize;
 	int numberSize;
-	int smallBitmapSize;
-	int giantBitmapSize;
 
-	// TrueType font sizes
+	// font sizes
 	tinySize = 8;
-	smallSize = 12;
+	smallSize = 16;
 	bigSize = 16;
-	giantSize = 20;
+	giantSize = 48;
 	numberSize = 48;
-
-	// Bitmap font sizes
-	smallBitmapSize = 16;
-	giantBitmapSize = 48;
-
-	// Make bitmap fonts use TrueType sizes
-	//smallBitmapSize = smallSize;
-	//giantBitmapSize = giantSize;
 
 	if ( !CG_InitTrueTypeFont( "fonts/tinyfont", tinySize, 0, &cgs.media.tinyFont ) ) {
 		CG_InitBitmapFont( &cgs.media.tinyFont, tinySize, tinySize );
 	}
 
-	if ( !CG_InitTrueTypeFont( "fonts/smallfont", smallSize, 0, &cgs.media.smallFont ) ) {
-		CG_InitBitmapFont( &cgs.media.smallFont, smallBitmapSize, smallBitmapSize * 0.5f );
+	if ( !CG_InitTrueTypeFont( "fonts/font", smallSize, 0, &cgs.media.smallFont ) ) {
+		CG_InitBitmapFont( &cgs.media.smallFont, smallSize, smallSize * 0.5f );
 	}
 
 	if ( !CG_InitTrueTypeFont( "fonts/font", bigSize, 0, &cgs.media.textFont ) ) {
 		CG_InitBitmapFont( &cgs.media.textFont, bigSize, bigSize );
 	}
 
-	if ( !CG_InitTrueTypeFont( "fonts/bigfont", giantSize, 0, &cgs.media.bigFont ) ) {
-		// quake 3 bitmap style
-		CG_InitBitmapFont( &cgs.media.bigFont, giantBitmapSize, ceil( giantBitmapSize * 0.666666f ) );
-		// team arena truetype style
-		//CG_InitBitmapFont( &cgs.media.bigFont, giantSize, giantSize * 0.5f );
+	if ( !CG_InitTrueTypeFont( "fonts/giantfont", giantSize, 0, &cgs.media.bigFont ) ) {
+		CG_InitBitmapFont( &cgs.media.bigFont, giantSize, ceil( giantSize * 0.666666f ) );
 	}
 
-	// note: the original Q3 number bitmaps look like font1_prop
 	if ( !CG_InitTrueTypeFont( "fonts/numberfont", numberSize, 0, &cgs.media.numberFont ) ) {
 		CG_InitBitmapNumberFont( &cgs.media.numberFont, numberSize, ceil( numberSize * 0.666666f ) );
 	}
@@ -191,19 +187,40 @@ qboolean CG_InitTrueTypeFont( const char *name, int pointSize, float borderWidth
 
 	// fallback if missing Q3 bigchars-like cursors only present in Spearmint rendered fonts
 	if ( !( font->flags & FONTFLAG_CURSORS ) ) {
-		// Team Arena per-rendered fonts don't have cursor characters (they're just transparent space)
-		Com_Memcpy( &font->glyphs[10], &font->glyphs[(int)'_'], sizeof ( glyphInfo_t ) );
-		Com_Memcpy( &font->glyphs[11], &font->glyphs[(int)'|'], sizeof ( glyphInfo_t ) );
-
-		// Make the '|' into a full width block
-		font->glyphs[11].glyph = cgs.media.whiteShader;
-		font->glyphs[11].imageWidth = font->glyphs[(int)'M'].left + font->glyphs[(int)'M'].xSkip;
-		font->glyphs[11].s = 0;
-		font->glyphs[11].s2 = 1;
+		// Team Arena pre-rendered fonts don't have cursor characters (they're just transparent space)
 
 		// character 13 is used as a selection marker in q3_ui
-		Com_Memcpy( &font->glyphs[13], &font->glyphs[(int)'>'], sizeof ( glyphInfo_t ) );
+		Com_Memcpy( &font->glyphs[GLYPH_ARROW], &font->glyphs[(int)'>'], sizeof ( glyphInfo_t ) );
 	}
+
+	// Most TrueType fonts don't contain the glyphs used for text input
+	// cursors, so just hard code them. There is no easy way to hard code
+	// the q3_ui arrow. Though, I don't think programs typically use glyphs
+	// from fonts for text input cursors anyway.
+
+	// ZTM: TODO?: Replace (unreliable/pointless) glyphInfo_t::pitch with
+	// flags so it's possible to check if glyph is missing, so these can
+	// be fallbacks instead of hard coded.
+
+	// missing overstrike block
+	Com_Memcpy( &font->glyphs[GLYPH_OVERSTRIKE], &font->glyphs[(int)'|'], sizeof ( glyphInfo_t ) );
+	font->glyphs[GLYPH_OVERSTRIKE].glyph = cgs.media.whiteShader;
+	font->glyphs[GLYPH_OVERSTRIKE].imageWidth = font->glyphs[GLYPH_OVERSTRIKE].imageHeight * 0.5f;
+	font->glyphs[GLYPH_OVERSTRIKE].s = 0;
+	font->glyphs[GLYPH_OVERSTRIKE].t = 0;
+	font->glyphs[GLYPH_OVERSTRIKE].s2 = 1;
+	font->glyphs[GLYPH_OVERSTRIKE].t2 = 1;
+
+	// missing insert underline
+	Com_Memcpy( &font->glyphs[GLYPH_INSERT], &font->glyphs[(int)'|'], sizeof ( glyphInfo_t ) );
+	font->glyphs[GLYPH_INSERT].glyph = cgs.media.whiteShader;
+	font->glyphs[GLYPH_INSERT].imageWidth = font->glyphs[GLYPH_INSERT].imageHeight * 0.5f;
+	font->glyphs[GLYPH_INSERT].s = 0;
+	font->glyphs[GLYPH_INSERT].t = 0;
+	font->glyphs[GLYPH_INSERT].s2 = 1;
+	font->glyphs[GLYPH_INSERT].t2 = 1;
+	font->glyphs[GLYPH_INSERT].top -= font->glyphs[GLYPH_INSERT].imageHeight - 1;
+	font->glyphs[GLYPH_INSERT].imageHeight = 1;
 
 	return qtrue;
 }
@@ -461,7 +478,7 @@ void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale
 		}
 
 		// make overstrike cursor invert color
-		if ( count == cursorPos && !( ( cg.realTime / BLINK_DIVISOR ) & 1 ) && cursor == 11 ) {
+		if ( count == cursorPos && !( ( cg.realTime / BLINK_DIVISOR ) & 1 ) && cursor == GLYPH_OVERSTRIKE ) {
 			// invert color
 			vec4_t invertedColor;
 
@@ -477,7 +494,7 @@ void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale
 			Text_PaintGlyph( x + xadj, y - yadj, useScale, glyph, ( gradient != 0 ) ? gradientColor : NULL );
 		}
 
-		if ( count == cursorPos && !( ( cg.realTime / BLINK_DIVISOR ) & 1 ) && cursor == 11 ) {
+		if ( count == cursorPos && !( ( cg.realTime / BLINK_DIVISOR ) & 1 ) && cursor == GLYPH_OVERSTRIKE ) {
 			// restore color
 			trap_R_SetColor( newColor );
 		}

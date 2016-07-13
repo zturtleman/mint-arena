@@ -346,7 +346,7 @@ char *G_NewString( const char *string ) {
 	
 	l = strlen(string) + 1;
 
-	newb = trap_Alloc( l, NULL );
+	newb = trap_HeapMalloc( l );
 
 	new_p = newb;
 

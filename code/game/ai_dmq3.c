@@ -2489,6 +2489,19 @@ int BotCanAndWantsToRocketJump(bot_state_t *bs) {
 
 /*
 ==================
+BotCanGrapple
+==================
+*/
+int BotCanGrapple(bot_state_t *bs) {
+	//if grappling is disabled
+	if (!bot_grapple.integer) return qfalse;
+	//if no grappling hook
+	if (!bot_offhandgrapple.integer && bs->inventory[INVENTORY_GRAPPLINGHOOK] <= 0) return qfalse;
+	return qtrue;
+}
+
+/*
+==================
 BotHasPersistantPowerupAndWeapon
 ==================
 */
@@ -4790,9 +4803,8 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t a
 		if (!strcmp(ent->classname, "func_button") && (ent->moverState == MOVER_POS1)) {
 			return;
 		}
-		// if the bot wants to activate the bsp entity and not predicting obstacles
-		// (it's better to activate the entity if it's blocking route than if bot touched it)
-		if (activatedonefunc != NULL && !bot_predictobstacles.integer) {
+		// if the bot wants to activate the bsp entity
+		if (activatedonefunc != NULL) {
 			// find the bsp entity which should be activated in order to get the blocking entity out of the way
 			bspent = BotGetActivateGoal(bs, entinfo.number, &activategoal);
 
@@ -5780,7 +5792,7 @@ void BotSetupDeathmatchAI(void) {
 	gametype = trap_Cvar_VariableIntegerValue("g_gametype");
 
 	trap_Cvar_Register(&bot_rocketjump, "bot_rocketjump", "1", 0);
-	trap_Cvar_Register(&bot_grapple, "bot_grapple", "0", 0);
+	trap_Cvar_Register(&bot_grapple, "bot_grapple", "1", 0);
 	trap_Cvar_Register(&bot_fastchat, "bot_fastchat", "0", 0);
 	trap_Cvar_Register(&bot_nochat, "bot_nochat", "0", 0);
 	trap_Cvar_Register(&bot_testichat, "bot_testichat", "0", 0);

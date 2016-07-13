@@ -1645,6 +1645,10 @@ qboolean CG_AnyScoreboardShowing( void );
 //
 // cg_text.c
 //
+#define GLYPH_INSERT 10
+#define GLYPH_OVERSTRIKE 11
+#define GLYPH_ARROW 13
+
 void CG_TextInit( void );
 void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth );
 void CG_InitBitmapNumberFont( fontInfo_t *font, int charHeight, int charWidth );

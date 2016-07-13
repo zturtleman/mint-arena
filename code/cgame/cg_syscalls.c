@@ -801,8 +801,16 @@ int trap_PC_SourceFileAndLine( int handle, char *filename, int *line ) {
 	return syscall( CG_PC_SOURCE_FILE_AND_LINE, handle, filename, line );
 }
 
-void *trap_Alloc( int size, const char *tag ) {
-	return (void *)syscall( CG_ALLOC, size, tag );
+void *trap_HeapMalloc( int size ) {
+	return (void *)syscall( CG_HEAP_MALLOC, size );
+}
+
+int trap_HeapAvailable( void ) {
+	return syscall( CG_HEAP_AVAILABLE );
+}
+
+void trap_HeapFree( void *data ) {
+	syscall( CG_HEAP_FREE, data );
 }
 
 int trap_RealTime(qtime_t *qtime) {

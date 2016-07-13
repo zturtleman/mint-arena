@@ -62,9 +62,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "syn.h"				//synonyms
 #include "match.h"				//string matching types and vars
 
-#define GetClearedHunkMemory( _s ) trap_Alloc( _s, NULL )
-#define GetClearedMemory( _s ) trap_Alloc( _s, NULL )
-#define FreeMemory( x )
+#define GetClearedHunkMemory( _s ) trap_HeapMalloc( _s )
+#define GetClearedMemory( _s ) trap_HeapMalloc( _s )
+#define FreeMemory( _data ) trap_HeapFree( _data )
 
 
 //escape character
@@ -1465,9 +1465,7 @@ int StringsMatch(bot_matchpiece_t *pieces, bot_match_t *match)
 		//if the last piece was a variable string
 		if (lastvariable >= 0)
 		{
-#ifndef Q3_VM
 			assert( match->variables[lastvariable].offset >= 0 );
-#endif
 			match->variables[lastvariable].length =
 				strlen(&match->string[ (int) match->variables[lastvariable].offset]);
 		} //end if
@@ -1568,9 +1566,7 @@ void BotMatchVariable(bot_match_t *match, int variable, char *buf, int size)
 	{
 		if (match->variables[variable].length < size)
 			size = match->variables[variable].length+1;
-#ifndef Q3_VM
 		assert( match->variables[variable].offset >= 0 );
-#endif
 		strncpy(buf, &match->string[ (int) match->variables[variable].offset], size-1);
 		buf[size-1] = '\0';
 	} //end if
@@ -2386,9 +2382,7 @@ int BotExpandChatMessage(char *outmessage, char *message, unsigned long mcontext
 					} //end if
 					if (match->variables[num].offset >= 0)
 					{
-#ifndef Q3_VM
 						assert( match->variables[num].offset >= 0 );
-#endif
 						ptr = &match->string[ (int) match->variables[num].offset];
 						for (i = 0; i < match->variables[num].length; i++)
 						{

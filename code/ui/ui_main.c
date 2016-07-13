@@ -1554,7 +1554,7 @@ static void UI_DrawGLInfo(rectDef_t *rect, float scale, vec4_t color, int textSt
 
 	// build null terminated extension strings
   // TTimo: https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=399
-  // in TA this was not directly crashing, but displaying a nasty broken shader right in the middle
+  // in Team Arena this was not directly crashing, but displaying a nasty broken shader right in the middle
   // brought down the string size to 1024, there's not much that can be shown on the screen anyway
 	Q_strncpyz(buff, cgs.glconfig.extensions_string, 1024);
 	eptr = buff;
@@ -1868,80 +1868,79 @@ static qboolean UI_OwnerDrawVisible(int flags) {
 }
 
 static qboolean UI_Handicap_HandleKey(int flags, float *special, int key) {
-  if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
-    int h;
-    h = Com_Clamp( 5, 100, trap_Cvar_VariableValue("handicap") );
-		if (key == K_MOUSE2) {
-	    h -= 5;
-		} else {
-	    h += 5;
-		}
-    if (h > 100) {
-      h = 5;
-    } else if (h < 5) {
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
+		int h;
+
+		h = Com_Clamp( 5, 100, trap_Cvar_VariableValue("handicap") );
+		h += 5 * select;
+
+		if (h > 100) {
+			h = 5;
+		} else if (h < 5) {
 			h = 100;
 		}
-  	trap_Cvar_SetValue( "handicap", h );
-    return qtrue;
-  }
-  return qfalse;
+
+		trap_Cvar_SetValue( "handicap", h );
+		return qtrue;
+	}
+	return qfalse;
 }
 
 static qboolean UI_Effects_HandleKey(int flags, float *special, int key) {
-  if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
+		uiInfo.effectsColor += select;
 
-		if (key == K_MOUSE2) {
-	    uiInfo.effectsColor--;
-		} else {
-	    uiInfo.effectsColor++;
-		}
-
-    if( uiInfo.effectsColor > NUM_COLOR_EFFECTS-1 ) {
-	  	uiInfo.effectsColor = 0;
+		if( uiInfo.effectsColor > NUM_COLOR_EFFECTS-1 ) {
+			uiInfo.effectsColor = 0;
 		} else if (uiInfo.effectsColor < 0) {
-	  	uiInfo.effectsColor = NUM_COLOR_EFFECTS-1;
+			uiInfo.effectsColor = NUM_COLOR_EFFECTS-1;
 		}
 
-	  trap_Cvar_SetValue( "color1", uitogamecode[uiInfo.effectsColor] );
-	  updateModelColor = qtrue;
-    return qtrue;
-  }
-  return qfalse;
+		trap_Cvar_SetValue( "color1", uitogamecode[uiInfo.effectsColor] );
+		updateModelColor = qtrue;
+		return qtrue;
+	}
+	return qfalse;
 }
 
 static qboolean UI_ClanName_HandleKey(int flags, float *special, int key) {
-  if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
-    int i;
-    i = UI_TeamIndexFromName(CG_Cvar_VariableString("ui_teamName"));
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
+		int i;
+
+		i = UI_TeamIndexFromName(CG_Cvar_VariableString("ui_teamName"));
+
 		if (uiInfo.teamList[i].cinematic >= 0) {
-		  trap_CIN_StopCinematic(uiInfo.teamList[i].cinematic);
+			trap_CIN_StopCinematic(uiInfo.teamList[i].cinematic);
 			uiInfo.teamList[i].cinematic = -1;
 		}
-		if (key == K_MOUSE2) {
-	    i--;
-		} else {
-	    i++;
-		}
-    if (i >= uiInfo.teamCount) {
-      i = 0;
-    } else if (i < 0) {
+
+		i += select;
+
+		if (i >= uiInfo.teamCount) {
+			i = 0;
+		} else if (i < 0) {
 			i = uiInfo.teamCount - 1;
 		}
-  	trap_Cvar_Set( "ui_teamName", uiInfo.teamList[i].teamName);
-	UI_HeadCountByTeam();
-	UI_FeederSelection(FEEDER_HEADS, 0);
-	updateModel = qtrue;
-    return qtrue;
-  }
-  return qfalse;
+
+		trap_Cvar_Set( "ui_teamName", uiInfo.teamList[i].teamName);
+		UI_HeadCountByTeam();
+		UI_FeederSelection(FEEDER_HEADS, 0);
+		updateModel = qtrue;
+		return qtrue;
+	}
+	return qfalse;
 }
 
 static qboolean UI_GameType_HandleKey(int flags, float *special, int key, qboolean resetMap) {
-  if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
 		int oldCount = UI_MapCountByGameType(qtrue);
 
 		// hard coded mess here
-		if (key == K_MOUSE2) {
+		if (select < 0) {
 			ui_gameType.integer--;
 			if (ui_gameType.integer == 2) {
 				ui_gameType.integer = 1;
@@ -1970,44 +1969,36 @@ static qboolean UI_GameType_HandleKey(int flags, float *special, int key, qboole
 			trap_Cvar_SetValue( "ui_currentMap", 0);
 			Menu_SetFeederSelection(NULL, FEEDER_MAPS, 0, NULL);
 		}
-    return qtrue;
-  }
-  return qfalse;
+		return qtrue;
+	}
+	return qfalse;
 }
 
 static qboolean UI_NetGameType_HandleKey(int flags, float *special, int key) {
-  if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
+		ui_netGameType.integer += select;
 
-		if (key == K_MOUSE2) {
-			ui_netGameType.integer--;
-		} else {
-			ui_netGameType.integer++;
+		if (ui_netGameType.integer < 0) {
+			ui_netGameType.integer = uiInfo.numGameTypes - 1;
+		} else if (ui_netGameType.integer >= uiInfo.numGameTypes) {
+			ui_netGameType.integer = 0;
 		}
 
-    if (ui_netGameType.integer < 0) {
-      ui_netGameType.integer = uiInfo.numGameTypes - 1;
-		} else if (ui_netGameType.integer >= uiInfo.numGameTypes) {
-      ui_netGameType.integer = 0;
-    } 
-
-  	trap_Cvar_SetValue( "ui_netGameType", ui_netGameType.integer);
-  	trap_Cvar_SetValue( "ui_actualnetGameType", uiInfo.gameTypes[ui_netGameType.integer].gtEnum);
-  	trap_Cvar_SetValue( "ui_currentNetMap", 0);
+		trap_Cvar_SetValue( "ui_netGameType", ui_netGameType.integer);
+		trap_Cvar_SetValue( "ui_actualnetGameType", uiInfo.gameTypes[ui_netGameType.integer].gtEnum);
+		trap_Cvar_SetValue( "ui_currentNetMap", 0);
 		UI_MapCountByGameType(qfalse);
 		Menu_SetFeederSelection(NULL, FEEDER_ALLMAPS, 0, NULL);
-    return qtrue;
-  }
-  return qfalse;
+		return qtrue;
+	}
+	return qfalse;
 }
 
 static qboolean UI_JoinGameType_HandleKey(int flags, float *special, int key) {
-	if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
-
-		if (key == K_MOUSE2) {
-			ui_joinGameType.integer--;
-		} else {
-			ui_joinGameType.integer++;
-		}
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
+		ui_joinGameType.integer += select;
 
 		if (ui_joinGameType.integer < 0) {
 			ui_joinGameType.integer = uiInfo.numJoinGameTypes - 1;
@@ -2025,64 +2016,54 @@ static qboolean UI_JoinGameType_HandleKey(int flags, float *special, int key) {
 
 
 static qboolean UI_Skill_HandleKey(int flags, float *special, int key) {
-  if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
-  	int i = trap_Cvar_VariableValue( "g_spSkill" );
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
+		int i = trap_Cvar_VariableValue( "g_spSkill" );
 
-		if (key == K_MOUSE2) {
-	    i--;
-		} else {
-	    i++;
-		}
+		i += select;
 
-    if (i < 1) {
+		if (i < 1) {
 			i = numSkillLevels;
 		} else if (i > numSkillLevels) {
-      i = 1;
-    }
+			i = 1;
+		}
 
-    trap_Cvar_SetValue("g_spSkill", i);
-    return qtrue;
-  }
-  return qfalse;
+		trap_Cvar_SetValue("g_spSkill", i);
+		return qtrue;
+	}
+	return qfalse;
 }
 
 static qboolean UI_TeamName_HandleKey(int flags, float *special, int key, qboolean blue) {
-  if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
-    int i;
-    i = UI_TeamIndexFromName(CG_Cvar_VariableString((blue) ? "ui_blueTeam" : "ui_redTeam"));
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
+		int i;
 
-		if (key == K_MOUSE2) {
-	    i--;
-		} else {
-	    i++;
-		}
+		i = UI_TeamIndexFromName(CG_Cvar_VariableString((blue) ? "ui_blueTeam" : "ui_redTeam"));
+		i += select;
 
-    if (i >= uiInfo.teamCount) {
-      i = 0;
-    } else if (i < 0) {
+		if (i >= uiInfo.teamCount) {
+			i = 0;
+		} else if (i < 0) {
 			i = uiInfo.teamCount - 1;
 		}
 
-    trap_Cvar_Set( (blue) ? "ui_blueTeam" : "ui_redTeam", uiInfo.teamList[i].teamName);
-
-    return qtrue;
-  }
-  return qfalse;
+		trap_Cvar_Set( (blue) ? "ui_blueTeam" : "ui_redTeam", uiInfo.teamList[i].teamName);
+		return qtrue;
+	}
+	return qfalse;
 }
 
 static qboolean UI_TeamMember_HandleKey(int flags, float *special, int key, qboolean blue, int num) {
-  if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
 		// 0 - None
 		// 1 - Human
 		// 2..NumCharacters - Bot
 		char *cvar = va(blue ? "ui_blueteam%i" : "ui_redteam%i", num);
 		int value = trap_Cvar_VariableValue(cvar);
 
-		if (key == K_MOUSE2) {
-			value--;
-		} else {
-			value++;
-		}
+		value += select;
 
 		if (ui_actualNetGameType.integer >= GT_TEAM) {
 			if (value >= uiInfo.characterCount + 2) {
@@ -2099,19 +2080,15 @@ static qboolean UI_TeamMember_HandleKey(int flags, float *special, int key, qboo
 		}
 
 		trap_Cvar_SetValue(cvar, value);
-    return qtrue;
-  }
-  return qfalse;
+		return qtrue;
+	}
+	return qfalse;
 }
 
 static qboolean UI_NetSource_HandleKey(int flags, float *special, int key) {
-	if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
-		
-		if (key == K_MOUSE2) {
-			ui_netSource.integer--;
-		} else {
-			ui_netSource.integer++;
-		}
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
+		ui_netSource.integer += select;
 
 		if(ui_netSource.integer >= UIAS_GLOBAL1 && ui_netSource.integer <= UIAS_GLOBAL5)
 		{
@@ -2123,12 +2100,8 @@ static qboolean UI_NetSource_HandleKey(int flags, float *special, int key) {
 				trap_Cvar_VariableStringBuffer(cvarname, masterstr, sizeof(masterstr));
 				if(*masterstr)
 					break;
-			
-				if (key == K_MOUSE2) {
-					ui_netSource.integer--;
-				} else {
-					ui_netSource.integer++;
-				}
+
+				ui_netSource.integer += select;
 			}
 		}
 
@@ -2149,47 +2122,41 @@ static qboolean UI_NetSource_HandleKey(int flags, float *special, int key) {
 }
 
 static qboolean UI_NetFilter_HandleKey(int flags, float *special, int key) {
-  if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
+		ui_serverFilterType.integer += select;
 
-		if (key == K_MOUSE2) {
-			ui_serverFilterType.integer--;
-		} else {
-			ui_serverFilterType.integer++;
-		}
-
-    if (ui_serverFilterType.integer > uiInfo.modCount) {
-      ui_serverFilterType.integer = 0;
-    } else if (ui_serverFilterType.integer < 0) {
-      ui_serverFilterType.integer = uiInfo.modCount;
+		if (ui_serverFilterType.integer > uiInfo.modCount) {
+			ui_serverFilterType.integer = 0;
+		} else if (ui_serverFilterType.integer < 0) {
+			ui_serverFilterType.integer = uiInfo.modCount;
 		}
 		UI_BuildServerDisplayList(qtrue);
-    return qtrue;
-  }
-  return qfalse;
+		return qtrue;
+	}
+	return qfalse;
 }
 
 static qboolean UI_OpponentName_HandleKey(int flags, float *special, int key) {
-  if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
-		if (key == K_MOUSE2) {
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
+		if (select < 0) {
 			UI_PriorOpponent();
 		} else {
 			UI_NextOpponent();
 		}
-    return qtrue;
-  }
-  return qfalse;
+		return qtrue;
+	}
+	return qfalse;
 }
 
 static qboolean UI_BotName_HandleKey(int flags, float *special, int key) {
-  if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
 		int game = trap_Cvar_VariableValue("g_gametype");
 		int value = uiInfo.botIndex;
 
-		if (key == K_MOUSE2) {
-			value--;
-		} else {
-			value++;
-		}
+		value += select;
 
 		if (game >= GT_TEAM) {
 			if (value >= uiInfo.characterCount + 2) {
@@ -2205,30 +2172,29 @@ static qboolean UI_BotName_HandleKey(int flags, float *special, int key) {
 			}
 		}
 		uiInfo.botIndex = value;
-    return qtrue;
-  }
-  return qfalse;
+		return qtrue;
+	}
+	return qfalse;
 }
 
 static qboolean UI_BotSkill_HandleKey(int flags, float *special, int key) {
-  if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
-		if (key == K_MOUSE2) {
-			uiInfo.skillIndex--;
-		} else {
-			uiInfo.skillIndex++;
-		}
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
+		uiInfo.skillIndex += select;
+
 		if (uiInfo.skillIndex >= numSkillLevels) {
 			uiInfo.skillIndex = 0;
 		} else if (uiInfo.skillIndex < 0) {
 			uiInfo.skillIndex = numSkillLevels-1;
 		}
-    return qtrue;
-  }
+		return qtrue;
+	}
 	return qfalse;
 }
 
 static qboolean UI_RedBlue_HandleKey(int flags, float *special, int key) {
-  if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
 		uiInfo.redBlue ^= 1;
 		return qtrue;
 	}
@@ -2236,19 +2202,16 @@ static qboolean UI_RedBlue_HandleKey(int flags, float *special, int key) {
 }
 
 static qboolean UI_Crosshair_HandleKey(int flags, float *special, int key) {
-  if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
-		if (key == K_MOUSE2) {
-			uiInfo.currentCrosshair--;
-		} else {
-			uiInfo.currentCrosshair++;
-		}
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
+		uiInfo.currentCrosshair += select;
 
 		if (uiInfo.currentCrosshair >= NUM_CROSSHAIRS) {
 			uiInfo.currentCrosshair = 0;
 		} else if (uiInfo.currentCrosshair < 0) {
 			uiInfo.currentCrosshair = NUM_CROSSHAIRS - 1;
 		}
-		trap_Cvar_SetValue("cg_drawCrosshair", uiInfo.currentCrosshair); 
+		trap_Cvar_SetValue("cg_drawCrosshair", uiInfo.currentCrosshair);
 		return qtrue;
 	}
 	return qfalse;
@@ -2257,7 +2220,8 @@ static qboolean UI_Crosshair_HandleKey(int flags, float *special, int key) {
 
 
 static qboolean UI_SelectedPlayer_HandleKey(int flags, float *special, int key) {
-  if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_ENTER || key == K_KP_ENTER) {
+	int select = UI_SelectForKey(key);
+	if (select != 0) {
 		int selected;
 
 		UI_BuildPlayerList();
@@ -2265,12 +2229,8 @@ static qboolean UI_SelectedPlayer_HandleKey(int flags, float *special, int key) 
 			return qfalse;
 		}
 		selected = trap_Cvar_VariableValue("cg_selectedPlayer");
-		
-		if (key == K_MOUSE2) {
-			selected--;
-		} else {
-			selected++;
-		}
+
+		selected += select;
 
 		if (selected > uiInfo.myTeamCount) {
 			selected = 0;
@@ -2279,11 +2239,11 @@ static qboolean UI_SelectedPlayer_HandleKey(int flags, float *special, int key) 
 		}
 
 		if (selected == uiInfo.myTeamCount) {
-		 	trap_Cvar_Set( "cg_selectedPlayerName", "Everyone");
+			trap_Cvar_Set( "cg_selectedPlayerName", "Everyone");
 		} else {
-		 	trap_Cvar_Set( "cg_selectedPlayerName", uiInfo.teamPlayerNames[selected]);
+			trap_Cvar_Set( "cg_selectedPlayerName", uiInfo.teamPlayerNames[selected]);
 		}
-	 	trap_Cvar_SetValue( "cg_selectedPlayer", selected);
+		trap_Cvar_SetValue( "cg_selectedPlayer", selected);
 	}
 	return qfalse;
 }

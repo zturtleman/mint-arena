@@ -617,6 +617,14 @@ int trap_PC_SourceFileAndLine( int handle, char *filename, int *line ) {
 	return syscall( G_PC_SOURCE_FILE_AND_LINE, handle, filename, line );
 }
 
-void *trap_Alloc( int size, const char *tag ) {
-	return (void *)syscall( G_ALLOC, size, tag );
+void *trap_HeapMalloc( int size ) {
+	return (void *)syscall( G_HEAP_MALLOC, size );
+}
+
+int trap_HeapAvailable( void ) {
+	return syscall( G_HEAP_AVAILABLE );
+}
+
+void trap_HeapFree( void *data ) {
+	syscall( G_HEAP_FREE, data );
 }

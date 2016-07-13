@@ -2782,6 +2782,17 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 	CG_UpdateMusic();
 
 	if ( state == CA_CINEMATIC && cg.cinematicHandle >= 0 ) {
+		float x, y, width, height;
+
+		x = 0;
+		y = 0;
+		width = SCREEN_WIDTH;
+		height = SCREEN_HEIGHT;
+		CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
+		CG_AdjustFrom640( &x, &y, &width, &height );
+
+		trap_CIN_SetExtents( cg.cinematicHandle, x, y, width, height );
+
 		CG_ClearViewport();
 		trap_CIN_DrawCinematic( cg.cinematicHandle );
 

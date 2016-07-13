@@ -716,10 +716,16 @@ static qboolean CG_RegisterPlayerModelname( playerInfo_t *pi, const char *modelN
 
 	if ( CG_FindPlayerHeadFile( filename, sizeof(filename), pi, teamName, headName, headSkinName, "icon", "$image" ) ) {
 		pi->modelIcon = trap_R_RegisterShaderNoMip( filename );
+	} else {
+		pi->modelIcon = 0;
 	}
 
 	if ( !pi->modelIcon ) {
-		return qfalse;
+		Com_Printf( "Failed to load icon for %s/%s\n", headName, headSkinName );
+
+		if ( cg_buildScript.integer ) {
+			return qfalse;
+		}
 	}
 
 	return qtrue;

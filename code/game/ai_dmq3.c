@@ -2489,6 +2489,19 @@ int BotCanAndWantsToRocketJump(bot_state_t *bs) {
 
 /*
 ==================
+BotCanGrapple
+==================
+*/
+int BotCanGrapple(bot_state_t *bs) {
+	//if grappling is disabled
+	if (!bot_grapple.integer) return qfalse;
+	//if no grappling hook
+	if (!bot_offhandgrapple.integer && bs->inventory[INVENTORY_GRAPPLINGHOOK] <= 0) return qfalse;
+	return qtrue;
+}
+
+/*
+==================
 BotHasPersistantPowerupAndWeapon
 ==================
 */
@@ -5779,7 +5792,7 @@ void BotSetupDeathmatchAI(void) {
 	gametype = trap_Cvar_VariableIntegerValue("g_gametype");
 
 	trap_Cvar_Register(&bot_rocketjump, "bot_rocketjump", "1", 0);
-	trap_Cvar_Register(&bot_grapple, "bot_grapple", "0", 0);
+	trap_Cvar_Register(&bot_grapple, "bot_grapple", "1", 0);
 	trap_Cvar_Register(&bot_fastchat, "bot_fastchat", "0", 0);
 	trap_Cvar_Register(&bot_nochat, "bot_nochat", "0", 0);
 	trap_Cvar_Register(&bot_testichat, "bot_testichat", "0", 0);

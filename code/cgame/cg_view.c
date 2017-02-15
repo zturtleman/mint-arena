@@ -560,7 +560,7 @@ Fixed fov at intermissions, otherwise account for fov variable and zooms.
 #define	WAVE_AMPLITUDE	1
 #define	WAVE_FREQUENCY	0.4
 
-static int CG_CalcFov( void ) {
+qboolean CG_CalcFov( refdef_t *refdef, qboolean viewWeapon ) {
 	float	x;
 	float	phase;
 	float	v;
@@ -571,17 +571,27 @@ static int CG_CalcFov( void ) {
 
 	if ( cg.cur_lc->predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		// if in intermission, use a fixed value
-		cg.fov = fov_x = 90;
+		fov_x = 90;
+
+		if ( viewWeapon ) {
+			cg.viewWeaponFov = fov_x;
+		}
 	} else {
 		// user selectable
 		if ( cgs.dmflags & DF_FIXED_FOV ) {
 			// dmflag to prevent wide fov for all players
 			fov_x = 90;
 		} else {
-			fov_x = cg_fov.value;
+			if ( viewWeapon && cg_weaponFov.value > 0 ) {
+				fov_x = cg_weaponFov.value;
+			} else {
+				fov_x = cg_fov.value;
+			}
 		}
 
-		cg.fov = fov_x;
+		if ( viewWeapon ) {
+			cg.viewWeaponFov = fov_x;
+		}
 
 		// account for zooms
 		zoomFov = cg_zoomFov.value;
@@ -605,41 +615,43 @@ static int CG_CalcFov( void ) {
 		// Based on LordHavoc's code for Darkplaces
 		// http://www.quakeworld.nu/forum/topic/53/what-does-your-qw-look-like/page/30
 		const float baseAspect = 0.75f; // 3/4
-		const float aspect = (float)cg.refdef.width/(float)cg.refdef.height;
+		const float aspect = (float)refdef->width/(float)refdef->height;
 		const float desiredFov = fov_x;
 
 		fov_x = atan( tan( desiredFov*M_PI / 360.0f ) * baseAspect*aspect )*360.0f / M_PI;
 	}
 
-	x = cg.refdef.width / tan( fov_x / 360 * M_PI );
-	fov_y = atan2( cg.refdef.height, x );
+	x = refdef->width / tan( fov_x / 360 * M_PI );
+	fov_y = atan2( refdef->height, x );
 	fov_y = fov_y * 360 / M_PI;
 
 	// warp if underwater
-	contents = CG_PointContents( cg.refdef.vieworg, -1 );
+	contents = CG_PointContents( refdef->vieworg, -1 );
 	if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ){
 		phase = cg.time / 1000.0 * WAVE_FREQUENCY * M_PI * 2;
 		v = WAVE_AMPLITUDE * sin( phase );
 		fov_x += v;
 		fov_y -= v;
-		cg.refdef.rdflags |= RDF_UNDERWATER;
+		refdef->rdflags |= RDF_UNDERWATER;
 	}
 	else {
-		cg.refdef.rdflags &= ~RDF_UNDERWATER;
+		refdef->rdflags &= ~RDF_UNDERWATER;
 	}
 
 
 	// set it
-	cg.refdef.fov_x = fov_x;
-	cg.refdef.fov_y = fov_y;
+	refdef->fov_x = fov_x;
+	refdef->fov_y = fov_y;
 
-	if ( !cg.cur_lc->zoomed ) {
-		cg.cur_lc->zoomSensitivity = 1;
-	} else {
-		cg.cur_lc->zoomSensitivity = cg.refdef.fov_y / 75.0;
+	if ( !viewWeapon ) {
+		if ( !cg.cur_lc->zoomed ) {
+			cg.cur_lc->zoomSensitivity = 1;
+		} else {
+			cg.cur_lc->zoomSensitivity = cg.refdef.fov_y / 75.0;
+		}
 	}
 
-	return (cg.refdef.rdflags & RDF_UNDERWATER);
+	return (refdef->rdflags & RDF_UNDERWATER) ? qtrue : qfalse;
 }
 
 
@@ -763,7 +775,7 @@ static int CG_CalcViewValues( void ) {
 			angles[ROLL] = 0;
 			VectorCopy(angles, cg.refdefViewAngles);
 			AnglesToAxis( cg.refdefViewAngles, cg.refdef.viewaxis );
-			return CG_CalcFov();
+			return CG_CalcFov( &cg.refdef, qfalse );
 		} else {
 			cg.cameraMode = qfalse;
 		}
@@ -774,7 +786,7 @@ static int CG_CalcViewValues( void ) {
 		VectorCopy( ps->origin, cg.refdef.vieworg );
 		VectorCopy( ps->viewangles, cg.refdefViewAngles );
 		AnglesToAxis( cg.refdefViewAngles, cg.refdef.viewaxis );
-		return CG_CalcFov();
+		return CG_CalcFov( &cg.refdef, qfalse );
 	}
 
 	cg.bobcycle = ( ps->bobCycle & 128 ) >> 7;
@@ -833,7 +845,7 @@ static int CG_CalcViewValues( void ) {
 	cg.cur_lc->lastViewAngles[ROLL] = cg.refdefViewAngles[ROLL];
 
 	// field of view
-	return CG_CalcFov();
+	return CG_CalcFov( &cg.refdef, qfalse );
 }
 
 
@@ -1114,7 +1126,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 			CG_AddLocalEntities();
 			CG_AddAtmosphericEffects();
 		}
-		CG_AddViewWeapon( &cg.cur_lc->predictedPlayerState );
 
 		// finish up the rest of the refdef
 		if ( cg.testModelEntity.hModel ) {

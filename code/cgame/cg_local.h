@@ -734,7 +734,7 @@ typedef struct {
 	// view rendering
 	refdef_t	refdef;
 	vec3_t		refdefViewAngles;		// will be converted to refdef.viewaxis
-	float		fov;					// either range checked cg_fov or forced value
+	float		viewWeaponFov;			// either range checked cg_weaponFov or forced value
 
 	// first person view pos, set even when rendering third person view
 	vec3_t		firstPersonViewOrg;
@@ -1361,6 +1361,7 @@ extern	vmCvar_t		cg_ignore;
 extern	vmCvar_t		cg_simpleItems;
 extern	vmCvar_t		cg_fov;
 extern	vmCvar_t		cg_zoomFov;
+extern	vmCvar_t		cg_weaponFov;
 extern	vmCvar_t		cg_splitviewVertical;
 extern	vmCvar_t		cg_splitviewThirdEqual;
 extern	vmCvar_t		cg_splitviewTextScale;
@@ -1532,7 +1533,10 @@ void CG_SetupFrustum( void );
 qboolean CG_CullPoint( vec3_t pt );
 qboolean CG_CullPointAndRadius( const vec3_t pt, vec_t radius );
 
+qboolean CG_CalcFov( refdef_t *refdef, qboolean viewWeapon );
+
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback );
+
 
 
 //
@@ -1735,7 +1739,7 @@ void CG_Bullet( vec3_t origin, int sourceEntityNum, vec3_t normal, qboolean fles
 
 void CG_RailTrail( playerInfo_t *pi, vec3_t start, vec3_t end );
 void CG_GrappleTrail( centity_t *ent, const weaponInfo_t *wi );
-void CG_AddViewWeapon (playerState_t *ps);
+void CG_DrawViewWeapon (playerState_t *ps );
 void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent, int team );
 void CG_DrawWeaponSelect( void );
 

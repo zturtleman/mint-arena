@@ -3026,6 +3026,9 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 	// draw 3D view
 	trap_R_RenderScene( &cg.refdef );
 
+	// draw the 3D view weapon
+	CG_DrawViewWeapon( &cg.cur_lc->predictedPlayerState );
+
 	// draw status bar and other floating elements
  	CG_Draw2D(stereoView);
 

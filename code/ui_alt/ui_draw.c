@@ -340,12 +340,12 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 
 #ifdef Q3UIFONTS
 		if ( menuInfo->menuFlags & MF_DIALOG ) {
-			UI_DrawProportionalString( current->header.captionPos.x, current->header.captionPos.y, menuInfo->header, UI_DROPSHADOW|UI_GIANTFONT, color_bigtext );
+			UI_DrawProportionalString( current->header.captionPos.x, current->header.captionPos.y, menuInfo->header, UI_DROPSHADOW|UI_BIGFONT, color_bigtext );
 		} else {
 			UI_DrawBannerString( current->header.captionPos.x, current->header.captionPos.y, menuInfo->header, 0, color_header );
 		}
 #else
-		CG_DrawString( current->header.captionPos.x, current->header.captionPos.y, menuInfo->header, UI_DROPSHADOW|UI_GIANTFONT, color_header );
+		CG_DrawString( current->header.captionPos.x, current->header.captionPos.y, menuInfo->header, UI_DROPSHADOW|UI_BIGFONT, color_header );
 #endif
 	}
 
@@ -369,7 +369,7 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 
 		if ( item->flags & MIF_BIGTEXT ) {
 			Vector4Copy( color_bigtext, drawcolor );
-			style |= UI_GIANTFONT;
+			style |= UI_BIGFONT;
 		} else {
 			Vector4Copy( color_smalltext, drawcolor );
 			style |= UI_SMALLFONT;
@@ -461,7 +461,7 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 				if ( item->flags & (MIF_BACKBUTTON|MIF_NEXTBUTTON) ) {
 					// this has white text, instead of selected color
 					// TODO: use unselected small/big color?
-					CG_DrawString( SCREEN_WIDTH / 2, onImage.y + onImage.height / 2 - GIANTCHAR_HEIGHT / 2, item->caption, UI_CENTER|UI_DROPSHADOW|style, colorWhite );
+					CG_DrawString( SCREEN_WIDTH / 2, onImage.y + onImage.height / 2 - BIGCHAR_HEIGHT / 2, item->caption, UI_CENTER|UI_DROPSHADOW|style, colorWhite );
 				}
 #endif
 			}
@@ -478,7 +478,6 @@ static int UI_ItemVerticalGap( currentMenuItem_t *item ) {
 	}
 }
 
-// TODO: Fix font heights in UI_BuildCurrentMenu with Q3UIFONTS defined
 #define MAX_MENU_HEADERS	8
 // this is used for drawing and logic. it's closely related to UI_DrawCurrentMenu.
 void UI_BuildCurrentMenu( currentMenu_t *current ) {
@@ -513,7 +512,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			current->header.captionPos.height = PROPB_HEIGHT;
 		}
 #else
-		current->header.captionPos.width = CG_DrawStrlen( menuInfo->header, UI_GIANTFONT );
+		current->header.captionPos.width = CG_DrawStrlen( menuInfo->header, UI_BIGFONT );
 		current->header.captionPos.height = BIGCHAR_HEIGHT;
 #endif
 		current->header.captionPos.x = ( SCREEN_WIDTH - current->header.captionPos.width ) / 2;
@@ -631,7 +630,11 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 		}
 
 		if ( item->flags & MIF_HEADER ) {
-			numHeaders++;
+			if ( numHeaders + 1 < MAX_MENU_HEADERS ) {
+				numHeaders++;
+			} else {
+				Com_Printf( "WARNING: Too many headers in menu %s (MenuID %d)\n", menuInfo->header, (int)current->menu );
+			}
 
 			if ( !( item->flags & MIF_SELECTABLE ) ) {
 				continue;

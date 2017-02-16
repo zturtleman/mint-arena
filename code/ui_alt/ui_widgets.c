@@ -44,8 +44,8 @@ static void Caption_Init( currentMenuItem_t *item, const char *extData ) {
 		item->captionPos.width = UI_ProportionalStringWidth( item->caption );
 		item->captionPos.height = PROP_HEIGHT;
 #else
-		item->captionPos.width = CG_DrawStrlen( item->caption, UI_GIANTFONT );
-		item->captionPos.height = GIANTCHAR_HEIGHT;
+		item->captionPos.width = CG_DrawStrlen( item->caption, UI_BIGFONT );
+		item->captionPos.height = BIGCHAR_HEIGHT;
 #endif
 	} else {
 		item->captionPos.width = CG_DrawStrlen( item->caption, UI_SMALLFONT );
@@ -338,7 +338,7 @@ void UI_DrawSlider( currentMenuItem_t *item, float x, float y, int style, float 
 
 	// draw value
 #ifdef Q3UIFONTS
-	if ( style & UI_GIANTFONT ) {
+	if ( style & UI_BIGFONT ) {
 		UI_DrawProportionalString( x + sliderWidth + 8, y, va("%g", value), style, drawcolor );
 	} else
 #endif

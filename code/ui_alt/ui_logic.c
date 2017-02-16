@@ -589,7 +589,6 @@ void UI_InitFileList( currentMenu_t *current, currentMenuItem_t *item, const cha
 
 	Q_strncpyz( dirName, Info_ValueForKey( extData, "dir" ), sizeof (dirName) );
 	Q_strncpyz( extension, Info_ValueForKey( extData, "ext" ), sizeof (extension) );
-	// defaultMessage cannot be local memory...
 	Q_strncpyz( defaultMessage, Info_ValueForKey( extData, "empty" ), sizeof (defaultMessage) );
 
 	numFilenames = trap_FS_GetFileList( dirName, extension, fileNames, fileNamesSize );

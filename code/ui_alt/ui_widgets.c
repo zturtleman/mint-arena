@@ -246,6 +246,7 @@ void UI_DrawSlider( currentMenuItem_t *item, float x, float y, int style, float 
 	qhandle_t hShader;
 	int sliderWidth, sliderHeight, buttonWidth, buttonHeight;
 	float min, max, value;
+	vec4_t baseColor = {1,1,1,1}, buttonColor = {1,1,1,1};
 
 	min = item->cvarRange->min;
 	max = item->cvarRange->max;
@@ -265,14 +266,19 @@ void UI_DrawSlider( currentMenuItem_t *item, float x, float y, int style, float 
 		buttonHeight = 20;
 		hShader = uiAssets.sliderBar;
 
-		// set color of slider bar and button
-		trap_R_SetColor( drawcolor );
+		// set color of slider bar
+		Vector4Copy( drawcolor, baseColor );
+
+#ifdef MISSIONPACK
+		// team arena colorizes the slider button, q3 does not
+		Vector4Copy( drawcolor, buttonColor );
+#endif
 	}
 
 	if ( hShader ) {
-		CG_DrawPic( x, y, sliderWidth, sliderHeight, hShader );
+		CG_DrawPicColor( x, y, sliderWidth, sliderHeight, hShader, baseColor );
 	} else {
-		UI_BuiltinSliderBar( x, y, sliderWidth, sliderHeight, drawcolor );
+		UI_BuiltinSliderBar( x, y, sliderWidth, sliderHeight, baseColor );
 	}
 
 	// draw the button
@@ -301,36 +307,26 @@ void UI_DrawSlider( currentMenuItem_t *item, float x, float y, int style, float 
 		//float xOffset = 128.0f / (NUM_COLOR_EFFECTS + 1);
 		hShader = uiAssets.fxPic[item->cvarPair];
 		if ( !hShader ) {
-			vec4_t picColor;
-
 			hShader = uiAssets.fxPic[NUM_COLOR_EFFECTS-1]; // white
 			if ( !hShader )
 				hShader = cgs.media.whiteShader;
 
-			CG_PlayerColorFromIndex( atoi( item->cvarPairs[item->cvarPair].value ), picColor );
-			picColor[3] = 1;
-			trap_R_SetColor( picColor );
+			CG_PlayerColorFromIndex( atoi( item->cvarPairs[item->cvarPair].value ), buttonColor );
+			buttonColor[3] = 1;
 		}
 		//CG_DrawPic( item->generic.x + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y + PROP_HEIGHT + 6, 16, 12, colorShader );
 
 		// FIXME
 		buttonX = x + 8 + ( sliderWidth - 16 ) * frac - 2;
 	} else {
-#ifndef MISSIONPACK
-		// team arena colorizes the button, q3 does not
-		trap_R_SetColor( NULL );
-#endif
-
 		buttonX = x + 8 + ( sliderWidth - 16 ) * frac - 2;
 	}
 
 	if ( hShader ) {
-		CG_DrawPic( buttonX, y - 2, buttonWidth, buttonHeight, hShader );
+		CG_DrawPicColor( buttonX, y - 2, buttonWidth, buttonHeight, hShader, buttonColor );
 	} else {
-		UI_BuiltinCircle( buttonX, y - 2, buttonWidth, buttonHeight, drawcolor );
+		UI_BuiltinCircle( buttonX, y - 2, buttonWidth, buttonHeight, buttonColor );
 	}
-
-	trap_R_SetColor( NULL );
 
 	if ( colorBar ) {
 		return;
@@ -518,9 +514,7 @@ static void ListBox_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style )
 			VectorCopy( drawcolor, color );
 			color[3] = 0.5f;
 
-			trap_R_SetColor( color );
-			CG_DrawPic( x, y, width, BIGCHAR_HEIGHT, cgs.media.whiteShader );
-			trap_R_SetColor( NULL );
+			CG_DrawPicColor( x, y, width, BIGCHAR_HEIGHT, cgs.media.whiteShader, color );
 		}
 
 		if ( item->cvarPair == i && selected ) {

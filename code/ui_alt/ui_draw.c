@@ -275,15 +275,11 @@ void UI_DrawGradientBar( int x, int y, int width, int height, qboolean highlight
 	}
 
 	// draw gradient body
-	trap_R_SetColor( color );
-	CG_DrawPic( x, y, width, height, uiAssets.gradientBar );
+	CG_DrawPicColor( x, y, width, height, uiAssets.gradientBar, color );
 
 	// draw top and bottom border
-	trap_R_SetColor( borderColor );
-	CG_DrawPic( x, y-borderSize, width, borderSize, uiAssets.gradientBar );
-	CG_DrawPic( x, y+height, width, borderSize, uiAssets.gradientBar );
-
-	trap_R_SetColor( NULL );
+	CG_DrawPicColor( x, y-borderSize, width, borderSize, uiAssets.gradientBar, borderColor );
+	CG_DrawPicColor( x, y+height, width, borderSize, uiAssets.gradientBar, borderColor );
 }
 #endif
 
@@ -436,9 +432,7 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 				}
 #endif
 
-				trap_R_SetColor( color );
-				CG_DrawPic( onImage.x, onImage.y, onImage.width, onImage.height, ui_bitmaps[item->bitmapIndex].onShader );
-				trap_R_SetColor( NULL );
+				CG_DrawPicColor( onImage.x, onImage.y, onImage.width, onImage.height, ui_bitmaps[item->bitmapIndex].onShader, color );
 
 #ifdef MISSIONPACK
 				// only draw lightning or caption if status bar was drawn

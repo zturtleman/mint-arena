@@ -12,5 +12,5 @@ If you put both projects in the same directory you can launch the game using;
 
     spearmint/build/release-mingw32-x86/spearmint_x86.exe +set fs_basepath "mint-arena/build/release-mingw32-x86/" +set fs_game "baseq3"
 
-On Linux and OS X you'll need to put `./` before the command and substitute correct platform and architecture (look in the build directory).
+On Linux and OS X you'll need to put `./` before the command and substitute the correct platform and architecture (look in the build directory).
 

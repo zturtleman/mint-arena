@@ -1352,12 +1352,13 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 /*
 ==============
-CG_AddViewWeapon
+CG_DrawViewWeapon
 
-Add the weapon, and flash for the player's view
+Draw the weapon and flash for the player's view
 ==============
 */
-void CG_AddViewWeapon( playerState_t *ps ) {
+void CG_DrawViewWeapon( playerState_t *ps ) {
+	refdef_t refdef;
 	refEntity_t	hand;
 	centity_t	*cent;
 	playerInfo_t	*pi;
@@ -1398,14 +1399,19 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		return;
 	}
 
+	// copy world refdef and set weapon field of view.
+	refdef = cg.refdef;
+	refdef.rdflags = RDF_NOWORLDMODEL;
+	CG_CalcFov( &refdef, qtrue );
+
 	VectorClear(fovOffset);
 
-	if ( cg.fov > 90 ) {
+	if ( cg.viewWeaponFov > 90 ) {
 		// drop gun lower at higher fov
-		fovOffset[2] = -0.2 * ( cg.fov - 90 ) * cg.refdef.fov_x / cg.fov;
-	} else if ( cg.fov < 90 ) {
+		fovOffset[2] = -0.2 * ( cg.viewWeaponFov - 90 ) * cg.refdef.fov_x / cg.viewWeaponFov;
+	} else if ( cg.viewWeaponFov < 90 ) {
 		// move gun forward at lowerer fov
-		fovOffset[0] = -0.2 * ( cg.fov - 90 ) * cg.refdef.fov_x / cg.fov;
+		fovOffset[0] = -0.2 * ( cg.viewWeaponFov - 90 ) * cg.refdef.fov_x / cg.viewWeaponFov;
 	}
 
 	cent = &cg.cur_lc->predictedPlayerEntity;	// &cg_entities[cg.snap->ps.playerNum];
@@ -1437,10 +1443,12 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	}
 
 	hand.hModel = weapon->handsModel;
-	hand.renderfx = RF_DEPTHHACK | RF_NO_MIRROR;
+	hand.renderfx = RF_DEPTHHACK | RF_NO_MIRROR | RF_LIGHTING_GRID;
 
 	// add everything onto the hand
 	CG_AddPlayerWeapon( &hand, ps, &cg.cur_lc->predictedPlayerEntity, ps->persistant[PERS_TEAM] );
+
+	trap_R_RenderScene( &refdef );
 }
 
 /*

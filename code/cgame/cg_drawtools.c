@@ -325,6 +325,19 @@ void CG_DrawNamedPic( float x, float y, float width, float height, const char *p
 
 /*
 ================
+CG_DrawPicColor
+
+Coordinates are 640*480 virtual values
+=================
+*/
+void CG_DrawPicColor( float x, float y, float width, float height, qhandle_t hShader, const float *color ) {
+	trap_R_SetColor( color );
+	CG_DrawPic( x, y, width, height, hShader );
+	trap_R_SetColor( NULL );
+}
+
+/*
+================
 CG_SetClipRegion
 =================
 */

@@ -373,9 +373,11 @@ ifdef MINGW
       CC=gcc
     endif
 
-    ifndef WINDRES
-      WINDRES=windres
-    endif
+  endif
+
+  # using generic windres if specific one is not present
+  ifndef WINDRES
+    WINDRES=windres
   endif
 
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \

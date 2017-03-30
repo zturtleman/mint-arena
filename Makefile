@@ -1365,8 +1365,8 @@ $(B)/$(MISSIONPACK)/vm/$(VM_PREFIX)game.qvm: $(MPGVMOBJ) $(GDIR)/bg_syscalls.asm
 
 # Extra dependencies to ensure the git version is incorporated
 #ifeq ($(USE_GIT),1)
-#  $(B)/$(BASEGAME)/bg_misc.o : .git/index
-#  $(B)/$(MISSIONPACK)/bg_misc.o : .git/index
+#  $(B)/$(BASEGAME)/bg_misc.o : .git
+#  $(B)/$(MISSIONPACK)/bg_misc.o : .git
 #endif
 
 

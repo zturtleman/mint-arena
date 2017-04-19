@@ -220,7 +220,7 @@ float BotGetTime(bot_match_t *match) {
 		//match it to find out if the time is in seconds or minutes
 		if (BotFindMatch(timestring, &timematch, MTCONTEXT_TIME)) {
 			if (timematch.type == MSG_FOREVER) {
-				t = 99999999.0f;
+				t = 99999999.9f;
 			}
 			else if (timematch.type == MSG_FORAWHILE) {
 				t = 10 * 60; // 10 minutes

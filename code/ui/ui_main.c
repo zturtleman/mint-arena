@@ -3359,7 +3359,6 @@ static void UI_BuildServerDisplayList(int force) {
 			} else {
 				clients = atoi(Info_ValueForKey(info, "clients"));
 			}
-			uiInfo.serverStatus.numPlayersOnServers += clients;
 
 			if (ui_browserShowEmpty.integer == 0) {
 				if (clients == 0) {
@@ -3403,6 +3402,7 @@ static void UI_BuildServerDisplayList(int force) {
 			// done with this server
 			if (ping > 0) {
 				trap_LAN_MarkServerVisible(lanSource, i, qfalse);
+				uiInfo.serverStatus.numPlayersOnServers += clients;
 				numinvisible++;
 			}
 		}

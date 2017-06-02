@@ -1443,7 +1443,7 @@ void CG_DrawViewWeapon( playerState_t *ps ) {
 	}
 
 	hand.hModel = weapon->handsModel;
-	hand.renderfx = RF_DEPTHHACK | RF_NO_MIRROR | RF_LIGHTING_GRID;
+	hand.renderfx = RF_DEPTHHACK | RF_NO_MIRROR;
 
 	// add everything onto the hand
 	CG_AddPlayerWeapon( &hand, ps, &cg.cur_lc->predictedPlayerEntity, ps->persistant[PERS_TEAM] );

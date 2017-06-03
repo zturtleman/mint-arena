@@ -1400,12 +1400,12 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 
 	VectorClear(fovOffset);
 
-	if ( cg.fov > 90 ) {
+	if ( cg.viewWeaponFov > 90 ) {
 		// drop gun lower at higher fov
-		fovOffset[2] = -0.2 * ( cg.fov - 90 ) * cg.refdef.fov_x / cg.fov;
-	} else if ( cg.fov < 90 ) {
+		fovOffset[2] = -0.2 * ( cg.viewWeaponFov - 90 ) * cg.refdef.weapon_fov_x / cg.viewWeaponFov;
+	} else if ( cg.viewWeaponFov < 90 ) {
 		// move gun forward at lowerer fov
-		fovOffset[0] = -0.2 * ( cg.fov - 90 ) * cg.refdef.fov_x / cg.fov;
+		fovOffset[0] = -0.2 * ( cg.viewWeaponFov - 90 ) * cg.refdef.weapon_fov_x / cg.viewWeaponFov;
 	}
 
 	cent = &cg.cur_lc->predictedPlayerEntity;	// &cg_entities[cg.snap->ps.playerNum];

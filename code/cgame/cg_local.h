@@ -734,7 +734,7 @@ typedef struct {
 	// view rendering
 	refdef_t	refdef;
 	vec3_t		refdefViewAngles;		// will be converted to refdef.viewaxis
-	float		fov;					// either range checked cg_fov or forced value
+	float		viewWeaponFov;			// either range checked cg_weaponFov or forced value
 
 	// first person view pos, set even when rendering third person view
 	vec3_t		firstPersonViewOrg;
@@ -1361,6 +1361,7 @@ extern	vmCvar_t		cg_ignore;
 extern	vmCvar_t		cg_simpleItems;
 extern	vmCvar_t		cg_fov;
 extern	vmCvar_t		cg_zoomFov;
+extern	vmCvar_t		cg_weaponFov;
 extern	vmCvar_t		cg_splitviewVertical;
 extern	vmCvar_t		cg_splitviewThirdEqual;
 extern	vmCvar_t		cg_splitviewTextScale;

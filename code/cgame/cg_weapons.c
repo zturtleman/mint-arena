@@ -1383,8 +1383,8 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	// allow the gun to be completely removed
 	if ( !cg_drawGun[cg.cur_localPlayerNum].integer ) {
 		// use default flash origin
-		VectorCopy( cg_entities[cg.cur_ps->playerNum].lerpOrigin, cg.cur_lc->flashOrigin );
-		cg.cur_lc->flashOrigin[2] += DEFAULT_VIEWHEIGHT - 6;
+		VectorCopy( cg.firstPersonViewOrg, cg.cur_lc->flashOrigin );
+		VectorMA( cg.cur_lc->flashOrigin, -8, cg.firstPersonViewAxis[2], cg.cur_lc->flashOrigin );
 
 		if ( cg.cur_lc->predictedPlayerState.eFlags & EF_FIRING ) {
 			// special hack for lightning gun...

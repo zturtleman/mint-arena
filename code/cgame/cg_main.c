@@ -2408,6 +2408,25 @@ void CG_LoadHudMenu( void ) {
 
 	// make voice chat head stick to left side in widescreen
 	Menu_SetScreenPlacement( Menus_FindByName( "voiceMenu" ), PLACE_LEFT, PLACE_TOP );
+
+	// Make vertical power up area stick to the left or right side in widescreen.
+	// Team Arena has it on the right side but also handle custom huds that use left side.
+	{
+		menuDef_t *menu = Menus_FindByName( "powerup area" );
+		itemDef_t *item = Menu_FindItemByName( menu, "powerupArea" );
+
+		if ( item && item->window.ownerDraw == CG_AREA_POWERUP && item->alignment == HUD_VERTICAL ) {
+			screenPlacement_e hpos;
+
+			if ( item->window.rect.x > SCREEN_WIDTH*0.5f ) {
+				hpos = PLACE_RIGHT;
+			} else {
+				hpos = PLACE_LEFT;
+			}
+
+			Menu_SetScreenPlacement( menu, hpos, PLACE_CENTER );
+		}
+	}
 }
 
 void CG_AssetCache( void ) {

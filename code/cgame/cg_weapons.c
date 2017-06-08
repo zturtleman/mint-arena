@@ -1573,7 +1573,7 @@ void CG_NextWeapon_f( int localPlayerNum ) {
 		if ( player->weaponSelect == MAX_WEAPONS ) {
 			player->weaponSelect = 0;
 		}
-		if ( player->weaponSelect == WP_GAUNTLET ) {
+		if ( player->weaponSelect == WP_GAUNTLET && cg_cyclePastGauntlet[localPlayerNum].integer ) {
 			continue;		// never cycle to gauntlet
 		}
 		if ( CG_WeaponSelectable( ps, player->weaponSelect ) ) {
@@ -1615,7 +1615,7 @@ void CG_PrevWeapon_f( int localPlayerNum ) {
 		if ( player->weaponSelect == -1 ) {
 			player->weaponSelect = MAX_WEAPONS - 1;
 		}
-		if ( player->weaponSelect == WP_GAUNTLET ) {
+		if ( player->weaponSelect == WP_GAUNTLET && cg_cyclePastGauntlet[localPlayerNum].integer ) {
 			continue;		// never cycle to gauntlet
 		}
 		if ( CG_WeaponSelectable( ps, player->weaponSelect ) ) {

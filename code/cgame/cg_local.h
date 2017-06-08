@@ -1444,6 +1444,7 @@ extern	vmCvar_t		cg_handicap[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_teamtask[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_teampref[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_autoswitch[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_cyclePastGauntlet[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_drawGun[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_thirdPerson[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_thirdPersonRange[MAX_SPLITVIEW];

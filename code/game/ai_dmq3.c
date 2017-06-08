@@ -220,6 +220,7 @@ qboolean EntityIsDead(aas_entityinfo_t *entinfo) {
 		if (!BotAI_GetPlayerState( entinfo->number, &ps )) {
 			return qfalse;
 		}
+
 		if (ps.pm_type != PM_NORMAL) return qtrue;
 	}
 	return qfalse;

@@ -990,7 +990,7 @@ int BotAI(int playernum, float thinktime) {
 	}
 
 	//retrieve the current player state
-	if (!BotAI_GetPlayerState( playernum, &bs->cur_ps )) {
+	if (!BotAI_GetPlayerState(playernum, &bs->cur_ps)) {
 		BotAI_Print(PRT_FATAL, "BotAI: failed to get player state for player %d\n", playernum);
 		return qfalse;
 	}

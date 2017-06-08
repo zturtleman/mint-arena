@@ -2043,12 +2043,13 @@ qboolean CG_Load_Menu(char **p) {
 	while ( 1 ) {
 
 		token = COM_ParseExt(p, qtrue);
-		if ( !token[0] ) {
-			return qfalse;
-		}
 
 		if (Q_stricmp(token, "}") == 0) {
 			return qtrue;
+		}
+
+		if ( !token[0] ) {
+			return qfalse;
 		}
 
 		CG_ParseMenu(token); 
@@ -2096,7 +2097,7 @@ void CG_LoadMenus(const char *menuFile) {
 
 	while ( 1 ) {
 		token = COM_ParseExt( &p, qtrue );
-		if ( !token[0] ) {
+		if (!token[0]) {
 			break;
 		}
 

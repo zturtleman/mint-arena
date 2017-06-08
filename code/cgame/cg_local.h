@@ -634,6 +634,7 @@ typedef struct {
 	int			weaponSelectTime;
 	int			weaponAnimation;
 	int			weaponAnimationTime;
+	int			weaponToggledFrom;
 
 	// blend blobs
 	float		damageTime;
@@ -1724,6 +1725,7 @@ qboolean CG_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *
 void CG_NextWeapon_f( int localPlayerNum );
 void CG_PrevWeapon_f( int localPlayerNum );
 void CG_Weapon_f( int localPlayerNum );
+void CG_WeaponToggle_f( int localPlayerNum );
 
 void CG_RegisterWeapon( int weaponNum );
 void CG_RegisterItemVisuals( int itemNum );

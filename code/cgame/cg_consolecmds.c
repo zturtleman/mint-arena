@@ -996,7 +996,8 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "viewpos", CG_Viewpos_f, CMD_INGAME },
 	{ "weapnext", CG_NextWeapon_f, CMD_INGAME },
 	{ "weapprev", CG_PrevWeapon_f, CMD_INGAME },
-	{ "weapon", CG_Weapon_f, CMD_INGAME }
+	{ "weapon", CG_Weapon_f, CMD_INGAME },
+	{ "weaponToggle", CG_WeaponToggle_f, CMD_INGAME }
 };
 
 static int numPlayerCommands = ARRAY_LEN( playerCommands );

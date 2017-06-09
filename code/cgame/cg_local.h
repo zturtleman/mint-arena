@@ -663,6 +663,11 @@ typedef struct {
 
 	//qboolean cameraMode;		// if rendering from a loaded camera
 
+	// orbit camera around player
+	float cameraOrbit;			// angles per second to orbit, forces third person.
+	float cameraOrbitAngle;
+	float cameraOrbitRange;
+
 	vec3_t		lastViewPos;
 	vec3_t		lastViewAngles;
 
@@ -830,7 +835,6 @@ typedef struct {
 	float		bobfracsin;
 	int			bobcycle;
 	float		xyspeed;
-	int     	nextOrbitTime;
 
 	// development tool
 	refEntity_t		testModelEntity;
@@ -1392,8 +1396,6 @@ extern	vmCvar_t		pmove_overbounce;
 extern	vmCvar_t		pmove_fixed;
 extern	vmCvar_t		pmove_msec;
 //extern	vmCvar_t		cg_pmove_fixed;
-extern	vmCvar_t		cg_cameraOrbit;
-extern	vmCvar_t		cg_cameraOrbitDelay;
 extern	vmCvar_t		cg_timescaleFadeEnd;
 extern	vmCvar_t		cg_timescaleFadeSpeed;
 extern	vmCvar_t		cg_timescale;

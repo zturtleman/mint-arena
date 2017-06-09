@@ -353,31 +353,26 @@ static void CG_ScrollScoresUp_f( int localPlayerNum ) {
 }
 #endif
 
-static void CG_CameraOrbit( int speed, int delay ) {
-	int i;
+static void CG_CameraOrbit( int localPlayerNum, float speed ) {
+	localPlayer_t *player;
 
-	trap_Cvar_SetValue( "cg_cameraOrbit", speed );
-	if ( delay > 0 ) {
-		trap_Cvar_SetValue( "cg_cameraOrbitDelay", delay );
-	}
+	player = &cg.localPlayers[localPlayerNum];
 
-	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
-		trap_Cvar_SetValue(Com_LocalPlayerCvarName( i, "cg_thirdPerson" ), speed == 0 ? 0 : 1 );
-		trap_Cvar_SetValue(Com_LocalPlayerCvarName( i, "cg_thirdPersonAngle" ), 0 );
-		trap_Cvar_SetValue(Com_LocalPlayerCvarName( i, "cg_thirdPersonRange" ), 100 );
-	}
+	player->cameraOrbit = speed;
+	player->cameraOrbitAngle = 0;
+	player->cameraOrbitRange = 100;
 }
 
 #ifdef MISSIONPACK
 static void CG_spWin_f( void) {
-	CG_CameraOrbit( 2, 35 );
+	CG_CameraOrbit( 0, 30 );
 	CG_AddBufferedSound(cgs.media.winnerSound);
 	//trap_S_StartLocalSound(cgs.media.winnerSound, CHAN_ANNOUNCER);
 	CG_GlobalCenterPrint("YOU WIN!", SCREEN_HEIGHT/2, 2.0);
 }
 
 static void CG_spLose_f( void) {
-	CG_CameraOrbit( 2, 35 );
+	CG_CameraOrbit( 0, 30 );
 	CG_AddBufferedSound(cgs.media.loserSound);
 	//trap_S_StartLocalSound(cgs.media.loserSound, CHAN_ANNOUNCER);
 	CG_GlobalCenterPrint("YOU LOSE...", SCREEN_HEIGHT/2, 2.0);
@@ -650,16 +645,14 @@ CG_StartOrbit_f
 */
 
 static void CG_StartOrbit_f( void ) {
-	char var[MAX_TOKEN_CHARS];
+	int i;
 
-	trap_Cvar_VariableStringBuffer( "developer", var, sizeof( var ) );
-	if ( !atoi(var) ) {
-		return;
-	}
-	if (cg_cameraOrbit.value != 0) {
-		CG_CameraOrbit( 0, -1 );
-	} else {
-		CG_CameraOrbit( 5, -1 );
+	for ( i = 0; i < MAX_SPLITVIEW; i++ ) {
+		if (cg.localPlayers[i].cameraOrbit != 0) {
+			CG_CameraOrbit( i, 0 );
+		} else {
+			CG_CameraOrbit( i, 30 );
+		}
 	}
 }
 

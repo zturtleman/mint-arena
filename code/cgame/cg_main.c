@@ -2488,6 +2488,9 @@ void CG_ClearState( qboolean everything, int maxSplitView ) {
 	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
 		cg.localPlayers[i].playerNum = -1;
 	}
+
+	// get the rendering configuration from the client system
+	CG_UpdateGlconfig( qtrue );
 }
 
 /*
@@ -2536,9 +2539,6 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 	cgs.media.whiteDynamicShader= trap_R_RegisterShaderEx( "white", LIGHTMAP_NONE, qtrue );
 
 	CG_TextInit();
-
-	// get the rendering configuration from the client system
-	CG_UpdateGlconfig( qtrue );
 
 	CG_ConsoleInit();
 

@@ -2760,6 +2760,8 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 	}
 
 	if ( !cg_dedicated.integer && state == CA_DISCONNECTED && !UI_IsFullscreen() ) {
+		// if disconnected, bring up the menu
+		// ZTM: TODO: call trap_S_StopAllSounds() here. Currently it's done in cl_main.c
 		UI_SetActiveMenu( UIMENU_MAIN );
 	}
 

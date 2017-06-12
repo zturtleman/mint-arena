@@ -1500,7 +1500,7 @@ static void ServerOptions_MenuInit( qboolean multiplayer ) {
 	s_serveroptions.botSkill.generic.x				= 32 + CG_DrawStrlen( s_serveroptions.botSkill.generic.name, UI_SMALLFONT ) + 2 * SMALLCHAR_WIDTH;
 	s_serveroptions.botSkill.generic.y				= y;
 	s_serveroptions.botSkill.itemnames				= botSkill_list;
-	s_serveroptions.botSkill.curvalue				= 1;
+	s_serveroptions.botSkill.curvalue				= 3;
 
 	y += ( 2 * SMALLCHAR_HEIGHT );
 	s_serveroptions.player0.generic.type			= MTYPE_TEXT;

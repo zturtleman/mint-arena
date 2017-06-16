@@ -43,7 +43,7 @@ MULTIPLAYER MENU (SERVER BROWSER)
 #define MAX_GLOBALSERVERS		128
 #define MAX_PINGREQUESTS		32
 #define MAX_ADDRESSLENGTH		64
-#define MAX_HOSTNAMELENGTH		22
+#define MAX_HOSTNAMELENGTH		32
 #define MAX_MAPNAMELENGTH		16
 #define MAX_LISTBOXITEMS		128
 #define MAX_LOCALSERVERS		128
@@ -164,7 +164,7 @@ typedef struct {
 
 typedef struct servernode_s {
 	char	adrstr[MAX_ADDRESSLENGTH];
-	char	hostname[MAX_HOSTNAMELENGTH+3];
+	char	hostname[MAX_HOSTNAMELENGTH];
 	char	mapname[MAX_MAPNAMELENGTH];
 	int		numclients;
 	int		humanplayers;
@@ -178,8 +178,10 @@ typedef struct servernode_s {
 } servernode_t; 
 
 typedef struct {
-	char			buff[MAX_LISTBOXWIDTH];
+	char			buff[2]; // List box key handler selects item based on buff[0].
 	servernode_t*	servernode;
+	int				displayclients;
+	const char		*pingColor;
 } table_t;
 
 typedef struct {
@@ -574,10 +576,11 @@ static void ArenaServers_UpdateMenu( void ) {
 			pingColor = S_COLOR_RED;
 		}
 
-		Com_sprintf( buff, MAX_LISTBOXWIDTH, "%-20.20s %-12.12s %2d/%2d %-8.8s %4s%s%3d " S_COLOR_YELLOW "",
-			servernodeptr->hostname, servernodeptr->mapname, clients,
- 			servernodeptr->maxclients, servernodeptr->gametypeName,
-			netnames[servernodeptr->nettype], pingColor, servernodeptr->pingtime);
+		buff[0] = servernodeptr->hostname[0];
+		buff[1] = '\0';
+		tableptr->displayclients = clients;
+		tableptr->pingColor = pingColor;
+
 		j++;
 	}
 
@@ -1303,6 +1306,114 @@ static sfxHandle_t ArenaServers_MenuKey( int key ) {
 
 /*
 =================
+ArenaServers_DrawServerList
+=================
+*/
+void ArenaServers_DrawServerList( int x, int y, int item, int style, float *color ) {
+	table_t *tableptr;
+	servernode_t *servernodeptr;
+	const int charWidth = 8;
+	int w;
+
+	tableptr = &g_arenaservers.table[item];
+	servernodeptr = tableptr->servernode;
+
+	w = 24 * charWidth;
+	CG_SetClipRegion( x, y, w, SMALLCHAR_HEIGHT );
+	UI_DrawString( x, y, servernodeptr->hostname, style, color );
+	x += w + charWidth;
+
+	w = 12 * charWidth;
+	CG_SetClipRegion( x, y, w, SMALLCHAR_HEIGHT );
+	UI_DrawString( x, y, servernodeptr->mapname, style, color );
+	x += w + charWidth;
+
+	w = 5 * charWidth;
+	CG_ClearClipRegion();
+	UI_DrawString( x, y, va("%d/%d",tableptr->displayclients,servernodeptr->maxclients), style, color );
+	x += w + charWidth;
+
+	w = 8 * charWidth;
+	CG_SetClipRegion( x, y, w, SMALLCHAR_HEIGHT );
+	UI_DrawString( x, y, servernodeptr->gametypeName, style, color );
+	x += w + charWidth;
+
+	w = 3 * charWidth;
+	CG_SetClipRegion( x, y, w, SMALLCHAR_HEIGHT );
+	UI_DrawString( x, y, netnames[servernodeptr->nettype], style, color );
+	x += w + charWidth;
+
+	CG_ClearClipRegion();
+	UI_DrawString( x, y, va("%s%d",tableptr->pingColor,servernodeptr->pingtime), style, color );
+}
+
+/*
+=================
+ServerList_Draw
+
+Based on ScrollList_Draw
+=================
+*/
+void ServerList_Draw( void *data )
+{
+	int			x;
+	int			u;
+	int			y;
+	int			i;
+	int			base;
+	int			column;
+	float*		color;
+	qboolean	hasfocus;
+	int			style;
+	menulist_s	*l;
+
+	l = (menulist_s *)data;
+
+	hasfocus = (l->generic.parent->cursor == l->generic.menuPosition);
+
+	x =	l->generic.x;
+	for( column = 0; column < l->columns; column++ ) {
+		y =	l->generic.y;
+		base = l->top + column * l->height;
+		for( i = base; i < base + l->height; i++) {
+			if (i >= l->numitems)
+				break;
+
+			if (i == l->curvalue)
+			{
+				u = x - 2;
+				if( l->generic.flags & QMF_CENTER_JUSTIFY ) {
+					u -= (l->width * SMALLCHAR_WIDTH) / 2 + 1;
+				}
+
+				CG_FillRect(u,y,l->width*SMALLCHAR_WIDTH,SMALLCHAR_HEIGHT+2,listbar_color);
+				color = text_color_highlight;
+
+				if (hasfocus)
+					style = UI_PULSE|UI_LEFT|UI_SMALLFONT;
+				else
+					style = UI_LEFT|UI_SMALLFONT;
+			}
+			else
+			{
+				color = text_color_normal;
+				style = UI_LEFT|UI_SMALLFONT;
+			}
+			if( l->generic.flags & QMF_CENTER_JUSTIFY ) {
+				style &= ~UI_FORMATMASK;
+				style |= UI_CENTER;
+			}
+
+			ArenaServers_DrawServerList(x, y, i, style, color);
+
+			y += SMALLCHAR_HEIGHT;
+		}
+		x += (l->width + l->seperation) * SMALLCHAR_WIDTH;
+	}
+}
+
+/*
+=================
 ArenaServers_MenuInit
 =================
 */
@@ -1388,9 +1499,10 @@ static void ArenaServers_MenuInit( void ) {
 
 	y += 3 * SMALLCHAR_HEIGHT;
 	g_arenaservers.list.generic.type			= MTYPE_SCROLLLIST;
-	g_arenaservers.list.generic.flags			= QMF_HIGHLIGHT_IF_FOCUS;
+	g_arenaservers.list.generic.flags			= QMF_HIGHLIGHT_IF_FOCUS|QMF_OWNERDRAW;
 	g_arenaservers.list.generic.id				= ID_LIST;
 	g_arenaservers.list.generic.callback		= ArenaServers_Event;
+	g_arenaservers.list.generic.ownerdraw		= ServerList_Draw;
 	g_arenaservers.list.generic.x				= 72;
 	g_arenaservers.list.generic.y				= y;
 	g_arenaservers.list.width					= MAX_LISTBOXWIDTH;

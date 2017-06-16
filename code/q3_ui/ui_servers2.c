@@ -1497,7 +1497,7 @@ static void ArenaServers_MenuInit( void ) {
 	g_arenaservers.showbots.generic.x			= 320;
 	g_arenaservers.showbots.generic.y			= y;
 
-	y += 3 * SMALLCHAR_HEIGHT;
+	y += 2 * SMALLCHAR_HEIGHT;
 	g_arenaservers.list.generic.type			= MTYPE_SCROLLLIST;
 	g_arenaservers.list.generic.flags			= QMF_HIGHLIGHT_IF_FOCUS|QMF_OWNERDRAW;
 	g_arenaservers.list.generic.id				= ID_LIST;

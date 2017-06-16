@@ -1692,6 +1692,8 @@ void CG_LocalPlayerAdded(int localPlayerNum, int playerNum) {
 		return;
 
 	cg.localPlayers[localPlayerNum].playerNum = playerNum;
+
+	CG_LoadDeferredPlayers();
 }
 
 /*

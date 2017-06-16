@@ -208,7 +208,7 @@ void InGame_MenuInit( void ) {
 	s_ingame.frame.generic.x			= 320-233;//142;
 	s_ingame.frame.generic.y			= 240-166;//118;
 	s_ingame.frame.width				= 466;//359;
-	s_ingame.frame.height				= 332;//256;
+	s_ingame.frame.height				= 356;//256;
 
 	if (UI_MaxSplitView() > 1) {
 		y = 88;

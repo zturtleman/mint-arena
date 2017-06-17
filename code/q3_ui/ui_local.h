@@ -107,7 +107,7 @@ extern vmCvar_t	ui_server13;
 extern vmCvar_t	ui_server14;
 extern vmCvar_t	ui_server15;
 extern vmCvar_t	ui_server16;
-
+extern vmCvar_t	ui_firstrun;
 extern vmCvar_t	ui_ioq3;
 
 
@@ -422,6 +422,12 @@ extern void PlayerSettings_Cache( void );
 //
 extern void UI_PreferencesMenu( void );
 extern void Preferences_Cache( void );
+
+//
+// ui_firstrun.c
+//
+extern void FirstRun_Cache(void);
+extern void UI_FirstRunMenu(void);
 
 //
 // ui_specifyserver.c

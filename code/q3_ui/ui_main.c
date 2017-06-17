@@ -133,7 +133,7 @@ vmCvar_t	ui_server13;
 vmCvar_t	ui_server14;
 vmCvar_t	ui_server15;
 vmCvar_t	ui_server16;
-
+vmCvar_t	ui_firstrun;
 vmCvar_t	ui_ioq3;
 
 static cvarTable_t		cvarTable[] = {
@@ -208,7 +208,7 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_server14, "server14", "", CVAR_ARCHIVE },
 	{ &ui_server15, "server15", "", CVAR_ARCHIVE },
 	{ &ui_server16, "server16", "", CVAR_ARCHIVE },
-
+	{ &ui_firstrun, "ui_firstrun", "1", CVAR_ARCHIVE },
 	{ &ui_ioq3, "ui_ioq3", "1", CVAR_ROM }
 };
 

@@ -1111,6 +1111,7 @@ Q3CGOBJ = \
   $(B)/$(BASEGAME)/ui/ui_serverinfo.o \
   $(B)/$(BASEGAME)/ui/ui_servers2.o \
   $(B)/$(BASEGAME)/ui/ui_setup.o \
+  $(B)/$(BASEGAME)/ui/ui_firstrun.o \
   $(B)/$(BASEGAME)/ui/ui_sound.o \
   $(B)/$(BASEGAME)/ui/ui_sparena.o \
   $(B)/$(BASEGAME)/ui/ui_specifyserver.o \
@@ -1214,6 +1215,7 @@ MPCGOBJ += \
   $(B)/$(MISSIONPACK)/q3ui/ui_serverinfo.o \
   $(B)/$(MISSIONPACK)/q3ui/ui_servers2.o \
   $(B)/$(MISSIONPACK)/q3ui/ui_setup.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_firstrun.o \
   $(B)/$(MISSIONPACK)/q3ui/ui_sound.o \
   $(B)/$(MISSIONPACK)/q3ui/ui_sparena.o \
   $(B)/$(MISSIONPACK)/q3ui/ui_specifyserver.o \

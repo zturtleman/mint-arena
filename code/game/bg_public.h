@@ -896,9 +896,11 @@ typedef struct animation_s {
 #define DEFAULT_TEAM_MODEL4		"janet"
 #define DEFAULT_TEAM_HEAD4		"*janet"
 
-// For team fallback sounds
+// For team fallback sounds and Team Arena UI's character model base and CGame pre-caching.
 #define DEFAULT_TEAM_MODEL_MALE		"james"
+#define DEFAULT_TEAM_HEAD_MALE		"*james"
 #define DEFAULT_TEAM_MODEL_FEMALE	"janet"
+#define DEFAULT_TEAM_HEAD_FEMALE	"*janet"
 #else
 // Default team player model names
 #define DEFAULT_TEAM_MODEL		DEFAULT_MODEL

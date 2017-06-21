@@ -1675,7 +1675,7 @@ int CG_Text_Height( const char *text, float scale, int limit );
 
 
 //
-// cg_player.c
+// cg_players.c
 //
 void CG_Player( centity_t *cent );
 void CG_ResetPlayerEntity( centity_t *cent );
@@ -1684,6 +1684,8 @@ qhandle_t CG_AddSkinToFrame( const cgSkin_t *skin );
 qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append );
 void CG_NewPlayerInfo( int playerNum );
 sfxHandle_t	CG_CustomSound( int playerNum, const char *soundName );
+void CG_CachePlayerSounds( const char *modelName );
+void CG_CachePlayerModels( const char *modelName, const char *headModelName );
 void CG_PlayerColorFromIndex( int val, vec3_t color );
 
 //

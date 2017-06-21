@@ -78,6 +78,56 @@ sfxHandle_t	CG_CustomSound( int playerNum, const char *soundName ) {
 }
 
 
+/*
+================
+CG_CachePlayerSounds
+
+Used to cache missionpack player sounds at start up.
+================
+*/
+void CG_CachePlayerSounds( const char *modelName ) {
+	char filename[MAX_QPATH];
+	const char *s;
+	int i;
+
+	for ( i = 0 ; i < MAX_CUSTOM_SOUNDS; i++ ) {
+		s = cg_customSoundNames[i];
+		if ( !s ) {
+			break;
+		}
+
+		Com_sprintf( filename, sizeof( filename ), "sound/player/%s/%s", modelName, s + 1 );
+		trap_S_RegisterSound( filename, qfalse );
+	}
+}
+
+/*
+================
+CG_CachePlayerModels
+
+Used to cache missionpack player models at start up.
+================
+*/
+void CG_CachePlayerModels( const char *modelName, const char *headModelName ) {
+	char filename[MAX_QPATH];
+
+	Com_sprintf( filename, sizeof( filename ), "models/players/%s/lower.md3", modelName );
+	trap_R_RegisterModel( filename );
+
+	Com_sprintf( filename, sizeof( filename ), "models/players/%s/upper.md3", modelName );
+	trap_R_RegisterModel( filename );
+
+	if ( headModelName[0] == '*' ) {
+		Com_sprintf( filename, sizeof( filename ), "models/players/heads/%s/%s.md3", &headModelName[1], &headModelName[1] );
+	} else {
+		Com_sprintf( filename, sizeof( filename ), "models/players/%s/head.md3", headModelName );
+	}
+
+	if ( !trap_R_RegisterModel( filename ) && headModelName[0] != '*' ) {
+		Com_sprintf( filename, sizeof( filename ), "models/players/heads/%s/%s.md3", headModelName, headModelName );
+		trap_R_RegisterModel( filename );
+	}
+}
 
 /*
 =============================================================================

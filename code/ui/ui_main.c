@@ -4196,9 +4196,9 @@ static qboolean Character_Parse(char **p) {
 			uiInfo.characterList[uiInfo.characterCount].imageName = String_Alloc(va("models/players/heads/%s/icon_default.tga", uiInfo.characterList[uiInfo.characterCount].name));
 
 	  if (tempStr && (!Q_stricmp(tempStr, "female"))) {
-        uiInfo.characterList[uiInfo.characterCount].base = String_Alloc("Janet");
+        uiInfo.characterList[uiInfo.characterCount].base = String_Alloc(DEFAULT_TEAM_MODEL_FEMALE);
       } else if (tempStr && (!Q_stricmp(tempStr, "male"))) {
-        uiInfo.characterList[uiInfo.characterCount].base = String_Alloc("James");
+        uiInfo.characterList[uiInfo.characterCount].base = String_Alloc(DEFAULT_TEAM_MODEL_MALE);
 	  } else {
         uiInfo.characterList[uiInfo.characterCount].base = String_Alloc(tempStr);
 	  }

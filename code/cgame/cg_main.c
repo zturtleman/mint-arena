@@ -282,6 +282,18 @@ vmCvar_t	cg_recordSPDemoName;
 vmCvar_t	cg_obeliskRespawnDelay;
 #endif
 
+vmCvar_t	cg_defaultModelGender;
+vmCvar_t	cg_defaultMaleModel;
+vmCvar_t	cg_defaultMaleHeadModel;
+vmCvar_t	cg_defaultFemaleModel;
+vmCvar_t	cg_defaultFemaleHeadModel;
+
+vmCvar_t	cg_defaultTeamModelGender;
+vmCvar_t	cg_defaultMaleTeamModel;
+vmCvar_t	cg_defaultMaleTeamHeadModel;
+vmCvar_t	cg_defaultFemaleTeamModel;
+vmCvar_t	cg_defaultFemaleTeamHeadModel;
+
 vmCvar_t	cg_color1[MAX_SPLITVIEW];
 vmCvar_t	cg_color2[MAX_SPLITVIEW];
 vmCvar_t	cg_handicap[MAX_SPLITVIEW];
@@ -468,6 +480,16 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_forceBitmapFonts, "cg_forceBitmapFonts", "0", CVAR_ARCHIVE | CVAR_LATCH, RANGE_BOOL },
 	{ &cg_drawGrappleHook, "cg_drawGrappleHook", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_drawBBox, "cg_drawBBox", "0", CVAR_CHEAT, RANGE_BOOL },
+	{ &cg_defaultModelGender, "default_model_gender", DEFAULT_MODEL_GENDER, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultMaleModel, "default_male_model", DEFAULT_MODEL_MALE, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultMaleHeadModel, "default_male_headmodel", DEFAULT_HEAD_MALE, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultFemaleModel, "default_female_model", DEFAULT_MODEL_FEMALE, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultFemaleHeadModel, "default_female_headmodel", DEFAULT_HEAD_FEMALE, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultTeamModelGender, "default_team_model_gender", DEFAULT_TEAM_MODEL_GENDER, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultMaleTeamModel, "default_male_team_model", DEFAULT_TEAM_MODEL_MALE, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultMaleTeamHeadModel, "default_male_team_headmodel", DEFAULT_TEAM_HEAD_MALE, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultFemaleTeamModel, "default_female_team_model", DEFAULT_TEAM_MODEL_FEMALE, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultFemaleTeamHeadModel, "default_female_team_headmodel", DEFAULT_TEAM_HEAD_FEMALE, CVAR_ARCHIVE, RANGE_ALL },
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
 
 	{ &cg_introPlayed, "com_introPlayed", "0", CVAR_ARCHIVE, RANGE_BOOL },
@@ -1353,8 +1375,8 @@ static void CG_RegisterSounds( void ) {
 
 #ifdef MISSIONPACK
 	if ( cgs.gametype >= GT_TEAM || cg_buildScript.integer ) {
-		CG_CachePlayerSounds( DEFAULT_TEAM_MODEL_MALE );
-		CG_CachePlayerSounds( DEFAULT_TEAM_MODEL_FEMALE );
+		CG_CachePlayerSounds( cg_defaultMaleTeamModel.string );
+		CG_CachePlayerSounds( cg_defaultFemaleTeamModel.string );
 	}
 #endif
 
@@ -1637,8 +1659,8 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.flagShaders[2] = trap_R_RegisterShaderNoMip("ui/assets/statusbar/flag_missing.tga");
 
 	if ( cgs.gametype >= GT_TEAM || cg_buildScript.integer ) {
-		CG_CachePlayerModels( DEFAULT_TEAM_MODEL_MALE, DEFAULT_TEAM_HEAD_MALE );
-		CG_CachePlayerModels( DEFAULT_TEAM_MODEL_FEMALE, DEFAULT_TEAM_HEAD_FEMALE );
+		CG_CachePlayerModels( cg_defaultMaleTeamModel.string, cg_defaultMaleTeamHeadModel.string );
+		CG_CachePlayerModels( cg_defaultFemaleTeamModel.string, cg_defaultFemaleTeamHeadModel.string );
 	}
 #endif
 

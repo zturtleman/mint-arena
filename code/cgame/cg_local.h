@@ -1440,6 +1440,18 @@ extern  vmCvar_t		cg_recordSPDemoName;
 extern	vmCvar_t		cg_obeliskRespawnDelay;
 #endif
 
+extern	vmCvar_t		cg_defaultModelGender;
+extern	vmCvar_t		cg_defaultMaleModel;
+extern	vmCvar_t		cg_defaultMaleHeadModel;
+extern	vmCvar_t		cg_defaultFemaleModel;
+extern	vmCvar_t		cg_defaultFemaleHeadModel;
+
+extern	vmCvar_t		cg_defaultTeamModelGender;
+extern	vmCvar_t		cg_defaultMaleTeamModel;
+extern	vmCvar_t		cg_defaultMaleTeamHeadModel;
+extern	vmCvar_t		cg_defaultFemaleTeamModel;
+extern	vmCvar_t		cg_defaultFemaleTeamHeadModel;
+
 extern	vmCvar_t		cg_color1[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_color2[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_handicap[MAX_SPLITVIEW];

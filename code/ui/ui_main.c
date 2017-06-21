@@ -1117,7 +1117,14 @@ static const char *UI_AIFromName(const char *name) {
 			return uiInfo.aliasList[j].ai;
 		}
 	}
-	return "James";
+	for (j = 0; j < uiInfo.characterCount; j++) {
+		if (Q_stricmp(uiInfo.characterList[j].name, name) == 0) {
+			return uiInfo.characterList[j].name;
+		}
+	}
+	// Name is listed in team list but not in alias or characters list.
+	Com_Printf( S_COLOR_YELLOW "WARNING: Unknown team character '%s'.\n", name );
+	return name;
 }
 
 
@@ -4301,7 +4308,17 @@ static void UI_ParseTeamInfo(const char *teamFile) {
     }
 
   }
+}
 
+void UI_ValidateTeams( void ) {
+	int i, j;
+
+	// Check for unknown team characters
+	for (i = 0; i < uiInfo.teamCount; i++) {
+		for (j = 0; j < TEAM_MEMBERS; j++) {
+			UI_AIFromName(uiInfo.teamList[i].teamMembers[j]);
+		}
+	}
 }
 
 
@@ -4694,6 +4711,7 @@ void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	UI_LoadTeams();
 	UI_ParseGameInfo("gameinfo.txt");
 #endif
+	UI_ValidateTeams();
 
 	menuSet = CG_Cvar_VariableString("ui_menuFiles");
 	if (menuSet == NULL || menuSet[0] == '\0') {

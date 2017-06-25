@@ -1450,7 +1450,7 @@ void SP_team_neutralobelisk( gentity_t *ent ) {
 	ObeliskInit( ent );
 	if ( g_gametype.integer == GT_HARVESTER) {
 		neutralObelisk = SpawnObelisk( ent->s.origin, ent->s.mins, ent->s.maxs, TEAM_FREE );
-		neutralObelisk->spawnflags = TEAM_FREE;
+		neutralObelisk->activator = ent;
 	}
 	ent->s.modelindex = TEAM_FREE;
 	trap_LinkEntity(ent);

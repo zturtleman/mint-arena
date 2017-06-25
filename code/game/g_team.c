@@ -1315,6 +1315,7 @@ static void ObeliskPain( gentity_t *self, gentity_t *attacker, int damage ) {
 	AddScore(attacker, self->r.currentOrigin, actualDamage);
 }
 
+// spawn invisible damagable obelisk entity / harvester base trigger.
 gentity_t *SpawnObelisk( vec3_t origin, vec3_t mins, vec3_t maxs, int team ) {
 	gentity_t	*ent;
 
@@ -1353,6 +1354,7 @@ gentity_t *SpawnObelisk( vec3_t origin, vec3_t mins, vec3_t maxs, int team ) {
 	return ent;
 }
 
+// setup entity for team base model / obelisk model.
 void ObeliskInit( gentity_t *ent ) {
 	trace_t		tr;
 	vec3_t		dest;

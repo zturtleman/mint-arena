@@ -201,7 +201,8 @@ typedef struct {
 } playerEntity_t;
 
 
-#define MAX_CG_SKIN_SURFACES 32
+// skin surfaces array shouldn't be dynamically allocated because players reuse the same skin structure when changing models
+#define MAX_CG_SKIN_SURFACES 100
 typedef struct {
 	int numSurfaces;
 	qhandle_t surfaces[MAX_CG_SKIN_SURFACES];

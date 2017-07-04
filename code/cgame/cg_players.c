@@ -548,6 +548,8 @@ qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append ) {
 	char		surfName[MAX_QPATH];
 	char		shaderName[MAX_QPATH];
 	qhandle_t	hShader;
+	int			initialSurfaces;
+	int			totalSurfaces;
 
 	if ( !name || !name[0] ) {
 		Com_DPrintf( "Empty name passed to RE_RegisterSkin\n" );
@@ -567,6 +569,9 @@ qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append ) {
 	if ( !append ) {
 		skin->numSurfaces = 0;
 	}
+
+	initialSurfaces = skin->numSurfaces;
+	totalSurfaces = skin->numSurfaces;
 
 	// load the file
 	len = trap_FS_FOpenFile( name, &f, FS_READ );
@@ -613,20 +618,24 @@ qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append ) {
 		token = COM_ParseExt2( &text_p, qfalse, ',' );
 		Q_strncpyz( shaderName, token, sizeof( shaderName ) );
 
-		if ( skin->numSurfaces >= MAX_CG_SKIN_SURFACES ) {
-			Com_Printf( "WARNING: Ignoring surfaces in '%s', the max is %d surfaces!\n", name, MAX_CG_SKIN_SURFACES );
-			break;
+		if ( skin->numSurfaces < MAX_CG_SKIN_SURFACES ) {
+			hShader = trap_R_RegisterShaderEx( shaderName, LIGHTMAP_NONE, qtrue );
+
+			// for compatibility with quake3 skins, don't render missing shaders listed in skins
+			if ( !hShader ) {
+				hShader = cgs.media.nodrawShader;
+			}
+
+			skin->surfaces[skin->numSurfaces] = trap_R_AllocSkinSurface( surfName, hShader );
+			skin->numSurfaces++;
 		}
 
-		hShader = trap_R_RegisterShaderEx( shaderName, LIGHTMAP_NONE, qtrue );
+		totalSurfaces++;
+	}
 
-		// for compatibility with quake3 skins, don't render missing shaders listed in skins
-		if ( !hShader ) {
-			hShader = cgs.media.nodrawShader;
-		}
-
-		skin->surfaces[skin->numSurfaces] = trap_R_AllocSkinSurface( surfName, hShader );
-		skin->numSurfaces++;
+	if ( totalSurfaces > MAX_CG_SKIN_SURFACES ) {
+		CG_Printf( "WARNING: Ignoring excess surfaces (found %d, max is %d) in skin '%s'!\n",
+					totalSurfaces - initialSurfaces, MAX_CG_SKIN_SURFACES - initialSurfaces, name );
 	}
 
 	// failed to load surfaces

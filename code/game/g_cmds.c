@@ -926,16 +926,18 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		netname = "server";
 	}
 
+	Q_strncpyz( text, chatText, sizeof(text) );
+
 	switch ( mode ) {
 	default:
 	case SAY_ALL:
-		G_LogPrintf( "say: %s: %s\n", netname, chatText );
+		G_LogPrintf( "say: %s: %s\n", netname, text );
 		Com_sprintf (name, sizeof(name), "%s%c%c"EC": ", netname, Q_COLOR_ESCAPE, COLOR_WHITE );
 		color = COLOR_GREEN;
 		cmd = "chat";
 		break;
 	case SAY_TEAM:
-		G_LogPrintf( "sayteam: %s: %s\n", netname, chatText );
+		G_LogPrintf( "sayteam: %s: %s\n", netname, text );
 		if (Team_GetLocationMsg(ent, location, sizeof(location)))
 			Com_sprintf (name, sizeof(name), EC"(%s%c%c"EC") (%s)"EC": ", 
 				netname, Q_COLOR_ESCAPE, COLOR_WHITE, location);
@@ -947,7 +949,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		break;
 	case SAY_TELL:
 		if ( target && target->player ) {
-			G_LogPrintf( "tell: %s to %s: %s\n", netname, target->player->pers.netname, chatText );
+			G_LogPrintf( "tell: %s to %s: %s\n", netname, target->player->pers.netname, text );
 		}
 		if (OnSameTeam(ent, target) && Team_GetLocationMsg(ent, location, sizeof(location)))
 			Com_sprintf (name, sizeof(name), EC"[%s%c%c"EC"] (%s)"EC": ", netname, Q_COLOR_ESCAPE, COLOR_WHITE, location );
@@ -966,8 +968,6 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 	if ( !useChatEscapeCharacter ) {
 		G_RemoveChatEscapeChar( name );
 	}
-
-	Q_strncpyz( text, chatText, sizeof(text) );
 
 	str = va( "%s \"%s%c%c%s\"", cmd, name, Q_COLOR_ESCAPE, color, text );
 

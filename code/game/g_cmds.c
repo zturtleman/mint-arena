@@ -878,7 +878,7 @@ static qboolean G_SayTo( gentity_t *ent, gentity_t *other, int mode ) {
 	// no chatting to players in tournements
 	if ( (g_gametype.integer == GT_TOURNAMENT )
 		&& other->player->sess.sessionTeam == TEAM_FREE
-		&& ent->player->sess.sessionTeam != TEAM_FREE ) {
+		&& ent && ent->player && ent->player->sess.sessionTeam != TEAM_FREE ) {
 		return qfalse;
 	}
 
@@ -900,6 +900,7 @@ static void G_RemoveChatEscapeChar( char *text ) {
 	text[l] = '\0';
 }
 
+// ent is NULL for messages from dedicated server
 void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) {
 	static int	useChatEscapeCharacter = -1;
 	int			i, j;
@@ -909,38 +910,42 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 	// don't let text be too long for malicious reasons
 	char		text[MAX_SAY_TEXT];
 	char		location[64];
-	char		*cmd, *str;
+	char		*cmd, *str, *netname;
 
 	if ( g_gametype.integer < GT_TEAM && mode == SAY_TEAM ) {
 		mode = SAY_ALL;
 	}
 
+	if ( ent && ent->player ) {
+		netname = ent->player->pers.netname;
+	} else {
+		netname = NETNAME_SERVER;
+	}
+
 	switch ( mode ) {
 	default:
 	case SAY_ALL:
-		G_LogPrintf( "say: %s: %s\n", ent->player->pers.netname, chatText );
-		Com_sprintf (name, sizeof(name), "%s%c%c"EC": ", ent->player->pers.netname, Q_COLOR_ESCAPE, COLOR_WHITE );
+		G_LogPrintf( "say: %s: %s\n", netname, chatText );
+		Com_sprintf (name, sizeof(name), "%s%c%c"EC": ", netname, Q_COLOR_ESCAPE, COLOR_WHITE );
 		color = COLOR_GREEN;
 		cmd = "chat";
 		break;
 	case SAY_TEAM:
-		G_LogPrintf( "sayteam: %s: %s\n", ent->player->pers.netname, chatText );
+		G_LogPrintf( "sayteam: %s: %s\n", netname, chatText );
 		if (Team_GetLocationMsg(ent, location, sizeof(location)))
 			Com_sprintf (name, sizeof(name), EC"(%s%c%c"EC") (%s)"EC": ", 
-				ent->player->pers.netname, Q_COLOR_ESCAPE, COLOR_WHITE, location);
+				netname, Q_COLOR_ESCAPE, COLOR_WHITE, location);
 		else
 			Com_sprintf (name, sizeof(name), EC"(%s%c%c"EC")"EC": ", 
-				ent->player->pers.netname, Q_COLOR_ESCAPE, COLOR_WHITE );
+				netname, Q_COLOR_ESCAPE, COLOR_WHITE );
 		color = COLOR_CYAN;
 		cmd = "tchat";
 		break;
 	case SAY_TELL:
-		if (target && target->inuse && target->player && g_gametype.integer >= GT_TEAM &&
-			target->player->sess.sessionTeam == ent->player->sess.sessionTeam &&
-			Team_GetLocationMsg(ent, location, sizeof(location)))
-			Com_sprintf (name, sizeof(name), EC"[%s%c%c"EC"] (%s)"EC": ", ent->player->pers.netname, Q_COLOR_ESCAPE, COLOR_WHITE, location );
+		if (OnSameTeam(ent, target) && Team_GetLocationMsg(ent, location, sizeof(location)))
+			Com_sprintf (name, sizeof(name), EC"[%s%c%c"EC"] (%s)"EC": ", netname, Q_COLOR_ESCAPE, COLOR_WHITE, location );
 		else
-			Com_sprintf (name, sizeof(name), EC"[%s%c%c"EC"]"EC": ", ent->player->pers.netname, Q_COLOR_ESCAPE, COLOR_WHITE );
+			Com_sprintf (name, sizeof(name), EC"[%s%c%c"EC"]"EC": ", netname, Q_COLOR_ESCAPE, COLOR_WHITE );
 		color = COLOR_MAGENTA;
 		cmd = "tell";
 		break;
@@ -974,7 +979,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 	}
 
 	// send to everyone on team
-	if ( mode == SAY_TEAM ) {
+	if ( mode == SAY_TEAM && ent && ent->player ) {
 		G_TeamCommand( ent->player->sess.sessionTeam, str );
 		return;
 	}

@@ -66,6 +66,8 @@ typedef enum {
 
 #define SP_PODIUM_MODEL		"models/mapobjects/podium/podium4.md3"
 
+#define NETNAME_SERVER		"server"
+
 //============================================================================
 
 typedef struct gentity_s gentity_t;
@@ -477,6 +479,7 @@ void StopFollowing( gentity_t *ent );
 void BroadcastTeamChange( gplayer_t *player, int oldTeam );
 void SetTeam( gentity_t *ent, const char *s );
 void Cmd_FollowCycle_f( gentity_t *ent, int dir );
+void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
 
 //
 // g_items.c
@@ -655,6 +658,7 @@ void G_StartKamikaze( gentity_t *ent );
 //
 void DeathmatchScoreboardMessage( gentity_t *ent );
 char *ConcatArgs( int start );
+qboolean StringIsInteger( const char * s );
 
 //
 // g_main.c

@@ -170,7 +170,7 @@ OnSameTeam
 ==============
 */
 qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 ) {
-	if ( !ent1->player || !ent2->player ) {
+	if ( !ent1 || !ent1->player || !ent2 || !ent2->player ) {
 		return qfalse;
 	}
 
@@ -895,6 +895,10 @@ gentity_t *Team_GetLocation(gentity_t *ent)
 	gentity_t		*eloc, *best;
 	float			bestlen, len;
 	vec3_t			origin;
+
+	if ( !ent ) {
+		return NULL;
+	}
 
 	best = NULL;
 	bestlen = 3*8192.0*8192.0;

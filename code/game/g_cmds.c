@@ -973,11 +973,6 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		return;
 	}
 
-	// echo the text to the console
-	if ( g_dedicated.integer ) {
-		G_Printf( "%s%s\n", name, text);
-	}
-
 	// send to everyone on team
 	if ( mode == SAY_TEAM && ent && ent->player ) {
 		G_TeamCommand( ent->player->sess.sessionTeam, str );

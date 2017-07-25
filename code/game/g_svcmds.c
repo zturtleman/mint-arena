@@ -554,7 +554,6 @@ void	Svcmd_Tell_f( void ) {
 
 	p = ConcatArgs( 2 );
 
-	G_LogPrintf( "tell: %s to %s: %s\n", NETNAME_SERVER, target->player->pers.netname, p );
 	G_Say( NULL, target, SAY_TELL, p );
 }
 #endif

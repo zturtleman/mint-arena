@@ -66,8 +66,6 @@ typedef enum {
 
 #define SP_PODIUM_MODEL		"models/mapobjects/podium/podium4.md3"
 
-#define NETNAME_SERVER		"server"
-
 //============================================================================
 
 typedef struct gentity_s gentity_t;

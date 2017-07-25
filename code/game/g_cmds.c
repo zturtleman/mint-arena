@@ -916,10 +916,14 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		mode = SAY_ALL;
 	}
 
+	if ( target && !G_SayTo( ent, target, mode ) ) {
+		return;
+	}
+
 	if ( ent && ent->player ) {
 		netname = ent->player->pers.netname;
 	} else {
-		netname = NETNAME_SERVER;
+		netname = "server";
 	}
 
 	switch ( mode ) {
@@ -942,6 +946,9 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		cmd = "tchat";
 		break;
 	case SAY_TELL:
+		if ( target && target->player ) {
+			G_LogPrintf( "tell: %s to %s: %s\n", netname, target->player->pers.netname, chatText );
+		}
 		if (OnSameTeam(ent, target) && Team_GetLocationMsg(ent, location, sizeof(location)))
 			Com_sprintf (name, sizeof(name), EC"[%s%c%c"EC"] (%s)"EC": ", netname, Q_COLOR_ESCAPE, COLOR_WHITE, location );
 		else
@@ -965,11 +972,13 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 	str = va( "%s \"%s%c%c%s\"", cmd, name, Q_COLOR_ESCAPE, color, text );
 
 	if ( target ) {
-		if ( !G_SayTo( ent, target, mode ) ) {
-			return;
-		}
-
 		trap_SendServerCommand( target-g_entities, str );
+
+		// don't tell to the player self if it was already directed to this player
+		// also don't send the chat back to a bot
+		if ( ent && ent != target && !(ent->r.svFlags & SVF_BOT)) {
+			trap_SendServerCommand( ent-g_entities, str );
+		}
 		return;
 	}
 
@@ -1052,13 +1061,7 @@ static void Cmd_Tell_f( gentity_t *ent ) {
 
 	p = ConcatArgs( 2 );
 
-	G_LogPrintf( "tell: %s to %s: %s\n", ent->player->pers.netname, target->player->pers.netname, p );
 	G_Say( ent, target, SAY_TELL, p );
-	// don't tell to the player self if it was already directed to this player
-	// also don't send the chat back to a bot
-	if ( ent != target && !(ent->r.svFlags & SVF_BOT)) {
-		G_Say( ent, ent, SAY_TELL, p );
-	}
 }
 
 

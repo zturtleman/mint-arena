@@ -317,6 +317,19 @@ void Text_PaintChar( float x, float y, float width, float height, float useScale
 	h = height * useScale;
 
 	CG_AdjustFrom640( &x, &y, &w, &h );
+
+	// prevent native resolution text from being blurred due to sub-pixel blending
+	x = floor( x );
+	y = floor( y );
+	w = floor( w );
+	h = floor( h );
+
+	// fix rounding to 0
+	if( w == 0)
+		w = 1;
+	if( h == 0)
+		h = 1;
+
 	trap_R_DrawStretchPic( x, y, w, h, s, t, s2, t2, hShader );
 }
 
@@ -328,6 +341,18 @@ void Text_PaintGlyph( float x, float y, float useScale, const glyphInfo_t *glyph
 	h = glyph->imageHeight * useScale;
 
 	CG_AdjustFrom640( &x, &y, &w, &h );
+
+	// prevent native resolution text from being blurred due to sub-pixel blending
+	x = floor( x );
+	y = floor( y );
+	w = floor( w );
+	h = floor( h );
+
+	// fix rounding to 0
+	if( w == 0)
+		w = 1;
+	if( h == 0)
+		h = 1;
 
 	if ( gradientColor ) {
 		trap_R_DrawStretchPicGradient( x, y, w, h, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph, gradientColor );

@@ -80,6 +80,10 @@ void CG_TextInit( void ) {
 	if ( !CG_InitTrueTypeFont( "fonts/numberfont", numberSize, 0, &cgs.media.numberFont ) ) {
 		CG_InitBitmapNumberFont( &cgs.media.numberFont, numberSize, ceil( numberSize * 0.666666f ) );
 	}
+
+	if ( !CG_InitTrueTypeFont( "fonts/consolefont", smallSize, 0, &cgs.media.consoleFont ) ) {
+		CG_InitBitmapFont( &cgs.media.consoleFont, smallSize, smallSize * 0.5f );
+	}
 }
 
 // 256x256 image with characters that are 16x16

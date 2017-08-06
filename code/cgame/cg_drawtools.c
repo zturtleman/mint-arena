@@ -457,6 +457,10 @@ void CG_DrawStringDirect( int x, int y, const char* str, int style, const vec4_t
 				style &= ~UI_GRADIENT;
 			}
 			break;
+
+		case UI_CONSOLEFONT:
+			font = &cgs.media.consoleFont;
+			break;
 	}
 
 	charh = font->pointSize;
@@ -626,6 +630,10 @@ float CG_DrawStrlenEx( const char *str, int style, int maxchars ) {
 		case UI_NUMBERFONT:
 			font = &cgs.media.numberFont;
 			break;
+
+		case UI_CONSOLEFONT:
+			font = &cgs.media.consoleFont;
+			break;
 	}
 
 	charh = font->pointSize;
@@ -673,6 +681,10 @@ float CG_DrawStrlen( const char *str, int style ) {
 
 		case UI_NUMBERFONT:
 			font = &cgs.media.numberFont;
+			break;
+
+		case UI_CONSOLEFONT:
+			font = &cgs.media.consoleFont;
 			break;
 	}
 
@@ -728,6 +740,11 @@ int CG_DrawStringLineHeight( int style ) {
 
 		case UI_NUMBERFONT:
 			font = &cgs.media.numberFont;
+			break;
+
+		case UI_CONSOLEFONT:
+			font = &cgs.media.consoleFont;
+			gap = 2;
 			break;
 	}
 

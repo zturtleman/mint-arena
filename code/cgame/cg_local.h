@@ -1869,6 +1869,7 @@ void CG_DrawTourneyScoreboard( void );
 // cg_console.c
 //
 void CG_ConsoleInit( void );
+void CG_ConsoleResized( void );
 void CG_ConsolePrint( const char *text );
 void CG_CloseConsole( void );
 void Con_ClearConsole_f( void );

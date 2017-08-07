@@ -788,23 +788,41 @@ void CG_ConsoleInit( void ) {
 	trap_Cvar_VariableStringBuffer( "version", con.version, sizeof ( con.version ) );
 
 	con.sideMargin = CONCHAR_WIDTH;
+
+	MField_Clear( &g_consoleField );
+
+	for ( i = 0 ; i < COMMAND_HISTORY ; i++ ) {
+		MField_Clear( &historyEditLines[i] );
+	}
+
+	CG_ConsoleResized();
+
+	CG_LoadConsoleHistory();
+}
+
+/*
+================
+CG_ConsoleResized
+
+Called when window is resized.
+================
+*/
+void CG_ConsoleResized( void ) {
+	int i;
+
 	// fit across whole screen inside of a 640x480 box
 	con.screenFakeWidth = cgs.glconfig.vidWidth / cgs.screenXScale;
 
-	g_console_field_width = con.screenFakeWidth / CONCHAR_WIDTH - 2;
+	g_console_field_width = ( con.screenFakeWidth - con.sideMargin * 2 ) / CONCHAR_WIDTH;
 
 	if ( g_console_field_width > MAX_EDIT_LINE ) {
 		g_console_field_width = MAX_EDIT_LINE;
 	}
 
-	MField_Clear( &g_consoleField );
 	g_consoleField.widthInChars = g_console_field_width;
 
 	for ( i = 0 ; i < COMMAND_HISTORY ; i++ ) {
-		MField_Clear( &historyEditLines[i] );
 		historyEditLines[i].widthInChars = g_console_field_width;
 	}
-
-	CG_LoadConsoleHistory();
 }
 

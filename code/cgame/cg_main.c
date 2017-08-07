@@ -3435,6 +3435,7 @@ static void CG_UpdateGlconfig( qboolean initial ) {
 	}
 
 	if ( resized ) {
+		CG_ConsoleResized();
 		UI_WindowResized();
 	}
 }

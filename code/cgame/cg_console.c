@@ -334,7 +334,7 @@ void Con_DrawSolidConsole( connstate_t state, float frac ) {
 	lineHeight = CG_DrawStringLineHeight( UI_CONSOLEFONT );
 
 	// draw the version number
-	CG_DrawString( SCREEN_WIDTH, lines - lineHeight, con.version, UI_RIGHT|UI_CONSOLEFONT, color );
+	CG_DrawString( SCREEN_WIDTH - con.sideMargin, lines - lineHeight, con.version, UI_RIGHT|UI_CONSOLEFONT, color );
 
 	CG_SetScreenPlacement( PLACE_LEFT, PLACE_TOP );
 

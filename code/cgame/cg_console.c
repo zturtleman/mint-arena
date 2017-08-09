@@ -297,7 +297,7 @@ Draws the console with the solid background
 */
 void Con_DrawSolidConsole( connstate_t state, float frac ) {
 	int				i;
-	int				x, y;
+	int				y;
 	int				rows;
 	char			*text;
 	int				row;
@@ -346,10 +346,15 @@ void Con_DrawSolidConsole( connstate_t state, float frac ) {
 	// draw from the bottom up
 	if (con.display != con.current)
 	{
-		int linewidth = con.screenFakeWidth / CONCHAR_WIDTH;
+		char *symbol = "^";
+		float symbolWidth = CG_DrawStrlen( symbol, UI_CONSOLEFONT );
+		int symbolCount = 20;
+		float xgap = (con.screenFakeWidth - con.sideMargin*2 - symbolWidth) / (float)symbolCount;
+		float x;
+
 		// draw arrows to show the buffer is backscrolled
-		for (x=0 ; x<linewidth ; x+=4)
-			CG_DrawString( (x+1)*CONCHAR_WIDTH, y, "^", UI_CENTER|UI_CONSOLEFONT, color );
+		for (x=con.sideMargin ; x<con.screenFakeWidth ; x+=xgap)
+			CG_DrawString( x, y, symbol, UI_CONSOLEFONT, color );
 		y -= lineHeight;
 		rows--;
 	}

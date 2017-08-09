@@ -179,6 +179,8 @@ void CG_InitBitmapNumberFont( fontInfo_t *font, int charHeight, int charWidth ) 
 
 // borderWidth is in screen-pixels, not scaled with resolution
 qboolean CG_InitTrueTypeFont( const char *name, int pointSize, float borderWidth, fontInfo_t *font ) {
+	int imageHeight;
+
 	if ( cg_forceBitmapFonts.integer ) {
 		return qfalse;
 	}
@@ -223,8 +225,9 @@ qboolean CG_InitTrueTypeFont( const char *name, int pointSize, float borderWidth
 	font->glyphs[GLYPH_INSERT].t = 0;
 	font->glyphs[GLYPH_INSERT].s2 = 1;
 	font->glyphs[GLYPH_INSERT].t2 = 1;
-	font->glyphs[GLYPH_INSERT].top -= font->glyphs[GLYPH_INSERT].imageHeight - 1;
-	font->glyphs[GLYPH_INSERT].imageHeight = 1;
+	imageHeight = Com_Clamp( 1, font->glyphs[GLYPH_INSERT].imageHeight, 1 / ( font->pointSize / 48.0f * font->glyphScale ) );
+	font->glyphs[GLYPH_INSERT].top -= font->glyphs[GLYPH_INSERT].imageHeight - imageHeight;
+	font->glyphs[GLYPH_INSERT].imageHeight = imageHeight;
 
 	return qtrue;
 }

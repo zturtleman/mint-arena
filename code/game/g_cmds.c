@@ -1112,33 +1112,42 @@ void G_Voice( gentity_t *ent, gentity_t *target, int mode, const char *id, qbool
 		mode = SAY_ALL;
 	}
 
-	if (mode == SAY_TEAM) {
-		color = COLOR_CYAN;
-		cmd = "vtchat";
+	if ( target && !G_VoiceTo( ent, target, mode ) ) {
+		return;
 	}
-	else if (mode == SAY_TELL) {
-		color = COLOR_MAGENTA;
-		cmd = "vtell";
-	}
-	else {
+
+	switch ( mode ) {
+	default:
+	case SAY_ALL:
+		G_LogPrintf( "vchat: %s: %s\n", ent->player->pers.netname, id );
 		color = COLOR_GREEN;
 		cmd = "vchat";
+		break;
+	case SAY_TEAM:
+		G_LogPrintf( "vtchat: %s: %s\n", ent->player->pers.netname, id );
+		color = COLOR_CYAN;
+		cmd = "vtchat";
+		break;
+	case SAY_TELL:
+		if ( target && target->player ) {
+			G_LogPrintf( "vtell: %s to %s: %s\n", ent->player->pers.netname, target->player->pers.netname, id );
+		}
+		color = COLOR_MAGENTA;
+		cmd = "vtell";
+		break;
 	}
 
 	str = va( "%s %d %d %d %s", cmd, voiceonly, ent->s.number, color, id );
 
 	if ( target ) {
-		if ( !G_VoiceTo( ent, target, mode ) ) {
-			return;
-		}
-
 		trap_SendServerCommand( target-g_entities, str );
-		return;
-	}
 
-	// echo the text to the console
-	if ( g_dedicated.integer ) {
-		G_Printf( "voice: %s %s\n", ent->player->pers.netname, id);
+		// don't tell to the player self if it was already directed to this player
+		// also don't send the chat back to a bot
+		if ( ent != target && !(ent->r.svFlags & SVF_BOT)) {
+			trap_SendServerCommand( ent-g_entities, str );
+		}
+		return;
 	}
 
 	// send to everyone on team
@@ -1223,13 +1232,7 @@ static void Cmd_VoiceTell_f( gentity_t *ent, qboolean voiceonly ) {
 
 	SanitizeChatText( id );
 
-	G_LogPrintf( "vtell: %s to %s: %s\n", ent->player->pers.netname, target->player->pers.netname, id );
 	G_Voice( ent, target, SAY_TELL, id, voiceonly );
-	// don't tell to the player self if it was already directed to this player
-	// also don't send the chat back to a bot
-	if ( ent != target && !(ent->r.svFlags & SVF_BOT)) {
-		G_Voice( ent, ent, SAY_TELL, id, voiceonly );
-	}
 }
 
 
@@ -1252,9 +1255,6 @@ static void Cmd_VoiceTaunt_f( gentity_t *ent ) {
 		if (!(ent->enemy->r.svFlags & SVF_BOT)) {
 			G_Voice( ent, ent->enemy, SAY_TELL, VOICECHAT_DEATHINSULT, qfalse );
 		}
-		if (!(ent->r.svFlags & SVF_BOT)) {
-			G_Voice( ent, ent,        SAY_TELL, VOICECHAT_DEATHINSULT, qfalse );
-		}
 		ent->enemy = NULL;
 		return;
 	}
@@ -1267,15 +1267,9 @@ static void Cmd_VoiceTaunt_f( gentity_t *ent ) {
 				if (!(who->r.svFlags & SVF_BOT)) {
 					G_Voice( ent, who, SAY_TELL, VOICECHAT_KILLGAUNTLET, qfalse );	// and I killed them with a gauntlet
 				}
-				if (!(ent->r.svFlags & SVF_BOT)) {
-					G_Voice( ent, ent, SAY_TELL, VOICECHAT_KILLGAUNTLET, qfalse );
-				}
 			} else {
 				if (!(who->r.svFlags & SVF_BOT)) {
 					G_Voice( ent, who, SAY_TELL, VOICECHAT_KILLINSULT, qfalse );	// and I killed them with something else
-				}
-				if (!(ent->r.svFlags & SVF_BOT)) {
-					G_Voice( ent, ent, SAY_TELL, VOICECHAT_KILLINSULT, qfalse );
 				}
 			}
 			ent->player->lastkilled_player = -1;
@@ -1291,9 +1285,6 @@ static void Cmd_VoiceTaunt_f( gentity_t *ent ) {
 				if (who->player->rewardTime > level.time) {
 					if (!(who->r.svFlags & SVF_BOT)) {
 						G_Voice( ent, who, SAY_TELL, VOICECHAT_PRAISE, qfalse );
-					}
-					if (!(ent->r.svFlags & SVF_BOT)) {
-						G_Voice( ent, ent, SAY_TELL, VOICECHAT_PRAISE, qfalse );
 					}
 					return;
 				}

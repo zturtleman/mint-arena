@@ -1350,13 +1350,7 @@ void Cmd_GameCommand_f( gentity_t *ent ) {
 		return;
 	}
 
-	G_LogPrintf( "tell: %s to %s: %s\n", ent->player->pers.netname, target->player->pers.netname, gc_orders[order] );
 	G_Say( ent, target, SAY_TELL, gc_orders[order] );
-	// don't tell to the player self if it was already directed to this player
-	// also don't send the chat back to a bot
-	if ( ent != target && !(ent->r.svFlags & SVF_BOT)) {
-		G_Say( ent, ent, SAY_TELL, gc_orders[order] );
-	}
 }
 
 /*

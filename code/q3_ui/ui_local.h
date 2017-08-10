@@ -80,6 +80,7 @@ extern vmCvar_t	ui_spSkill;
 extern vmCvar_t	ui_spSelection;
 
 extern vmCvar_t	ui_browserMaster;
+extern vmCvar_t	ui_browserGame;
 extern vmCvar_t	ui_browserGameType;
 extern vmCvar_t	ui_browserSortKey;
 extern vmCvar_t	ui_browserShowFull;

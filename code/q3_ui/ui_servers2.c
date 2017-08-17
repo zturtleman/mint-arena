@@ -1139,15 +1139,22 @@ int ArenaServers_SetType( int type )
 	if(type >= UIAS_GLOBAL1 && type <= UIAS_GLOBAL5)
 	{
 		char masterstr[2], cvarname[sizeof("sv_master1")];
+		int select;
 		
-		while(type <= UIAS_GLOBAL5)
+		if ( type < g_servertype ) {
+			select = -1;
+		} else {
+			select = 1;
+		}
+
+		while(type >= UIAS_GLOBAL1 && type <= UIAS_GLOBAL5)
 		{
 			Com_sprintf(cvarname, sizeof(cvarname), "sv_master%d", type - UIAS_GLOBAL0);
 			trap_Cvar_VariableStringBuffer(cvarname, masterstr, sizeof(masterstr));
 			if(*masterstr)
 				break;
 			
-			type++;
+			type += select;
 		}
 	}
 

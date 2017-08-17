@@ -722,7 +722,6 @@ static void ArenaServers_Insert( char* adrstr, char* info, int pingtime )
 
 	Q_strncpyz( servernodeptr->hostname, Info_ValueForKey( info, "hostname"), MAX_HOSTNAMELENGTH );
 	Q_CleanStr( servernodeptr->hostname );
-	Q_strupr( servernodeptr->hostname );
 
 	Q_strncpyz( servernodeptr->mapname, Info_ValueForKey( info, "mapname"), MAX_MAPNAMELENGTH );
 	Q_CleanStr( servernodeptr->mapname );
@@ -1364,12 +1363,12 @@ void ArenaServers_DrawServerList( int x, int y, int item, int style, float *colo
 	servernodeptr = tableptr->servernode;
 
 	w = 24 * charWidth;
-	CG_SetClipRegion( x, y, w, SMALLCHAR_HEIGHT );
+	CG_SetClipRegion( x, y, w, SMALLCHAR_HEIGHT + 2 );
 	UI_DrawString( x, y, servernodeptr->hostname, style, color );
 	x += w + charWidth;
 
 	w = 12 * charWidth;
-	CG_SetClipRegion( x, y, w, SMALLCHAR_HEIGHT );
+	CG_SetClipRegion( x, y, w, SMALLCHAR_HEIGHT + 2 );
 	UI_DrawString( x, y, servernodeptr->mapname, style, color );
 	x += w + charWidth;
 
@@ -1379,17 +1378,19 @@ void ArenaServers_DrawServerList( int x, int y, int item, int style, float *colo
 	x += w + charWidth;
 
 	w = 8 * charWidth;
-	CG_SetClipRegion( x, y, w, SMALLCHAR_HEIGHT );
+	CG_SetClipRegion( x, y, w, SMALLCHAR_HEIGHT + 2 );
 	UI_DrawString( x, y, servernodeptr->gametypeName, style, color );
 	x += w + charWidth;
 
-	w = 3 * charWidth;
-	CG_SetClipRegion( x, y, w, SMALLCHAR_HEIGHT );
+	w = 5 * charWidth;
+	CG_ClearClipRegion();
 	UI_DrawString( x, y, netnames[servernodeptr->nettype], style, color );
 	x += w + charWidth;
 
+	w = 3 * charWidth;
 	CG_ClearClipRegion();
-	UI_DrawString( x, y, va("%s%d",tableptr->pingColor,servernodeptr->pingtime), style, color );
+	UI_DrawString( x + w, y, va("%s%d",tableptr->pingColor,servernodeptr->pingtime), (style & ~UI_FORMATMASK) | UI_RIGHT, color );
+	x += w + charWidth;
 }
 
 /*

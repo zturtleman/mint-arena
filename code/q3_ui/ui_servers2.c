@@ -703,12 +703,6 @@ static void ArenaServers_Insert( char* adrstr, char* info, int pingtime )
 	char*			s;
 	int				i;
 
-	if ((pingtime >= ArenaServers_MaxPing()) && (g_servertype != UIAS_FAVORITES))
-	{
-		// slow global or local servers do not get entered
-		return;
-	}
-
 	if (*g_arenaservers.numservers >= g_arenaservers.maxservers) {
 		// list full;
 		servernodeptr = g_arenaservers.serverlist+(*g_arenaservers.numservers)-1;
@@ -956,11 +950,9 @@ static void ArenaServers_DoRefresh( void )
 				info[0] = '\0';
 				time    = maxPing;
 
-				// set hostname for nonresponsive favorite server
-				if (g_servertype == UIAS_FAVORITES) {
-					Info_SetValueForKey( info, "hostname", adrstr );
-					Info_SetValueForKey( info, "game", "???" );
-				}
+				// set hostname for nonresponsive server
+				Info_SetValueForKey( info, "hostname", adrstr );
+				Info_SetValueForKey( info, "game", "???" );
 			}
 			else
 			{

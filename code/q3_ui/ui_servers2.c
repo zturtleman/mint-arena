@@ -483,8 +483,8 @@ static void ArenaServers_UpdateMenu( void ) {
 		// servers found
 		if( g_arenaservers.refreshservers && ( g_arenaservers.currentping <= g_arenaservers.numqueriedservers ) ) {
 			// show progress
-			Com_sprintf( g_arenaservers.status.string, MAX_STATUSLENGTH, "%d of %d Arena Servers.", g_arenaservers.currentping, g_arenaservers.numqueriedservers);
-			g_arenaservers.statusbar.string  = "Press SPACE to stop";
+			Com_sprintf( g_arenaservers.status.string, MAX_STATUSLENGTH, "Pinged %d of %d Servers.", g_arenaservers.currentping, g_arenaservers.numqueriedservers);
+			g_arenaservers.statusbar.string  = "Press SPACE to Stop";
 			qsort( g_arenaservers.serverlist, *g_arenaservers.numservers, sizeof( servernode_t ), ArenaServers_Compare);
 		}
 		else {
@@ -513,7 +513,7 @@ static void ArenaServers_UpdateMenu( void ) {
 		// no servers found
 		if( g_arenaservers.refreshservers ) {
 			strcpy( g_arenaservers.status.string,"Scanning For Servers." );
-			g_arenaservers.statusbar.string = "Press SPACE to stop";
+			g_arenaservers.statusbar.string = "Press SPACE to Stop";
 
 			// disable controls during refresh
 			g_arenaservers.game.generic.flags		|= QMF_GRAYED;
@@ -1191,7 +1191,7 @@ int ArenaServers_SetType( int type )
 		g_arenaservers.currentping       = *g_arenaservers.numservers;
 		g_arenaservers.numqueriedservers = *g_arenaservers.numservers; 
 		ArenaServers_UpdateMenu();
-		strcpy(g_arenaservers.status.string,"hit refresh to update");
+		strcpy( g_arenaservers.status.string, "Hit Refresh to Update." );
 	}
 	
 	return type;

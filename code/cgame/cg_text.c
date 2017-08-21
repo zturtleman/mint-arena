@@ -312,50 +312,22 @@ float Text_Height( const char *text, const fontInfo_t *font, float scale, int li
 	return max * useScale;
 }
 
-// Note: scale must be multiplied by font->glyphScale
-void Text_PaintChar( float x, float y, float width, float height, float useScale, float s, float t, float s2, float t2, qhandle_t hShader ) {
-	float w, h;
+void Text_PaintGlyph( float x, float y, float w, float h, const glyphInfo_t *glyph, float *gradientColor ) {
+#if 0
+	vec4_t colors[2] = {
+		{ 1.0, 1.0, 1.0f, 1.0f }, // white (pixel aligned)
+		{ 0.0, 1.0, 0.0f, 1.0f }, // green (sub-pixel position / size)
+	};
 
-	w = width * useScale;
-	h = height * useScale;
-
-	CG_AdjustFrom640( &x, &y, &w, &h );
-
-	// prevent native resolution text from being blurred due to sub-pixel blending
-	x = floor( x );
-	y = floor( y );
-	w = floor( w );
-	h = floor( h );
-
-	// fix rounding to 0
-	if( w == 0)
-		w = 1;
-	if( h == 0)
-		h = 1;
-
-	trap_R_DrawStretchPic( x, y, w, h, s, t, s2, t2, hShader );
-}
-
-// Note: scale must be multiplied by font->glyphScale
-void Text_PaintGlyph( float x, float y, float useScale, const glyphInfo_t *glyph, float *gradientColor ) {
-	float w, h;
-
-	w = glyph->imageWidth * useScale;
-	h = glyph->imageHeight * useScale;
-
-	CG_AdjustFrom640( &x, &y, &w, &h );
-
-	// prevent native resolution text from being blurred due to sub-pixel blending
-	x = floor( x );
-	y = floor( y );
-	w = floor( w );
-	h = floor( h );
-
-	// fix rounding to 0
-	if( w == 0)
-		w = 1;
-	if( h == 0)
-		h = 1;
+	// check which glyphs have sub-pixel blending
+	gradientColor = NULL;
+	if ( x != floor( x ) || y != floor( y ) ||
+		 w != floor( w ) || h != floor( h ) ) {
+		trap_R_SetColor( colors[1] );
+	} else {
+		trap_R_SetColor( colors[0] );
+	}
+#endif
 
 	if ( gradientColor ) {
 		trap_R_DrawStretchPicGradient( x, y, w, h, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph, gradientColor );
@@ -371,13 +343,31 @@ void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const ve
 	const glyphInfo_t *glyph;
 	const char *s;
 	float yadj, xadj;
-	float useScale;
+	float useScaleX, useScaleY;
+	float xscale, yscale;
+	float shadowOffsetX, shadowOffsetY;
 
 	if ( !text ) {
 		return;
 	}
 
-	useScale = scale * font->glyphScale;
+	xscale = 1.0f;
+	yscale = 1.0f;
+	CG_AdjustFrom640( &x, &y, &xscale, &yscale );
+
+	shadowOffsetX = shadowOffset * xscale;
+	shadowOffsetY = shadowOffset * yscale;
+
+	adjust *= xscale;
+
+	useScaleX = scale * font->glyphScale * xscale;
+	useScaleY = scale * font->glyphScale * yscale;
+
+	// prevent native resolution text from being blurred due to sub-pixel blending
+	x = floor( x );
+	y = floor( y );
+	shadowOffsetX = floor( shadowOffsetX );
+	shadowOffsetY = floor( shadowOffsetY );
 
 	trap_R_SetColor( color );
 	Vector4Copy( color, newColor );
@@ -414,18 +404,18 @@ void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const ve
 
 		glyph = Text_GetGlyph( font, Q_UTF8_CodePoint( &s ) );
 
-		yadj = useScale * glyph->top;
-		xadj = useScale * glyph->left;
-		if ( shadowOffset ) {
+		yadj = useScaleY * glyph->top;
+		xadj = useScaleX * glyph->left;
+		if ( shadowOffsetX || shadowOffsetY ) {
 			colorBlack[3] = newColor[3];
 			trap_R_SetColor( colorBlack );
-			Text_PaintGlyph( x + xadj + shadowOffset, y - yadj + shadowOffset, useScale, glyph, NULL );
+			Text_PaintGlyph( x + xadj + shadowOffsetX, y - yadj + shadowOffsetY, glyph->imageWidth * useScaleX, glyph->imageHeight * useScaleY, glyph, NULL );
 			trap_R_SetColor( newColor );
 			colorBlack[3] = 1.0f;
 		}
-		Text_PaintGlyph( x + xadj, y - yadj, useScale, glyph, ( gradient != 0 ) ? gradientColor : NULL );
+		Text_PaintGlyph( x + xadj, y - yadj, glyph->imageWidth * useScaleX, glyph->imageHeight * useScaleY, glyph, ( gradient != 0 ) ? gradientColor : NULL );
 
-		x += ( glyph->xSkip * useScale ) + adjust;
+		x += ( glyph->xSkip * useScaleX ) + adjust;
 		count++;
 	}
 
@@ -438,14 +428,32 @@ void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale
 	vec4_t gradientColor;
 	const glyphInfo_t *glyph, *glyph2;
 	float yadj, xadj;
-	float useScale;
+	float useScaleX, useScaleY;
+	float xscale, yscale;
+	float shadowOffsetX, shadowOffsetY;
 	const char *s;
 
 	if ( !text ) {
 		return;
 	}
 
-	useScale = scale * font->glyphScale;
+	xscale = 1.0f;
+	yscale = 1.0f;
+	CG_AdjustFrom640( &x, &y, &xscale, &yscale );
+
+	shadowOffsetX = shadowOffset * xscale;
+	shadowOffsetY = shadowOffset * yscale;
+
+	adjust *= xscale;
+
+	useScaleX = scale * font->glyphScale * xscale;
+	useScaleY = scale * font->glyphScale * yscale;
+
+	// prevent native resolution text from being blurred due to sub-pixel blending
+	x = floor( x );
+	y = floor( y );
+	shadowOffsetX = floor( shadowOffsetX );
+	shadowOffsetY = floor( shadowOffsetY );
 
 	trap_R_SetColor( color );
 	Vector4Copy( color, newColor );
@@ -485,26 +493,23 @@ void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale
 		glyph = Text_GetGlyph( font, Q_UTF8_CodePoint( &s ) );
 
 		if ( count == cursorPos && ( ( cg.realTime / BLINK_DIVISOR ) & 1 ) == 0 ) {
-			yadj = useScale * glyph2->top;
+			yadj = useScaleY * glyph2->top;
 
-			Text_PaintChar( x, y - yadj,
-							glyph->left + glyph->xSkip, // use horizontal width of text character
-							glyph2->imageHeight,
-							useScale,
-							glyph2->s,
-							glyph2->t,
-							glyph2->s2,
-							glyph2->t2,
-							glyph2->glyph );
+			// use horizontal width of text character (glyph)
+			Text_PaintGlyph( x, y - yadj,
+							(glyph->left + glyph->xSkip) * useScaleX,
+							glyph2->imageHeight * useScaleY,
+							glyph2,
+							NULL );
 		}
 
-		yadj = useScale * glyph->top;
-		xadj = useScale * glyph->left;
+		yadj = useScaleY * glyph->top;
+		xadj = useScaleX * glyph->left;
 
-		if ( shadowOffset ) {
+		if ( shadowOffsetX || shadowOffsetY ) {
 			colorBlack[3] = newColor[3];
 			trap_R_SetColor( colorBlack );
-			Text_PaintGlyph( x + xadj + shadowOffset, y - yadj + shadowOffset, useScale, glyph, NULL );
+			Text_PaintGlyph( x + xadj + shadowOffsetX, y - yadj + shadowOffsetY, glyph->imageWidth * useScaleX, glyph->imageHeight * useScaleY, glyph, NULL );
 			trap_R_SetColor( newColor );
 			colorBlack[3] = 1.0f;
 		}
@@ -521,9 +526,9 @@ void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale
 
 			trap_R_SetColor( invertedColor );
 
-			Text_PaintGlyph( x + xadj, y - yadj, useScale, glyph, NULL );
+			Text_PaintGlyph( x + xadj, y - yadj, glyph->imageWidth * useScaleX, glyph->imageHeight * useScaleY, glyph, NULL );
 		} else {
-			Text_PaintGlyph( x + xadj, y - yadj, useScale, glyph, ( gradient != 0 ) ? gradientColor : NULL );
+			Text_PaintGlyph( x + xadj, y - yadj, glyph->imageWidth * useScaleX, glyph->imageHeight * useScaleY, glyph, ( gradient != 0 ) ? gradientColor : NULL );
 		}
 
 		if ( count == cursorPos && !( ( cg.realTime / BLINK_DIVISOR ) & 1 ) && cursor == GLYPH_OVERSTRIKE ) {
@@ -531,14 +536,14 @@ void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale
 			trap_R_SetColor( newColor );
 		}
 
-		x += ( glyph->xSkip * useScale ) + adjust;
+		x += ( glyph->xSkip * useScaleX ) + adjust;
 		count++;
 	}
 
 	// need to paint cursor at end of text
 	if ( cursorPos == len && !( ( cg.realTime / BLINK_DIVISOR ) & 1 ) ) {
-		yadj = useScale * glyph2->top;
-		Text_PaintGlyph( x, y - yadj, useScale, glyph2, NULL );
+		yadj = useScaleY * glyph2->top;
+		Text_PaintGlyph( x, y - yadj, glyph2->imageWidth * useScaleX, glyph2->imageHeight * useScaleY, glyph2, NULL );
 	}
 
 	trap_R_SetColor( NULL );
@@ -551,15 +556,27 @@ void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, fl
 	const char *s;
 	float max;
 	float yadj, xadj;
-	float useScale;
+	float useScaleX, useScaleY;
+	float xscale, yscale;
 
 	if ( !text || !maxX ) {
 		return;
 	}
 
-	max = *maxX;
+	xscale = 1.0f;
+	yscale = 1.0f;
+	CG_AdjustFrom640( &x, &y, &xscale, &yscale );
 
-	useScale = scale * font->glyphScale;
+	max = *maxX * xscale;
+	adjust *= xscale;
+
+	useScaleX = scale * font->glyphScale * xscale;
+	useScaleY = scale * font->glyphScale * yscale;
+
+	// prevent native resolution text from being blurred due to sub-pixel blending
+	x = floor( x );
+	y = floor( y );
+
 	trap_R_SetColor( color );
 	Vector4Copy( color, lastTextColor );
 
@@ -582,17 +599,17 @@ void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, fl
 
 		glyph = Text_GetGlyph( font, Q_UTF8_CodePoint( &s ) );
 
-		if ( x + ( glyph->xSkip * useScale ) > max ) {
+		if ( x + ( glyph->xSkip * useScaleX ) > max ) {
 			*maxX = 0;
 			break;
 		}
 
-		yadj = useScale * glyph->top;
-		xadj = useScale * glyph->left;
+		yadj = useScaleY * glyph->top;
+		xadj = useScaleX * glyph->left;
 
-		Text_PaintGlyph( x + xadj, y - yadj, useScale, glyph, NULL );
-		x += ( glyph->xSkip * useScale ) + adjust;
-		*maxX = x;
+		Text_PaintGlyph( x + xadj, y - yadj, glyph->imageWidth * useScaleX, glyph->imageHeight * useScaleY, glyph, NULL );
+		x += ( glyph->xSkip * useScaleX ) + adjust;
+		*maxX = x / xscale;
 		count++;
 	}
 	trap_R_SetColor( NULL );

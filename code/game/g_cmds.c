@@ -514,7 +514,7 @@ void BroadcastTeamChange( gplayer_t *player, int oldTeam )
 		trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " joined the spectators.\n\"",
 		player->pers.netname));
 	} else if ( player->sess.sessionTeam == TEAM_FREE ) {
-		trap_SendServerCommand( -1, va("print  \"%s" S_COLOR_WHITE " joined the battle.\n\"",
+		trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " joined the battle.\n\"",
 		player->pers.netname));
 	} else if ( player->sess.sessionTeam == TEAM_RED ) {
 		trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " joined the red team.\n\"",

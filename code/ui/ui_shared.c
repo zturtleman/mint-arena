@@ -3231,7 +3231,7 @@ typedef struct
 static bind_t g_bindings[] = 
 {
 	{"+scores",			 K_TAB,				-1,		-1, -1},
-	{"+useitem",		 K_ENTER,			-1,		-1, -1},
+	{"+button2",		 K_ENTER,			-1,		-1, -1},
 	{"+speed", 			 K_SHIFT,			-1,		-1,	-1},
 	{"+forward", 		 K_UPARROW,		-1,		-1, -1},
 	{"+back", 			 K_DOWNARROW,	-1,		-1, -1},
@@ -3263,7 +3263,7 @@ static bind_t g_bindings[] =
 	{"+attack", 		 K_CTRL,				-1,		-1, -1},
 	{"weapprev",		 '[',					-1,		-1, -1},
 	{"weapnext", 		 ']',					-1,		-1, -1},
-	{"+gesture", 		 K_MOUSE3,			-1,		-1, -1},
+	{"+button3", 		 K_MOUSE3,			-1,		-1, -1},
 	{"+button4", 		 K_MOUSE4,			-1,		-1, -1},
 	{"prevTeamMember", 'w',					-1,		-1, -1},
 	{"nextTeamMember", 'r',					-1,		-1, -1},

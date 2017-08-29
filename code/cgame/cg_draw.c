@@ -2735,13 +2735,12 @@ CG_DrawNotify
 Draw console notify area.
 =====================
 */
-void CG_DrawNotify( void ) {
+void CG_DrawNotify( qboolean voiceMenuOpen ) {
 	int x;
 
 #ifdef MISSIONPACK_HUD
 	// voice head is being shown
-	if ( !cg.cur_lc->showScores && cg.cur_ps->stats[STAT_HEALTH] > 0 &&
-		cg.cur_lc->voiceTime && cg.cur_lc->voiceTime >= cg.time && cg.cur_lc->playerNum != cg.cur_lc->currentVoicePlayerNum )
+	if ( voiceMenuOpen )
 		x = 72;
 	else
 #endif
@@ -2758,11 +2757,13 @@ void CG_DrawNotify( void ) {
 CG_DrawTimedMenus
 =================
 */
-void CG_DrawTimedMenus( void ) {
+void CG_DrawTimedMenus( qboolean *voiceMenuOpen ) {
 	if ( cg.cur_lc->voiceTime && cg.cur_lc->voiceTime >= cg.time && cg.cur_lc->playerNum != cg.cur_lc->currentVoicePlayerNum ) {
 		Menus_OpenByName("voiceMenu");
+		*voiceMenuOpen = qtrue;
 	} else {
 		Menus_CloseByName("voiceMenu");
+		*voiceMenuOpen = qfalse;
 	}
 }
 #endif
@@ -2771,7 +2772,7 @@ void CG_DrawTimedMenus( void ) {
 CG_Draw2D
 =================
 */
-static void CG_Draw2D(stereoFrame_t stereoFrame)
+static void CG_Draw2D(stereoFrame_t stereoFrame, qboolean *voiceMenuOpen)
 {
 #ifdef MISSIONPACK
 	if (cg.cur_lc->orderPending && cg.time > cg.cur_lc->orderTime) {
@@ -2816,7 +2817,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 			if ( cg_drawStatus.integer ) {
 				CG_SetScreenPlacement(PLACE_CENTER, PLACE_BOTTOM);
 
-				CG_DrawTimedMenus();
+				CG_DrawTimedMenus(voiceMenuOpen);
 				Menu_PaintAll();
 			}
 #else
@@ -2994,6 +2995,8 @@ Perform all drawing needed to completely fill the viewport
 =====================
 */
 void CG_DrawActive( stereoFrame_t stereoView ) {
+	qboolean voiceMenuOpen = qfalse;
+
 	// optionally draw the info screen instead
 	if ( !cg.snap ) {
 		CG_DrawInformation();
@@ -3027,9 +3030,9 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 	trap_R_RenderScene( &cg.refdef );
 
 	// draw status bar and other floating elements
- 	CG_Draw2D(stereoView);
+	CG_Draw2D(stereoView, &voiceMenuOpen);
 
-	CG_DrawNotify();
+	CG_DrawNotify(voiceMenuOpen);
 }
 
 /*

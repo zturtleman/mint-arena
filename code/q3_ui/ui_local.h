@@ -111,6 +111,10 @@ extern vmCvar_t	ui_server16;
 
 extern vmCvar_t	ui_ioq3;
 
+extern vmCvar_t	ui_menuFont;
+extern vmCvar_t	ui_menuFontProp;
+extern vmCvar_t	ui_menuFontBanner;
+
 
 //
 // ui_qmenu.c
@@ -536,6 +540,8 @@ typedef struct {
 	qhandle_t			whiteShader;
 	qhandle_t			menuBackShader;
 	qhandle_t			menuBackNoLogoShader;
+	fontInfo_t			smallFont;
+	fontInfo_t			textFont;
 	fontInfo_t			fontProp;
 	fontInfo_t			fontPropGlow;
 	fontInfo_t			fontPropB;
@@ -557,6 +563,7 @@ extern void			UI_DrawProportionalString( int x, int y, const char* str, int styl
 extern void			UI_DrawProportionalString_AutoWrapped( int x, int ystart, int xmax, int ystep, const char* str, int style, vec4_t color );
 extern int			UI_ProportionalStringWidth( const char* str );
 extern void			UI_DrawString( int x, int y, const char* str, int style, vec4_t color );
+extern float		UI_DrawStrlen( const char *str, int style );
 extern void			UI_DrawChar( int x, int y, int ch, int style, vec4_t color );
 extern qboolean 	UI_CursorInRect (int x, int y, int width, int height);
 extern qboolean		UI_IsFullscreen( void );

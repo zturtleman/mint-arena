@@ -36,53 +36,37 @@ static vec4_t lastTextColor = { 0, 0, 0, 1 };
 /*
 Load fonts for CGame and UI usage.
 
-q3_ui loads additional fonts (font1_prop, font1_prop_glo, font2_prop).
-Team Arena HUD/UI also use separate fonts (specified in .menu files).
+Try to load TrueType/OpenType fonts specified by cvars. Falls back to
+original Quake 3 fonts.
 
-Try to load fonts specified by cg_font* cvars. Falls back to font names and
-sizes used by Team Arena's .menu files (fonts/smallfont:12, fonts/font:16,
-and fonts/bigfont:20) or Q3 gfx/2d/bigchars.tga bitmap font.
+cgame loads an additional font for the console.
+q3_ui loads additional fonts (font1_prop, font1_prop_glo, font2_prop).
+Team Arena menu/hud also load separate fonts (specified in .menu files).
 
 Q3 gfx/2d/bigchars.tga bitmap font looks like Helvetica or Arial.
-number font, font1_prop, and font2_prop look similar to Impact Wide but not quite.
-Team Arena's fonts look like Impact.
+Q3 number font, font1_prop, and font2_prop look similar to Impact Wide.
+Team Arena's pre-rendered menu/hud TrueType fonts (fonts/smallfont:12,
+fonts/font:16, and fonts/bigfont:20) are Impact.
 */
-void CG_TextInit( void ) {
-	int tinySize;
-	int smallSize;
-	int bigSize;
-	int giantSize;
-	int numberSize;
-
-	// font sizes
-	tinySize = 8;
-	smallSize = 16;
-	bigSize = 16;
-	giantSize = 48;
-	numberSize = 48;
-
-	if ( !CG_InitTrueTypeFont( "fonts/tinyfont", tinySize, 0, &cgs.media.tinyFont ) ) {
-		CG_InitBitmapFont( &cgs.media.tinyFont, tinySize, tinySize );
+void CG_HudTextInit( void ) {
+	if ( !CG_InitTrueTypeFont( cg_hudFont.string, TINYCHAR_HEIGHT, 0, &cgs.media.tinyFont ) ) {
+		CG_InitBitmapFont( &cgs.media.tinyFont, TINYCHAR_HEIGHT, TINYCHAR_WIDTH );
 	}
 
-	if ( !CG_InitTrueTypeFont( "fonts/font", smallSize, 0, &cgs.media.smallFont ) ) {
-		CG_InitBitmapFont( &cgs.media.smallFont, smallSize, smallSize * 0.5f );
+	if ( !CG_InitTrueTypeFont( cg_hudFont.string, SMALLCHAR_HEIGHT, 0, &cgs.media.smallFont ) ) {
+		CG_InitBitmapFont( &cgs.media.smallFont, SMALLCHAR_HEIGHT, SMALLCHAR_WIDTH );
 	}
 
-	if ( !CG_InitTrueTypeFont( "fonts/font", bigSize, 0, &cgs.media.textFont ) ) {
-		CG_InitBitmapFont( &cgs.media.textFont, bigSize, bigSize );
+	if ( !CG_InitTrueTypeFont( cg_hudFont.string, BIGCHAR_HEIGHT, 0, &cgs.media.textFont ) ) {
+		CG_InitBitmapFont( &cgs.media.textFont, BIGCHAR_HEIGHT, BIGCHAR_WIDTH );
 	}
 
-	if ( !CG_InitTrueTypeFont( "fonts/giantfont", giantSize, 0, &cgs.media.bigFont ) ) {
-		CG_InitBitmapFont( &cgs.media.bigFont, giantSize, ceil( giantSize * 0.666666f ) );
+	if ( !CG_InitTrueTypeFont( cg_hudFont.string, GIANTCHAR_HEIGHT, 0, &cgs.media.bigFont ) ) {
+		CG_InitBitmapFont( &cgs.media.bigFont, GIANTCHAR_HEIGHT, GIANTCHAR_WIDTH );
 	}
 
-	if ( !CG_InitTrueTypeFont( "fonts/numberfont", numberSize, 0, &cgs.media.numberFont ) ) {
-		CG_InitBitmapNumberFont( &cgs.media.numberFont, numberSize, ceil( numberSize * 0.666666f ) );
-	}
-
-	if ( !CG_InitTrueTypeFont( "fonts/consolefont", smallSize, 0, &cgs.media.consoleFont ) ) {
-		CG_InitBitmapFont( &cgs.media.consoleFont, smallSize, smallSize * 0.5f );
+	if ( !CG_InitTrueTypeFont( cg_numberFont.string, CHAR_HEIGHT, 0, &cgs.media.numberFont ) ) {
+		CG_InitBitmapNumberFont( &cgs.media.numberFont, CHAR_HEIGHT, CHAR_WIDTH );
 	}
 }
 
@@ -181,7 +165,7 @@ void CG_InitBitmapNumberFont( fontInfo_t *font, int charHeight, int charWidth ) 
 qboolean CG_InitTrueTypeFont( const char *name, int pointSize, float borderWidth, fontInfo_t *font ) {
 	int imageHeight;
 
-	if ( cg_forceBitmapFonts.integer ) {
+	if ( cg_forceBitmapFonts.integer || !name || !name[0] ) {
 		return qfalse;
 	}
 

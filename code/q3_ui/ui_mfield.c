@@ -56,7 +56,7 @@ void MenuField_Init( menufield_s* m ) {
 		style = UI_BIGFONT;
 	}	
 
-	l = CG_DrawStrlen( m->generic.name, style ) + w;
+	l = UI_DrawStrlen( m->generic.name, style ) + w;
 
 	m->generic.left   = m->generic.x - l;
 	m->generic.top    = m->generic.y;

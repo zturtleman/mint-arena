@@ -267,6 +267,9 @@ vmCvar_t	cg_antiLag;
 vmCvar_t	cg_forceBitmapFonts;
 vmCvar_t	cg_drawGrappleHook;
 vmCvar_t	cg_drawBBox;
+vmCvar_t	cg_consoleFont;
+vmCvar_t	cg_hudFont;
+vmCvar_t	cg_numberFont;
 
 vmCvar_t	cg_introPlayed;
 vmCvar_t	cg_joystickDebug;
@@ -450,6 +453,7 @@ static cvarTable_t cgameCvarTable[] = {
 
 	{ &pmove_overbounce, "pmove_overbounce", "0", CVAR_SYSTEMINFO, RANGE_BOOL },
 	{ &pmove_fixed, "pmove_fixed", "0", CVAR_SYSTEMINFO, RANGE_BOOL },
+//	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL },
 	{ &pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO, RANGE_ALL },
 	{ &cg_noTaunt, "cg_noTaunt", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_noProjectileTrail, "cg_noProjectileTrail", "0", CVAR_ARCHIVE, RANGE_BOOL },
@@ -480,6 +484,10 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_forceBitmapFonts, "cg_forceBitmapFonts", "0", CVAR_ARCHIVE | CVAR_LATCH, RANGE_BOOL },
 	{ &cg_drawGrappleHook, "cg_drawGrappleHook", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_drawBBox, "cg_drawBBox", "0", CVAR_CHEAT, RANGE_BOOL },
+	{ &cg_consoleFont, "cg_consoleFont", "fonts/LiberationMono-Regular.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+	{ &cg_hudFont, "cg_hudFont", "fonts/LiberationSans-Bold.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+	{ &cg_numberFont, "cg_numberFont", "", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+
 	{ &cg_defaultModelGender, "default_model_gender", DEFAULT_MODEL_GENDER, CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_defaultMaleModel, "default_male_model", DEFAULT_MODEL_MALE, CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_defaultMaleHeadModel, "default_male_headmodel", DEFAULT_HEAD_MALE, CVAR_ARCHIVE, RANGE_ALL },
@@ -490,7 +498,6 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_defaultMaleTeamHeadModel, "default_male_team_headmodel", DEFAULT_TEAM_HEAD_MALE, CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_defaultFemaleTeamModel, "default_female_team_model", DEFAULT_TEAM_MODEL_FEMALE, CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_defaultFemaleTeamHeadModel, "default_female_team_headmodel", DEFAULT_TEAM_HEAD_FEMALE, CVAR_ARCHIVE, RANGE_ALL },
-//	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
 
 	{ &cg_introPlayed, "com_introPlayed", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_joystickDebug, "in_joystickDebug", "0", CVAR_TEMP, RANGE_BOOL },
@@ -1854,6 +1861,12 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
+			if (cg_hudFont.string[0]) {
+				if (CG_InitTrueTypeFont(cg_hudFont.string, pointSize, 0, &cgDC.Assets.textFont)) {
+					Com_DPrintf("Overriding HUD font '%s' with '%s'\n", tempStr, cg_hudFont.string);
+					continue;
+				}
+			}
 			if (!CG_InitTrueTypeFont(tempStr, pointSize, 0, &cgDC.Assets.textFont)) {
 				CG_InitBitmapFont(&cgDC.Assets.textFont, pointSize, pointSize / 2);
 			}
@@ -1866,6 +1879,12 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
+			if (cg_hudFont.string[0]) {
+				if (CG_InitTrueTypeFont(cg_hudFont.string, pointSize, 0, &cgDC.Assets.smallFont)) {
+					Com_DPrintf("Overriding HUD smallFont '%s' with '%s'\n", tempStr, cg_hudFont.string);
+					continue;
+				}
+			}
 			if (!CG_InitTrueTypeFont(tempStr, pointSize, 0, &cgDC.Assets.smallFont)) {
 				CG_InitBitmapFont(&cgDC.Assets.smallFont, pointSize, pointSize / 2);
 			}
@@ -1877,6 +1896,12 @@ qboolean CG_Asset_Parse(int handle) {
 			int pointSize;
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
+			}
+			if (cg_hudFont.string[0]) {
+				if (CG_InitTrueTypeFont(cg_hudFont.string, pointSize, 0, &cgDC.Assets.bigFont)) {
+					Com_DPrintf("Overriding HUD bigFont '%s' with '%s'\n", tempStr, cg_hudFont.string);
+					continue;
+				}
 			}
 			if (!CG_InitTrueTypeFont(tempStr, pointSize, 0, &cgDC.Assets.bigFont)) {
 				CG_InitBitmapFont(&cgDC.Assets.bigFont, pointSize, pointSize / 2);
@@ -2538,8 +2563,6 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 	cgs.media.nodrawShader		= trap_R_RegisterShaderEx( "nodraw", LIGHTMAP_NONE, qtrue );
 	cgs.media.whiteDynamicShader= trap_R_RegisterShaderEx( "white", LIGHTMAP_NONE, qtrue );
 
-	CG_TextInit();
-
 	CG_ConsoleInit();
 
 	if ( cg_dedicated.integer ) {
@@ -2617,6 +2640,8 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	if ( strcmp( s, GAME_VERSION ) ) {
 		CG_Error( "Client/Server game mismatch: %s/%s", GAME_VERSION, s );
 	}
+
+	CG_HudTextInit();
 
 	s = CG_ConfigString( CS_LEVEL_START_TIME );
 	cgs.levelStartTime = atoi( s );

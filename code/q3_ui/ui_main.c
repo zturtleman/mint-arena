@@ -137,6 +137,10 @@ vmCvar_t	ui_server16;
 
 vmCvar_t	ui_ioq3;
 
+vmCvar_t	ui_menuFont;
+vmCvar_t	ui_menuFontProp;
+vmCvar_t	ui_menuFontBanner;
+
 static cvarTable_t		cvarTable[] = {
 	{ &ui_ffa_fraglimit, "ui_ffa_fraglimit", "20", CVAR_ARCHIVE },
 	{ &ui_ffa_timelimit, "ui_ffa_timelimit", "0", CVAR_ARCHIVE },
@@ -211,7 +215,11 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_server15, "server15", "", CVAR_ARCHIVE },
 	{ &ui_server16, "server16", "", CVAR_ARCHIVE },
 
-	{ &ui_ioq3, "ui_ioq3", "1", CVAR_ROM }
+	{ &ui_ioq3, "ui_ioq3", "1", CVAR_ROM },
+
+	{ &ui_menuFont, "ui_menuFont", "fonts/LiberationSans-Bold.ttf", CVAR_ARCHIVE | CVAR_LATCH },
+	{ &ui_menuFontProp, "ui_menuFontProp", "", CVAR_ARCHIVE | CVAR_LATCH },
+	{ &ui_menuFontBanner, "ui_menuFontBanner", "", CVAR_ARCHIVE | CVAR_LATCH },
 };
 
 static int cvarTableSize = ARRAY_LEN( cvarTable );

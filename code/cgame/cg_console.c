@@ -197,7 +197,7 @@ void CG_ConsolePrint( const char *p ) {
 				break;
 			}
 
-			charDrawLen = CG_DrawStrlenEx( &p[i], UI_CONSOLEFONT, 1 );
+			charDrawLen = CG_DrawStrlenMaxChars( &p[i], UI_CONSOLEFONT, 1 );
 
 			// make sure the word will fit on screen, even if it needs a whole line to do so.
 			if ( wordDrawLen + charDrawLen >= con.screenFakeWidth - ( con.sideMargin * 2 ) ) {
@@ -789,6 +789,10 @@ CG_ConsoleInit
 */
 void CG_ConsoleInit( void ) {
 	int i;
+
+	if ( !CG_InitTrueTypeFont( cg_consoleFont.string, CONCHAR_HEIGHT, 0, &cgs.media.consoleFont ) ) {
+		CG_InitBitmapFont( &cgs.media.consoleFont, CONCHAR_HEIGHT, CONCHAR_WIDTH );
+	}
 
 	trap_Cvar_VariableStringBuffer( "version", con.version, sizeof ( con.version ) );
 

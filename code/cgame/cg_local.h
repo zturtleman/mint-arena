@@ -47,19 +47,19 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	SCREEN_HEIGHT		480
 
 #define TINYCHAR_WIDTH		8
-#define TINYCHAR_HEIGHT		cgs.media.tinyFont.pointSize // default: 8
+#define TINYCHAR_HEIGHT		8
 
 #define SMALLCHAR_WIDTH		8
-#define SMALLCHAR_HEIGHT	cgs.media.smallFont.pointSize // default: 16
+#define SMALLCHAR_HEIGHT	16
 
 #define BIGCHAR_WIDTH		16
-#define BIGCHAR_HEIGHT		cgs.media.textFont.pointSize // default: 16
+#define BIGCHAR_HEIGHT		16
 
 #define	GIANTCHAR_WIDTH		32
-#define	GIANTCHAR_HEIGHT	cgs.media.bigFont.pointSize // default: 48
+#define	GIANTCHAR_HEIGHT	48
 
 #define	CONCHAR_WIDTH		8
-#define	CONCHAR_HEIGHT		cgs.media.consoleFont.pointSize // default: 16
+#define	CONCHAR_HEIGHT		16
 
 #define	POWERUP_BLINKS		5
 
@@ -1434,6 +1434,9 @@ extern	vmCvar_t		cg_antiLag;
 extern	vmCvar_t		cg_forceBitmapFonts;
 extern	vmCvar_t		cg_drawGrappleHook;
 extern	vmCvar_t		cg_drawBBox;
+extern	vmCvar_t		cg_consoleFont;
+extern	vmCvar_t		cg_hudFont;
+extern	vmCvar_t		cg_numberFont;
 extern	vmCvar_t		ui_stretch;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;
@@ -1591,13 +1594,14 @@ void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const ve
 void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset );
 void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar );
 void CG_DrawStringAutoWrap( int x, int y, const char* str, int style, const vec4_t color, float scale, float shadowOffset, float gradient, float wrapX );
-void CG_DrawStringDirect( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar, float wrapX );
+void CG_DrawStringCommon( int x, int y, const char* str, int style, const fontInfo_t *font, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar, float wrapX );
 void CG_DrawBigString( int x, int y, const char *s, float alpha );
 void CG_DrawBigStringColor( int x, int y, const char *s, vec4_t color );
 void CG_DrawSmallString( int x, int y, const char *s, float alpha );
 void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color );
 
-float CG_DrawStrlenEx( const char *str, int style, int maxchars );
+float CG_DrawStrlenCommon( const char *str, int style, const fontInfo_t *font, int maxchars );
+float CG_DrawStrlenMaxChars( const char *str, int style, int maxchars );
 float CG_DrawStrlen( const char *str, int style );
 int CG_DrawStringLineHeight( int style );
 
@@ -1668,7 +1672,7 @@ qboolean CG_AnyScoreboardShowing( void );
 #define GLYPH_OVERSTRIKE 11
 #define GLYPH_ARROW 13
 
-void CG_TextInit( void );
+void CG_HudTextInit( void );
 void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth );
 void CG_InitBitmapNumberFont( fontInfo_t *font, int charHeight, int charWidth );
 qboolean CG_InitTrueTypeFont( const char *name, int pointSize, float borderWidth, fontInfo_t *font );

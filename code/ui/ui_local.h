@@ -134,6 +134,7 @@ extern vmCvar_t	ui_bigFont;
 extern vmCvar_t ui_serverStatusTimeOut;
 extern vmCvar_t ui_defaultMaleTeamModel;
 extern vmCvar_t ui_defaultFemaleTeamModel;
+extern vmCvar_t ui_menuFont;
 
 
 extern sfxHandle_t	menu_in_sound;

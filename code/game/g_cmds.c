@@ -1871,7 +1871,7 @@ void ClientCommand( int connectionNum ) {
 
 	// ignore all other commands when at intermission
 	if (level.intermissiontime) {
-		Cmd_Say_f (ent, qfalse, qtrue);
+		trap_SendServerCommand( playerNum, va("print \"%s command not allowed at intermission.\n\"", buf ) );
 		return;
 	}
 

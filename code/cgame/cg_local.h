@@ -153,7 +153,7 @@ void	MField_KeyDownEvent( mfield_t *edit, int key );
 void	MField_CharEvent( mfield_t *edit, int ch );
 void	MField_SetText( mfield_t *edit, const char *text );
 const char *MField_Buffer( mfield_t *edit );
-void	MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor );
+void	MField_Draw( mfield_t *edit, int x, int y, int style, const fontInfo_t *font, vec4_t color, qboolean drawCursor );
 
 //=================================================
 
@@ -1590,9 +1590,8 @@ void CG_ClearClipRegion( void );
 void CG_LerpColor( const vec4_t a, const vec4_t b, vec4_t c, float t );
 
 void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color );
-void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const vec4_t color, int cursorPos, int cursorChar );
+void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const fontInfo_t *font, const vec4_t color, int cursorPos, int cursorChar );
 void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset );
-void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar );
 void CG_DrawStringAutoWrap( int x, int y, const char* str, int style, const vec4_t color, float scale, float shadowOffset, float gradient, float wrapX );
 void CG_DrawStringCommon( int x, int y, const char* str, int style, const fontInfo_t *font, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar, float wrapX );
 void CG_DrawBigString( int x, int y, const char *s, float alpha );
@@ -1604,6 +1603,8 @@ float CG_DrawStrlenCommon( const char *str, int style, const fontInfo_t *font, i
 float CG_DrawStrlenMaxChars( const char *str, int style, int maxchars );
 float CG_DrawStrlen( const char *str, int style );
 int CG_DrawStringLineHeight( int style );
+
+void CG_MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor );
 
 float	*CG_FadeColor( int startMsec, int totalMsec );
 float *CG_TeamColor( int team );

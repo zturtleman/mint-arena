@@ -438,16 +438,12 @@ void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color
 	CG_DrawStringCommon( x, y, str, style, CG_FontForStyle( style ), color, 0, 0, 0, 0, -1, -1, 0 );
 }
 
-void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const vec4_t color, int cursorPos, int cursorChar ) {
-	CG_DrawStringCommon( x, y, str, style, CG_FontForStyle( style ), color, 0, 0, 0, 0, cursorPos, cursorChar, 0 );
+void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const fontInfo_t *font, const vec4_t color, int cursorPos, int cursorChar ) {
+	CG_DrawStringCommon( x, y, str, style, font, color, 0, 0, 0, 0, cursorPos, cursorChar, 0 );
 }
 
 void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset ) {
 	CG_DrawStringCommon( x, y, str, style, CG_FontForStyle( style ), color, scale, maxChars, shadowOffset, 0, -1, -1, 0 );
-}
-
-void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar ) {
-	CG_DrawStringCommon( x, y, str, style, CG_FontForStyle( style ), color, scale, maxChars, shadowOffset, gradient, cursorPos, cursorChar, 0 );
 }
 
 void CG_DrawStringAutoWrap( int x, int y, const char* str, int style, const vec4_t color, float scale, float shadowOffset, float gradient, float wrapX ) {
@@ -718,6 +714,15 @@ int CG_DrawStringLineHeight( int style ) {
 	}
 
 	return lineHeight;
+}
+
+/*
+=================
+CG_MField_Draw
+=================
+*/
+void CG_MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor ) {
+	MField_Draw( edit, x, y, style, CG_FontForStyle( style ), color, drawCursor );
 }
 
 /*

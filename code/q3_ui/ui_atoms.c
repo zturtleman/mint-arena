@@ -631,6 +631,15 @@ float UI_DrawStrlen( const char *str, int style )
 
 /*
 =================
+UI_MField_Draw
+=================
+*/
+void UI_MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor ) {
+	MField_Draw( edit, x, y, style, UI_FontForStyle( style ), color, drawCursor );
+}
+
+/*
+=================
 UI_DrawChar
 =================
 */

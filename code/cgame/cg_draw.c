@@ -3076,7 +3076,7 @@ void CG_DrawMessageMode( void ) {
 	// draw the chat line
 	CG_DrawString( 8, 232, cg.messagePrompt, UI_DROPSHADOW|UI_BIGFONT, NULL );
 
-	MField_Draw( &cg.messageField, 8 + CG_DrawStrlen( cg.messagePrompt, UI_BIGFONT ), 232,
+	CG_MField_Draw( &cg.messageField, 8 + CG_DrawStrlen( cg.messagePrompt, UI_BIGFONT ), 232,
 			UI_DROPSHADOW|UI_BIGFONT, NULL, qtrue );
 }
 

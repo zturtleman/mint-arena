@@ -118,7 +118,7 @@ void MenuField_Draw( menufield_s *f )
 		UI_DrawString( x - w, y, f->generic.name, style|UI_RIGHT, color );
 	}
 
-	MField_Draw( &f->field, x + w, y, style, color, focus );
+	UI_MField_Draw( &f->field, x + w, y, style, color, focus );
 }
 
 /*

@@ -285,7 +285,7 @@ void Con_DrawInput ( connstate_t state, int lines ) {
 
 	CG_DrawString( con.sideMargin, y, "]", UI_CONSOLEFONT, NULL );
 
-	MField_Draw( &g_consoleField, con.sideMargin + CG_DrawStrlen( "]", UI_CONSOLEFONT ), y, UI_CONSOLEFONT, NULL, qtrue );
+	CG_MField_Draw( &g_consoleField, con.sideMargin + CG_DrawStrlen( "]", UI_CONSOLEFONT ), y, UI_CONSOLEFONT, NULL, qtrue );
 }
 
 /*

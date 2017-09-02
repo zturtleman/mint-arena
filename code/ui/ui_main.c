@@ -4759,7 +4759,7 @@ void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 
 	// sets defaults for ui temp cvars
 	uiInfo.effectsColor = gamecodetoui[(int)trap_Cvar_VariableValue("color1")-1];
-	uiInfo.currentCrosshair = (int)trap_Cvar_VariableValue("cg_drawCrosshair");
+	uiInfo.currentCrosshair = (int)trap_Cvar_VariableValue("cg_drawCrosshair") % NUM_CROSSHAIRS;
 	trap_Cvar_SetValue( "ui_mousePitch", (trap_Cvar_VariableValue("m_pitch") >= 0) ? 0 : 1 );
 
 	uiInfo.serverStatus.currentServerCinematic = -1;

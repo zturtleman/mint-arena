@@ -129,8 +129,8 @@ static const char *splittextsize_names[] =
 
 static const char *thirdsize_names[] =
 {
-	"half",
-	"quarter",
+	"half of screen",
+	"quarter of screen",
 	NULL
 };
 
@@ -481,7 +481,7 @@ static void Preferences_MenuInit( void ) {
 
 	y += BIGCHAR_HEIGHT+2;
 	s_preferences.thirdsize.generic.type			= MTYPE_SPINCONTROL;
-	s_preferences.thirdsize.generic.name			= "Third view size:";
+	s_preferences.thirdsize.generic.name			= "Third Player View:";
 	s_preferences.thirdsize.generic.flags			= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
 	s_preferences.thirdsize.generic.callback		= Preferences_Event;
 	s_preferences.thirdsize.generic.id				= ID_SPLITVERTICAL;

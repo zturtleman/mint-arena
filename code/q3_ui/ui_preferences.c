@@ -289,9 +289,6 @@ static void Crosshair_Draw( void *self ) {
 	}
 
 	UI_DrawString( x - SMALLCHAR_WIDTH, y, s->generic.name, style|UI_RIGHT, color );
-	if( !s->curvalue ) {
-		return;
-	}
 
 	// draw crosshair red if crosshair health is enabled and selected
 	if ( s_preferences.crosshairhealth.curvalue && s->generic.parent->cursor == s_preferences.crosshairhealth.generic.menuPosition ) {

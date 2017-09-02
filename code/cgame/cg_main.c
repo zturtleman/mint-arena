@@ -1902,6 +1902,12 @@ qboolean CG_Asset_Parse(int handle) {
 				return qfalse;
 			}
 			if (cg_hudFont.string[0]) {
+				// ZTM: HACK: Team Arena hud.menu list bigFont as 20 point but status numbers are drawn at 36 point.
+				if (!strcmp(tempStr, "fonts/bigfont") && pointSize == 20 && CG_InitTrueTypeFont(cg_hudFont.string, 36, 0, &cgDC.Assets.bigFont)) {
+					Com_DPrintf("Overriding HUD bigFont '%s' (%d pt) with '%s' (36 pt)\n", tempStr, pointSize, cg_hudFont.string);
+					continue;
+				}
+
 				if (CG_InitTrueTypeFont(cg_hudFont.string, pointSize, 0, &cgDC.Assets.bigFont)) {
 					Com_DPrintf("Overriding HUD bigFont '%s' with '%s'\n", tempStr, cg_hudFont.string);
 					continue;

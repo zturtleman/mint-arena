@@ -416,11 +416,15 @@ CG_AddToTeamChat
 
 =======================
 */
-static void CG_AddToTeamChat( const char *str ) {
+static void CG_AddToTeamChat( team_t team, const char *str ) {
 	int len;
 	char *p, *ls;
 	int lastcolor;
 	int chatHeight;
+
+	if (team < 0 || team >= TEAM_NUM_TEAMS) {
+		return;
+	}
 
 	if (cg_teamChatHeight.integer < TEAMCHAT_HEIGHT) {
 		chatHeight = cg_teamChatHeight.integer;
@@ -430,13 +434,13 @@ static void CG_AddToTeamChat( const char *str ) {
 
 	if (chatHeight <= 0 || cg_teamChatTime.integer <= 0) {
 		// team chat disabled, dump into normal chat
-		cgs.teamChatPos = cgs.teamLastChatPos = 0;
+		cgs.teamChatPos[team] = cgs.teamLastChatPos[team] = 0;
 		return;
 	}
 
 	len = 0;
 
-	p = cgs.teamChatMsgs[cgs.teamChatPos % chatHeight];
+	p = cgs.teamChatMsgs[team][cgs.teamChatPos[team] % chatHeight];
 	*p = 0;
 
 	lastcolor = '7';
@@ -451,10 +455,10 @@ static void CG_AddToTeamChat( const char *str ) {
 			}
 			*p = 0;
 
-			cgs.teamChatMsgTimes[cgs.teamChatPos % chatHeight] = cg.time;
+			cgs.teamChatMsgTimes[team][cgs.teamChatPos[team] % chatHeight] = cg.time;
 
-			cgs.teamChatPos++;
-			p = cgs.teamChatMsgs[cgs.teamChatPos % chatHeight];
+			cgs.teamChatPos[team]++;
+			p = cgs.teamChatMsgs[team][cgs.teamChatPos[team] % chatHeight];
 			*p = 0;
 			*p++ = Q_COLOR_ESCAPE;
 			*p++ = lastcolor;
@@ -476,11 +480,11 @@ static void CG_AddToTeamChat( const char *str ) {
 	}
 	*p = 0;
 
-	cgs.teamChatMsgTimes[cgs.teamChatPos % chatHeight] = cg.time;
-	cgs.teamChatPos++;
+	cgs.teamChatMsgTimes[team][cgs.teamChatPos[team] % chatHeight] = cg.time;
+	cgs.teamChatPos[team]++;
 
-	if (cgs.teamChatPos - cgs.teamLastChatPos > chatHeight)
-		cgs.teamLastChatPos = cgs.teamChatPos - chatHeight;
+	if (cgs.teamChatPos[team] - cgs.teamLastChatPos[team] > chatHeight)
+		cgs.teamLastChatPos[team] = cgs.teamChatPos[team] - chatHeight;
 }
 
 /*
@@ -863,6 +867,7 @@ voiceChatList_t *CG_VoiceChatListForPlayer( int playerNum ) {
 
 typedef struct bufferedVoiceChat_s
 {
+	team_t team;
 	int localPlayerBits;
 	int playerNum;
 	sfxHandle_t snd;
@@ -887,7 +892,7 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 	}
 
 	// remove bits for non-valid players
-	vchat->localPlayerBits &= CG_LocalPlayerBitsForTeam( -1 );
+	vchat->localPlayerBits &= CG_LocalPlayerBitsForTeam( vchat->team );
 
 	if ( !cg_noVoiceChats.integer ) {
 		trap_S_StartLocalSound( vchat->snd, CHAN_VOICE);
@@ -912,7 +917,7 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 		}
 	}
 	if (!vchat->voiceOnly && !cg_noVoiceText.integer) {
-		CG_AddToTeamChat( vchat->message );
+		CG_AddToTeamChat( vchat->team, vchat->message );
 		CG_NotifyBitsPrintf( vchat->localPlayerBits, "%s\n", vchat->message );
 	}
 	voiceChatBuffer[cg.voiceChatBufferOut].snd = 0;
@@ -990,12 +995,15 @@ void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int p
 		Q_strncpyz(vchat.cmd, cmd, sizeof(vchat.cmd));
 		if ( mode == SAY_TELL ) {
 			Com_sprintf(vchat.message, sizeof(vchat.message), "[%s]: %c%c%s", pi->name, Q_COLOR_ESCAPE, color, chat);
+			vchat.team = -1;
 		}
 		else if ( mode == SAY_TEAM ) {
 			Com_sprintf(vchat.message, sizeof(vchat.message), "(%s): %c%c%s", pi->name, Q_COLOR_ESCAPE, color, chat);
+			vchat.team = pi->team;
 		}
 		else {
 			Com_sprintf(vchat.message, sizeof(vchat.message), "%s: %c%c%s", pi->name, Q_COLOR_ESCAPE, color, chat);
+			vchat.team = -1;
 		}
 		CG_AddBufferedVoiceChat(&vchat);
 	}
@@ -1099,6 +1107,7 @@ static void CG_ServerCommand( void ) {
 	const char	*cmd;
 	char		text[MAX_SAY_TEXT];
 	int			start = 0;
+	team_t		team = -1;
 	int			localPlayerBits = -1;
 	int			i;
 
@@ -1111,21 +1120,32 @@ static void CG_ServerCommand( void ) {
 
 	// Commands for team
 	if ( !Q_stricmp( cmd, "[RED]" ) ) {
-		localPlayerBits = CG_LocalPlayerBitsForTeam( TEAM_RED );
+		team = TEAM_RED;
+		localPlayerBits = CG_LocalPlayerBitsForTeam( team );
 
 		// Get command
 		start++;
 		cmd = CG_Argv(start);
 	}
 	else if ( !Q_stricmp( cmd, "[BLUE]" ) ) {
-		localPlayerBits = CG_LocalPlayerBitsForTeam( TEAM_BLUE );
+		team = TEAM_BLUE;
+		localPlayerBits = CG_LocalPlayerBitsForTeam( team );
 
 		// Get command
 		start++;
 		cmd = CG_Argv(start);
 	}
 	else if ( !Q_stricmp( cmd, "[SPECTATOR]" ) ) {
-		localPlayerBits = CG_LocalPlayerBitsForTeam( TEAM_SPECTATOR );
+		team = TEAM_SPECTATOR;
+		localPlayerBits = CG_LocalPlayerBitsForTeam( team );
+
+		// Get command
+		start++;
+		cmd = CG_Argv(start);
+	}
+	else if ( !Q_stricmp( cmd, "[FREE]" ) ) {
+		team = TEAM_FREE;
+		localPlayerBits = CG_LocalPlayerBitsForTeam( team );
 
 		// Get command
 		start++;
@@ -1135,10 +1155,11 @@ static void CG_ServerCommand( void ) {
 	else if ( cmd[0] == 'l' && cmd[1] =='c' && isdigit(cmd[2]) ) {
 		int num = atoi( &cmd[2] );
 
-		if ( num > CG_MaxSplitView() ) {
+		if ( num < 0 || num > CG_MaxSplitView() ) {
 			return;
 		}
 
+		team = cgs.playerinfo[ cg.localPlayers[num].playerNum ].team;
 		localPlayerBits = ( 1 << num );
 
 		// Get command
@@ -1223,7 +1244,7 @@ static void CG_ServerCommand( void ) {
 		Q_strncpyz( text, CG_Argv(start+1), MAX_SAY_TEXT );
 
 		CG_RemoveChatEscapeChar( text );
-		CG_AddToTeamChat( text );
+		CG_AddToTeamChat( team, text );
 		CG_NotifyBitsPrintf( localPlayerBits, "%s\n", text );
 		return;
 	}

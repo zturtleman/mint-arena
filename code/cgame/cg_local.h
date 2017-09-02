@@ -1279,10 +1279,10 @@ typedef struct {
 	playerInfo_t	playerinfo[MAX_CLIENTS];
 
 	// teamchat width is *3 because of embedded color codes
-	char			teamChatMsgs[TEAMCHAT_HEIGHT][TEAMCHAT_WIDTH*3+1];
-	int				teamChatMsgTimes[TEAMCHAT_HEIGHT];
-	int				teamChatPos;
-	int				teamLastChatPos;
+	char			teamChatMsgs[TEAM_NUM_TEAMS][TEAMCHAT_HEIGHT][TEAMCHAT_WIDTH*3+1];
+	int				teamChatMsgTimes[TEAM_NUM_TEAMS][TEAMCHAT_HEIGHT];
+	int				teamChatPos[TEAM_NUM_TEAMS];
+	int				teamLastChatPos[TEAM_NUM_TEAMS];
 
 	int cursorX;
 	int cursorY;

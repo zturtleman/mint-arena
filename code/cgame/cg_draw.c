@@ -1264,9 +1264,16 @@ static void CG_DrawTeamInfo( void ) {
 	vec4_t		hcolor;
 	int		chatHeight;
 	int		lineHeight;
+	team_t	team;
 
 #define CHATLOC_Y 420 // bottom end
 #define CHATLOC_X 0
+
+	// make spectators use TEAM_SPECTATOR
+	team = cgs.playerinfo[ cg.cur_lc->playerNum ].team;
+	if (team < 0 || team >= TEAM_NUM_TEAMS) {
+		return;
+	}
 
 	if (cg_teamChatHeight.integer < TEAMCHAT_HEIGHT)
 		chatHeight = cg_teamChatHeight.integer;
@@ -1279,19 +1286,19 @@ static void CG_DrawTeamInfo( void ) {
 
 	lineHeight = CG_DrawStringLineHeight( UI_TINYFONT );
 
-	if (cgs.teamLastChatPos != cgs.teamChatPos) {
-		if (cg.time - cgs.teamChatMsgTimes[cgs.teamLastChatPos % chatHeight] > cg_teamChatTime.integer) {
-			cgs.teamLastChatPos++;
+	if (cgs.teamLastChatPos[team] != cgs.teamChatPos[team]) {
+		if (cg.time - cgs.teamChatMsgTimes[team][cgs.teamLastChatPos[team] % chatHeight] > cg_teamChatTime.integer) {
+			cgs.teamLastChatPos[team]++;
 		}
 
-		h = (cgs.teamChatPos - cgs.teamLastChatPos) * lineHeight;
+		h = (cgs.teamChatPos[team] - cgs.teamLastChatPos[team]) * lineHeight;
 
-		if ( cg.cur_ps->persistant[PERS_TEAM] == TEAM_RED ) {
+		if ( team == TEAM_RED ) {
 			hcolor[0] = 1.0f;
 			hcolor[1] = 0.0f;
 			hcolor[2] = 0.0f;
 			hcolor[3] = 0.33f;
-		} else if ( cg.cur_ps->persistant[PERS_TEAM] == TEAM_BLUE ) {
+		} else if ( team == TEAM_BLUE ) {
 			hcolor[0] = 0.0f;
 			hcolor[1] = 0.0f;
 			hcolor[2] = 1.0f;
@@ -1310,10 +1317,10 @@ static void CG_DrawTeamInfo( void ) {
 		hcolor[0] = hcolor[1] = hcolor[2] = 1.0f;
 		hcolor[3] = 1.0f;
 
-		for (i = cgs.teamChatPos - 1; i >= cgs.teamLastChatPos; i--) {
+		for (i = cgs.teamChatPos[team] - 1; i >= cgs.teamLastChatPos[team]; i--) {
 			CG_DrawString( CHATLOC_X + TINYCHAR_WIDTH, 
-				CHATLOC_Y - (cgs.teamChatPos - i)*lineHeight, 
-				cgs.teamChatMsgs[i % chatHeight],
+				CHATLOC_Y - (cgs.teamChatPos[team] - i)*lineHeight,
+				cgs.teamChatMsgs[team][i % chatHeight],
 				UI_TINYFONT, hcolor );
 		}
 	}
@@ -2842,12 +2849,12 @@ static void CG_Draw2D(stereoFrame_t stereoFrame, qboolean *voiceMenuOpen)
 #endif
 			CG_DrawReward();
 		}
-    
-		if ( cgs.gametype >= GT_TEAM ) {
+	}
+
+	if ( cgs.gametype >= GT_TEAM ) {
 #ifndef MISSIONPACK_HUD
-			CG_DrawTeamInfo();
+		CG_DrawTeamInfo();
 #endif
-		}
 	}
 
 	CG_DrawVote();

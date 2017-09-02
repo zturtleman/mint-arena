@@ -1139,12 +1139,12 @@ int ArenaServers_SetType( int type )
 	if(type >= UIAS_GLOBAL1 && type <= UIAS_GLOBAL5)
 	{
 		char masterstr[2], cvarname[sizeof("sv_master1")];
-		int select;
+		int direction;
 		
-		if ( type < g_servertype ) {
-			select = -1;
+		if (type == g_servertype || type == ((g_servertype+1) % (ARRAY_LEN(master_items)-1))) {
+			direction = 1;
 		} else {
-			select = 1;
+			direction = -1;
 		}
 
 		while(type >= UIAS_GLOBAL1 && type <= UIAS_GLOBAL5)
@@ -1154,7 +1154,7 @@ int ArenaServers_SetType( int type )
 			if(*masterstr)
 				break;
 			
-			type += select;
+			type += direction;
 		}
 	}
 

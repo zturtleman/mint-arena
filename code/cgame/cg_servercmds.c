@@ -416,14 +416,14 @@ CG_AddToTeamChat
 
 =======================
 */
-static void CG_AddToTeamChat( team_t team, const char *str ) {
+static qboolean CG_AddToTeamChat( team_t team, const char *str ) {
 	int len;
 	char *p, *ls;
 	int lastcolor;
 	int chatHeight;
 
 	if (team < 0 || team >= TEAM_NUM_TEAMS) {
-		return;
+		return qfalse;
 	}
 
 	if (cg_teamChatHeight.integer < TEAMCHAT_HEIGHT) {
@@ -435,7 +435,7 @@ static void CG_AddToTeamChat( team_t team, const char *str ) {
 	if (chatHeight <= 0 || cg_teamChatTime.integer <= 0) {
 		// team chat disabled, dump into normal chat
 		cgs.teamChatPos[team] = cgs.teamLastChatPos[team] = 0;
-		return;
+		return qfalse;
 	}
 
 	len = 0;
@@ -485,6 +485,8 @@ static void CG_AddToTeamChat( team_t team, const char *str ) {
 
 	if (cgs.teamChatPos[team] - cgs.teamLastChatPos[team] > chatHeight)
 		cgs.teamLastChatPos[team] = cgs.teamChatPos[team] - chatHeight;
+
+	return qtrue;
 }
 
 /*
@@ -548,6 +550,17 @@ static void CG_MapRestart( void ) {
 
 		cg.localPlayers[i].cameraOrbit = 0;
 	}
+}
+
+// copied from g_team.c
+const char *CG_TeamName(int team)  {
+	if (team==TEAM_RED)
+		return "RED";
+	else if (team==TEAM_BLUE)
+		return "BLUE";
+	else if (team==TEAM_SPECTATOR)
+		return "SPECTATOR";
+	return "FREE";
 }
 
 #ifdef MISSIONPACK
@@ -917,8 +930,11 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 		}
 	}
 	if (!vchat->voiceOnly && !cg_noVoiceText.integer) {
-		CG_AddToTeamChat( vchat->team, vchat->message );
-		CG_NotifyBitsPrintf( vchat->localPlayerBits, "%s\n", vchat->message );
+		if ( CG_AddToTeamChat( vchat->team, vchat->message ) ) {
+			CG_Printf( "[skipnotify][%s team]%s\n", CG_TeamName( vchat->team ), vchat->message );
+		} else {
+			CG_NotifyBitsPrintf( vchat->localPlayerBits, "%s\n", vchat->message );
+		}
 	}
 	voiceChatBuffer[cg.voiceChatBufferOut].snd = 0;
 }
@@ -1244,8 +1260,11 @@ static void CG_ServerCommand( void ) {
 		Q_strncpyz( text, CG_Argv(start+1), MAX_SAY_TEXT );
 
 		CG_RemoveChatEscapeChar( text );
-		CG_AddToTeamChat( team, text );
-		CG_NotifyBitsPrintf( localPlayerBits, "%s\n", text );
+		if ( CG_AddToTeamChat( team, text ) ) {
+			CG_Printf( "[skipnotify][%s team]%s\n", CG_TeamName( team ), text );
+		} else {
+			CG_NotifyBitsPrintf( localPlayerBits, "%s\n", text );
+		}
 		return;
 	}
 

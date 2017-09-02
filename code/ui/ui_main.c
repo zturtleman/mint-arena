@@ -1445,8 +1445,8 @@ static void UI_DrawRedBlue(rectDef_t *rect, float scale, vec4_t color, int textS
 
 static void UI_DrawCrosshair(rectDef_t *rect, float scale, vec4_t color) {
  	trap_R_SetColor( color );
-	if (uiInfo.currentCrosshair < 0 || uiInfo.currentCrosshair >= NUM_CROSSHAIRS) {
-		uiInfo.currentCrosshair = 0;
+	if (uiInfo.currentCrosshair <= 0 || uiInfo.currentCrosshair >= NUM_CROSSHAIRS) {
+		return;
 	}
 	CG_DrawPic( rect->x, rect->y - rect->h, rect->w, rect->h, uiInfo.uiDC.Assets.crosshairShader[uiInfo.currentCrosshair]);
  	trap_R_SetColor( NULL );

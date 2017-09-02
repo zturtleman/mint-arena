@@ -499,6 +499,12 @@ void CopyToBodyQue( gentity_t *ent ) {
 	}
 
 
+	// use unsnapped origin so corpse doesn't move in splitscreen
+	// when switching from drawing player state to corpse.
+	VectorCopy( ent->player->ps.origin, body->s.origin2 );
+	// ZTM: HACK: tell cgame that origin2 is set to avoid breaking network compat.
+	body->s.eFlags |= EF_MOVER_STOP;
+
 	VectorCopy ( body->s.pos.trBase, body->r.currentOrigin );
 	trap_LinkEntity (body);
 }

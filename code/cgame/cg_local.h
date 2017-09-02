@@ -1409,7 +1409,9 @@ extern	vmCvar_t		cg_cameraMode;
 extern  vmCvar_t		cg_smallFont;
 extern  vmCvar_t		cg_bigFont;
 #endif
+#ifdef MISSIONPACK
 extern	vmCvar_t		cg_noTaunt;
+#endif
 extern	vmCvar_t		cg_noProjectileTrail;
 extern	vmCvar_t		cg_oldRail;
 extern	vmCvar_t		cg_oldRocket;

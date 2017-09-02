@@ -1405,8 +1405,10 @@ extern	vmCvar_t		cg_timescaleFadeEnd;
 extern	vmCvar_t		cg_timescaleFadeSpeed;
 extern	vmCvar_t		cg_timescale;
 extern	vmCvar_t		cg_cameraMode;
+#ifdef MISSIONPACK_HUD
 extern  vmCvar_t		cg_smallFont;
 extern  vmCvar_t		cg_bigFont;
+#endif
 extern	vmCvar_t		cg_noTaunt;
 extern	vmCvar_t		cg_noProjectileTrail;
 extern	vmCvar_t		cg_oldRail;

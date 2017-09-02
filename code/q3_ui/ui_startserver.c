@@ -368,6 +368,7 @@ static void StartServer_LevelshotDraw( void *self ) {
 	int				h;
 	int				n;
 	const char		*info;
+	char			mapname[ MAX_NAMELENGTH ];
 
 	b = (menubitmap_s *)self;
 
@@ -403,7 +404,9 @@ static void StartServer_LevelshotDraw( void *self ) {
 	n = s_startserver.page * MAX_MAPSPERPAGE + b->generic.id - ID_PICTURES;
 
 	info = UI_GetArenaInfoByNumber( s_startserver.maplist[ n ]);
-	UI_DrawString( x, y, Info_ValueForKey( info, "map" ), UI_CENTER|UI_SMALLFONT, color_orange );
+	Q_strncpyz( mapname, Info_ValueForKey( info, "map"), MAX_NAMELENGTH );
+	Q_strupr( mapname );
+	UI_DrawString( x, y, mapname, UI_CENTER|UI_SMALLFONT, color_orange );
 
 	x = b->generic.x;
 	y = b->generic.y;
@@ -1299,7 +1302,6 @@ static void ServerOptions_SetMenuItems( void ) {
 	// set the map pic
 	info = UI_GetArenaInfoByNumber( s_startserver.maplist[ s_startserver.currentmap ]);
 	Q_strncpyz( mapname, Info_ValueForKey( info, "map"), MAX_NAMELENGTH );
-	Q_strupr( mapname );
 
 	Com_sprintf( picname, sizeof(picname), "levelshots/%s_small", mapname );
 	if ( !trap_R_RegisterShaderNoMip( picname ) ) {

@@ -452,6 +452,17 @@ void CopyToBodyQue( gentity_t *ent ) {
 		VectorCopy( ent->player->ps.velocity, body->s.pos.trDelta );
 	} else {
 		body->s.pos.trType = TR_STATIONARY;
+
+		// use unsnapped origin so corpse doesn't move in splitscreen
+		// when switching from drawing player state to corpse.
+		// ZTM: TODO: Corpse bandwidth reduction idea:
+		//            Send (only) unsnapped origin as pos.trBase. Then in CGame
+		//            if it's not a splitscreen player do SnapVector() on it.
+		//            It would also fix the rare case of copy to body queue while
+		//            player is in the air.
+		VectorCopy( ent->player->ps.origin, body->s.origin2 );
+		// ZTM: HACK: tell cgame that origin2 is set to avoid breaking network compat.
+		body->s.eFlags |= EF_MOVER_STOP;
 	}
 	body->s.pos.trTime = level.time;
 	body->s.event = 0;
@@ -498,12 +509,6 @@ void CopyToBodyQue( gentity_t *ent ) {
 		body->takedamage = qtrue;
 	}
 
-
-	// use unsnapped origin so corpse doesn't move in splitscreen
-	// when switching from drawing player state to corpse.
-	VectorCopy( ent->player->ps.origin, body->s.origin2 );
-	// ZTM: HACK: tell cgame that origin2 is set to avoid breaking network compat.
-	body->s.eFlags |= EF_MOVER_STOP;
 
 	VectorCopy ( body->s.pos.trBase, body->r.currentOrigin );
 	trap_LinkEntity (body);

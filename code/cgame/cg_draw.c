@@ -1199,10 +1199,13 @@ static void CG_DrawLowerRight( void ) {
 CG_DrawPickupItem
 ===================
 */
-#ifndef MISSIONPACK_HUD
 static int CG_DrawPickupItem( int y ) {
 	int		value;
 	float	*fadeColor;
+
+	if ( !cg_drawPickupItems.integer ) {
+		return y;
+	}
 
 	if ( cg.cur_ps->stats[STAT_HEALTH] <= 0 ) {
 		return y;
@@ -1224,7 +1227,6 @@ static int CG_DrawPickupItem( int y ) {
 	
 	return y;
 }
-#endif // MISSIONPACK_HUD
 
 /*
 =====================
@@ -1232,7 +1234,6 @@ CG_DrawLowerLeft
 
 =====================
 */
-#ifndef MISSIONPACK_HUD
 static void CG_DrawLowerLeft( void ) {
 	float	y;
 
@@ -1240,14 +1241,15 @@ static void CG_DrawLowerLeft( void ) {
 
 	CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
 
+#ifndef MISSIONPACK_HUD
 	if ( cgs.gametype >= GT_TEAM && cg_drawTeamOverlay.integer == 3 ) {
 		y = CG_DrawTeamOverlay( y, qfalse, qfalse );
 	} 
+#endif
 
 
 	CG_DrawPickupItem( y );
 }
-#endif // MISSIONPACK_HUD
 
 
 //===========================================================================================
@@ -2874,8 +2876,8 @@ static void CG_Draw2D(stereoFrame_t stereoFrame, qboolean *voiceMenuOpen)
 
 #ifndef MISSIONPACK_HUD
 	CG_DrawLowerRight();
-	CG_DrawLowerLeft();
 #endif
+	CG_DrawLowerLeft();
 
 	CG_DrawShaderInfo();
 

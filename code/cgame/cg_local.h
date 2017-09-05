@@ -1431,7 +1431,10 @@ extern	vmCvar_t		cg_coronas;
 extern	vmCvar_t		cg_fovAspectAdjust;
 extern	vmCvar_t		cg_fadeExplosions;
 extern	vmCvar_t		cg_skybox;
+#ifndef MISSIONPACK_HUD
 extern	vmCvar_t		cg_drawScores;
+#endif
+extern	vmCvar_t		cg_drawPickupItems;
 extern	vmCvar_t		cg_oldBubbles;
 extern	vmCvar_t		cg_smoothBodySink;
 extern	vmCvar_t		cg_antiLag;

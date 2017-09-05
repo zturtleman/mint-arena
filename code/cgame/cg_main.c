@@ -264,7 +264,10 @@ vmCvar_t	cg_coronas;
 vmCvar_t	cg_fovAspectAdjust;
 vmCvar_t	cg_fadeExplosions;
 vmCvar_t	cg_skybox;
+#ifndef MISSIONPACK_HUD
 vmCvar_t	cg_drawScores;
+#endif
+vmCvar_t	cg_drawPickupItems;
 vmCvar_t	cg_oldBubbles;
 vmCvar_t	cg_smoothBodySink;
 vmCvar_t	cg_antiLag;
@@ -485,7 +488,12 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_fovAspectAdjust, "cg_fovAspectAdjust", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_fadeExplosions, "cg_fadeExplosions", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_skybox, "cg_skybox", "1", CVAR_ARCHIVE, RANGE_INT( 0, 2 ) },
-	{ &cg_drawScores, "cg_drawScores", "1", 0, RANGE_BOOL },
+#ifdef MISSIONPACK_HUD
+	{ &cg_drawPickupItems, "cg_drawPickupItems", "0", CVAR_ARCHIVE, RANGE_BOOL },
+#else
+	{ &cg_drawScores, "cg_drawScores", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_drawPickupItems, "cg_drawPickupItems", "1", CVAR_ARCHIVE, RANGE_BOOL },
+#endif
 	{ &cg_oldBubbles, "cg_oldBubbles", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_smoothBodySink, "cg_smoothBodySink", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_antiLag, "cg_antiLag", "0", CVAR_USERINFO_ALL | CVAR_ARCHIVE, RANGE_INT( 0, 2 ) },

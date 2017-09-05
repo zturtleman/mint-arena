@@ -417,6 +417,10 @@ CG_AddToTeamChat
 =======================
 */
 static qboolean CG_AddToTeamChat( team_t team, const char *str ) {
+#ifdef MISSIONPACK_HUD
+	// team chat box is not drawn
+	return qfalse;
+#else
 	int len;
 	char *p, *ls;
 	int lastcolor;
@@ -487,6 +491,7 @@ static qboolean CG_AddToTeamChat( team_t team, const char *str ) {
 		cgs.teamLastChatPos[team] = cgs.teamChatPos[team] - chatHeight;
 
 	return qtrue;
+#endif
 }
 
 /*

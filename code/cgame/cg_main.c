@@ -209,8 +209,10 @@ vmCvar_t	cg_drawLagometer;
 vmCvar_t	cg_drawAttacker;
 vmCvar_t	cg_synchronousClients;
 vmCvar_t	cg_singlePlayer;
+#ifndef MISSIONPACK_HUD
 vmCvar_t 	cg_teamChatTime;
 vmCvar_t 	cg_teamChatHeight;
+#endif
 vmCvar_t 	cg_stats;
 vmCvar_t 	cg_buildScript;
 vmCvar_t 	cg_forceModel;
@@ -409,8 +411,10 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_splitviewThirdEqual, "cg_splitviewThirdEqual", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_splitviewTextScale, "cg_splitviewTextScale", "1", CVAR_ARCHIVE, RANGE_FLOAT( 0.1, 5 ) },
 	{ &cg_hudTextScale, "cg_hudTextScale", "1", CVAR_ARCHIVE, RANGE_FLOAT( 0.1, 5 ) },
+#ifndef MISSIONPACK_HUD
 	{ &cg_teamChatTime, "cg_teamChatTime", "3000", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", CVAR_ARCHIVE, RANGE_INT( 0, TEAMCHAT_HEIGHT ) },
+#endif
 	{ &cg_forceModel, "cg_forceModel", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_predictItems, "cg_predictItems", "1", CVAR_ARCHIVE | CVAR_USERINFO_ALL, RANGE_BOOL },
 #ifdef MISSIONPACK

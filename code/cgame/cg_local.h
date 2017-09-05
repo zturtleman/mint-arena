@@ -1380,8 +1380,10 @@ extern	vmCvar_t		cg_drawLagometer;
 extern	vmCvar_t		cg_drawAttacker;
 extern	vmCvar_t		cg_synchronousClients;
 extern	vmCvar_t		cg_singlePlayer;
+#ifndef MISSIONPACK_HUD
 extern	vmCvar_t		cg_teamChatTime;
 extern	vmCvar_t		cg_teamChatHeight;
+#endif
 extern	vmCvar_t		cg_stats;
 extern	vmCvar_t 		cg_forceModel;
 extern	vmCvar_t 		cg_buildScript;

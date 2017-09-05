@@ -89,7 +89,7 @@ CG_MessageMode_f
 */
 void CG_MessageMode_f( void ) {
 	Q_strncpyz( cg.messageCommand, "say", sizeof (cg.messageCommand) );
-	Q_strncpyz( cg.messagePrompt, "Say:", sizeof (cg.messagePrompt) );
+	Q_strncpyz( cg.messagePrompt, "Say: ", sizeof (cg.messagePrompt) );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 30;
 	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
@@ -102,7 +102,7 @@ CG_MessageMode2_f
 */
 void CG_MessageMode2_f( void ) {
 	Q_strncpyz( cg.messageCommand, "say_team", sizeof (cg.messageCommand) );
-	Q_strncpyz( cg.messagePrompt, "Team Say:", sizeof (cg.messagePrompt) );
+	Q_strncpyz( cg.messagePrompt, "Team Say: ", sizeof (cg.messagePrompt) );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 25;
 	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
@@ -119,7 +119,7 @@ void CG_MessageMode3_f( void ) {
 		return;
 	}
 	Com_sprintf( cg.messageCommand, sizeof (cg.messageCommand), "tell %d", playerNum );
-	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s:", cgs.playerinfo[ playerNum ].name );
+	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s: ", cgs.playerinfo[ playerNum ].name );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 30;
 	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
@@ -136,7 +136,7 @@ void CG_MessageMode4_f( void ) {
 		return;
 	}
 	Com_sprintf( cg.messageCommand, sizeof (cg.messageCommand), "tell %d", playerNum );
-	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s:", cgs.playerinfo[ playerNum ].name );
+	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s: ", cgs.playerinfo[ playerNum ].name );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 30;
 	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );

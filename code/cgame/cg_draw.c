@@ -3082,6 +3082,8 @@ void CG_DrawMessageMode( void ) {
 		return;
 	}
 
+	CG_SetScreenPlacement( PLACE_LEFT, PLACE_CENTER );
+
 	// draw the chat line
 	CG_DrawString( 8, 232, cg.messagePrompt, UI_DROPSHADOW|UI_BIGFONT, NULL );
 

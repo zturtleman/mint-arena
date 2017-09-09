@@ -2871,7 +2871,6 @@ static void UI_RunMenuScript(char **args) {
 			trap_Cvar_SetValue( "com_introPlayed", 1 );
 			trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
 		} else if (Q_stricmp(name, "loadArenas") == 0) {
-			UI_LoadArenas();
 			UI_MapCountByGameType(qfalse);
 			Menu_SetFeederSelection(NULL, FEEDER_ALLMAPS, 0, "createserver");
 		} else if (Q_stricmp(name, "saveControls") == 0) {
@@ -4731,6 +4730,7 @@ void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	UI_ParseTeamInfo("teaminfo.txt");
 	UI_LoadTeams();
 	UI_ParseGameInfo("gameinfo.txt");
+	UI_LoadArenas();
 #endif
 	UI_ValidateTeams();
 

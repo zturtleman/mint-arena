@@ -640,6 +640,44 @@ static void CG_EditHud_f( void ) {
 
 /*
 ==================
+CG_VstrDown_f
+==================
+*/
+static void CG_VstrDown_f( void ) {
+	const char *cvarName;
+
+	if ( trap_Argc() < 3 ) {
+		Com_Printf( "+vstr <press variable name> <release variable name> : execute a variable command on key press and release\n" );
+		return;
+	}
+
+	cvarName = CG_Argv( 1 );
+	if ( *cvarName ) {
+		trap_Cmd_ExecuteText( EXEC_NOW, va( "vstr %s\n", cvarName ) );
+	}
+}
+
+/*
+==================
+CG_VstrUp_f
+==================
+*/
+static void CG_VstrUp_f( void ) {
+	const char *cvarName;
+
+	if ( trap_Argc() < 3 ) {
+		Com_Printf( "-vstr <press variable name> <release variable name> : execute a variable command on key press and release\n" );
+		return;
+	}
+
+	cvarName = CG_Argv( 2 );
+	if ( *cvarName ) {
+		trap_Cmd_ExecuteText( EXEC_NOW, va( "vstr %s\n", cvarName ) );
+	}
+}
+
+/*
+==================
 CG_StartOrbit_f
 ==================
 */
@@ -848,6 +886,8 @@ void CG_ToggleMenu_f( void ) {
 }
 
 static consoleCommand_t	cg_commands[] = {
+	{ "+vstr", CG_VstrDown_f, 0 },
+	{ "-vstr", CG_VstrUp_f, 0 },
 	{ "testgun", CG_TestGun_f, CMD_INGAME },
 	{ "testmodel", CG_TestModel_f, CMD_INGAME },
 	{ "nextframe", CG_TestModelNextFrame_f, CMD_INGAME },

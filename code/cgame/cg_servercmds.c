@@ -1131,6 +1131,7 @@ static void CG_ServerCommand( void ) {
 	team_t		team = -1;
 	int			localPlayerBits = -1;
 	int			i;
+	int			chatPlayerNum;
 
 	cmd = CG_Argv(start);
 
@@ -1236,7 +1237,15 @@ static void CG_ServerCommand( void ) {
 	}
 
 	if ( !strcmp( cmd, "chat" ) ) {
-		if ( cgs.gametype >= GT_TEAM && cg_teamChatsOnly.integer ) {
+		if ( trap_Argc() > start+2 ) {
+			chatPlayerNum = atoi(CG_Argv(start+2));
+		} else {
+			// message is from a pre-Spearmint 0.5 server or demo
+			chatPlayerNum = CHATPLAYER_UNKNOWN;
+		}
+
+		// allow disabling non-team chat but always show server chat
+		if ( cgs.gametype >= GT_TEAM && cg_teamChatsOnly.integer && chatPlayerNum != CHATPLAYER_SERVER ) {
 			return;
 		}
 
@@ -1254,6 +1263,12 @@ static void CG_ServerCommand( void ) {
 
 		Q_strncpyz( text, CG_Argv(start+1), MAX_SAY_TEXT );
 
+		if ( trap_Argc() > start+2 ) {
+			chatPlayerNum = atoi(CG_Argv(start+2));
+		} else {
+			chatPlayerNum = CHATPLAYER_UNKNOWN;
+		}
+
 		CG_RemoveChatEscapeChar( text );
 		CG_NotifyBitsPrintf( localPlayerBits, "%s\n", text );
 		return;
@@ -1263,6 +1278,12 @@ static void CG_ServerCommand( void ) {
 		trap_S_StartLocalSound( cgs.media.talkSound, CHAN_LOCAL_SOUND );
 
 		Q_strncpyz( text, CG_Argv(start+1), MAX_SAY_TEXT );
+
+		if ( trap_Argc() > start+2 ) {
+			chatPlayerNum = atoi(CG_Argv(start+2));
+		} else {
+			chatPlayerNum = CHATPLAYER_UNKNOWN;
+		}
 
 		CG_RemoveChatEscapeChar( text );
 		if ( CG_AddToTeamChat( team, text ) ) {

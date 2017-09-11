@@ -65,6 +65,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	SAY_TEAM		1
 #define	SAY_TELL		2
 
+#define CHATPLAYER_SERVER	-1
+#define CHATPLAYER_UNKNOWN	-2
+
 #define	MODELINDEX_BITS		10
 
 // these are networked using the modelindex and/or modelindex2 field, must fit in MODELINDEX_BITS

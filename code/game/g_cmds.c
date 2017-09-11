@@ -911,6 +911,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 	char		text[MAX_SAY_TEXT];
 	char		location[64];
 	char		*cmd, *str, *netname;
+	int			playerNum;
 
 	if ( g_gametype.integer < GT_TEAM && mode == SAY_TEAM ) {
 		mode = SAY_ALL;
@@ -922,8 +923,10 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 
 	if ( ent && ent->player ) {
 		netname = ent->player->pers.netname;
+		playerNum = ent->s.number;
 	} else {
 		netname = "server";
+		playerNum = CHATPLAYER_SERVER;
 	}
 
 	Q_strncpyz( text, chatText, sizeof(text) );
@@ -969,7 +972,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		G_RemoveChatEscapeChar( name );
 	}
 
-	str = va( "%s \"%s%c%c%s\"", cmd, name, Q_COLOR_ESCAPE, color, text );
+	str = va( "%s \"%s%c%c%s\" %d", cmd, name, Q_COLOR_ESCAPE, color, text, playerNum );
 
 	if ( target ) {
 		trap_SendServerCommand( target-g_entities, str );

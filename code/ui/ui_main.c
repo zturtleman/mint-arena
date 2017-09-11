@@ -2122,10 +2122,12 @@ static qboolean UI_NetSource_HandleKey(int flags, float *special, int key) {
 		
 			while(ui_netSource.integer >= UIAS_GLOBAL1 && ui_netSource.integer <= UIAS_GLOBAL5)
 			{
-				Com_sprintf(cvarname, sizeof(cvarname), "sv_master%d", ui_netSource.integer - UIAS_GLOBAL0);
-				trap_Cvar_VariableStringBuffer(cvarname, masterstr, sizeof(masterstr));
-				if(*masterstr)
-					break;
+				if (ui_browserSeparateMasters.integer) {
+					Com_sprintf(cvarname, sizeof(cvarname), "sv_master%d", ui_netSource.integer - UIAS_GLOBAL0);
+					trap_Cvar_VariableStringBuffer(cvarname, masterstr, sizeof(masterstr));
+					if(*masterstr)
+						break;
+				}
 
 				ui_netSource.integer += select;
 			}
@@ -5266,6 +5268,7 @@ vmCvar_t	ui_browserGameType;
 vmCvar_t	ui_browserShowFull;
 vmCvar_t	ui_browserShowEmpty;
 vmCvar_t	ui_browserShowBots;
+vmCvar_t	ui_browserSeparateMasters;
 
 vmCvar_t	ui_brassTime;
 vmCvar_t	ui_drawCrosshair;
@@ -5389,6 +5392,7 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_browserShowFull, "ui_browserShowFull", "1", CVAR_ARCHIVE },
 	{ &ui_browserShowEmpty, "ui_browserShowEmpty", "1", CVAR_ARCHIVE },
 	{ &ui_browserShowBots, "ui_browserShowBots", "1", CVAR_ARCHIVE },
+	{ &ui_browserSeparateMasters, "ui_browserSeparateMasters", "0", CVAR_ARCHIVE },
 
 	{ &ui_brassTime, "cg_brassTime", "2500", CVAR_ARCHIVE },
 	{ &ui_drawCrosshair, "cg_drawCrosshair", "4", CVAR_ARCHIVE },

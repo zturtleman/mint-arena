@@ -1446,7 +1446,9 @@ extern	vmCvar_t		cg_drawGrappleHook;
 extern	vmCvar_t		cg_drawBBox;
 extern	vmCvar_t		cg_consoleFont;
 extern	vmCvar_t		cg_hudFont;
+extern	vmCvar_t		cg_hudFontBorder;
 extern	vmCvar_t		cg_numberFont;
+extern	vmCvar_t		cg_numberFontBorder;
 extern	vmCvar_t		ui_stretch;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;

@@ -49,23 +49,23 @@ Team Arena's pre-rendered menu/hud TrueType fonts (fonts/smallfont:12,
 fonts/font:16, and fonts/bigfont:20) are Impact.
 */
 void CG_HudTextInit( void ) {
-	if ( !CG_InitTrueTypeFont( cg_hudFont.string, TINYCHAR_HEIGHT, 0, &cgs.media.tinyFont ) ) {
+	if ( !CG_InitTrueTypeFont( cg_hudFont.string, TINYCHAR_HEIGHT, cg_hudFontBorder.value*0.5f, &cgs.media.tinyFont ) ) {
 		CG_InitBitmapFont( &cgs.media.tinyFont, TINYCHAR_HEIGHT, TINYCHAR_WIDTH );
 	}
 
-	if ( !CG_InitTrueTypeFont( cg_hudFont.string, SMALLCHAR_HEIGHT, 0, &cgs.media.smallFont ) ) {
+	if ( !CG_InitTrueTypeFont( cg_hudFont.string, SMALLCHAR_HEIGHT, cg_hudFontBorder.value, &cgs.media.smallFont ) ) {
 		CG_InitBitmapFont( &cgs.media.smallFont, SMALLCHAR_HEIGHT, SMALLCHAR_WIDTH );
 	}
 
-	if ( !CG_InitTrueTypeFont( cg_hudFont.string, BIGCHAR_HEIGHT, 0, &cgs.media.textFont ) ) {
+	if ( !CG_InitTrueTypeFont( cg_hudFont.string, BIGCHAR_HEIGHT, cg_hudFontBorder.value, &cgs.media.textFont ) ) {
 		CG_InitBitmapFont( &cgs.media.textFont, BIGCHAR_HEIGHT, BIGCHAR_WIDTH );
 	}
 
-	if ( !CG_InitTrueTypeFont( cg_hudFont.string, GIANTCHAR_HEIGHT, 0, &cgs.media.bigFont ) ) {
+	if ( !CG_InitTrueTypeFont( cg_hudFont.string, GIANTCHAR_HEIGHT, cg_hudFontBorder.value*2.0f, &cgs.media.bigFont ) ) {
 		CG_InitBitmapFont( &cgs.media.bigFont, GIANTCHAR_HEIGHT, GIANTCHAR_WIDTH );
 	}
 
-	if ( !CG_InitTrueTypeFont( cg_numberFont.string, CHAR_HEIGHT, 0, &cgs.media.numberFont ) ) {
+	if ( !CG_InitTrueTypeFont( cg_numberFont.string, CHAR_HEIGHT, cg_numberFontBorder.value, &cgs.media.numberFont ) ) {
 		CG_InitBitmapNumberFont( &cgs.media.numberFont, CHAR_HEIGHT, CHAR_WIDTH );
 	}
 }

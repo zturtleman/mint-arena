@@ -831,12 +831,15 @@ CG_StopCinematic_f
 =================
 */
 void CG_StopCinematic_f( void ) {
-	if ( cg.cinematicHandle < 0 )
+	if ( !cg.cinematicPlaying ) {
 		return;
+	}
 
-	trap_CIN_StopCinematic(cg.cinematicHandle);
-	cg.cinematicHandle = -1;
 	//trap_S_StopAllSounds();
+	trap_CIN_StopCinematic( cg.cinematicHandle );
+
+	cg.cinematicHandle = 0;
+	cg.cinematicPlaying = qfalse;
 }
 
 /*
@@ -850,8 +853,9 @@ void CG_Cinematic_f( void ) {
 	float	x, y, width, height;
 	int		bits = CIN_system;
 
-	Com_DPrintf("CG_Cinematic_f\n");
-	CG_StopCinematic_f();
+	if ( cg.cinematicPlaying ) {
+		CG_StopCinematic_f();
+	}
 
 	trap_Argv( 1, arg, sizeof( arg ) );
 	trap_Argv( 2, s, sizeof( s ) );
@@ -873,6 +877,9 @@ void CG_Cinematic_f( void ) {
 	CG_AdjustFrom640( &x, &y, &width, &height );
 
 	cg.cinematicHandle = trap_CIN_PlayCinematic( arg, x, y, width, height, bits );
+	if ( cg.cinematicHandle >= 0 ) {
+		cg.cinematicPlaying = qtrue;
+	}
 }
 
 /*

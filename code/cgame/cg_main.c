@@ -110,6 +110,10 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		return 0;
 	case CG_SET_ACTIVE_MENU:
 		UI_SetActiveMenu( arg0 );
+		// stop cinematic when disconnect or start demo playback
+		if ( arg0 == UIMENU_NONE && cg.cinematicPlaying ) {
+			CG_StopCinematic_f();
+		}
 		return 0;
 	case CG_JOYSTICK_AXIS_EVENT:
 		CG_JoystickAxisEvent(arg0, arg1, arg2, arg3, arg4);
@@ -2534,8 +2538,6 @@ void CG_ClearState( qboolean everything, int maxSplitView ) {
 	memset( cg_weapons, 0, sizeof(cg_weapons) );
 	memset( cg_items, 0, sizeof(cg_items) );
 
-	cg.cinematicHandle = -1;
-
 	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
 		cg.localPlayers[i].playerNum = -1;
 	}
@@ -2790,7 +2792,7 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 	// update cvars
 	CG_UpdateCvars();
 
-	if ( state == CA_CINEMATIC && cg.cinematicHandle >= 0 ) {
+	if ( state == CA_CINEMATIC && cg.cinematicPlaying ) {
 		float x, y, width, height;
 
 		x = 0;

@@ -698,6 +698,7 @@ typedef struct {
 	
 	int			clientFrame;		// incremented each frame
 
+	int			cinematicPlaying;	// playing fullscreen cinematic
 	int			cinematicHandle;	// handle for fullscreen cinematic
 	qboolean	demoPlayback;
 	qboolean	levelShot;			// taking a level menu screenshot

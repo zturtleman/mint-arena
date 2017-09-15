@@ -2607,7 +2607,7 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 
 	// if the user didn't give any commands, run default action
 	if ( playVideo == 1 ) {
-		trap_Cmd_ExecuteText( EXEC_APPEND, "cinematic idlogo.RoQ\n" );
+		trap_Cmd_ExecuteText( EXEC_NOW, "cinematic idlogo.RoQ\n" );
 		if( !cg_introPlayed.integer ) {
 			trap_Cvar_SetValue( "com_introPlayed", 1 );
 			trap_Cvar_Set( "nextmap", "cinematic intro.RoQ" );

@@ -2657,6 +2657,7 @@ static void CG_DrawWarmup( void ) {
 	float		scale;
 	playerInfo_t	*ci1, *ci2;
 	const char	*s;
+	int			style;
 
 	sec = cg.warmup;
 	if ( !sec ) {
@@ -2721,19 +2722,24 @@ static void CG_DrawWarmup( void ) {
 	switch ( cg.warmupCount ) {
 	case 0:
 		scale = 28 / 48.0f;
+		style = UI_GIANTFONT;
 		break;
 	case 1:
 		scale = 24 / 48.0f;
+		style = UI_GIANTFONT;
 		break;
 	case 2:
 		scale = 20 / 48.0f;
+		style = UI_GIANTFONT;
 		break;
 	default:
 		scale = 16 / 48.0f;
+		// use big font for native 16 point font
+		style = UI_BIGFONT;
 		break;
 	}
 
-	CG_DrawStringExt( SCREEN_WIDTH / 2, 70, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT|UI_NOSCALE, NULL, scale, 0, 0 );
+	CG_DrawStringExt( SCREEN_WIDTH / 2, 70, s, UI_CENTER|UI_DROPSHADOW|style, NULL, scale, 0, 0 );
 }
 
 

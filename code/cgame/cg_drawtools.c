@@ -566,7 +566,7 @@ void CG_DrawStringCommon( int x, int y, const char* str, int style, const fontIn
 	}
 
 	if ( cursorChar >= 0 ) {
-		Text_PaintWithCursor( x, y, font, scale, drawcolor, str, cursorPos, cursorChar, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ) );
+		Text_PaintWithCursor( x, y, font, scale, drawcolor, str, cursorPos, cursorChar, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ) );
 	} else if ( wrapX > 0 ) {
 		// replace 'char height' in line height with our scaled charh
 		// ZTM: TODO: This text gap handling is kind of messy. Passing scale to CG_DrawStringLineHeight might make cleaner code here.
@@ -580,9 +580,9 @@ void CG_DrawStringCommon( int x, int y, const char* str, int style, const fontIn
 			}
 		}
 
-		Text_Paint_AutoWrapped( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ), wrapX, charh + gap, style );
+		Text_Paint_AutoWrapped( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ), wrapX, charh + gap, style );
 	} else {
-		Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ) );
+		Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ) );
 	}
 }
 

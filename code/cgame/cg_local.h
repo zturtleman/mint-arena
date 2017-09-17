@@ -1695,10 +1695,10 @@ const glyphInfo_t *Text_GetGlyph( const fontInfo_t *font, unsigned long index );
 float Text_Width( const char *text, const fontInfo_t *font, float scale, int limit );
 float Text_Height( const char *text, const fontInfo_t *font, float scale, int limit );
 void Text_PaintGlyph( float x, float y, float w, float h, const glyphInfo_t *glyph, float *gradientColor );
-void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor );
-void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor );
-void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit );
-void Text_Paint_AutoWrapped( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *str, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, float xmax, float ystep, int style );
+void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, qboolean textInMotion );
+void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, qboolean textInMotion );
+void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit, qboolean textInMotion );
+void Text_Paint_AutoWrapped( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *str, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, qboolean textInMotion, float xmax, float ystep, int style );
 
 void CG_Text_Paint( float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle );
 void CG_Text_PaintWithCursor( float x, float y, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, int textStyle );

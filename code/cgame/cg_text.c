@@ -320,7 +320,7 @@ void Text_PaintGlyph( float x, float y, float w, float h, const glyphInfo_t *gly
 	}
 }
 
-void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor ) {
+void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, qboolean textInMotion ) {
 	int len, count;
 	vec4_t newColor;
 	vec4_t gradientColor;
@@ -347,11 +347,13 @@ void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const ve
 	useScaleX = scale * font->glyphScale * xscale;
 	useScaleY = scale * font->glyphScale * yscale;
 
-	// prevent native resolution text from being blurred due to sub-pixel blending
-	x = floor( x );
-	y = floor( y );
-	shadowOffsetX = floor( shadowOffsetX );
-	shadowOffsetY = floor( shadowOffsetY );
+	if ( !textInMotion ) {
+		// prevent native resolution text from being blurred due to sub-pixel blending
+		x = floor( x );
+		y = floor( y );
+		shadowOffsetX = floor( shadowOffsetX );
+		shadowOffsetY = floor( shadowOffsetY );
+	}
 
 	trap_R_SetColor( color );
 	Vector4Copy( color, newColor );
@@ -406,7 +408,7 @@ void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const ve
 	trap_R_SetColor( NULL );
 }
 
-void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor ) {
+void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, qboolean textInMotion ) {
 	int len, count;
 	vec4_t newColor;
 	vec4_t gradientColor;
@@ -433,11 +435,13 @@ void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale
 	useScaleX = scale * font->glyphScale * xscale;
 	useScaleY = scale * font->glyphScale * yscale;
 
-	// prevent native resolution text from being blurred due to sub-pixel blending
-	x = floor( x );
-	y = floor( y );
-	shadowOffsetX = floor( shadowOffsetX );
-	shadowOffsetY = floor( shadowOffsetY );
+	if ( !textInMotion ) {
+		// prevent native resolution text from being blurred due to sub-pixel blending
+		x = floor( x );
+		y = floor( y );
+		shadowOffsetX = floor( shadowOffsetX );
+		shadowOffsetY = floor( shadowOffsetY );
+	}
 
 	trap_R_SetColor( color );
 	Vector4Copy( color, newColor );
@@ -533,7 +537,7 @@ void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale
 	trap_R_SetColor( NULL );
 }
 
-void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit ) {
+void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit, qboolean textInMotion ) {
 	int len, count;
 	vec4_t newColor;
 	const glyphInfo_t *glyph;
@@ -557,9 +561,11 @@ void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, fl
 	useScaleX = scale * font->glyphScale * xscale;
 	useScaleY = scale * font->glyphScale * yscale;
 
-	// prevent native resolution text from being blurred due to sub-pixel blending
-	x = floor( x );
-	y = floor( y );
+	if ( !textInMotion ) {
+		// prevent native resolution text from being blurred due to sub-pixel blending
+		x = floor( x );
+		y = floor( y );
+	}
 
 	trap_R_SetColor( color );
 	Vector4Copy( color, lastTextColor );
@@ -602,7 +608,7 @@ void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, fl
 #define MAX_WRAP_BYTES 1024
 #define MAX_WRAP_LINES 1024
 
-void Text_Paint_AutoWrapped( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *str, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, float xmax, float ystep, int style ) {
+void Text_Paint_AutoWrapped( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *str, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, qboolean textInMotion, float xmax, float ystep, int style ) {
 	int width;
 	char *s1, *s2, *s3;
 	char c_bcp;
@@ -758,7 +764,7 @@ void Text_Paint_AutoWrapped( float x, float y, const fontInfo_t *font, float sca
 				break;
 		}
 
-		Text_Paint( drawX, y, font, scale, newColor, buf, adjust, 0, shadowOffset, gradient, forceColor );
+		Text_Paint( drawX, y, font, scale, newColor, buf, adjust, 0, shadowOffset, gradient, forceColor, textInMotion );
 		y += ystep;
 
 		if ( numLines >= MAX_WRAP_LINES || autoNewline[numLines] ) {

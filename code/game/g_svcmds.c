@@ -507,7 +507,6 @@ void	Svcmd_ListIPs_f( void ) {
 	trap_Cmd_ExecuteText( EXEC_NOW, "g_banIPs\n" );
 }
 
-#if 0
 /*
 ===================
 Svcmd_Say_f
@@ -556,7 +555,6 @@ void	Svcmd_Tell_f( void ) {
 
 	G_Say( NULL, target, SAY_TELL, p );
 }
-#endif
 
 struct svcmd
 {
@@ -573,9 +571,9 @@ struct svcmd
   { "forceTeam", qfalse, Svcmd_ForceTeam_f },
   { "listip", qfalse, Svcmd_ListIPs_f },
   { "removeip", qfalse, Svcmd_RemoveIP_f },
-  //{ "say", qtrue, Svcmd_Say_f },
+  { "say", qtrue, Svcmd_Say_f },
   { "teleport", qfalse, Svcmd_Teleport_f },
-  //{ "tell", qtrue, Svcmd_Tell_f },
+  { "tell", qtrue, Svcmd_Tell_f },
 };
 
 const size_t numSvCmds = ARRAY_LEN(svcmds);

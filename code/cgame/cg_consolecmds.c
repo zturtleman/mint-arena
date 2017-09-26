@@ -835,7 +835,7 @@ void CG_StopCinematic_f( void ) {
 		return;
 	}
 
-	//trap_S_StopAllSounds();
+	trap_S_StopAllSounds();
 	trap_CIN_StopCinematic( cg.cinematicHandle );
 
 	cg.cinematicHandle = 0;
@@ -867,7 +867,7 @@ void CG_Cinematic_f( void ) {
 		bits |= CIN_loop;
 	}
 
-	//trap_S_StopAllSounds();
+	trap_S_StopAllSounds();
 
 	x = 0;
 	y = 0;

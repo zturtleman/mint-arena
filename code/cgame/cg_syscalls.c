@@ -330,6 +330,10 @@ void trap_S_SetStreamVolume( int stream, float volume ) {
 	syscall( CG_S_SETSTREAMVOLUME, stream, PASSFLOAT( volume ) );
 }
 
+void trap_S_StopAllSounds( void ) {
+	syscall( CG_S_STOPALLSOUNDS );
+}
+
 void	trap_R_LoadWorldMap( const char *mapname ) {
 	syscall( CG_R_LOADWORLDMAP, mapname );
 }

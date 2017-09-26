@@ -235,6 +235,8 @@ void		trap_S_QueueStreamingSound( int stream, const char *filename, float volume
 int			trap_S_GetStreamPlayCount( int stream );
 void		trap_S_SetStreamVolume( int stream, float volume );
 
+void		trap_S_StopAllSounds( void );
+
 void			trap_Key_KeynumToStringBuf( int keynum, char *buf, int buflen );
 void			trap_Key_GetBindingBuf( int keynum, char *buf, int buflen );
 void			trap_Key_SetBinding( int keynum, const char *binding );

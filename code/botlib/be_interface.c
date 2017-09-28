@@ -710,13 +710,9 @@ GetBotLibAPI
 ============
 */
 botlib_export_t *GetBotLibAPI(int apiVersion, botlib_import_t *import) {
-#ifndef Q3_VM
 	assert(import);
-#endif
 	botimport = *import;
-#ifndef Q3_VM
 	assert(botimport.Print);
-#endif
 
 	Com_Memset( &be_botlib_export, 0, sizeof( be_botlib_export ) );
 

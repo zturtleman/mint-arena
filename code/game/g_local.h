@@ -679,7 +679,7 @@ void QDECL G_Error( const char *fmt, ... ) __attribute__ ((noreturn, format (pri
 //
 char *PlayerConnect( int playerNum, qboolean firstTime, qboolean isBot, int connectionNum, int localPlayerNum );
 void PlayerUserinfoChanged( int playerNum );
-void PlayerDisconnect( int playerNum );
+qboolean PlayerDisconnect( int playerNum, qboolean force );
 void PlayerBegin( int playerNum );
 void ClientCommand( int connectionNum );
 float PlayerHandicap( gplayer_t *player );

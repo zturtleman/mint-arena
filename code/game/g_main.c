@@ -240,8 +240,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		PlayerUserinfoChanged( arg0 );
 		return 0;
 	case GAME_PLAYER_DISCONNECT:
-		PlayerDisconnect( arg0 );
-		return 0;
+		return PlayerDisconnect( arg0, arg1 );
 	case GAME_PLAYER_BEGIN:
 		PlayerBegin( arg0 );
 		return 0;

@@ -379,7 +379,7 @@ typedef enum {
 
 	GAME_PLAYER_USERINFO_CHANGED,	// ( int playerNum );
 
-	GAME_PLAYER_DISCONNECT,			// ( int playerNum );
+	GAME_PLAYER_DISCONNECT,			// ( int playerNum, qboolean force );
 
 	GAME_CLIENT_COMMAND,			// ( int clientNum );
 

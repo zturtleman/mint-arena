@@ -561,6 +561,7 @@ struct svcmd
   char     *cmd;
   qboolean dedicated;
   void     ( *function )( void );
+  void     ( *complete )( char *, int );
 } svcmds[ ] = {
   { "abort_podium", qfalse, Svcmd_AbortPodium_f },
   { "addbot", qfalse, Svcmd_AddBot_f },
@@ -580,11 +581,11 @@ const size_t numSvCmds = ARRAY_LEN(svcmds);
 
 /*
 =================
-ConsoleCommand
+G_ConsoleCommand
 
 =================
 */
-qboolean	ConsoleCommand( void ) {
+qboolean	G_ConsoleCommand( void ) {
 	char	cmd[MAX_TOKEN_CHARS];
 	struct	svcmd *command;
 
@@ -604,6 +605,33 @@ qboolean	ConsoleCommand( void ) {
 		return qfalse;
 
 	command->function( );
+	return qtrue;
+}
+
+/*
+=================
+G_ConsoleCompleteArgument
+
+=================
+*/
+qboolean	G_ConsoleCompleteArgument( int completeArgument ) {
+	char	args[BIG_INFO_STRING];
+	char	cmd[MAX_TOKEN_CHARS];
+	struct	svcmd *command;
+
+	trap_Argv( 0, cmd, sizeof( cmd ) );
+
+	command = bsearch( cmd, svcmds, numSvCmds, sizeof( struct svcmd ), cmdcmp );
+
+	if( !command || !command->complete )
+		return qfalse;
+
+	if( command->dedicated && !g_dedicated.integer )
+		return qfalse;
+
+	trap_LiteralArgs( args, sizeof ( args ) );
+
+	command->complete( args, completeArgument );
 	return qtrue;
 }
 

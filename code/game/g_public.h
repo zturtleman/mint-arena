@@ -179,6 +179,10 @@ typedef enum {
 	G_HEAP_AVAILABLE,	// ( void );
 	G_HEAP_FREE,		// ( void *data );
 
+	G_FIELD_COMPLETEFILENAME, // ( const char *dir, const char *ext, qboolean stripExt, qboolean allowNonPureFilesOnDisk );
+	G_FIELD_COMPLETECOMMAND, // ( const char *cmd, qboolean doCommands, qboolean doCvars );
+	G_FIELD_COMPLETELIST, // ( const char *list );
+
 	//=========== server specific functionality =============
 
 	G_LOCATE_GAME_DATA = 100,		// ( gentity_t *gEnts, int numGEntities, int sizeofGEntity_t,
@@ -384,7 +388,7 @@ typedef enum {
 	GAME_RUN_FRAME,					// ( int levelTime );
 
 	GAME_CONSOLE_COMMAND,			// ( void );
-	// ConsoleCommand will be called when a command has been issued
+	// G_ConsoleCommand will be called when a command has been issued
 	// that is not recognized as a builtin function.
 	// The game can issue trap_argc() / trap_argv() commands to get the command
 	// and parameters.  Return qfalse if the game doesn't recognize it as a command.
@@ -398,11 +402,13 @@ typedef enum {
 	// caused by vid_restart on localhost server.
 	// model handles are no longer valid, must re-register all models.
 
-	GAME_MAP_RESTART				// ( int levelTime, int restartTime );
+	GAME_MAP_RESTART,				// ( int levelTime, int restartTime );
 	// G_MapRestart will be called when a map_restart command has been issued;
 	//    caused by user, VM code, or server after restart time is hit.
 	// return restart time (levelTime + delay), -1 to do a full map reload,
 	//    or INT_MAX to prevent map restart.
+
+	GAME_CONSOLE_COMPLETEARGUMENT,		// ( int completeArgument );
 
 } gameExport_t;
 

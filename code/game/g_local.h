@@ -638,7 +638,8 @@ void G_PredictPlayerMove( gentity_t *ent, float frametime );
 //
 // g_svcmds.c
 //
-qboolean	ConsoleCommand( void );
+qboolean	G_ConsoleCommand( void );
+qboolean	G_ConsoleCompleteArgument( int completeArgument );
 void G_RegisterCommands( void );
 void G_ProcessIPBans(void);
 qboolean G_FilterPacket (char *from);

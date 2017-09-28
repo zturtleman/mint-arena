@@ -817,6 +817,18 @@ void trap_HeapFree( void *data ) {
 	syscall( CG_HEAP_FREE, data );
 }
 
+void	trap_Field_CompleteFilename( const char *dir, const char *ext, qboolean stripExt, qboolean allowNonPureFilesOnDisk ) {
+	syscall( CG_FIELD_COMPLETEFILENAME, dir, ext, stripExt, allowNonPureFilesOnDisk );
+}
+
+void	trap_Field_CompleteCommand( const char *cmd, qboolean doCommands, qboolean doCvars ) {
+	syscall( CG_FIELD_COMPLETECOMMAND, cmd, doCommands, doCvars );
+}
+
+void	trap_Field_CompleteList( const char *list ) {
+	syscall( CG_FIELD_COMPLETELIST, list );
+}
+
 int trap_RealTime(qtime_t *qtime) {
 	return syscall( CG_REAL_TIME, qtime );
 }

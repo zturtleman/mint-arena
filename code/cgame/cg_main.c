@@ -135,6 +135,8 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_UPDATE_GLCONFIG:
 		CG_UpdateGlconfig( qfalse );
 		return 0;
+	case CG_CONSOLE_COMPLETEARGUMENT:
+		return CG_ConsoleCompleteArgument(arg0, arg1, arg2);
 	default:
 		CG_Error( "cgame vmMain: unknown command %i", command );
 		break;

@@ -1345,3 +1345,8 @@ int		trap_PC_SourceFileAndLine( int handle, char *filename, int *line );
 void	*trap_HeapMalloc( int size );
 int		trap_HeapAvailable( void );
 void	trap_HeapFree( void *data );
+
+// functions for console command argument completion
+void	trap_Field_CompleteFilename( const char *dir, const char *ext, qboolean stripExt, qboolean allowNonPureFilesOnDisk );
+void	trap_Field_CompleteCommand( const char *cmd, qboolean doCommands, qboolean doCvars );
+void	trap_Field_CompleteList( const char *list );

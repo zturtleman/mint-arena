@@ -252,7 +252,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		G_RunFrame( arg0 );
 		return 0;
 	case GAME_CONSOLE_COMMAND:
-		return ConsoleCommand();
+		return G_ConsoleCommand();
 	case GAME_SNAPSHOT_CALLBACK:
 		return G_SnapshotCallback( arg0, arg1 );
 	case GAME_VID_RESTART:
@@ -262,6 +262,8 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		return G_MapRestart( arg0, arg1 );
 	case BOTAI_START_FRAME:
 		return BotAIStartFrame( arg0 );
+	case GAME_CONSOLE_COMPLETEARGUMENT:
+		return G_ConsoleCompleteArgument(arg0);
 	default:
 		G_Error( "game vmMain: unknown command %i", command );
 		break;

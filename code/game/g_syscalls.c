@@ -348,15 +348,15 @@ void trap_ClientCommand(int playerNum, const char *command) {
 
 
 int trap_BotGetSnapshotEntity( int playerNum, int sequence ) {
-	return syscall( BOTLIB_GET_SNAPSHOT_ENTITY, playerNum, sequence );
+	return syscall( G_BOT_GET_SNAPSHOT_ENTITY, playerNum, sequence );
 }
 
-int trap_BotGetServerCommand(int playerNum, char *message, int size) {
-	return syscall( BOTLIB_GET_CONSOLE_MESSAGE, playerNum, message, size );
+int trap_BotGetServerCommand(int playerNum, char *command, int size) {
+	return syscall( G_BOT_GET_SERVER_COMMAND, playerNum, command, size );
 }
 
 void trap_BotUserCommand(int playerNum, usercmd_t *ucmd) {
-	syscall( BOTLIB_USER_COMMAND, playerNum, ucmd );
+	syscall( G_BOT_USER_COMMAND, playerNum, ucmd );
 }
 
 

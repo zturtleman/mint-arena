@@ -161,6 +161,84 @@ void BotAI_Trace(bsp_trace_t *bsptrace, vec3_t start, vec3_t mins, vec3_t maxs, 
 
 /*
 ==================
+BotAI_EntityTrace
+==================
+*/
+void BotAI_EntityTrace(bsp_trace_t *bsptrace, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int entnum, int contentmask) {
+	trap_ClipToEntities(bsptrace, start, mins, maxs, end, entnum, contentmask);
+}
+
+/*
+==================
+BotAI_PointContents
+==================
+*/
+int BotAI_PointContents(vec3_t point) {
+	return trap_PointContents(point, -1);
+}
+
+/*
+==================
+BotAI_InPVS
+==================
+*/
+int BotAI_InPVS(vec3_t p1, vec3_t p2) {
+	return trap_InPVS(p1, p2);
+}
+
+/*
+==================
+BotAI_DebugLineCreate
+==================
+*/
+int BotAI_DebugLineCreate( void ) {
+	return trap_DebugPolygonCreate( 0, 0, NULL );
+}
+
+/*
+==================
+BotAI_DebugLineDelete
+==================
+*/
+void BotAI_DebugLineDelete( int line ) {
+	trap_DebugPolygonDelete( line );
+}
+
+/*
+==================
+BotAI_DebugLineShow
+==================
+*/
+void BotAI_DebugLineShow( int line, vec3_t start, vec3_t end, int color ) {
+	vec3_t points[4], dir, cross, up = {0, 0, 1};
+	float dot;
+
+	VectorCopy(start, points[0]);
+	VectorCopy(start, points[1]);
+	//points[1][2] -= 2;
+	VectorCopy(end, points[2]);
+	//points[2][2] -= 2;
+	VectorCopy(end, points[3]);
+
+
+	VectorSubtract(end, start, dir);
+	VectorNormalize(dir);
+	dot = DotProduct(dir, up);
+	if (dot > 0.99 || dot < -0.99) VectorSet(cross, 1, 0, 0);
+	else CrossProduct(dir, up, cross);
+
+	VectorNormalize(cross);
+
+	VectorMA(points[0], 2, cross, points[0]);
+	VectorMA(points[1], -2, cross, points[1]);
+	VectorMA(points[2], -2, cross, points[2]);
+	VectorMA(points[3], 2, cross, points[3]);
+
+	trap_DebugPolygonShow(line, color, 4, points);
+}
+
+/*
+==================
 BotAI_GetPlayerState
 ==================
 */
@@ -1191,8 +1269,8 @@ int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean re
 		return qfalse;
 	}
 
-	if (!trap_AAS_Initialized()) {
-		BotAI_Print(PRT_FATAL, "AAS not initialized\n");
+	if (!trap_AAS_Loaded()) {
+		BotAI_Print(PRT_FATAL, "AAS not loaded\n");
 		return qfalse;
 	}
 
@@ -1383,10 +1461,8 @@ int BotAILoadMap( int restart ) {
 	int			i;
 	vmCvar_t	mapname;
 
-	if (!restart) {
-		trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
-		trap_BotLibLoadMap( mapname.string );
-	}
+	trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+	trap_BotLibLoadMap( mapname.string );
 
 	//initialize physics
 	BotInitPhysicsSettings();	//ai_move.h
@@ -1698,14 +1774,11 @@ int BotAISetup( int restart ) {
 
 	level.botReportModificationCount = bot_report.modificationCount;
 
-	//if the game isn't restarted for a tournament
-	if (!restart) {
-		//initialize the bot states
-		memset( botstates, 0, sizeof(botstates) );
+	//initialize the bot states
+	memset( botstates, 0, sizeof(botstates) );
 
-		errnum = BotInitLibrary();
-		if (errnum != BLERR_NOERROR) return qfalse;
-	}
+	errnum = BotInitLibrary();
+	if (errnum != BLERR_NOERROR) return qfalse;
 
 	errnum = EA_Setup();			//ai_ea.c
 	if (errnum != BLERR_NOERROR) return qfalse;
@@ -1737,11 +1810,9 @@ int BotAIShutdown( int restart ) {
 				BotAIShutdownPlayer(botstates[i]->playernum, restart);
 			}
 		}
-		//don't shutdown the bot library
 	}
-	else {
-		trap_BotLibShutdown();
-	}
+
+	trap_BotLibShutdown();
 
 	//
 	BotShutdownCharacters();	//ai_char.c

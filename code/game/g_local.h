@@ -727,7 +727,14 @@ void Svcmd_AddBot_f( void );
 void Svcmd_BotList_f( void );
 void BotInterbreedEndMatch( void );
 
+//
+// g_botlib.c
+//
+void G_BotInitBotLib(void);
+
+//
 // ai_main.c
+//
 #define MAX_FILEPATH			144
 
 //bot settings

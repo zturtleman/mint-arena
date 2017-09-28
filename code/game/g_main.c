@@ -476,6 +476,8 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	Swap_Init();
 
+	G_BotInitBotLib();
+
 	G_RegisterCvars();
 
 	G_ProcessIPBans();

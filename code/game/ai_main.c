@@ -65,10 +65,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "syn.h"				//synonyms
 #include "match.h"				//string matching types and vars
 
-#ifndef MAX_PATH
-#define MAX_PATH		144
-#endif
-
 
 //bot states
 bot_state_t	*botstates[MAX_CLIENTS];
@@ -1684,7 +1680,7 @@ BotAISetupPlayer
 ==============
 */
 int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean restart) {
-	char filename[MAX_PATH], name[MAX_PATH], gender[MAX_PATH];
+	char filename[144], name[144], gender[144];
 	bot_state_t *bs;
 	int errnum;
 
@@ -1716,7 +1712,7 @@ int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean re
 	//allocate a goal state
 	bs->gs = BotAllocGoalState(playernum);
 	//load the item weights
-	Characteristic_String(bs->character, CHARACTERISTIC_ITEMWEIGHTS, filename, MAX_PATH);
+	Characteristic_String(bs->character, CHARACTERISTIC_ITEMWEIGHTS, filename, sizeof(filename));
 	errnum = BotLoadItemWeights(bs->gs, filename);
 	if (errnum != BLERR_NOERROR) {
 		BotFreeGoalState(bs->gs);
@@ -1726,7 +1722,7 @@ int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean re
 	//allocate a weapon state
 	bs->ws = BotAllocWeaponState(playernum);
 	//load the weapon weights
-	Characteristic_String(bs->character, CHARACTERISTIC_WEAPONWEIGHTS, filename, MAX_PATH);
+	Characteristic_String(bs->character, CHARACTERISTIC_WEAPONWEIGHTS, filename, sizeof(filename));
 	errnum = BotLoadWeaponWeights(bs->ws, filename);
 	if (errnum != BLERR_NOERROR) {
 		BotFreeGoalState(bs->gs);
@@ -1737,8 +1733,8 @@ int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean re
 	//allocate a chat state
 	bs->cs = BotAllocChatState();
 	//load the chat file
-	Characteristic_String(bs->character, CHARACTERISTIC_CHAT_FILE, filename, MAX_PATH);
-	Characteristic_String(bs->character, CHARACTERISTIC_CHAT_NAME, name, MAX_PATH);
+	Characteristic_String(bs->character, CHARACTERISTIC_CHAT_FILE, filename, sizeof(filename));
+	Characteristic_String(bs->character, CHARACTERISTIC_CHAT_NAME, name, sizeof(name));
 	errnum = BotLoadChatFile(bs->cs, filename, name);
 	if (errnum != BLERR_NOERROR) {
 		BotFreeChatState(bs->cs);
@@ -1748,7 +1744,7 @@ int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean re
 		return qfalse;
 	}
 	//get the gender characteristic
-	Characteristic_String(bs->character, CHARACTERISTIC_GENDER, gender, MAX_PATH);
+	Characteristic_String(bs->character, CHARACTERISTIC_GENDER, gender, sizeof(gender));
 	//set the chat gender
 	if (*gender == 'f' || *gender == 'F') BotSetChatGender(bs->cs, CHAT_GENDERFEMALE);
 	else if (*gender == 'm' || *gender == 'M') BotSetChatGender(bs->cs, CHAT_GENDERMALE);

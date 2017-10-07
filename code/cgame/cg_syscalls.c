@@ -777,8 +777,12 @@ qboolean trap_LAN_ServerIsInFavoriteList( int source, int n  ) {
 	return syscall( CG_LAN_SERVERISINFAVORITELIST, source, n );
 }
 
-int trap_PC_AddGlobalDefine( char *define ) {
+int trap_PC_AddGlobalDefine( const char *define ) {
 	return syscall( CG_PC_ADD_GLOBAL_DEFINE, define );
+}
+
+int trap_PC_RemoveGlobalDefine( const char *define ) {
+	return syscall( CG_PC_REMOVE_GLOBAL_DEFINE, define );
 }
 
 void trap_PC_RemoveAllGlobalDefines( void ) {
@@ -791,6 +795,10 @@ int trap_PC_LoadSource( const char *filename, const char *basepath ) {
 
 int trap_PC_FreeSource( int handle ) {
 	return syscall( CG_PC_FREE_SOURCE, handle );
+}
+
+int trap_PC_AddDefine( int handle, const char *define ) {
+	return syscall( CG_PC_ADD_DEFINE, handle, define );
 }
 
 int trap_PC_ReadToken( int handle, pc_token_t *pc_token ) {

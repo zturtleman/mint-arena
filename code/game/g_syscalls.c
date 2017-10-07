@@ -360,8 +360,12 @@ void trap_BotUserCommand(int playerNum, usercmd_t *ucmd) {
 }
 
 
-int trap_PC_AddGlobalDefine(char *string) {
-	return syscall( G_PC_ADD_GLOBAL_DEFINE, string );
+int trap_PC_AddGlobalDefine( const char *define ) {
+	return syscall( G_PC_ADD_GLOBAL_DEFINE, define );
+}
+
+int trap_PC_RemoveGlobalDefine( const char *define ) {
+	return syscall( G_PC_REMOVE_GLOBAL_DEFINE, define );
 }
 
 void trap_PC_RemoveAllGlobalDefines( void ) {
@@ -374,6 +378,10 @@ int trap_PC_LoadSource( const char *filename, const char *basepath ) {
 
 int trap_PC_FreeSource( int handle ) {
 	return syscall( G_PC_FREE_SOURCE, handle );
+}
+
+int trap_PC_AddDefine( int handle, const char *define ) {
+	return syscall( G_PC_ADD_DEFINE, handle, define );
 }
 
 int trap_PC_ReadToken( int handle, pc_token_t *pc_token ) {

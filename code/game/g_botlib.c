@@ -158,7 +158,7 @@ static int G_BotLibSetup( void ) {
 	}
 
 	if ( !botlib_export ) {
-		Com_Printf( S_COLOR_RED "Error: SV_BotLibSetup without SV_BotInitBotLib\n" );
+		Com_Printf( S_COLOR_RED "Error: G_BotLibSetup without G_BotInitBotLib\n" );
 		return -1;
 	}
 
@@ -218,10 +218,6 @@ int trap_BotLibUpdateEntity(int ent, void /* struct bot_updateentity_s */ *bue) 
 	return botlib_export->BotLibUpdateEntity( ent, bue );
 }
 
-int trap_BotLibTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3) {
-	return botlib_export->Test( parm0, parm1, parm2, parm3 );
-}
-
 int trap_AAS_Loaded(void) {
 	return botlib_export->aas.AAS_Loaded();
 }
@@ -237,6 +233,57 @@ void trap_AAS_PresenceTypeBoundingBox(int presencetype, vec3_t mins, vec3_t maxs
 float trap_AAS_Time(void) {
 	return botlib_export->aas.AAS_Time();
 }
+
+
+void trap_AAS_ClearShownDebugLines( void ) {
+	botlib_export->aas.AAS_ClearShownDebugLines();
+}
+void trap_AAS_ClearShownPolygons( void ) {
+	botlib_export->aas.AAS_ClearShownPolygons();
+}
+void trap_AAS_DebugLine( vec3_t start, vec3_t end, int color ) {
+	botlib_export->aas.AAS_DebugLine( start, end, color );
+}
+void trap_AAS_PermanentLine( vec3_t start, vec3_t end, int color ) {
+	botlib_export->aas.AAS_PermanentLine( start, end, color );
+}
+void trap_AAS_DrawPermanentCross( vec3_t origin, float size, int color ) {
+	botlib_export->aas.AAS_DrawPermanentCross( origin, size, color );
+}
+void trap_AAS_DrawPlaneCross( vec3_t point, vec3_t normal, float dist, int type, int color ) {
+	botlib_export->aas.AAS_DrawPlaneCross( point, normal, dist, type, color );
+}
+void trap_AAS_ShowBoundingBox( vec3_t origin, vec3_t mins, vec3_t maxs ) {
+	botlib_export->aas.AAS_ShowBoundingBox( origin, mins, maxs );
+}
+void trap_AAS_ShowFace( int facenum ) {
+	botlib_export->aas.AAS_ShowFace( facenum );
+}
+void trap_AAS_ShowArea( int areanum, int groundfacesonly ) {
+	botlib_export->aas.AAS_ShowArea( areanum, groundfacesonly );
+}
+void trap_AAS_ShowAreaPolygons( int areanum, int color, int groundfacesonly ) {
+	botlib_export->aas.AAS_ShowAreaPolygons( areanum, color, groundfacesonly );
+}
+void trap_AAS_DrawCross( vec3_t origin, float size, int color ) {
+	botlib_export->aas.AAS_DrawCross( origin, size, color );
+}
+void trap_AAS_PrintTravelType( int traveltype ) {
+	botlib_export->aas.AAS_PrintTravelType( traveltype );
+}
+void trap_AAS_DrawArrow( vec3_t start, vec3_t end, int linecolor, int arrowcolor ) {
+	botlib_export->aas.AAS_DrawArrow( start, end, linecolor, arrowcolor );
+}
+void trap_AAS_ShowReachability( void /*struct aas_reachability_s*/ *reach, int contentmask ) {
+	botlib_export->aas.AAS_ShowReachability( reach, contentmask );
+}
+void trap_AAS_ShowReachableAreas( int areanum, int contentmask ) {
+	botlib_export->aas.AAS_ShowReachableAreas( areanum, contentmask );
+}
+void trap_AAS_FloodAreas( vec3_t origin ) {
+	botlib_export->aas.AAS_FloodAreas( origin );
+}
+
 
 int trap_AAS_PointAreaNum(vec3_t point) {
 	return botlib_export->aas.AAS_PointAreaNum( point );

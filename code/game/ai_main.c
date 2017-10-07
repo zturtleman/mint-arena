@@ -358,6 +358,7 @@ void BotTestAAS(vec3_t origin) {
 
 
 typedef struct {
+	int area;
 	int goalareanum;
 	vec3_t goalorigin;
 	int runai;
@@ -397,8 +398,6 @@ int BotLibTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
 
 //	return AAS_PointLight(parm2, NULL, NULL, NULL);
 
-	static int area = -1;
-	static int line[2];
 	int newarea, i, highlightarea, flood;
 	aas_areainfo_t areainfo;
 
@@ -432,7 +431,6 @@ int BotLibTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
 	} //end if
 	return 0;
 	*/
-	for (i = 0; i < 2; i++) if (!line[i]) line[i] = BotAI_DebugLineCreate();
 
 //	trap_AAS_ClearShownDebugLines();
 
@@ -456,15 +454,15 @@ int BotLibTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
 	BotAI_Print(PRT_MESSAGE, "\rtravel time to goal (%d) = %d  ", botlibdebug.goalareanum,
 		trap_AAS_AreaTravelTimeToGoalArea(newarea, origin, botlibdebug.goalareanum, TFL_DEFAULT));
 	//newarea = BotReachabilityArea(origin, qtrue);
-	if (newarea != area)
+	if (newarea != botlibdebug.area)
 	{
-		area = newarea;
-		trap_AAS_AreaInfo(area, &areainfo);
+		botlibdebug.area = newarea;
+		trap_AAS_AreaInfo(botlibdebug.area, &areainfo);
 
 		BotAI_Print(PRT_MESSAGE, "\n"); //end travel time to goal message line
 		BotAI_Print(PRT_MESSAGE, "origin = %f, %f, %f\n", origin[0], origin[1], origin[2]);
 		BotAI_Print(PRT_MESSAGE, "new area %d, cluster %d, presence type %d\n",
-					area, areainfo.cluster, areainfo.presencetype);
+					botlibdebug.area, areainfo.cluster, areainfo.presencetype);
 		BotAI_Print(PRT_MESSAGE, "area contents: ");
 		if (areainfo.contents & AREACONTENTS_WATER)
 		{
@@ -611,7 +609,7 @@ int BotLibTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
 	trap_AAS_ClearShownPolygons();
 	trap_AAS_ClearShownDebugLines();
 	trap_AAS_ShowAreaPolygons(newarea, 1, parm0 & 4);
-	if (parm0 & 2) trap_AAS_ShowReachableAreas(area, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+	if (parm0 & 2) trap_AAS_ShowReachableAreas(botlibdebug.area, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
 	else
 	{
 		static int lastgoalareanum, lastareanum;
@@ -2223,6 +2221,7 @@ int BotAISetup( int restart ) {
 
 	//initialize the bot states
 	memset( botstates, 0, sizeof(botstates) );
+	memset( &botlibdebug, 0, sizeof(botlibdebug) );
 
 	errnum = BotInitLibrary();
 	if (errnum != BLERR_NOERROR) return qfalse;

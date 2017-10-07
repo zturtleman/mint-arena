@@ -139,6 +139,7 @@ double log( double x );
 double log10( double x );
 int abs( int n );
 double fabs( double x );
+float fabsf( float x );
 double rint( double v );
 
 #endif // BG_LIB_H

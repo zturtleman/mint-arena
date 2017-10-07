@@ -1347,6 +1347,10 @@ double fabs( double x ) {
 	return x < 0 ? -x : x;
 }
 
+float fabsf( float x ) {
+	return x < 0 ? -x : x;
+}
+
 unsigned int _hextoi( const char **stringPtr )
 {
 	unsigned int value;

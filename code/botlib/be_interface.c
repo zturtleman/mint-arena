@@ -162,6 +162,9 @@ int Export_BotLibShutdown(void)
 	AAS_Shutdown();
 	//free all libvars
 	LibVarDeAllocAll();
+	//clear debug polygons and release handles
+	AAS_ClearShownPolygons();
+	AAS_ClearShownDebugLines();
 
 	//dump all allocated memory
 //	DumpMemory();

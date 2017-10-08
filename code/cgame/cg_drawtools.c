@@ -570,7 +570,7 @@ void CG_DrawStringCommon( int x, int y, const char* str, int style, const fontIn
 	} else if ( wrapX > 0 ) {
 		// replace 'char height' in line height with our scaled charh
 		// ZTM: TODO: This text gap handling is kind of messy. Passing scale to CG_DrawStringLineHeight might make cleaner code here.
-		int gap = CG_DrawStringLineHeight( style ) - font->pointSize;
+		int gap = CG_DrawStringLineHeight( style | UI_NOSCALE ) - font->pointSize;
 
 		if ( !( style & UI_NOSCALE ) && cg.cur_lc ) {
 			if ( cg.numViewports != 1 ) {

@@ -924,6 +924,12 @@ void QDECL CG_NotifyPrintf( int localPlayerNum, const char *msg, ... ) {
 	Q_vsnprintf (text+prefixLen, sizeof(text)-prefixLen, msg, argptr);
 	va_end (argptr);
 
+	// switch order of [player %d][skipnotify] so skip is first
+	if ( !Q_strncmp( text+prefixLen, "[skipnotify]", 12 ) ) {
+		memmove( text+12, text, prefixLen ); // "[player %d]"
+		memcpy( text, "[skipnotify]", 12 );
+	}
+
 	trap_Print( text );
 }
 

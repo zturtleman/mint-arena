@@ -1288,12 +1288,12 @@ static void CG_DrawTeamInfo( void ) {
 
 	lineHeight = CG_DrawStringLineHeight( UI_TINYFONT );
 
-	if (cgs.teamLastChatPos[team] != cgs.teamChatPos[team]) {
-		if (cg.time - cgs.teamChatMsgTimes[team][cgs.teamLastChatPos[team] % chatHeight] > cg_teamChatTime.integer) {
-			cgs.teamLastChatPos[team]++;
+	if (cg.cur_lc->teamLastChatPos != cg.cur_lc->teamChatPos) {
+		if (cg.time - cg.cur_lc->teamChatMsgTimes[cg.cur_lc->teamLastChatPos % chatHeight] > cg_teamChatTime.integer) {
+			cg.cur_lc->teamLastChatPos++;
 		}
 
-		h = (cgs.teamChatPos[team] - cgs.teamLastChatPos[team]) * lineHeight;
+		h = (cg.cur_lc->teamChatPos - cg.cur_lc->teamLastChatPos) * lineHeight;
 
 		if ( team == TEAM_RED ) {
 			hcolor[0] = 1.0f;
@@ -1319,10 +1319,10 @@ static void CG_DrawTeamInfo( void ) {
 		hcolor[0] = hcolor[1] = hcolor[2] = 1.0f;
 		hcolor[3] = 1.0f;
 
-		for (i = cgs.teamChatPos[team] - 1; i >= cgs.teamLastChatPos[team]; i--) {
+		for (i = cg.cur_lc->teamChatPos - 1; i >= cg.cur_lc->teamLastChatPos; i--) {
 			CG_DrawString( CHATLOC_X + TINYCHAR_WIDTH, 
-				CHATLOC_Y - (cgs.teamChatPos[team] - i)*lineHeight,
-				cgs.teamChatMsgs[team][i % chatHeight],
+				CHATLOC_Y - (cg.cur_lc->teamChatPos - i)*lineHeight,
+				cg.cur_lc->teamChatMsgs[i % chatHeight],
 				UI_TINYFONT, hcolor );
 		}
 	}

@@ -412,11 +412,11 @@ static void CG_ConfigStringModified( void ) {
 
 /*
 =======================
-CG_AddToTeamChat
+CG_AddToPlayerChatBox
 
 =======================
 */
-static qboolean CG_AddToTeamChat( team_t team, const char *str ) {
+static qboolean CG_AddToPlayerChatBox( int localPlayerNum, const char *str ) {
 #ifdef MISSIONPACK_HUD
 	// team chat box is not drawn
 	return qfalse;
@@ -425,10 +425,9 @@ static qboolean CG_AddToTeamChat( team_t team, const char *str ) {
 	char *p, *ls;
 	int lastcolor;
 	int chatHeight;
+	localPlayer_t *player;
 
-	if (team < 0 || team >= TEAM_NUM_TEAMS) {
-		return qfalse;
-	}
+	player = &cg.localPlayers[localPlayerNum];
 
 	if (cg_teamChatHeight.integer < TEAMCHAT_HEIGHT) {
 		chatHeight = cg_teamChatHeight.integer;
@@ -438,13 +437,13 @@ static qboolean CG_AddToTeamChat( team_t team, const char *str ) {
 
 	if (chatHeight <= 0 || cg_teamChatTime.integer <= 0) {
 		// team chat disabled, dump into normal chat
-		cgs.teamChatPos[team] = cgs.teamLastChatPos[team] = 0;
+		player->teamChatPos = player->teamLastChatPos = 0;
 		return qfalse;
 	}
 
 	len = 0;
 
-	p = cgs.teamChatMsgs[team][cgs.teamChatPos[team] % chatHeight];
+	p = player->teamChatMsgs[player->teamChatPos % chatHeight];
 	*p = 0;
 
 	lastcolor = '7';
@@ -459,10 +458,10 @@ static qboolean CG_AddToTeamChat( team_t team, const char *str ) {
 			}
 			*p = 0;
 
-			cgs.teamChatMsgTimes[team][cgs.teamChatPos[team] % chatHeight] = cg.time;
+			player->teamChatMsgTimes[player->teamChatPos % chatHeight] = cg.time;
 
-			cgs.teamChatPos[team]++;
-			p = cgs.teamChatMsgs[team][cgs.teamChatPos[team] % chatHeight];
+			player->teamChatPos++;
+			p = player->teamChatMsgs[player->teamChatPos % chatHeight];
 			*p = 0;
 			*p++ = Q_COLOR_ESCAPE;
 			*p++ = lastcolor;
@@ -484,14 +483,57 @@ static qboolean CG_AddToTeamChat( team_t team, const char *str ) {
 	}
 	*p = 0;
 
-	cgs.teamChatMsgTimes[team][cgs.teamChatPos[team] % chatHeight] = cg.time;
-	cgs.teamChatPos[team]++;
+	player->teamChatMsgTimes[player->teamChatPos % chatHeight] = cg.time;
+	player->teamChatPos++;
 
-	if (cgs.teamChatPos[team] - cgs.teamLastChatPos[team] > chatHeight)
-		cgs.teamLastChatPos[team] = cgs.teamChatPos[team] - chatHeight;
+	if (player->teamChatPos - player->teamLastChatPos > chatHeight)
+		player->teamLastChatPos = player->teamChatPos - chatHeight;
 
 	return qtrue;
 #endif
+}
+
+// copied from g_team.c
+const char *CG_TeamName(int team)  {
+	if (team==TEAM_RED)
+		return "RED";
+	else if (team==TEAM_BLUE)
+		return "BLUE";
+	else if (team==TEAM_SPECTATOR)
+		return "SPECTATOR";
+	return "FREE";
+}
+
+/*
+=======================
+CG_AddToTeamChat
+
+Add message to team chat box if enabled otherwise add message to notify messages.
+(for tell messages) Add message to notify messages if local player is on a different team.
+=======================
+*/
+static void CG_AddToTeamChat( int localPlayerBits, team_t team, const char *text ) {
+	int i, teamBits;
+	qboolean firstTime;
+
+	teamBits = CG_LocalPlayerBitsForTeam( team );
+	firstTime = qtrue;
+
+	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+		if ( ! ( localPlayerBits & ( 1 << i ) ) ) {
+			continue;
+		}
+
+		if ( ( teamBits & ( 1 << i ) ) && CG_AddToPlayerChatBox( i, text ) ) {
+			if ( firstTime ) {
+				//CG_NotifyPrintf( i, "[skipnotify]%s\n", text );
+				CG_Printf( "[skipnotify][%s team]%s\n", CG_TeamName( team ), text );
+				firstTime = qfalse;
+			}
+		} else {
+			CG_NotifyPrintf( i, "%s\n", text );
+		}
+	}
 }
 
 /*
@@ -557,16 +599,6 @@ static void CG_MapRestart( void ) {
 	}
 }
 
-// copied from g_team.c
-const char *CG_TeamName(int team)  {
-	if (team==TEAM_RED)
-		return "RED";
-	else if (team==TEAM_BLUE)
-		return "BLUE";
-	else if (team==TEAM_SPECTATOR)
-		return "SPECTATOR";
-	return "FREE";
-}
 
 #ifdef MISSIONPACK
 
@@ -935,11 +967,7 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 		}
 	}
 	if (!vchat->voiceOnly && !cg_noVoiceText.integer) {
-		if ( CG_AddToTeamChat( vchat->team, vchat->message ) ) {
-			CG_Printf( "[skipnotify][%s team]%s\n", CG_TeamName( vchat->team ), vchat->message );
-		} else {
-			CG_NotifyBitsPrintf( vchat->localPlayerBits, "%s\n", vchat->message );
-		}
+		CG_AddToTeamChat( vchat->localPlayerBits, vchat->team, vchat->message );
 	}
 	voiceChatBuffer[cg.voiceChatBufferOut].snd = 0;
 }
@@ -1266,11 +1294,16 @@ static void CG_ServerCommand( void ) {
 		if ( trap_Argc() > start+2 ) {
 			chatPlayerNum = atoi(CG_Argv(start+2));
 		} else {
+			// message is from a pre-Spearmint 0.5 server or demo
 			chatPlayerNum = CHATPLAYER_UNKNOWN;
 		}
 
 		CG_RemoveChatEscapeChar( text );
-		CG_NotifyBitsPrintf( localPlayerBits, "%s\n", text );
+		if ( chatPlayerNum >= 0 && chatPlayerNum < MAX_CLIENTS ) {
+			CG_AddToTeamChat( localPlayerBits, cgs.playerinfo[chatPlayerNum].team, text );
+		} else {
+			CG_NotifyBitsPrintf( localPlayerBits, "%s\n", text );
+		}
 		return;
 	}
 
@@ -1282,15 +1315,12 @@ static void CG_ServerCommand( void ) {
 		if ( trap_Argc() > start+2 ) {
 			chatPlayerNum = atoi(CG_Argv(start+2));
 		} else {
+			// message is from a pre-Spearmint 0.5 server or demo
 			chatPlayerNum = CHATPLAYER_UNKNOWN;
 		}
 
 		CG_RemoveChatEscapeChar( text );
-		if ( CG_AddToTeamChat( team, text ) ) {
-			CG_Printf( "[skipnotify][%s team]%s\n", CG_TeamName( team ), text );
-		} else {
-			CG_NotifyBitsPrintf( localPlayerBits, "%s\n", text );
-		}
+		CG_AddToTeamChat( localPlayerBits, team, text );
 		return;
 	}
 

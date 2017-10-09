@@ -417,7 +417,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_tracerLength, "cg_tracerlength", "100", CVAR_CHEAT, RANGE_ALL },
 	{ &cg_splitviewVertical, "cg_splitviewVertical", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_splitviewThirdEqual, "cg_splitviewThirdEqual", "1", CVAR_ARCHIVE, RANGE_BOOL },
-	{ &cg_splitviewTextScale, "cg_splitviewTextScale", "1", CVAR_ARCHIVE, RANGE_FLOAT( 0.1, 5 ) },
+	{ &cg_splitviewTextScale, "cg_splitviewTextScale", "2", CVAR_ARCHIVE, RANGE_FLOAT( 0.1, 5 ) },
 	{ &cg_hudTextScale, "cg_hudTextScale", "1", CVAR_ARCHIVE, RANGE_FLOAT( 0.1, 5 ) },
 #ifndef MISSIONPACK_HUD
 	{ &cg_teamChatTime, "cg_teamChatTime", "3000", CVAR_ARCHIVE, RANGE_ALL },
@@ -960,6 +960,12 @@ void QDECL CG_NotifyPrintf( int localPlayerNum, const char *msg, ... ) {
 	va_start (argptr, msg);
 	Q_vsnprintf (text+prefixLen, sizeof(text)-prefixLen, msg, argptr);
 	va_end (argptr);
+
+	// switch order of [player %d][skipnotify] so skip is first
+	if ( !Q_strncmp( text+prefixLen, "[skipnotify]", 12 ) ) {
+		memmove( text+12, text, prefixLen ); // "[player %d]"
+		memcpy( text, "[skipnotify]", 12 );
+	}
 
 	trap_Print( text );
 }

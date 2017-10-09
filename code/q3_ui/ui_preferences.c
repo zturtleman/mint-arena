@@ -487,7 +487,7 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.thirdsize.generic.name			= "Third Player View:";
 	s_preferences.thirdsize.generic.flags			= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
 	s_preferences.thirdsize.generic.callback		= Preferences_Event;
-	s_preferences.thirdsize.generic.id				= ID_SPLITVERTICAL;
+	s_preferences.thirdsize.generic.id				= ID_THIRDSIZE;
 	s_preferences.thirdsize.generic.x				= PREFERENCES_X_POS;
 	s_preferences.thirdsize.generic.y				= y;
 	s_preferences.thirdsize.itemnames				= thirdsize_names;

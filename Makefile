@@ -98,7 +98,7 @@ endif
 export CROSS_COMPILING
 
 ifndef VERSION
-VERSION=0.5-devil
+VERSION=0.5
 endif
 
 ifndef VM_PREFIX

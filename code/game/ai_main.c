@@ -65,10 +65,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "syn.h"				//synonyms
 #include "match.h"				//string matching types and vars
 
-#ifndef MAX_PATH
-#define MAX_PATH		144
-#endif
-
 
 //bot states
 bot_state_t	*botstates[MAX_CLIENTS];
@@ -90,6 +86,15 @@ vmCvar_t bot_report;
 vmCvar_t bot_testsolid;
 vmCvar_t bot_testclusters;
 vmCvar_t bot_developer;
+vmCvar_t bot_debug;					//enable bot debugging
+vmCvar_t bot_groundonly;			//only show ground faces of areas
+vmCvar_t bot_reachability;			//show all reachabilities to other areas
+vmCvar_t bot_highlightarea;
+vmCvar_t bot_visualizejumppads;		//show jumppads
+vmCvar_t bot_forceclustering;		//force cluster calculations
+vmCvar_t bot_forcereachability;		//force reachability calculations
+vmCvar_t bot_forcewrite;			//force writing aas file
+vmCvar_t bot_aasoptimize;			//no aas file optimisation
 vmCvar_t bot_shownodechanges;
 vmCvar_t bot_showteamgoals;
 vmCvar_t bot_interbreedchar;
@@ -157,6 +162,84 @@ BotAI_Trace
 */
 void BotAI_Trace(bsp_trace_t *bsptrace, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int passent, int contentmask) {
 	trap_Trace(bsptrace, start, mins, maxs, end, passent, contentmask);
+}
+
+/*
+==================
+BotAI_EntityTrace
+==================
+*/
+void BotAI_EntityTrace(bsp_trace_t *bsptrace, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int entnum, int contentmask) {
+	trap_ClipToEntities(bsptrace, start, mins, maxs, end, entnum, contentmask);
+}
+
+/*
+==================
+BotAI_PointContents
+==================
+*/
+int BotAI_PointContents(vec3_t point) {
+	return trap_PointContents(point, -1);
+}
+
+/*
+==================
+BotAI_InPVS
+==================
+*/
+int BotAI_InPVS(vec3_t p1, vec3_t p2) {
+	return trap_InPVS(p1, p2);
+}
+
+/*
+==================
+BotAI_DebugLineCreate
+==================
+*/
+int BotAI_DebugLineCreate( void ) {
+	return trap_DebugPolygonCreate( 0, 0, NULL );
+}
+
+/*
+==================
+BotAI_DebugLineDelete
+==================
+*/
+void BotAI_DebugLineDelete( int line ) {
+	trap_DebugPolygonDelete( line );
+}
+
+/*
+==================
+BotAI_DebugLineShow
+==================
+*/
+void BotAI_DebugLineShow( int line, vec3_t start, vec3_t end, int color ) {
+	vec3_t points[4], dir, cross, up = {0, 0, 1};
+	float dot;
+
+	VectorCopy(start, points[0]);
+	VectorCopy(start, points[1]);
+	//points[1][2] -= 2;
+	VectorCopy(end, points[2]);
+	//points[2][2] -= 2;
+	VectorCopy(end, points[3]);
+
+
+	VectorSubtract(end, start, dir);
+	VectorNormalize(dir);
+	dot = DotProduct(dir, up);
+	if (dot > 0.99 || dot < -0.99) VectorSet(cross, 1, 0, 0);
+	else CrossProduct(dir, up, cross);
+
+	VectorNormalize(cross);
+
+	VectorMA(points[0], 2, cross, points[0]);
+	VectorMA(points[1], -2, cross, points[1]);
+	VectorMA(points[2], -2, cross, points[2]);
+	VectorMA(points[3], 2, cross, points[3]);
+
+	trap_DebugPolygonShow(line, color, 4, points);
 }
 
 /*
@@ -271,6 +354,426 @@ void BotTestAAS(vec3_t origin) {
 			BotAI_Print(PRT_MESSAGE, "\rarea %d, cluster %d       ", areanum, info.cluster);
 		}
 	}
+}
+
+
+typedef struct {
+	int area;
+	int goalareanum;
+	vec3_t goalorigin;
+	int runai;
+} botlib_debug_t;
+
+botlib_debug_t botlibdebug;
+
+// ai_move.c
+void MoverBottomCenter(aas_reachability_t *reach, vec3_t bottomcenter);
+int BotGetReachabilityToGoal(vec3_t origin, int areanum,
+									  int lastgoalareanum, int lastareanum,
+									  int *avoidreach, float *avoidreachtimes, int *avoidreachtries,
+									  bot_goal_t *goal, int travelflags,
+									  struct bot_avoidspot_s *avoidspots, int numavoidspots, int *flags);
+int BotFuzzyPointReachabilityArea(vec3_t origin);
+float BotGapDistance(vec3_t origin, vec3_t hordir, int entnum);
+
+// ZTM: TODO: Use botlib API to access these functions.
+// be_aas_move.c
+//void AAS_TestMovementPrediction(int entnum, vec3_t origin, vec3_t dir, int contentmask);
+
+// be_aas_reach.c
+//int AAS_Reachability_WeaponJump(int area1num, int area2num);
+
+// missing function
+//int AAS_PointLight(vec3_t origin, int *red, int *green, int *blue);
+
+/*
+==================
+BotLibTest
+
+Set r_debugSurface 2; bot_debug 1; bot_maxdebugpolys 8096
+==================
+*/
+int BotLibTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
+{
+
+//	return AAS_PointLight(parm2, NULL, NULL, NULL);
+
+	int newarea, i, highlightarea, flood;
+	aas_areainfo_t areainfo;
+
+//	int reachnum;
+	vec3_t forward, origin;
+//	vec3_t eye, right, end;
+//	vec3_t bottomcenter;
+//	aas_trace_t trace;
+//	aas_face_t *face;
+//	aas_entity_t *ent;
+//	bsp_trace_t bsptrace;
+//	aas_reachability_t reach;
+//	bot_goal_t goal;
+
+	// clock_t start_time, end_time;
+//	vec3_t mins = {-16, -16, -24};
+//	vec3_t maxs = {16, 16, 32};
+
+//	int areas[10], numareas;
+
+
+	//return 0;
+
+	if (!trap_AAS_Loaded()) return 0;
+
+	/*
+	if (parm0 & 1)
+	{
+		trap_AAS_ClearShownPolygons();
+		trap_AAS_FloodAreas(parm2);
+	} //end if
+	return 0;
+	*/
+
+//	trap_AAS_ClearShownDebugLines();
+
+	//if (AAS_AgainstLadder(parm2)) BotAI_Print(PRT_MESSAGE, "against ladder\n");
+	//BotOnGround(parm2, PRESENCE_NORMAL, 1, &newarea, &newarea);
+	//BotAI_Print(PRT_MESSAGE, "%f %f %f\n", parm2[0], parm2[1], parm2[2]);
+	//*
+	highlightarea = BotLibVarGetValue("bot_highlightarea");
+	if (highlightarea > 0)
+	{
+		newarea = highlightarea;
+	} //end if
+	else
+	{
+		VectorCopy(parm2, origin);
+		origin[2] += 0.5;
+		//newarea = AAS_PointAreaNum(origin);
+		newarea = BotFuzzyPointReachabilityArea(origin);
+	} //end else
+
+	BotAI_Print(PRT_MESSAGE, "\rtravel time to goal (%d) = %d  ", botlibdebug.goalareanum,
+		trap_AAS_AreaTravelTimeToGoalArea(newarea, origin, botlibdebug.goalareanum, TFL_DEFAULT));
+	//newarea = BotReachabilityArea(origin, qtrue);
+	if (newarea != botlibdebug.area)
+	{
+		botlibdebug.area = newarea;
+		trap_AAS_AreaInfo(botlibdebug.area, &areainfo);
+
+		BotAI_Print(PRT_MESSAGE, "\n"); //end travel time to goal message line
+		BotAI_Print(PRT_MESSAGE, "origin = %f, %f, %f\n", origin[0], origin[1], origin[2]);
+		BotAI_Print(PRT_MESSAGE, "new area %d, cluster %d, presence type %d\n",
+					botlibdebug.area, areainfo.cluster, areainfo.presencetype);
+		BotAI_Print(PRT_MESSAGE, "area contents: ");
+		if (areainfo.contents & AREACONTENTS_WATER)
+		{
+			BotAI_Print(PRT_MESSAGE, "water &");
+		} //end if
+		if (areainfo.contents & AREACONTENTS_LAVA)
+		{
+			BotAI_Print(PRT_MESSAGE, "lava &");
+		} //end if
+		if (areainfo.contents & AREACONTENTS_SLIME)
+		{
+			BotAI_Print(PRT_MESSAGE, "slime &");
+		} //end if
+		if (areainfo.contents & AREACONTENTS_TELEPORTER)
+		{
+			BotAI_Print(PRT_MESSAGE, "teleporter &");
+		} //end if
+		if (areainfo.contents & AREACONTENTS_JUMPPAD)
+		{
+			BotAI_Print(PRT_MESSAGE, "jump pad &");
+		} //end if
+		if (areainfo.contents & AREACONTENTS_CLUSTERPORTAL)
+		{
+			BotAI_Print(PRT_MESSAGE, "cluster portal &");
+		} //end if
+		if (areainfo.contents & AREACONTENTS_TELEPORTAL)
+		{
+			BotAI_Print(PRT_MESSAGE, "tele portal &");
+		} //end if
+		if (areainfo.contents & AREACONTENTS_ROUTEPORTAL)
+		{
+			BotAI_Print(PRT_MESSAGE, "route portal &");
+		} //end if
+		if (areainfo.contents & AREACONTENTS_VIEWPORTAL)
+		{
+			BotAI_Print(PRT_MESSAGE, "view portal &");
+		} //end if
+		if (areainfo.contents & AREACONTENTS_DONOTENTER)
+		{
+			BotAI_Print(PRT_MESSAGE, "do not enter &");
+		} //end if
+		if (areainfo.contents & AREACONTENTS_NOTTEAM1)
+		{
+			BotAI_Print(PRT_MESSAGE, "notteam1 &");
+		} //end if
+		if (areainfo.contents & AREACONTENTS_NOTTEAM1)
+		{
+			BotAI_Print(PRT_MESSAGE, "notteam2 &");
+		} //end if
+		if (areainfo.contents & AREACONTENTS_MOVER)
+		{
+			if (areainfo.contents & AREACONTENTS_MODELNUM)
+				BotAI_Print(PRT_MESSAGE, "mover_%d &", (areainfo.contents & AREACONTENTS_MODELNUM) >> AREACONTENTS_MODELNUMSHIFT);
+			else
+				BotAI_Print(PRT_MESSAGE, "mover &");
+		} //end if
+		if (!areainfo.contents)
+		{
+			BotAI_Print(PRT_MESSAGE, "empty");
+		} //end if
+		BotAI_Print(PRT_MESSAGE, "\n");
+		BotAI_Print(PRT_MESSAGE, "travel time to goal (%d) = %d\n", botlibdebug.goalareanum,
+					trap_AAS_AreaTravelTimeToGoalArea(newarea, origin, botlibdebug.goalareanum, TFL_DEFAULT|TFL_ROCKETJUMP));
+		/*
+		VectorCopy(origin, end);
+		end[2] += 5;
+		numareas = trap_AAS_TraceAreas(origin, end, areas, NULL, 10);
+		AAS_TracePlayerBBox(origin, end, PRESENCE_CROUCH, -1, MASK_PLAYERSOLID);
+		BotAI_Print(PRT_MESSAGE, "num areas = %d, area = %d\n", numareas, areas[0]);
+		*/
+		/*
+		botlibdebug.goalareanum = newarea;
+		VectorCopy(parm2, botlibdebug.goalorigin);
+		BotAI_Print(PRT_MESSAGE, "new goal %2.1f %2.1f %2.1f area %d\n",
+								origin[0], origin[1], origin[2], newarea);
+		*/
+	} //end if
+	//*
+	flood = BotLibVarGetValue("bot_flood");
+	if (parm0 & 1)
+	{
+		if (flood)
+		{
+			trap_AAS_ClearShownPolygons();
+			trap_AAS_ClearShownDebugLines();
+			trap_AAS_FloodAreas(parm2);
+		}
+		else
+		{
+			botlibdebug.goalareanum = newarea;
+			VectorCopy(parm2, botlibdebug.goalorigin);
+			BotAI_Print(PRT_MESSAGE, "new goal %2.1f %2.1f %2.1f area %d\n",
+									origin[0], origin[1], origin[2], newarea);
+		}
+	} //end if*/
+	if (flood)
+		return 0;
+//	if (parm0 & BUTTON_USE)
+//	{
+//		botlibdebug.runai = !botlibdebug.runai;
+//		if (botlibdebug.runai) BotAI_Print(PRT_MESSAGE, "started AI\n");
+//		else BotAI_Print(PRT_MESSAGE, "stopped AI\n");
+		//* /
+		/*
+		goal.areanum = botlibdebug.goalareanum;
+		reachnum = BotGetReachabilityToGoal(parm2, newarea, 1,
+										ms.avoidreach, ms.avoidreachtimes,
+										&goal, TFL_DEFAULT);
+		if (!reachnum)
+		{
+			BotAI_Print(PRT_MESSAGE, "goal not reachable\n");
+		} //end if
+		else
+		{
+			AAS_ReachabilityFromNum(reachnum, &reach);
+			trap_AAS_ClearShownDebugLines();
+			trap_AAS_ShowArea(area, qtrue);
+			trap_AAS_ShowArea(reach.areanum, qtrue);
+			trap_AAS_DrawCross(reach.start, 6, LINECOLOR_BLUE);
+			trap_AAS_DrawCross(reach.end, 6, LINECOLOR_RED);
+			//
+			if ((reach.traveltype & TRAVELTYPE_MASK) == TRAVEL_ELEVATOR)
+			{
+				MoverBottomCenter(&reach, bottomcenter);
+				trap_AAS_DrawCross(bottomcenter, 10, LINECOLOR_GREEN);
+			} //end if
+		} //end else*/
+//		BotAI_Print(PRT_MESSAGE, "travel time to goal = %d\n",
+//					trap_AAS_AreaTravelTimeToGoalArea(area, origin, botlibdebug.goalareanum, TFL_DEFAULT));
+//		BotAI_Print(PRT_MESSAGE, "test rj from 703 to 716\n");
+//		AAS_Reachability_WeaponJump(703, 716);
+//	} //end if*/
+
+/*	face = trap_AAS_AreaGroundFace(newarea, parm2);
+	if (face)
+	{
+		trap_AAS_ShowFace(face - aasworld.faces);
+	} //end if*/
+	/*
+	trap_AAS_ClearShownDebugLines();
+	trap_AAS_ShowArea(newarea, parm0 & BUTTON_USE);
+	trap_AAS_ShowReachableAreas(area, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+	*/
+	trap_AAS_ClearShownPolygons();
+	trap_AAS_ClearShownDebugLines();
+	trap_AAS_ShowAreaPolygons(newarea, 1, parm0 & 4);
+	if (parm0 & 2) trap_AAS_ShowReachableAreas(botlibdebug.area, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+	else
+	{
+		static int lastgoalareanum, lastareanum;
+		static int avoidreach[MAX_AVOIDREACH];
+		static float avoidreachtimes[MAX_AVOIDREACH];
+		static int avoidreachtries[MAX_AVOIDREACH];
+		int reachnum, resultFlags;
+		bot_goal_t goal;
+		aas_reachability_t reach;
+
+		/*
+		goal.areanum = botlibdebug.goalareanum;
+		VectorCopy(botlibdebug.goalorigin, goal.origin);
+		reachnum = BotGetReachabilityToGoal(origin, newarea,
+									  lastgoalareanum, lastareanum,
+									  avoidreach, avoidreachtimes, avoidreachtries,
+									  &goal, TFL_DEFAULT|TFL_FUNCBOB|TFL_ROCKETJUMP,
+									  NULL, 0, &resultFlags);
+		trap_AAS_ReachabilityFromNum(reachnum, &reach);
+		trap_AAS_ShowReachability(&reach, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+		*/
+		int curarea;
+		vec3_t curorigin;
+
+		trap_AAS_DrawCross(botlibdebug.goalorigin, 6, LINECOLOR_BLUE);
+
+		goal.areanum = botlibdebug.goalareanum;
+		VectorCopy(botlibdebug.goalorigin, goal.origin);
+		VectorCopy(origin, curorigin);
+		curarea = newarea;
+		for ( i = 0; i < 100; i++ ) {
+			if ( curarea == goal.areanum ) {
+				break;
+			}
+			reachnum = BotGetReachabilityToGoal(curorigin, curarea,
+										  lastgoalareanum, lastareanum,
+										  avoidreach, avoidreachtimes, avoidreachtries,
+										  &goal, TFL_DEFAULT|TFL_FUNCBOB|TFL_ROCKETJUMP,
+										  NULL, 0, &resultFlags);
+			trap_AAS_ReachabilityFromNum(reachnum, &reach);
+			trap_AAS_ShowReachability(&reach, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+			VectorCopy(reach.end, origin);
+			lastareanum = curarea;
+			curarea = reach.areanum;
+		}
+	} //end else
+	VectorClear(forward);
+	//BotGapDistance(origin, forward, 0);
+	/*
+	if (parm0 & BUTTON_USE)
+	{
+		BotAI_Print(PRT_MESSAGE, "test rj from 703 to 716\n");
+		AAS_Reachability_WeaponJump(703, 716);
+	} //end if*/
+
+//	AngleVectors(parm3, forward, right, NULL);
+	//get the eye 16 units to the right of the origin
+//	VectorMA(parm2, 8, right, eye);
+	//get the eye 24 units up
+//	eye[2] += 24;
+	//get the end point for the line to be traced
+//	VectorMA(eye, 800, forward, end);
+
+//	AAS_TestMovementPrediction(1, parm2, forward, MASK_PLAYERSOLID);
+/*
+    //trace the line to find the hit point
+	trace = AAS_TracePlayerBBox(eye, end, PRESENCE_NORMAL, 1, MASK_PLAYERSOLID);
+	if (!line[0]) line[0] = botimport.DebugLineCreate();
+	botimport.DebugLineShow(line[0], eye, trace.endpos, LINECOLOR_BLUE);
+	//
+	trap_AAS_ClearShownDebugLines();
+	if (trace.ent)
+	{
+		ent = &aasworld.entities[trace.ent];
+		trap_AAS_ShowBoundingBox(ent->origin, ent->mins, ent->maxs);
+	} //end if
+*/
+
+/*
+	start_time = clock();
+	for (i = 0; i < 2000; i++)
+	{
+		AAS_Trace2(eye, mins, maxs, end, 1, MASK_PLAYERSOLID);
+//		AAS_TracePlayerBBox(eye, end, PRESENCE_NORMAL, 1, MASK_PLAYERSOLID);
+	} //end for
+	end_time = clock();
+	BotAI_Print(PRT_MESSAGE, "me %lu clocks, %lu CLOCKS_PER_SEC\n", end_time - start_time, CLOCKS_PER_SEC);
+	start_time = clock();
+	for (i = 0; i < 2000; i++)
+	{
+		AAS_Trace(eye, mins, maxs, end, 1, MASK_PLAYERSOLID);
+	} //end for
+	end_time = clock();
+	BotAI_Print(PRT_MESSAGE, "id %lu clocks, %lu CLOCKS_PER_SEC\n", end_time - start_time, CLOCKS_PER_SEC);
+*/
+
+    // TTimo: nested comments are BAD for gcc -Werror, use #if 0 instead..
+#if 0
+	trap_AAS_ClearShownDebugLines();
+	//bsptrace = AAS_Trace(eye, NULL, NULL, end, 1, MASK_PLAYERSOLID);
+	bsptrace = AAS_Trace(eye, mins, maxs, end, 1, MASK_PLAYERSOLID);
+	if (!line[0]) line[0] = botimport.DebugLineCreate();
+	botimport.DebugLineShow(line[0], eye, bsptrace.endpos, LINECOLOR_YELLOW);
+	if (bsptrace.fraction < 1.0)
+	{
+		face = AAS_TraceEndFace(&trace);
+		if (face)
+		{
+			trap_AAS_ShowFace(face - aasworld.faces);
+		} //end if
+		
+		AAS_DrawPlaneCross(bsptrace.endpos,
+									bsptrace.plane.normal,
+									bsptrace.plane.dist + bsptrace.exp_dist,
+									bsptrace.plane.type, LINECOLOR_GREEN);
+		if (trace.ent)
+		{
+			ent = &aasworld.entities[trace.ent];
+			AAS_ShowBoundingBox(ent->origin, ent->mins, ent->maxs);
+		} //end if
+	} //end if
+	//bsptrace = AAS_Trace2(eye, NULL, NULL, end, 1, MASK_PLAYERSOLID);
+	bsptrace = AAS_Trace2(eye, mins, maxs, end, 1, MASK_PLAYERSOLID);
+	botimport.DebugLineShow(line[1], eye, bsptrace.endpos, LINECOLOR_BLUE);
+	if (bsptrace.fraction < 1.0)
+	{
+		AAS_DrawPlaneCross(bsptrace.endpos,
+									bsptrace.plane.normal,
+									bsptrace.plane.dist,// + bsptrace.exp_dist,
+									bsptrace.plane.type, LINECOLOR_RED);
+		if (bsptrace.ent)
+		{
+			ent = &aasworld.entities[bsptrace.ent];
+			AAS_ShowBoundingBox(ent->origin, ent->mins, ent->maxs);
+		} //end if
+	} //end if
+#endif
+	return 0;
+} //end of the function BotLibTest
+
+/*
+===============
+BotDrawDebugPolygons
+
+This was previously in server's BotDrawDebugPolygons() function which was
+only called when r_debugSurface != 0 and r_debugSurface != 1
+===============
+*/
+void BotDrawDebugPolygons(void) {
+	int parm0;
+
+	//bot debugging
+	if (bot_debug.integer && trap_Cvar_VariableIntegerValue( "r_debugSurface" ) == 2 ) {
+		parm0 = 0;
+		if (level.players[0].pers.cmd.buttons & BUTTON_ATTACK) parm0 |= 1;
+		//show reachabilities
+		if (bot_reachability.integer) parm0 |= 2;
+		//show ground faces only
+		if (bot_groundonly.integer) parm0 |= 4;
+		//get the hightlight area
+		trap_BotLibVarSet("bot_highlightarea", bot_highlightarea.string);
+		BotLibTest(parm0, NULL, level.gentities[0].r.currentOrigin,
+			level.gentities[0].r.currentAngles);
+	} //end if
 }
 
 /*
@@ -1175,7 +1678,7 @@ BotAISetupPlayer
 ==============
 */
 int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean restart) {
-	char filename[MAX_PATH], name[MAX_PATH], gender[MAX_PATH];
+	char filename[144], name[144], gender[144];
 	bot_state_t *bs;
 	int errnum;
 
@@ -1191,8 +1694,8 @@ int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean re
 		return qfalse;
 	}
 
-	if (!trap_AAS_Initialized()) {
-		BotAI_Print(PRT_FATAL, "AAS not initialized\n");
+	if (!trap_AAS_Loaded()) {
+		BotAI_Print(PRT_FATAL, "AAS not loaded\n");
 		return qfalse;
 	}
 
@@ -1207,7 +1710,7 @@ int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean re
 	//allocate a goal state
 	bs->gs = BotAllocGoalState(playernum);
 	//load the item weights
-	Characteristic_String(bs->character, CHARACTERISTIC_ITEMWEIGHTS, filename, MAX_PATH);
+	Characteristic_String(bs->character, CHARACTERISTIC_ITEMWEIGHTS, filename, sizeof(filename));
 	errnum = BotLoadItemWeights(bs->gs, filename);
 	if (errnum != BLERR_NOERROR) {
 		BotFreeGoalState(bs->gs);
@@ -1217,7 +1720,7 @@ int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean re
 	//allocate a weapon state
 	bs->ws = BotAllocWeaponState(playernum);
 	//load the weapon weights
-	Characteristic_String(bs->character, CHARACTERISTIC_WEAPONWEIGHTS, filename, MAX_PATH);
+	Characteristic_String(bs->character, CHARACTERISTIC_WEAPONWEIGHTS, filename, sizeof(filename));
 	errnum = BotLoadWeaponWeights(bs->ws, filename);
 	if (errnum != BLERR_NOERROR) {
 		BotFreeGoalState(bs->gs);
@@ -1228,8 +1731,8 @@ int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean re
 	//allocate a chat state
 	bs->cs = BotAllocChatState();
 	//load the chat file
-	Characteristic_String(bs->character, CHARACTERISTIC_CHAT_FILE, filename, MAX_PATH);
-	Characteristic_String(bs->character, CHARACTERISTIC_CHAT_NAME, name, MAX_PATH);
+	Characteristic_String(bs->character, CHARACTERISTIC_CHAT_FILE, filename, sizeof(filename));
+	Characteristic_String(bs->character, CHARACTERISTIC_CHAT_NAME, name, sizeof(name));
 	errnum = BotLoadChatFile(bs->cs, filename, name);
 	if (errnum != BLERR_NOERROR) {
 		BotFreeChatState(bs->cs);
@@ -1239,7 +1742,7 @@ int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean re
 		return qfalse;
 	}
 	//get the gender characteristic
-	Characteristic_String(bs->character, CHARACTERISTIC_GENDER, gender, MAX_PATH);
+	Characteristic_String(bs->character, CHARACTERISTIC_GENDER, gender, sizeof(gender));
 	//set the chat gender
 	if (*gender == 'f' || *gender == 'F') BotSetChatGender(bs->cs, CHAT_GENDERFEMALE);
 	else if (*gender == 'm' || *gender == 'M') BotSetChatGender(bs->cs, CHAT_GENDERMALE);
@@ -1383,10 +1886,8 @@ int BotAILoadMap( int restart ) {
 	int			i;
 	vmCvar_t	mapname;
 
-	if (!restart) {
-		trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
-		trap_BotLibLoadMap( mapname.string );
-	}
+	trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+	trap_BotLibLoadMap( mapname.string );
 
 	//initialize physics
 	BotInitPhysicsSettings();	//ai_move.h
@@ -1438,6 +1939,15 @@ int BotAIStartFrame(int time) {
 	trap_Cvar_Update(&bot_report);
 	trap_Cvar_Update(&bot_droppedweight);
 	trap_Cvar_Update(&bot_offhandgrapple);
+	trap_Cvar_Update(&bot_debug);
+	trap_Cvar_Update(&bot_groundonly);
+	trap_Cvar_Update(&bot_reachability);
+	trap_Cvar_Update(&bot_highlightarea);
+	trap_Cvar_Update(&bot_visualizejumppads);
+	trap_Cvar_Update(&bot_forceclustering);
+	trap_Cvar_Update(&bot_forcereachability);
+	trap_Cvar_Update(&bot_forcewrite);
+	trap_Cvar_Update(&bot_aasoptimize);
 	trap_Cvar_Update(&bot_shownodechanges);
 	trap_Cvar_Update(&bot_showteamgoals);
 	trap_Cvar_Update(&bot_reloadcharacters);
@@ -1620,6 +2130,8 @@ int BotAIStartFrame(int time) {
 		trap_BotUserCommand(botstates[i]->playernum, &botstates[i]->lastucmd);
 	}
 
+	BotDrawDebugPolygons();
+
 	return qtrue;
 }
 
@@ -1688,6 +2200,15 @@ int BotAISetup( int restart ) {
 	trap_Cvar_Register(&bot_testsolid, "bot_testsolid", "0", CVAR_CHEAT);
 	trap_Cvar_Register(&bot_testclusters, "bot_testclusters", "0", CVAR_CHEAT);
 	trap_Cvar_Register(&bot_developer, "bot_developer", "0", CVAR_CHEAT);
+	trap_Cvar_Register(&bot_debug, "bot_debug", "0", CVAR_CHEAT);
+	trap_Cvar_Register(&bot_groundonly, "bot_groundonly", "1", CVAR_CHEAT);
+	trap_Cvar_Register(&bot_reachability, "bot_reachability", "0", CVAR_CHEAT);
+	trap_Cvar_Register(&bot_highlightarea, "bot_highlightarea", "0", CVAR_CHEAT);
+	trap_Cvar_Register(&bot_visualizejumppads, "bot_visualizejumppads", "0", CVAR_CHEAT);
+	trap_Cvar_Register(&bot_forceclustering, "bot_forceclustering", "0", 0);
+	trap_Cvar_Register(&bot_forcereachability, "bot_forcereachability", "0", 0);
+	trap_Cvar_Register(&bot_forcewrite, "bot_forcewrite", "0", 0);
+	trap_Cvar_Register(&bot_aasoptimize, "bot_aasoptimize", "0", 0);
 	trap_Cvar_Register(&bot_shownodechanges, "bot_shownodechanges", "0", CVAR_CHEAT);
 	trap_Cvar_Register(&bot_showteamgoals, "bot_showteamgoals", "0", CVAR_CHEAT);
 	trap_Cvar_Register(&bot_reloadcharacters, "bot_reloadcharacters", "0", 0);
@@ -1698,14 +2219,12 @@ int BotAISetup( int restart ) {
 
 	level.botReportModificationCount = bot_report.modificationCount;
 
-	//if the game isn't restarted for a tournament
-	if (!restart) {
-		//initialize the bot states
-		memset( botstates, 0, sizeof(botstates) );
+	//initialize the bot states
+	memset( botstates, 0, sizeof(botstates) );
+	memset( &botlibdebug, 0, sizeof(botlibdebug) );
 
-		errnum = BotInitLibrary();
-		if (errnum != BLERR_NOERROR) return qfalse;
-	}
+	errnum = BotInitLibrary();
+	if (errnum != BLERR_NOERROR) return qfalse;
 
 	errnum = EA_Setup();			//ai_ea.c
 	if (errnum != BLERR_NOERROR) return qfalse;
@@ -1737,11 +2256,9 @@ int BotAIShutdown( int restart ) {
 				BotAIShutdownPlayer(botstates[i]->playernum, restart);
 			}
 		}
-		//don't shutdown the bot library
 	}
-	else {
-		trap_BotLibShutdown();
-	}
+
+	trap_BotLibShutdown();
 
 	//
 	BotShutdownCharacters();	//ai_char.c

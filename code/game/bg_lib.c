@@ -1347,6 +1347,10 @@ double fabs( double x ) {
 	return x < 0 ? -x : x;
 }
 
+float fabsf( float x ) {
+	return x < 0 ? -x : x;
+}
+
 unsigned int _hextoi( const char **stringPtr )
 {
 	unsigned int value;
@@ -2141,7 +2145,7 @@ int Q_vsnprintf(char *str, size_t length, const char *fmt, va_list args)
 
 /* this is really crappy */
 int sscanf( const char *buffer, const char *fmt, ... ) {
-	int		cmd;
+	int		cmd, type;
 	va_list		ap;
 	int		count;
 	size_t		len;
@@ -2166,17 +2170,68 @@ int sscanf( const char *buffer, const char *fmt, ... ) {
 			fmt++;
 		}
 
+		if ( cmd == 'h' || cmd == 'l' || cmd == 'L' ) {
+			type = cmd;
+			cmd = *fmt;
+			fmt++;
+
+			if ( cmd == 'l' && type == 'l' ) {
+				type = 'L';
+				cmd = *fmt;
+				fmt++;
+			}
+
+			if (!cmd) {
+				Com_Printf( "WARNING: bg_lib.c's sscanf doesn't support format %%%c\n", type );
+				break;
+			}
+		} else {
+			type = 0;
+		}
+
 		switch ( cmd ) {
 		case 'i':
 		case 'd':
+			if ( type == 'L' )
+				*( va_arg (ap, long long * ) ) = _atoi( &buffer );
+			else if ( type == 'l' )
+				*( va_arg (ap, long * ) ) = _atoi( &buffer );
+			else if ( type == 'h' )
+				*( va_arg (ap, short * ) ) = _atoi( &buffer );
+			else
+				*( va_arg ( ap, int * ) ) = _atoi( &buffer );
+			break;
 		case 'u':
-			*(va_arg (ap, int *)) = _atoi( &buffer );
+			if ( type == 'L' )
+				*( va_arg (ap, unsigned long long * ) ) = _atoi( &buffer );
+			else if ( type == 'l' )
+				*( va_arg (ap, unsigned long * ) ) = _atoi( &buffer );
+			else if ( type == 'h' )
+				*( va_arg (ap, unsigned short * ) ) = _atoi( &buffer );
+			else
+				*( va_arg ( ap, unsigned int * ) ) = _atoi( &buffer );
 			break;
 		case 'f':
-			*(va_arg (ap, float *)) = _atof( &buffer );
+		case 'F':
+		case 'g':
+		case 'G':
+			if ( type == 'L' )
+				*( va_arg ( ap, long double * ) ) = _atof( &buffer );
+			else if ( type == 'l' )
+				*( va_arg ( ap, double * ) ) = _atof( &buffer );
+			else
+				*( va_arg ( ap, float * ) ) = _atof( &buffer );
 			break;
 		case 'x':
-			*( va_arg( ap, unsigned int * ) ) = _hextoi( &buffer );
+		case 'X':
+			if ( type == 'L' )
+				*( va_arg ( ap, unsigned long long * ) ) = _hextoi( &buffer );
+			else if ( type == 'l' )
+				*( va_arg ( ap, unsigned long * ) ) = _hextoi( &buffer );
+			else if ( type == 'h' )
+				*( va_arg ( ap, unsigned short * ) ) = _hextoi( &buffer );
+			else
+				*( va_arg ( ap, unsigned int * ) ) = _hextoi( &buffer );
 			break;
 		case 's':
 			{

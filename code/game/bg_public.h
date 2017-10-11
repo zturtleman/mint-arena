@@ -1334,10 +1334,12 @@ int		trap_FS_GetFileList( const char *path, const char *extension, char *listbuf
 int		trap_FS_Delete( const char *path );
 int		trap_FS_Rename( const char *from, const char *to );
 
-int		trap_PC_AddGlobalDefine( char *define );
+int		trap_PC_AddGlobalDefine( const char *define );
+int		trap_PC_RemoveGlobalDefine( const char *define );
 void	trap_PC_RemoveAllGlobalDefines( void );
 int		trap_PC_LoadSource( const char *filename, const char *basepath );
 int		trap_PC_FreeSource( int handle );
+int		trap_PC_AddDefine( int handle, const char *define );
 int		trap_PC_ReadToken( int handle, pc_token_t *pc_token );
 void	trap_PC_UnreadToken( int handle );
 int		trap_PC_SourceFileAndLine( int handle, char *filename, int *line );
@@ -1345,3 +1347,8 @@ int		trap_PC_SourceFileAndLine( int handle, char *filename, int *line );
 void	*trap_HeapMalloc( int size );
 int		trap_HeapAvailable( void );
 void	trap_HeapFree( void *data );
+
+// functions for console command argument completion
+void	trap_Field_CompleteFilename( const char *dir, const char *ext, qboolean stripExt, qboolean allowNonPureFilesOnDisk );
+void	trap_Field_CompleteCommand( const char *cmd, qboolean doCommands, qboolean doCvars );
+void	trap_Field_CompleteList( const char *list );

@@ -135,6 +135,8 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_UPDATE_GLCONFIG:
 		CG_UpdateGlconfig( qfalse );
 		return 0;
+	case CG_CONSOLE_COMPLETEARGUMENT:
+		return CG_ConsoleCompleteArgument(arg0, arg1, arg2);
 	default:
 		CG_Error( "cgame vmMain: unknown command %i", command );
 		break;
@@ -885,12 +887,47 @@ void CG_AddNotifyText( int realTime, qboolean restoredText ) {
 
 		player = &cg.localPlayers[i];
 
-		if ( player->numConsoleLines == MAX_CONSOLE_LINES ) {
-			CG_RemoveNotifyLine( player );
+		// replace line
+		if ( buffer[0] == '\r' ) {
+			int j, length;
+
+			length = 0;
+			for ( j = 0; j < player->numConsoleLines - 1; j++ )
+				length += player->consoleLines[ j ].length;
+
+			player->consoleText[length] = '\0';
+
+			if ( player->numConsoleLines > 0 ) {
+				player->numConsoleLines--;
+			}
+
+			// free lines until there is enough space to fit buffer
+			while ( strlen( player->consoleText ) + bufferLen > MAX_CONSOLE_TEXT ) {
+				CG_RemoveNotifyLine( player );
+			}
+
+			// skip leading \r
+			Q_strcat( player->consoleText, MAX_CONSOLE_TEXT, buffer + 1 );
+			player->consoleLines[ player->numConsoleLines ].time = cg.time;
+			player->consoleLines[ player->numConsoleLines ].length = bufferLen - 1;
+			player->numConsoleLines++;
+			continue;
 		}
 
 		// free lines until there is enough space to fit buffer
 		while ( strlen( player->consoleText ) + bufferLen > MAX_CONSOLE_TEXT ) {
+			CG_RemoveNotifyLine( player );
+		}
+
+		// append to existing line
+		if ( player->numConsoleLines > 0 && player->consoleText[ strlen( player->consoleText ) - 1] != '\n' ) {
+			Q_strcat( player->consoleText, MAX_CONSOLE_TEXT, buffer );
+			player->consoleLines[ player->numConsoleLines - 1 ].time = cg.time;
+			player->consoleLines[ player->numConsoleLines - 1 ].length += bufferLen;
+			continue;
+		}
+
+		if ( player->numConsoleLines == MAX_CONSOLE_LINES ) {
 			CG_RemoveNotifyLine( player );
 		}
 
@@ -2824,7 +2861,7 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 
 	if ( !cg_dedicated.integer && state == CA_DISCONNECTED && !UI_IsFullscreen() ) {
 		// if disconnected, bring up the menu
-		// ZTM: TODO: call trap_S_StopAllSounds() here. Currently it's done in cl_main.c
+		trap_S_StopAllSounds();
 		UI_SetActiveMenu( UIMENU_MAIN );
 	}
 

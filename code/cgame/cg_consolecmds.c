@@ -678,6 +678,23 @@ static void CG_VstrUp_f( void ) {
 
 /*
 ==================
+CG_VstrComplete
+
+complete cvar name for second and third arguments for +vstr and -vstr
+==================
+*/
+static void CG_VstrComplete( char *args, int argNum ) {
+	if ( argNum == 2 || argNum == 3 ) {
+		// Skip "<cmd> "
+		char *p = Com_SkipTokens( args, argNum - 1, " " );
+
+		if( p > args )
+			trap_Field_CompleteCommand( p, qfalse, qtrue );
+	}
+}
+
+/*
+==================
 CG_StartOrbit_f
 ==================
 */
@@ -784,7 +801,16 @@ void CG_Play_f( void ) {
 
 /*
 =================
-S_Music_f
+CG_PlayComplete
+=================
+*/
+static void CG_PlayComplete( char *args, int argNum ) {
+	trap_Field_CompleteFilename( "", "$sounds", qfalse, qfalse );
+}
+
+/*
+=================
+CG_Music_f
 =================
 */
 void CG_Music_f( void ) {
@@ -818,6 +844,17 @@ void CG_Music_f( void ) {
 
 /*
 =================
+CG_MusicComplete
+=================
+*/
+static void CG_MusicComplete( char *args, int argNum ) {
+	if ( argNum == 2 || argNum == 3 ) {
+		trap_Field_CompleteFilename( "", "$sounds", qfalse, qfalse );
+	}
+}
+
+/*
+=================
 CG_StopMusic_f
 =================
 */
@@ -835,7 +872,7 @@ void CG_StopCinematic_f( void ) {
 		return;
 	}
 
-	//trap_S_StopAllSounds();
+	trap_S_StopAllSounds();
 	trap_CIN_StopCinematic( cg.cinematicHandle );
 
 	cg.cinematicHandle = 0;
@@ -852,6 +889,14 @@ void CG_Cinematic_f( void ) {
 	char	s[6];
 	float	x, y, width, height;
 	int		bits = CIN_system;
+	int		c;
+
+	c = trap_Argc();
+
+	if ( c < 2 || c > 3 ) {
+		Com_Printf( "Usage: cinematic <videofile> [hold|loop]\n" );
+		return;
+	}
 
 	if ( cg.cinematicPlaying ) {
 		CG_StopCinematic_f();
@@ -860,14 +905,14 @@ void CG_Cinematic_f( void ) {
 	trap_Argv( 1, arg, sizeof( arg ) );
 	trap_Argv( 2, s, sizeof( s ) );
 
-	if (s[0] == '1' || Q_stricmp(arg,"demoend.roq")==0 || Q_stricmp(arg,"end.roq")==0) {
+	if (s[0] == '1' || Q_stricmp(s,"hold")==0 || Q_stricmp(arg,"demoend.roq")==0 || Q_stricmp(arg,"end.roq")==0) {
 		bits |= CIN_hold;
 	}
-	if (s[0] == '2') {
+	if (s[0] == '2' || Q_stricmp(s,"loop")==0) {
 		bits |= CIN_loop;
 	}
 
-	//trap_S_StopAllSounds();
+	trap_S_StopAllSounds();
 
 	x = 0;
 	y = 0;
@@ -883,6 +928,17 @@ void CG_Cinematic_f( void ) {
 }
 
 /*
+=================
+CG_CinematicComplete
+=================
+*/
+static void CG_CinematicComplete( char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		trap_Field_CompleteFilename( "", "$videos", qfalse, qfalse );
+	}
+}
+
+/*
 ===================
 CG_ToggleMenu_f
 ===================
@@ -893,8 +949,8 @@ void CG_ToggleMenu_f( void ) {
 }
 
 static consoleCommand_t	cg_commands[] = {
-	{ "+vstr", CG_VstrDown_f, 0 },
-	{ "-vstr", CG_VstrUp_f, 0 },
+	{ "+vstr", CG_VstrDown_f, 0, CG_VstrComplete },
+	{ "-vstr", CG_VstrUp_f, 0, CG_VstrComplete },
 	{ "testgun", CG_TestGun_f, CMD_INGAME },
 	{ "testmodel", CG_TestModel_f, CMD_INGAME },
 	{ "nextframe", CG_TestModelNextFrame_f, CMD_INGAME },
@@ -915,10 +971,10 @@ static consoleCommand_t	cg_commands[] = {
 	{ "loaddeferred", CG_LoadDeferredPlayers, CMD_INGAME },
 	{ "generateTracemap", CG_GenerateTracemap, CMD_INGAME },
 	{ "remapShader", CG_RemapShader_f, 0 },
-	{ "play", CG_Play_f, 0 },
-	{ "music", CG_Music_f, 0 },
+	{ "play", CG_Play_f, 0, CG_PlayComplete },
+	{ "music", CG_Music_f, 0, CG_MusicComplete },
 	{ "stopmusic", CG_StopMusic_f, 0 },
-	{ "cinematic", CG_Cinematic_f, 0 },
+	{ "cinematic", CG_Cinematic_f, 0, CG_CinematicComplete },
 	{ "stopcinematic", CG_StopCinematic_f, 0 },
 	{ "messageMode", CG_MessageMode_f },
 	{ "messageMode2", CG_MessageMode2_f },
@@ -935,6 +991,7 @@ typedef struct {
 	char	*cmd;
 	void	(*function)(int);
 	int		flags;
+	void	(*complete)(int, char *, int);
 } playerConsoleCommand_t;
 
 static playerConsoleCommand_t	playerCommands[] = {
@@ -1067,26 +1124,6 @@ static qboolean CG_CheckCmdFlags( const char *cmd, int flags ) {
 
 /*
 =================
-CG_CheckCommands
-=================
-*/
-static qboolean CG_CheckCommands( consoleCommand_t *commands, int numCommands, const char *cmd ) {
-	int i;
-
-	for ( i = 0 ; i < numCommands ; i++ ) {
-		if ( !Q_stricmp( cmd, commands[i].cmd )) {
-			if ( CG_CheckCmdFlags( cmd, commands[i].flags ) ) {
-				return qtrue;
-			}
-			commands[i].function();
-			return qtrue;
-		}
-	}
-	return qfalse;
-}
-
-/*
-=================
 CG_ConsoleCommand
 
 The string has been tokenized and can be retrieved with
@@ -1121,12 +1158,24 @@ qboolean CG_ConsoleCommand( connstate_t state, int realTime ) {
 	}
 
 	if ( localPlayerNum == 0 ) {
-		if ( CG_CheckCommands( cg_commands, cg_numCommands, cmd ) ) {
-			return qtrue;
+		for ( i = 0 ; i < cg_numCommands ; i++ ) {
+			if ( !Q_stricmp( cmd, cg_commands[i].cmd )) {
+				if ( CG_CheckCmdFlags( cmd, cg_commands[i].flags ) ) {
+					return qtrue;
+				}
+				cg_commands[i].function();
+				return qtrue;
+			}
 		}
 
-		if ( CG_CheckCommands( ui_commands, ui_numCommands, cmd ) ) {
-			return qtrue;
+		for ( i = 0 ; i < ui_numCommands ; i++ ) {
+			if ( !Q_stricmp( cmd, ui_commands[i].cmd )) {
+				if ( CG_CheckCmdFlags( cmd, ui_commands[i].flags ) ) {
+					return qtrue;
+				}
+				ui_commands[i].function();
+				return qtrue;
+			}
 		}
 	}
 
@@ -1135,6 +1184,55 @@ qboolean CG_ConsoleCommand( connstate_t state, int realTime ) {
 		trap_LiteralArgs( buffer, sizeof ( buffer ) );
 		trap_SendClientCommand( buffer );
 		return qtrue;
+	}
+
+	return qfalse;
+}
+
+/*
+=================
+CG_ConsoleCompleteArgument
+
+The string has been tokenized and can be retrieved with
+Cmd_Argc() / Cmd_Argv()
+=================
+*/
+qboolean CG_ConsoleCompleteArgument( connstate_t state, int realTime, int completeArgument ) {
+	char	args[BIG_INFO_STRING];
+	char	cmd[MAX_TOKEN_CHARS];
+	int		i;
+	int		localPlayerNum;
+	const char	*baseCmd;
+
+	cg.connState = state;
+
+	trap_Argv( 0, cmd, sizeof( cmd ) );
+	trap_LiteralArgs( args, sizeof ( args ) );
+
+	localPlayerNum = Com_LocalPlayerForCvarName( cmd );
+	baseCmd = Com_LocalPlayerBaseCvarName( cmd );
+
+	for ( i = 0 ; i < numPlayerCommands ; i++ ) {
+		if ( playerCommands[i].complete && !Q_stricmp( baseCmd, playerCommands[i].cmd ) ) {
+			playerCommands[i].complete( localPlayerNum, args, completeArgument );
+			return qtrue;
+		}
+	}
+
+	if ( localPlayerNum == 0 ) {
+		for ( i = 0 ; i < cg_numCommands ; i++ ) {
+			if ( cg_commands[i].complete && !Q_stricmp( cmd, cg_commands[i].cmd ) ) {
+				cg_commands[i].complete( args, completeArgument );
+				return qtrue;
+			}
+		}
+
+		for ( i = 0 ; i < ui_numCommands ; i++ ) {
+			if ( ui_commands[i].complete && !Q_stricmp( cmd, ui_commands[i].cmd ) ) {
+				ui_commands[i].complete( args, completeArgument );
+				return qtrue;
+			}
+		}
 	}
 
 	return qfalse;

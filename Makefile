@@ -98,7 +98,7 @@ endif
 export CROSS_COMPILING
 
 ifndef VERSION
-VERSION=0.4
+VERSION=0.5
 endif
 
 ifndef VM_PREFIX
@@ -171,6 +171,7 @@ endif
 BD=$(BUILD_DIR)/debug-$(PLATFORM)-$(ARCH)
 BR=$(BUILD_DIR)/release-$(PLATFORM)-$(ARCH)
 CMDIR=$(MOUNT_DIR)/qcommon
+BLIBDIR=$(MOUNT_DIR)/botlib
 GDIR=$(MOUNT_DIR)/game
 CGDIR=$(MOUNT_DIR)/cgame
 UIDIR=$(MOUNT_DIR)/ui
@@ -838,12 +839,14 @@ makedirs:
 	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
 	@if [ ! -d $(B)/$(BASEGAME) ];then $(MKDIR) $(B)/$(BASEGAME);fi
 	@if [ ! -d $(B)/$(BASEGAME)/cgame ];then $(MKDIR) $(B)/$(BASEGAME)/cgame;fi
+	@if [ ! -d $(B)/$(BASEGAME)/botlib ];then $(MKDIR) $(B)/$(BASEGAME)/botlib;fi
 	@if [ ! -d $(B)/$(BASEGAME)/game ];then $(MKDIR) $(B)/$(BASEGAME)/game;fi
 	@if [ ! -d $(B)/$(BASEGAME)/ui ];then $(MKDIR) $(B)/$(BASEGAME)/ui;fi
 	@if [ ! -d $(B)/$(BASEGAME)/qcommon ];then $(MKDIR) $(B)/$(BASEGAME)/qcommon;fi
 	@if [ ! -d $(B)/$(BASEGAME)/vm ];then $(MKDIR) $(B)/$(BASEGAME)/vm;fi
 	@if [ ! -d $(B)/$(MISSIONPACK) ];then $(MKDIR) $(B)/$(MISSIONPACK);fi
 	@if [ ! -d $(B)/$(MISSIONPACK)/cgame ];then $(MKDIR) $(B)/$(MISSIONPACK)/cgame;fi
+	@if [ ! -d $(B)/$(MISSIONPACK)/botlib ];then $(MKDIR) $(B)/$(MISSIONPACK)/botlib;fi
 	@if [ ! -d $(B)/$(MISSIONPACK)/game ];then $(MKDIR) $(B)/$(MISSIONPACK)/game;fi
 	@if [ ! -d $(B)/$(MISSIONPACK)/ui ];then $(MKDIR) $(B)/$(MISSIONPACK)/ui;fi
 	@if [ ! -d $(B)/$(MISSIONPACK)/q3ui ];then $(MKDIR) $(B)/$(MISSIONPACK)/q3ui;fi
@@ -1274,6 +1277,7 @@ Q3GOBJ = \
   $(B)/$(BASEGAME)/game/g_active.o \
   $(B)/$(BASEGAME)/game/g_arenas.o \
   $(B)/$(BASEGAME)/game/g_bot.o \
+  $(B)/$(BASEGAME)/game/g_botlib.o \
   $(B)/$(BASEGAME)/game/g_client.o \
   $(B)/$(BASEGAME)/game/g_cmds.o \
   $(B)/$(BASEGAME)/game/g_combat.o \
@@ -1291,6 +1295,24 @@ Q3GOBJ = \
   $(B)/$(BASEGAME)/game/g_unlagged.o \
   $(B)/$(BASEGAME)/game/g_utils.o \
   $(B)/$(BASEGAME)/game/g_weapon.o \
+  \
+  $(B)/$(BASEGAME)/botlib/be_aas_bspq3.o \
+  $(B)/$(BASEGAME)/botlib/be_aas_cluster.o \
+  $(B)/$(BASEGAME)/botlib/be_aas_debug.o \
+  $(B)/$(BASEGAME)/botlib/be_aas_entity.o \
+  $(B)/$(BASEGAME)/botlib/be_aas_file.o \
+  $(B)/$(BASEGAME)/botlib/be_aas_main.o \
+  $(B)/$(BASEGAME)/botlib/be_aas_move.o \
+  $(B)/$(BASEGAME)/botlib/be_aas_optimize.o \
+  $(B)/$(BASEGAME)/botlib/be_aas_reach.o \
+  $(B)/$(BASEGAME)/botlib/be_aas_route.o \
+  $(B)/$(BASEGAME)/botlib/be_aas_routealt.o \
+  $(B)/$(BASEGAME)/botlib/be_aas_sample.o \
+  $(B)/$(BASEGAME)/botlib/be_interface.o \
+  $(B)/$(BASEGAME)/botlib/l_crc.o \
+  $(B)/$(BASEGAME)/botlib/l_libvar.o \
+  $(B)/$(BASEGAME)/botlib/l_log.o \
+  $(B)/$(BASEGAME)/botlib/l_memory.o \
   \
   $(B)/$(BASEGAME)/qcommon/q_math.o \
   $(B)/$(BASEGAME)/qcommon/q_shared.o
@@ -1334,6 +1356,7 @@ MPGOBJ = \
   $(B)/$(MISSIONPACK)/game/g_active.o \
   $(B)/$(MISSIONPACK)/game/g_arenas.o \
   $(B)/$(MISSIONPACK)/game/g_bot.o \
+  $(B)/$(MISSIONPACK)/game/g_botlib.o \
   $(B)/$(MISSIONPACK)/game/g_client.o \
   $(B)/$(MISSIONPACK)/game/g_cmds.o \
   $(B)/$(MISSIONPACK)/game/g_combat.o \
@@ -1351,6 +1374,24 @@ MPGOBJ = \
   $(B)/$(MISSIONPACK)/game/g_unlagged.o \
   $(B)/$(MISSIONPACK)/game/g_utils.o \
   $(B)/$(MISSIONPACK)/game/g_weapon.o \
+  \
+  $(B)/$(MISSIONPACK)/botlib/be_aas_bspq3.o \
+  $(B)/$(MISSIONPACK)/botlib/be_aas_cluster.o \
+  $(B)/$(MISSIONPACK)/botlib/be_aas_debug.o \
+  $(B)/$(MISSIONPACK)/botlib/be_aas_entity.o \
+  $(B)/$(MISSIONPACK)/botlib/be_aas_file.o \
+  $(B)/$(MISSIONPACK)/botlib/be_aas_main.o \
+  $(B)/$(MISSIONPACK)/botlib/be_aas_move.o \
+  $(B)/$(MISSIONPACK)/botlib/be_aas_optimize.o \
+  $(B)/$(MISSIONPACK)/botlib/be_aas_reach.o \
+  $(B)/$(MISSIONPACK)/botlib/be_aas_route.o \
+  $(B)/$(MISSIONPACK)/botlib/be_aas_routealt.o \
+  $(B)/$(MISSIONPACK)/botlib/be_aas_sample.o \
+  $(B)/$(MISSIONPACK)/botlib/be_interface.o \
+  $(B)/$(MISSIONPACK)/botlib/l_crc.o \
+  $(B)/$(MISSIONPACK)/botlib/l_libvar.o \
+  $(B)/$(MISSIONPACK)/botlib/l_log.o \
+  $(B)/$(MISSIONPACK)/botlib/l_memory.o \
   \
   $(B)/$(MISSIONPACK)/qcommon/q_math.o \
   $(B)/$(MISSIONPACK)/qcommon/q_shared.o
@@ -1432,6 +1473,17 @@ $(B)/$(MISSIONPACK)/game/%.o: $(GDIR)/%.c
 $(B)/$(MISSIONPACK)/game/%.asm: $(GDIR)/%.c $(Q3LCC)
 	$(DO_GAME_Q3LCC_MISSIONPACK)
 
+$(B)/$(BASEGAME)/botlib/%.o: $(BLIBDIR)/%.c
+	$(DO_GAME_CC)
+
+$(B)/$(BASEGAME)/botlib/%.asm: $(BLIBDIR)/%.c $(Q3LCC)
+	$(DO_GAME_Q3LCC)
+
+$(B)/$(MISSIONPACK)/botlib/%.o: $(BLIBDIR)/%.c
+	$(DO_GAME_CC_MISSIONPACK)
+
+$(B)/$(MISSIONPACK)/botlib/%.asm: $(BLIBDIR)/%.c $(Q3LCC)
+	$(DO_GAME_Q3LCC_MISSIONPACK)
 
 $(B)/$(BASEGAME)/qcommon/%.o: $(CMDIR)/%.c
 	$(DO_SHLIB_CC)

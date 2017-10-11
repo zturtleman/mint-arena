@@ -1903,9 +1903,11 @@ typedef struct {
 	char	*cmd;
 	void	(*function)(void);
 	int		flags;
+	void	(*complete)(char *, int);
 } consoleCommand_t;
 
 qboolean CG_ConsoleCommand( connstate_t state, int realTime );
+qboolean CG_ConsoleCompleteArgument( connstate_t state, int realTime, int completeArgument );
 void CG_InitConsoleCommands( void );
 
 void CG_StopCinematic_f( void );

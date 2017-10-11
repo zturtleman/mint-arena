@@ -638,7 +638,8 @@ void G_PredictPlayerMove( gentity_t *ent, float frametime );
 //
 // g_svcmds.c
 //
-qboolean	ConsoleCommand( void );
+qboolean	G_ConsoleCommand( void );
+qboolean	G_ConsoleCompleteArgument( int completeArgument );
 void G_RegisterCommands( void );
 void G_ProcessIPBans(void);
 qboolean G_FilterPacket (char *from);
@@ -678,7 +679,7 @@ void QDECL G_Error( const char *fmt, ... ) __attribute__ ((noreturn, format (pri
 //
 char *PlayerConnect( int playerNum, qboolean firstTime, qboolean isBot, int connectionNum, int localPlayerNum );
 void PlayerUserinfoChanged( int playerNum );
-void PlayerDisconnect( int playerNum );
+qboolean PlayerDisconnect( int playerNum, qboolean force );
 void PlayerBegin( int playerNum );
 void ClientCommand( int connectionNum );
 float PlayerHandicap( gplayer_t *player );
@@ -726,7 +727,14 @@ void Svcmd_AddBot_f( void );
 void Svcmd_BotList_f( void );
 void BotInterbreedEndMatch( void );
 
+//
+// g_botlib.c
+//
+void G_BotInitBotLib(void);
+
+//
 // ai_main.c
+//
 #define MAX_FILEPATH			144
 
 //bot settings

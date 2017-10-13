@@ -197,6 +197,9 @@ const char *String_Alloc(const char *p) {
 		}
 
 		str  = UI_Alloc(sizeof(stringDef_t));
+		if (!str) {
+			return NULL;
+		}
 		str->next = NULL;
 		str->str = &strPool[ph];
 		if (last) {
@@ -1817,6 +1820,27 @@ qboolean Item_ListBox_HandleKey(itemDef_t *item, int key, qboolean down, qboolea
 				return qtrue;
 			}
 		}
+
+		// Use mouse wheel in vertical and horizontal menus.
+		// If scrolling 3 items would replace over half of the
+		// displayed items, only scroll 1 item at a time.
+		if ( key == K_MWHEELUP ) {
+			int scroll = viewmax < 6 ? 1 : 3;
+			listPtr->startPos -= scroll;
+			if (listPtr->startPos < 0) {
+				listPtr->startPos = 0;
+			}
+			return qtrue;
+		}
+		if ( key == K_MWHEELDOWN ) {
+			int scroll = viewmax < 6 ? 1 : 3;
+			listPtr->startPos += scroll;
+			if (listPtr->startPos > max) {
+				listPtr->startPos = max;
+			}
+			return qtrue;
+		}
+
 		// mouse hit
 		if (key == K_MOUSE1 || key == K_MOUSE2) {
 			if (item->window.flags & WINDOW_LB_LEFTARROW) {
@@ -5608,6 +5632,49 @@ qboolean MenuParse_fadeCycle( itemDef_t *item, int handle ) {
 	return qtrue;
 }
 
+// NOTE: This only affects the draw location. It's mainly for HUDs,
+// not interactive menus. Though it could be used for menu decorations.
+qboolean MenuParse_screenPlacement( itemDef_t *item, int handle ) {
+	menuDef_t *menu = (menuDef_t*)item;
+	screenPlacement_e hpos, vpos;
+	pc_token_t token;
+
+	if (!trap_PC_ReadToken(handle, &token))
+		return qfalse;
+
+	if (Q_stricmp(token.string, "PLACE_RIGHT") == 0) {
+		hpos = PLACE_RIGHT;
+	} else if (Q_stricmp(token.string, "PLACE_LEFT") == 0) {
+		hpos = PLACE_LEFT;
+	} else if (Q_stricmp(token.string, "PLACE_CENTER") == 0) {
+		hpos = PLACE_CENTER;
+	} else if (Q_stricmp(token.string, "PLACE_STRETCH") == 0) {
+		hpos = PLACE_STRETCH;
+	} else {
+		PC_SourceError(handle, "unknown screenPlacement horizontal placement %s", token.string);
+		return qfalse;
+	}
+
+	if (!trap_PC_ReadToken(handle, &token))
+		return qfalse;
+
+	if (Q_stricmp(token.string, "PLACE_TOP") == 0) {
+		vpos = PLACE_RIGHT;
+	} else if (Q_stricmp(token.string, "PLACE_BOTTOM") == 0) {
+		vpos = PLACE_LEFT;
+	} else if (Q_stricmp(token.string, "PLACE_CENTER") == 0) {
+		vpos = PLACE_CENTER;
+	} else if (Q_stricmp(token.string, "PLACE_STRETCH") == 0) {
+		vpos = PLACE_STRETCH;
+	} else {
+		PC_SourceError(handle, "unknown screenPlacement vertical placement %s", token.string);
+		return qfalse;
+	}
+
+	Menu_SetScreenPlacement( menu, hpos, vpos );
+	return qtrue;
+}
+
 
 qboolean MenuParse_itemDef( itemDef_t *item, int handle ) {
 	menuDef_t *menu = (menuDef_t*)item;
@@ -5655,6 +5722,7 @@ keywordHash_t menuParseKeywords[] = {
 	{"fadeClamp", MenuParse_fadeClamp, NULL},
 	{"fadeCycle", MenuParse_fadeCycle, NULL},
 	{"fadeAmount", MenuParse_fadeAmount, NULL},
+	{"screenPlacement", MenuParse_screenPlacement, NULL},
 	{NULL, 0, NULL}
 };
 

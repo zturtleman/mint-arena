@@ -452,6 +452,17 @@ void CopyToBodyQue( gentity_t *ent ) {
 		VectorCopy( ent->player->ps.velocity, body->s.pos.trDelta );
 	} else {
 		body->s.pos.trType = TR_STATIONARY;
+
+		// use unsnapped origin so corpse doesn't move in splitscreen
+		// when switching from drawing player state to corpse.
+		// ZTM: TODO: Corpse bandwidth reduction idea:
+		//            Send (only) unsnapped origin as pos.trBase. Then in CGame
+		//            if it's not a splitscreen player do SnapVector() on it.
+		//            It would also fix the rare case of copy to body queue while
+		//            player is in the air.
+		VectorCopy( ent->player->ps.origin, body->s.origin2 );
+		// ZTM: HACK: tell cgame that origin2 is set to avoid breaking network compat.
+		body->s.eFlags |= EF_MOVER_STOP;
 	}
 	body->s.pos.trTime = level.time;
 	body->s.event = 0;
@@ -899,7 +910,7 @@ char *PlayerConnect( int playerNum, qboolean firstTime, qboolean isBot, int conn
 	if (ent->inuse) {
 		G_LogPrintf("Forcing disconnect on active player: %i\n", playerNum);
 		// so lets just fix up anything that should happen on a disconnect
-		PlayerDisconnect(playerNum);
+		PlayerDisconnect(playerNum, qtrue);
 	}
 	// they can connect
 	ent->player = level.players + playerNum;
@@ -1251,12 +1262,23 @@ Will not be called between levels.
 This should NOT be called directly by any game logic,
 call trap_DropPlayer(), which will call this and do
 server system housekeeping.
+
+force is qfalse if splitscreen player requested leaving (2dropout).
+If force is qfalse and this function returns qfalse it will prevent the
+splitscreen player from disconnecting.
 ============
 */
-void PlayerDisconnect( int playerNum ) {
+qboolean PlayerDisconnect( int playerNum, qboolean force ) {
 	gentity_t	*ent;
 	gentity_t	*tent;
 	int			i;
+
+#if 0
+	if ( !force && !level.intermissiontime && !level.warmupTime ) {
+		trap_SendServerCommand( playerNum, "print \"Splitscreen dropout only allowed during intermission and warmup.\n\"" );
+		return qfalse;
+	}
+#endif
 
 	// cleanup if we are kicking a bot that
 	// hasn't spawned yet
@@ -1264,7 +1286,7 @@ void PlayerDisconnect( int playerNum ) {
 
 	ent = g_entities + playerNum;
 	if (!ent->player || ent->player->pers.connected == CON_DISCONNECTED) {
-		return;
+		return qtrue;
 	}
 
 	// stop any following players
@@ -1334,6 +1356,7 @@ void PlayerDisconnect( int playerNum ) {
 	level.connections[ent->player->pers.connectionNum].numLocalPlayers--;
 	level.connections[ent->player->pers.connectionNum].localPlayerNums[ent->player->pers.localPlayerNum] = -1;
 	ent->player->pers.localPlayerNum = ent->player->pers.connectionNum = -1;
+	return qtrue;
 }
 
 

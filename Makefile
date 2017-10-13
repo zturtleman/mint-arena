@@ -3,18 +3,12 @@
 #
 # GNU Make required
 #
-
-COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]'|sed -e 's/\//_/g')
-
-COMPILE_ARCH=$(shell uname -m | sed -e s/i.86/x86/ | sed -e 's/^arm.*/arm/')
+COMPILE_PLATFORM=$(shell uname | sed -e 's/_.*//' | tr '[:upper:]' '[:lower:]' | sed -e 's/\//_/g')
+COMPILE_ARCH=$(shell uname -m | sed -e 's/i.86/x86/' | sed -e 's/^arm.*/arm/')
 
 ifeq ($(COMPILE_PLATFORM),sunos)
   # Solaris uname and GNU uname differ
-  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/x86/)
-endif
-ifeq ($(COMPILE_PLATFORM),darwin)
-  # Apple does some things a little differently...
-  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/x86/)
+  COMPILE_ARCH=$(shell uname -p | sed -e 's/i.86/x86/')
 endif
 
 ifndef BUILD_GAME_SO
@@ -104,7 +98,7 @@ endif
 export CROSS_COMPILING
 
 ifndef VERSION
-VERSION=0.4
+VERSION=0.5
 endif
 
 ifndef VM_PREFIX
@@ -123,7 +117,7 @@ ifndef BASEGAME_CFLAGS
 BASEGAME_CFLAGS=
 endif
 
-BASEGAME_CFLAGS+=-DMODDIR=\"$(BASEGAME)\"
+BASEGAME_CFLAGS+=-DMODDIR=\"$(BASEGAME)\" -DBASETA=\"$(MISSIONPACK)\"
 
 ifndef MISSIONPACK
 MISSIONPACK=missionpack
@@ -137,7 +131,7 @@ MISSIONPACK_CFLAGS=-DMISSIONPACK -DMISSIONPACK_HUD
 endif
 endif
 
-MISSIONPACK_CFLAGS+=-DMODDIR=\"$(MISSIONPACK)\"
+MISSIONPACK_CFLAGS+=-DMODDIR=\"$(MISSIONPACK)\" -DBASEQ3=\"$(BASEGAME)\"
 
 # Add "-DEXAMPLE" to define EXAMPLE in engine and game/cgame.
 ifndef BUILD_DEFINES
@@ -169,7 +163,7 @@ GENERATE_DEPENDENCIES=1
 endif
 
 ifndef DEBUG_CFLAGS
-DEBUG_CFLAGS=-g -O0
+DEBUG_CFLAGS=-ggdb -O0
 endif
 
 #############################################################################
@@ -280,7 +274,17 @@ ifeq ($(PLATFORM),darwin)
   LIBS = -framework Cocoa
   OPTIMIZEVM=
 
-  BASE_CFLAGS = -Wall -Wimplicit -Wstrict-prototypes
+  # Default minimum Mac OS X version
+  ifeq ($(MACOSX_VERSION_MIN),)
+    MACOSX_VERSION_MIN=10.7
+  endif
+
+  # Multiply by 100 and then remove decimal. 10.7 -> 1070.0 -> 1070
+  MAC_OS_X_VERSION_MIN_REQUIRED=$(shell echo '$(MACOSX_VERSION_MIN) * 100' | bc | cut -d. -f1)
+
+  LDFLAGS += -mmacosx-version-min=$(MACOSX_VERSION_MIN)
+  BASE_CFLAGS += -mmacosx-version-min=$(MACOSX_VERSION_MIN) \
+                 -DMAC_OS_X_VERSION_MIN_REQUIRED=$(MAC_OS_X_VERSION_MIN_REQUIRED)
 
   ifeq ($(ARCH),ppc)
     BASE_CFLAGS += -arch ppc -faltivec -mmacosx-version-min=10.2
@@ -296,7 +300,8 @@ ifeq ($(PLATFORM),darwin)
     BASE_CFLAGS += -arch i386 -m32 -mstackrealign
   endif
   ifeq ($(ARCH),x86_64)
-    OPTIMIZEVM += -arch x86_64 -mfpmath=sse
+    OPTIMIZEVM += -mfpmath=sse
+    BASE_CFLAGS += -arch x86_64
   endif
 
   # When compiling on OSX for OSX, we're not cross compiling as far as the
@@ -318,11 +323,9 @@ ifeq ($(PLATFORM),darwin)
         $(error Architecture $(ARCH) is not supported when cross compiling)
       endif
     endif
-  else
-    TOOLS_CFLAGS += -DMACOS_X
   endif
 
-  BASE_CFLAGS += -fno-strict-aliasing -DMACOS_X -fno-common -pipe -DUSE_ICON
+  BASE_CFLAGS += -fno-strict-aliasing -fno-common -pipe
 
   BASE_CFLAGS += -D_THREAD_SAFE=1
 
@@ -352,10 +355,10 @@ ifdef MINGW
 
     # We need to figure out the correct gcc and windres
     ifeq ($(ARCH),x86_64)
-      MINGW_PREFIXES=amd64-mingw32msvc x86_64-w64-mingw32
+      MINGW_PREFIXES=x86_64-w64-mingw32 amd64-mingw32msvc
     endif
     ifeq ($(ARCH),x86)
-      MINGW_PREFIXES=i586-mingw32msvc i686-w64-mingw32 i686-pc-mingw32
+      MINGW_PREFIXES=i686-w64-mingw32 i586-mingw32msvc i686-pc-mingw32
     endif
 
     ifndef CC
@@ -374,9 +377,11 @@ ifdef MINGW
       CC=gcc
     endif
 
-    ifndef WINDRES
-      WINDRES=windres
-    endif
+  endif
+
+  # using generic windres if specific one is not present
+  ifndef WINDRES
+    WINDRES=windres
   endif
 
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
@@ -431,12 +436,12 @@ else # ifdef MINGW
 ifeq ($(PLATFORM),freebsd)
 
   # flags
-  BASE_CFLAGS = $(shell env MACHINE_ARCH=$(ARCH) make -f /dev/null -VCFLAGS) \
+  BASE_CFLAGS = \
     -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
     -DUSE_ICON -DMAP_ANONYMOUS=MAP_ANON
   HAVE_VM_COMPILED = true
 
-  OPTIMIZEVM = -O3
+  OPTIMIZEVM =
   OPTIMIZE = $(OPTIMIZEVM) -ffast-math
 
   SHLIBEXT=so
@@ -691,7 +696,13 @@ else
   STRIP_FLAG = -s
 endif
 
-BASE_CFLAGS += -DPRODUCT_VERSION=\\\"$(VERSION)\\\" -DBASEGAME=\\\"$(BASEGAME)\\\"
+# https://reproducible-builds.org/specs/source-date-epoch/
+ifdef SOURCE_DATE_EPOCH
+  BASE_CFLAGS += -DPRODUCT_DATE=\\\"$(shell date --date="@$$SOURCE_DATE_EPOCH" "+%b %_d %Y" | sed -e 's/ /\\\ /'g)\\\"
+endif
+
+BASE_CFLAGS += -DPRODUCT_VERSION=\\\"$(VERSION)\\\"
+BASE_CFLAGS += -DBASEGAME=\\\"$(BASEGAME)\\\"
 BASE_CFLAGS += -Wformat=2 -Wno-format-zero-length -Wformat-security -Wno-format-nonliteral
 BASE_CFLAGS += -Wstrict-aliasing=2 -Wmissing-format-attribute
 BASE_CFLAGS += -Wdisabled-optimization
@@ -773,7 +784,7 @@ endif
 
 NAKED_TARGETS=$(shell echo $(TARGETS) | sed -e "s!$(B)/!!g")
 
-print_list=@for i in $(1); \
+print_list=-@for i in $(1); \
      do \
              echo "    $$i"; \
      done
@@ -1398,8 +1409,8 @@ $(B)/$(MISSIONPACK)/vm/$(VM_PREFIX)game.qvm: $(MPGVMOBJ) $(GDIR)/bg_syscalls.asm
 
 # Extra dependencies to ensure the git version is incorporated
 #ifeq ($(USE_GIT),1)
-#  $(B)/$(BASEGAME)/bg_misc.o : .git/index
-#  $(B)/$(MISSIONPACK)/bg_misc.o : .git/index
+#  $(B)/$(BASEGAME)/bg_misc.o : .git
+#  $(B)/$(MISSIONPACK)/bg_misc.o : .git
 #endif
 
 

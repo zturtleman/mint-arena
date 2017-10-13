@@ -61,6 +61,7 @@ typedef struct bot_consolemessage_s
 	int type;									//message type
 	char message[MAX_MESSAGE_SIZE];				//message
 	struct bot_consolemessage_s *prev, *next;	//prev and next in list
+	int references;								//references to this message
 } bot_consolemessage_t;
 
 //match variable

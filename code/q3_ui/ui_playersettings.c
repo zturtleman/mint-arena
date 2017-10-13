@@ -154,7 +154,7 @@ static void PlayerSettings_DrawName( void *self ) {
 	if ( focus ) {
 		style |= UI_FORCECOLOR;
 	}
-	MField_Draw( &f->field, x, y, style, colorWhite, focus );
+	UI_MField_Draw( &f->field, x, y, style, colorWhite, focus );
 
 	// draw at bottom also using proportional font
 	Q_strncpyz( name, MField_Buffer( &f->field ), sizeof(name) );

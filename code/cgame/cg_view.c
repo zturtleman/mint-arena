@@ -324,15 +324,28 @@ static void CG_OffsetThirdPersonView( void ) {
 	vec3_t		focusPoint;
 	float		focusDist;
 	float		forwardScale, sideScale;
+	float		thirdPersonAngle, thirdPersonRange;
 
 	cg.refdef.vieworg[2] += cg.cur_lc->predictedPlayerState.viewheight;
 
 	VectorCopy( cg.refdefViewAngles, focusAngles );
 
-	// if dead, look at killer
-	if ( cg.cur_lc->predictedPlayerState.stats[STAT_HEALTH] <= 0 ) {
-		focusAngles[YAW] = cg.cur_lc->predictedPlayerState.stats[STAT_DEAD_YAW];
-		cg.refdefViewAngles[YAW] = cg.cur_lc->predictedPlayerState.stats[STAT_DEAD_YAW];
+	if ( cg.cur_lc->cameraOrbit ) {
+		thirdPersonAngle = cg.cur_lc->cameraOrbitAngle;
+		thirdPersonRange = cg.cur_lc->cameraOrbitRange;
+
+		// make camera orbit horizontal
+		focusAngles[PITCH] = 0;
+		cg.refdefViewAngles[PITCH] = 0;
+	} else {
+		thirdPersonAngle = cg_thirdPersonAngle[cg.cur_localPlayerNum].value;
+		thirdPersonRange = cg_thirdPersonRange[cg.cur_localPlayerNum].value;
+
+		// if dead, look at killer
+		if ( cg.cur_lc->predictedPlayerState.stats[STAT_HEALTH] <= 0 ) {
+			focusAngles[YAW] = cg.cur_lc->predictedPlayerState.stats[STAT_DEAD_YAW];
+			cg.refdefViewAngles[YAW] = cg.cur_lc->predictedPlayerState.stats[STAT_DEAD_YAW];
+		}
 	}
 
 	if ( focusAngles[PITCH] > 45 ) {
@@ -354,10 +367,10 @@ static void CG_OffsetThirdPersonView( void ) {
 
 	AngleVectors( cg.refdefViewAngles, forward, right, up );
 
-	forwardScale = cos( cg_thirdPersonAngle[cg.cur_localPlayerNum].value / 180 * M_PI );
-	sideScale = sin( cg_thirdPersonAngle[cg.cur_localPlayerNum].value / 180 * M_PI );
-	VectorMA( view, -cg_thirdPersonRange[cg.cur_localPlayerNum].value * forwardScale, forward, view );
-	VectorMA( view, -cg_thirdPersonRange[cg.cur_localPlayerNum].value * sideScale, right, view );
+	forwardScale = cos( thirdPersonAngle / 180 * M_PI );
+	sideScale = sin( thirdPersonAngle / 180 * M_PI );
+	VectorMA( view, -thirdPersonRange * forwardScale, forward, view );
+	VectorMA( view, -thirdPersonRange * sideScale, right, view );
 
 	// trace a ray from the origin to the viewpoint to make sure the view isn't
 	// in a solid block.  Use a 10 by 10 block to prevent the view from near clipping anything
@@ -386,7 +399,7 @@ static void CG_OffsetThirdPersonView( void ) {
 		focusDist = 1;	// should never happen
 	}
 	cg.refdefViewAngles[PITCH] = -180 / M_PI * atan2( focusPoint[2], focusDist );
-	cg.refdefViewAngles[YAW] -= cg_thirdPersonAngle[cg.cur_localPlayerNum].value;
+	cg.refdefViewAngles[YAW] -= thirdPersonAngle;
 }
 
 /*
@@ -560,28 +573,27 @@ Fixed fov at intermissions, otherwise account for fov variable and zooms.
 #define	WAVE_AMPLITUDE	1
 #define	WAVE_FREQUENCY	0.4
 
-static int CG_CalcFov( void ) {
+static void CG_CalcFov2( const refdef_t *refdef, float *input_fov, float *out_fov_x, float *out_fov_y ) {
 	float	x;
 	float	phase;
 	float	v;
-	int		contents;
 	float	fov_x, fov_y;
 	float	zoomFov;
 	float	f;
 
 	if ( cg.cur_lc->predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		// if in intermission, use a fixed value
-		cg.fov = fov_x = 90;
+		fov_x = 90;
+		*input_fov = 90;
 	} else {
 		// user selectable
 		if ( cgs.dmflags & DF_FIXED_FOV ) {
 			// dmflag to prevent wide fov for all players
 			fov_x = 90;
+			*input_fov = 90;
 		} else {
-			fov_x = cg_fov.value;
+			fov_x = *input_fov;
 		}
-
-		cg.fov = fov_x;
 
 		// account for zooms
 		zoomFov = cg_zoomFov.value;
@@ -605,33 +617,48 @@ static int CG_CalcFov( void ) {
 		// Based on LordHavoc's code for Darkplaces
 		// http://www.quakeworld.nu/forum/topic/53/what-does-your-qw-look-like/page/30
 		const float baseAspect = 0.75f; // 3/4
-		const float aspect = (float)cg.refdef.width/(float)cg.refdef.height;
+		const float aspect = (float)refdef->width/(float)refdef->height;
 		const float desiredFov = fov_x;
 
 		fov_x = atan( tan( desiredFov*M_PI / 360.0f ) * baseAspect*aspect )*360.0f / M_PI;
 	}
 
-	x = cg.refdef.width / tan( fov_x / 360 * M_PI );
-	fov_y = atan2( cg.refdef.height, x );
+	x = refdef->width / tan( fov_x / 360 * M_PI );
+	fov_y = atan2( refdef->height, x );
 	fov_y = fov_y * 360 / M_PI;
 
 	// warp if underwater
-	contents = CG_PointContents( cg.refdef.vieworg, -1 );
-	if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ){
+	if ( refdef->rdflags & RDF_UNDERWATER ) {
 		phase = cg.time / 1000.0 * WAVE_FREQUENCY * M_PI * 2;
 		v = WAVE_AMPLITUDE * sin( phase );
 		fov_x += v;
 		fov_y -= v;
+	}
+
+	*out_fov_x = fov_x;
+	*out_fov_y = fov_y;
+}
+
+static int CG_CalcFov( void ) {
+	float fov;
+	int contents;
+
+	// check if underwater
+	contents = CG_PointContents( cg.refdef.vieworg, -1 );
+	if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ){
 		cg.refdef.rdflags |= RDF_UNDERWATER;
 	}
 	else {
 		cg.refdef.rdflags &= ~RDF_UNDERWATER;
 	}
 
+	// set world fov
+	fov = cg_fov.integer;
+	CG_CalcFov2( &cg.refdef, &fov, &cg.refdef.fov_x, &cg.refdef.fov_y );
 
-	// set it
-	cg.refdef.fov_x = fov_x;
-	cg.refdef.fov_y = fov_y;
+	// set view weapon fov
+	cg.viewWeaponFov = cg_weaponFov.integer ? cg_weaponFov.integer : cg_fov.integer;
+	CG_CalcFov2( &cg.refdef, &cg.viewWeaponFov, &cg.refdef.weapon_fov_x, &cg.refdef.weapon_fov_y );
 
 	if ( !cg.cur_lc->zoomed ) {
 		cg.cur_lc->zoomSensitivity = 1;
@@ -786,11 +813,10 @@ static int CG_CalcViewValues( void ) {
 	VectorCopy( ps->origin, cg.refdef.vieworg );
 	VectorCopy( ps->viewangles, cg.refdefViewAngles );
 
-	if (cg_cameraOrbit.integer) {
-		if (cg.time > cg.nextOrbitTime) {
-			cg_thirdPersonAngle[cg.cur_localPlayerNum].value += cg_cameraOrbit.value;
-		}
+	if ( cg.cur_lc->cameraOrbit ) {
+		cg.cur_lc->cameraOrbitAngle += cg.cur_lc->cameraOrbit * cg.frametime * 0.001f;
 	}
+
 	// add error decay
 	if ( cg_errorDecay.value > 0 ) {
 		int		t;
@@ -1093,7 +1119,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 		// decide on third person view
 		cg.cur_lc->renderingThirdPerson = cg.cur_ps->persistant[PERS_TEAM] != TEAM_SPECTATOR
-							&& (cg_thirdPerson[cg.cur_localPlayerNum].integer || (cg.cur_ps->stats[STAT_HEALTH] <= 0));
+							&& (cg_thirdPerson[cg.cur_localPlayerNum].integer || (cg.cur_ps->stats[STAT_HEALTH] <= 0) || cg.cur_lc->cameraOrbit);
 
 		// build cg.refdef
 		inwater = CG_CalcViewValues();
@@ -1161,12 +1187,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	cg.cur_localPlayerNum = -1;
 	cg.cur_lc = NULL;
 	cg.cur_ps = NULL;
-
-	if (cg_cameraOrbit.integer) {
-		if (cg.time > cg.nextOrbitTime) {
-			cg.nextOrbitTime = cg.time + cg_cameraOrbitDelay.integer;
-		}
-	}
 
 	// load any models that have been deferred if a scoreboard is shown
 	if ( !CG_AnyScoreboardShowing() ) {

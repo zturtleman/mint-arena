@@ -348,20 +348,24 @@ void trap_ClientCommand(int playerNum, const char *command) {
 
 
 int trap_BotGetSnapshotEntity( int playerNum, int sequence ) {
-	return syscall( BOTLIB_GET_SNAPSHOT_ENTITY, playerNum, sequence );
+	return syscall( G_BOT_GET_SNAPSHOT_ENTITY, playerNum, sequence );
 }
 
-int trap_BotGetServerCommand(int playerNum, char *message, int size) {
-	return syscall( BOTLIB_GET_CONSOLE_MESSAGE, playerNum, message, size );
+int trap_BotGetServerCommand(int playerNum, char *command, int size) {
+	return syscall( G_BOT_GET_SERVER_COMMAND, playerNum, command, size );
 }
 
 void trap_BotUserCommand(int playerNum, usercmd_t *ucmd) {
-	syscall( BOTLIB_USER_COMMAND, playerNum, ucmd );
+	syscall( G_BOT_USER_COMMAND, playerNum, ucmd );
 }
 
 
-int trap_PC_AddGlobalDefine(char *string) {
-	return syscall( G_PC_ADD_GLOBAL_DEFINE, string );
+int trap_PC_AddGlobalDefine( const char *define ) {
+	return syscall( G_PC_ADD_GLOBAL_DEFINE, define );
+}
+
+int trap_PC_RemoveGlobalDefine( const char *define ) {
+	return syscall( G_PC_REMOVE_GLOBAL_DEFINE, define );
 }
 
 void trap_PC_RemoveAllGlobalDefines( void ) {
@@ -374,6 +378,10 @@ int trap_PC_LoadSource( const char *filename, const char *basepath ) {
 
 int trap_PC_FreeSource( int handle ) {
 	return syscall( G_PC_FREE_SOURCE, handle );
+}
+
+int trap_PC_AddDefine( int handle, const char *define ) {
+	return syscall( G_PC_ADD_DEFINE, handle, define );
 }
 
 int trap_PC_ReadToken( int handle, pc_token_t *pc_token ) {
@@ -398,4 +406,16 @@ int trap_HeapAvailable( void ) {
 
 void trap_HeapFree( void *data ) {
 	syscall( G_HEAP_FREE, data );
+}
+
+void trap_Field_CompleteFilename( const char *dir, const char *ext, qboolean stripExt, qboolean allowNonPureFilesOnDisk ) {
+	syscall( G_FIELD_COMPLETEFILENAME, dir, ext, stripExt, allowNonPureFilesOnDisk );
+}
+
+void trap_Field_CompleteCommand( const char *cmd, qboolean doCommands, qboolean doCvars ) {
+	syscall( G_FIELD_COMPLETECOMMAND, cmd, doCommands, doCvars );
+}
+
+void	trap_Field_CompleteList( const char *list ) {
+	syscall( G_FIELD_COMPLETELIST, list );
 }

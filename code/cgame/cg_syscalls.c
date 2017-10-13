@@ -330,6 +330,10 @@ void trap_S_SetStreamVolume( int stream, float volume ) {
 	syscall( CG_S_SETSTREAMVOLUME, stream, PASSFLOAT( volume ) );
 }
 
+void trap_S_StopAllSounds( void ) {
+	syscall( CG_S_STOPALLSOUNDS );
+}
+
 void	trap_R_LoadWorldMap( const char *mapname ) {
 	syscall( CG_R_LOADWORLDMAP, mapname );
 }
@@ -773,8 +777,12 @@ qboolean trap_LAN_ServerIsInFavoriteList( int source, int n  ) {
 	return syscall( CG_LAN_SERVERISINFAVORITELIST, source, n );
 }
 
-int trap_PC_AddGlobalDefine( char *define ) {
+int trap_PC_AddGlobalDefine( const char *define ) {
 	return syscall( CG_PC_ADD_GLOBAL_DEFINE, define );
+}
+
+int trap_PC_RemoveGlobalDefine( const char *define ) {
+	return syscall( CG_PC_REMOVE_GLOBAL_DEFINE, define );
 }
 
 void trap_PC_RemoveAllGlobalDefines( void ) {
@@ -787,6 +795,10 @@ int trap_PC_LoadSource( const char *filename, const char *basepath ) {
 
 int trap_PC_FreeSource( int handle ) {
 	return syscall( CG_PC_FREE_SOURCE, handle );
+}
+
+int trap_PC_AddDefine( int handle, const char *define ) {
+	return syscall( CG_PC_ADD_DEFINE, handle, define );
 }
 
 int trap_PC_ReadToken( int handle, pc_token_t *pc_token ) {
@@ -811,6 +823,18 @@ int trap_HeapAvailable( void ) {
 
 void trap_HeapFree( void *data ) {
 	syscall( CG_HEAP_FREE, data );
+}
+
+void	trap_Field_CompleteFilename( const char *dir, const char *ext, qboolean stripExt, qboolean allowNonPureFilesOnDisk ) {
+	syscall( CG_FIELD_COMPLETEFILENAME, dir, ext, stripExt, allowNonPureFilesOnDisk );
+}
+
+void	trap_Field_CompleteCommand( const char *cmd, qboolean doCommands, qboolean doCvars ) {
+	syscall( CG_FIELD_COMPLETECOMMAND, cmd, doCommands, doCvars );
+}
+
+void	trap_Field_CompleteList( const char *list ) {
+	syscall( CG_FIELD_COMPLETELIST, list );
 }
 
 int trap_RealTime(qtime_t *qtime) {

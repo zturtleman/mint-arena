@@ -170,17 +170,17 @@ void G_TeamCommand( team_t team, char *cmd ) {
 
 			playerNum = connection->localPlayerNums[j];
 
-			if ( level.players[playerNum].sess.sessionTeam == team )
-				break;			
+			if ( level.players[playerNum].sess.sessionTeam == team ) {
+				if ( connection->numLocalPlayers == 1 ) {
+					trap_SendServerCommand( playerNum, cmd );
+				}
+				break;
+			}
 		}
 
-		if ( j < MAX_SPLITVIEW ) {
-			// Include team when there are multiple local players
-			if ( connection->numLocalPlayers > 1 ) {
-				trap_SendServerCommandEx( i, -1, va( "[%s] %s", TeamName( team ), cmd ) );
-			} else {
-				trap_SendServerCommand( i, cmd );
-			}
+		// Include team when there are multiple local players
+		if ( connection->numLocalPlayers > 1 && j < MAX_SPLITVIEW ) {
+			trap_SendServerCommandEx( i, -1, va( "[%s] %s", TeamName( team ), cmd ) );
 		}
 	}
 }
@@ -463,7 +463,6 @@ gentity_t *G_Spawn( void ) {
 	gentity_t	*e;
 
 	e = NULL;	// shut up warning
-	i = 0;		// shut up warning
 	for ( force = 0 ; force < 2 ; force++ ) {
 		// if we go through all entities and can't find one to free,
 		// override the normal minimum times before use

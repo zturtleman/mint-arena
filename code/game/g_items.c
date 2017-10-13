@@ -880,15 +880,17 @@ void G_SpawnItem (gentity_t *ent, gitem_t *item) {
 
 #ifdef MISSIONPACK
 	if ( item->giType == IT_PERSISTANT_POWERUP ) {
-		// allow both teams to pick it up
-		if ( ( ent->spawnflags & 2 ) && ( ent->spawnflags & 4 ) ) {
-			ent->s.team = 255;
-		}
+		qboolean redTeam = !!( ent->spawnflags & 2 );
+		qboolean blueTeam = !!( ent->spawnflags & 4 );
+
 		// only one team can pick it up
-		else if ( ent->spawnflags & 2 )
+		if ( redTeam && !blueTeam )
 			ent->s.team = TEAM_RED;
-		else if ( ent->spawnflags & 4 )
+		else if ( blueTeam && !redTeam )
 			ent->s.team = TEAM_BLUE;
+		// allow all players to pick it up
+		else
+			ent->s.team = 255;
 	}
 #endif
 }

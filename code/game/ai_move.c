@@ -185,43 +185,6 @@ float AngleDiff(float ang1, float ang2)
 } //end of the function AngleDiff
 //===========================================================================
 //
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-void BotPrintTravelType(int traveltype)
-{
-	char *str;
-	//
-	switch(traveltype & TRAVELTYPE_MASK)
-	{
-		case TRAVEL_INVALID: str = "TRAVEL_INVALID"; break;
-		case TRAVEL_WALK: str = "TRAVEL_WALK"; break;
-		case TRAVEL_CROUCH: str = "TRAVEL_CROUCH"; break;
-		case TRAVEL_BARRIERJUMP: str = "TRAVEL_BARRIERJUMP"; break;
-		case TRAVEL_JUMP: str = "TRAVEL_JUMP"; break;
-		case TRAVEL_LADDER: str = "TRAVEL_LADDER"; break;
-		case TRAVEL_WALKOFFLEDGE: str = "TRAVEL_WALKOFFLEDGE"; break;
-		case TRAVEL_SWIM: str = "TRAVEL_SWIM"; break;
-		case TRAVEL_WATERJUMP: str = "TRAVEL_WATERJUMP"; break;
-		case TRAVEL_TELEPORT: str = "TRAVEL_TELEPORT"; break;
-		case TRAVEL_ELEVATOR: str = "TRAVEL_ELEVATOR"; break;
-		case TRAVEL_ROCKETJUMP: str = "TRAVEL_ROCKETJUMP"; break;
-		case TRAVEL_BFGJUMP: str = "TRAVEL_BFGJUMP"; break;
-		case TRAVEL_GRAPPLEHOOK: str = "TRAVEL_GRAPPLEHOOK"; break;
-		case TRAVEL_DOUBLEJUMP: str = "TRAVEL_DOUBLEJUMP"; break;
-		case TRAVEL_RAMPJUMP: str = "TRAVEL_RAMPJUMP"; break;
-		case TRAVEL_STRAFEJUMP: str = "TRAVEL_STRAFEJUMP"; break;
-		case TRAVEL_JUMPPAD: str = "TRAVEL_JUMPPAD"; break;
-		case TRAVEL_FUNCBOB: str = "TRAVEL_FUNCBOB"; break;
-		default:
-			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "UNKNOWN TRAVEL TYPE (%d)" S_COLOR_WHITE, (traveltype & TRAVELTYPE_MASK));
-			return;
-	} //end switch
-	BotAI_Print(PRT_MESSAGE, "%s", str);
-} //end of the function AAS_PrintTravelType
-//===========================================================================
-//
 // Parameter:			-
 // Returns:				-
 // Changes Globals:		-
@@ -3331,7 +3294,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 					if (ms->reachability_time < trap_AAS_Time())
 					{
 						BotAI_Print(PRT_MESSAGE, "player %d: reachability timeout in ", ms->playernum);
-						BotPrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
+						trap_AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
 						BotAI_Print(PRT_MESSAGE, "\n");
 					} //end if
 					/*
@@ -3413,7 +3376,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 			//
 #ifdef DEBUG_AI_MOVE
 			trap_AAS_ClearShownDebugLines();
-			BotPrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
+			trap_AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
 			trap_AAS_ShowReachability(&reach);
 #endif //DEBUG_AI_MOVE
 			//
@@ -3421,7 +3384,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 			if (bot_developer.integer)
 			{
 				BotAI_Print(PRT_MESSAGE, "player %d: ", ms->playernum);
-				BotPrintTravelType(reach.traveltype);
+				trap_AAS_PrintTravelType(reach.traveltype);
 				BotAI_Print(PRT_MESSAGE, "\n");
 			}
 #endif
@@ -3463,7 +3426,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 			if (result->failure)
 			{
 				BotAI_Print(PRT_MESSAGE, "player %d: movement failure in ", ms->playernum);
-				BotPrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
+				trap_AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
 				BotAI_Print(PRT_MESSAGE, "\n");
 			} //end if
 		} //end if
@@ -3530,7 +3493,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 			if (bot_developer.integer)
 			{
 				BotAI_Print(PRT_MESSAGE, "player %d finish: ", ms->playernum);
-				BotPrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
+				trap_AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
 				BotAI_Print(PRT_MESSAGE, "\n");
 			}
 #endif
@@ -3565,7 +3528,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 				if (result->failure)
 				{
 					BotAI_Print(PRT_MESSAGE, "player %d: movement failure in finish ", ms->playernum);
-					BotPrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
+					trap_AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
 					BotAI_Print(PRT_MESSAGE, "\n");
 				} //end if
 			} //end if

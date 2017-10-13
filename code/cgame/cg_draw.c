@@ -1199,10 +1199,13 @@ static void CG_DrawLowerRight( void ) {
 CG_DrawPickupItem
 ===================
 */
-#ifndef MISSIONPACK_HUD
 static int CG_DrawPickupItem( int y ) {
 	int		value;
 	float	*fadeColor;
+
+	if ( !cg_drawPickupItems.integer ) {
+		return y;
+	}
 
 	if ( cg.cur_ps->stats[STAT_HEALTH] <= 0 ) {
 		return y;
@@ -1224,7 +1227,6 @@ static int CG_DrawPickupItem( int y ) {
 	
 	return y;
 }
-#endif // MISSIONPACK_HUD
 
 /*
 =====================
@@ -1232,7 +1234,6 @@ CG_DrawLowerLeft
 
 =====================
 */
-#ifndef MISSIONPACK_HUD
 static void CG_DrawLowerLeft( void ) {
 	float	y;
 
@@ -1240,14 +1241,15 @@ static void CG_DrawLowerLeft( void ) {
 
 	CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
 
+#ifndef MISSIONPACK_HUD
 	if ( cgs.gametype >= GT_TEAM && cg_drawTeamOverlay.integer == 3 ) {
 		y = CG_DrawTeamOverlay( y, qfalse, qfalse );
 	} 
+#endif
 
 
 	CG_DrawPickupItem( y );
 }
-#endif // MISSIONPACK_HUD
 
 
 //===========================================================================================
@@ -1264,9 +1266,16 @@ static void CG_DrawTeamInfo( void ) {
 	vec4_t		hcolor;
 	int		chatHeight;
 	int		lineHeight;
+	team_t	team;
 
 #define CHATLOC_Y 420 // bottom end
 #define CHATLOC_X 0
+
+	// make spectators use TEAM_SPECTATOR
+	team = cgs.playerinfo[ cg.cur_lc->playerNum ].team;
+	if (team < 0 || team >= TEAM_NUM_TEAMS) {
+		return;
+	}
 
 	if (cg_teamChatHeight.integer < TEAMCHAT_HEIGHT)
 		chatHeight = cg_teamChatHeight.integer;
@@ -1279,19 +1288,19 @@ static void CG_DrawTeamInfo( void ) {
 
 	lineHeight = CG_DrawStringLineHeight( UI_TINYFONT );
 
-	if (cgs.teamLastChatPos != cgs.teamChatPos) {
-		if (cg.time - cgs.teamChatMsgTimes[cgs.teamLastChatPos % chatHeight] > cg_teamChatTime.integer) {
-			cgs.teamLastChatPos++;
+	if (cg.cur_lc->teamLastChatPos != cg.cur_lc->teamChatPos) {
+		if (cg.time - cg.cur_lc->teamChatMsgTimes[cg.cur_lc->teamLastChatPos % chatHeight] > cg_teamChatTime.integer) {
+			cg.cur_lc->teamLastChatPos++;
 		}
 
-		h = (cgs.teamChatPos - cgs.teamLastChatPos) * lineHeight;
+		h = (cg.cur_lc->teamChatPos - cg.cur_lc->teamLastChatPos) * lineHeight;
 
-		if ( cg.cur_ps->persistant[PERS_TEAM] == TEAM_RED ) {
+		if ( team == TEAM_RED ) {
 			hcolor[0] = 1.0f;
 			hcolor[1] = 0.0f;
 			hcolor[2] = 0.0f;
 			hcolor[3] = 0.33f;
-		} else if ( cg.cur_ps->persistant[PERS_TEAM] == TEAM_BLUE ) {
+		} else if ( team == TEAM_BLUE ) {
 			hcolor[0] = 0.0f;
 			hcolor[1] = 0.0f;
 			hcolor[2] = 1.0f;
@@ -1310,10 +1319,10 @@ static void CG_DrawTeamInfo( void ) {
 		hcolor[0] = hcolor[1] = hcolor[2] = 1.0f;
 		hcolor[3] = 1.0f;
 
-		for (i = cgs.teamChatPos - 1; i >= cgs.teamLastChatPos; i--) {
+		for (i = cg.cur_lc->teamChatPos - 1; i >= cg.cur_lc->teamLastChatPos; i--) {
 			CG_DrawString( CHATLOC_X + TINYCHAR_WIDTH, 
-				CHATLOC_Y - (cgs.teamChatPos - i)*lineHeight, 
-				cgs.teamChatMsgs[i % chatHeight],
+				CHATLOC_Y - (cg.cur_lc->teamChatPos - i)*lineHeight,
+				cg.cur_lc->teamChatMsgs[i % chatHeight],
 				UI_TINYFONT, hcolor );
 		}
 	}
@@ -2648,6 +2657,7 @@ static void CG_DrawWarmup( void ) {
 	float		scale;
 	playerInfo_t	*ci1, *ci2;
 	const char	*s;
+	int			style;
 
 	sec = cg.warmup;
 	if ( !sec ) {
@@ -2712,19 +2722,24 @@ static void CG_DrawWarmup( void ) {
 	switch ( cg.warmupCount ) {
 	case 0:
 		scale = 28 / 48.0f;
+		style = UI_GIANTFONT;
 		break;
 	case 1:
 		scale = 24 / 48.0f;
+		style = UI_GIANTFONT;
 		break;
 	case 2:
 		scale = 20 / 48.0f;
+		style = UI_GIANTFONT;
 		break;
 	default:
 		scale = 16 / 48.0f;
+		// use big font for native 16 point font
+		style = UI_BIGFONT;
 		break;
 	}
 
-	CG_DrawStringExt( SCREEN_WIDTH / 2, 70, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT|UI_NOSCALE, NULL, scale, 0, 0 );
+	CG_DrawStringExt( SCREEN_WIDTH / 2, 70, s, UI_CENTER|UI_DROPSHADOW|style, NULL, scale, 0, 0 );
 }
 
 
@@ -2735,13 +2750,12 @@ CG_DrawNotify
 Draw console notify area.
 =====================
 */
-void CG_DrawNotify( void ) {
+void CG_DrawNotify( qboolean voiceMenuOpen ) {
 	int x;
 
 #ifdef MISSIONPACK_HUD
 	// voice head is being shown
-	if ( !cg.cur_lc->showScores && cg.cur_ps->stats[STAT_HEALTH] > 0 &&
-		cg.cur_lc->voiceTime && cg.cur_lc->voiceTime >= cg.time && cg.cur_lc->playerNum != cg.cur_lc->currentVoicePlayerNum )
+	if ( voiceMenuOpen )
 		x = 72;
 	else
 #endif
@@ -2758,11 +2772,13 @@ void CG_DrawNotify( void ) {
 CG_DrawTimedMenus
 =================
 */
-void CG_DrawTimedMenus( void ) {
+void CG_DrawTimedMenus( qboolean *voiceMenuOpen ) {
 	if ( cg.cur_lc->voiceTime && cg.cur_lc->voiceTime >= cg.time && cg.cur_lc->playerNum != cg.cur_lc->currentVoicePlayerNum ) {
 		Menus_OpenByName("voiceMenu");
+		*voiceMenuOpen = qtrue;
 	} else {
 		Menus_CloseByName("voiceMenu");
+		*voiceMenuOpen = qfalse;
 	}
 }
 #endif
@@ -2771,7 +2787,7 @@ void CG_DrawTimedMenus( void ) {
 CG_Draw2D
 =================
 */
-static void CG_Draw2D(stereoFrame_t stereoFrame)
+static void CG_Draw2D(stereoFrame_t stereoFrame, qboolean *voiceMenuOpen)
 {
 #ifdef MISSIONPACK
 	if (cg.cur_lc->orderPending && cg.time > cg.cur_lc->orderTime) {
@@ -2816,7 +2832,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 			if ( cg_drawStatus.integer ) {
 				CG_SetScreenPlacement(PLACE_CENTER, PLACE_BOTTOM);
 
-				CG_DrawTimedMenus();
+				CG_DrawTimedMenus(voiceMenuOpen);
 				Menu_PaintAll();
 			}
 #else
@@ -2841,12 +2857,12 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 #endif
 			CG_DrawReward();
 		}
-    
-		if ( cgs.gametype >= GT_TEAM ) {
+	}
+
+	if ( cgs.gametype >= GT_TEAM ) {
 #ifndef MISSIONPACK_HUD
-			CG_DrawTeamInfo();
+		CG_DrawTeamInfo();
 #endif
-		}
 	}
 
 	CG_DrawVote();
@@ -2866,8 +2882,8 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 
 #ifndef MISSIONPACK_HUD
 	CG_DrawLowerRight();
-	CG_DrawLowerLeft();
 #endif
+	CG_DrawLowerLeft();
 
 	CG_DrawShaderInfo();
 
@@ -2994,6 +3010,8 @@ Perform all drawing needed to completely fill the viewport
 =====================
 */
 void CG_DrawActive( stereoFrame_t stereoView ) {
+	qboolean voiceMenuOpen = qfalse;
+
 	// optionally draw the info screen instead
 	if ( !cg.snap ) {
 		CG_DrawInformation();
@@ -3026,13 +3044,10 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 	// draw 3D view
 	trap_R_RenderScene( &cg.refdef );
 
-	// draw the 3D view weapon
-	CG_DrawViewWeapon( &cg.cur_lc->predictedPlayerState );
-
 	// draw status bar and other floating elements
- 	CG_Draw2D(stereoView);
+	CG_Draw2D(stereoView, &voiceMenuOpen);
 
-	CG_DrawNotify();
+	CG_DrawNotify(voiceMenuOpen);
 }
 
 /*
@@ -3073,10 +3088,12 @@ void CG_DrawMessageMode( void ) {
 		return;
 	}
 
+	CG_SetScreenPlacement( PLACE_LEFT, PLACE_CENTER );
+
 	// draw the chat line
 	CG_DrawString( 8, 232, cg.messagePrompt, UI_DROPSHADOW|UI_BIGFONT, NULL );
 
-	MField_Draw( &cg.messageField, 8 + CG_DrawStrlen( cg.messagePrompt, UI_BIGFONT ), 232,
+	CG_MField_Draw( &cg.messageField, 8 + CG_DrawStrlen( cg.messagePrompt, UI_BIGFONT ), 232,
 			UI_DROPSHADOW|UI_BIGFONT, NULL, qtrue );
 }
 

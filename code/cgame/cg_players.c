@@ -78,6 +78,56 @@ sfxHandle_t	CG_CustomSound( int playerNum, const char *soundName ) {
 }
 
 
+/*
+================
+CG_CachePlayerSounds
+
+Used to cache missionpack player sounds at start up.
+================
+*/
+void CG_CachePlayerSounds( const char *modelName ) {
+	char filename[MAX_QPATH];
+	const char *s;
+	int i;
+
+	for ( i = 0 ; i < MAX_CUSTOM_SOUNDS; i++ ) {
+		s = cg_customSoundNames[i];
+		if ( !s ) {
+			break;
+		}
+
+		Com_sprintf( filename, sizeof( filename ), "sound/player/%s/%s", modelName, s + 1 );
+		trap_S_RegisterSound( filename, qfalse );
+	}
+}
+
+/*
+================
+CG_CachePlayerModels
+
+Used to cache missionpack player models at start up.
+================
+*/
+void CG_CachePlayerModels( const char *modelName, const char *headModelName ) {
+	char filename[MAX_QPATH];
+
+	Com_sprintf( filename, sizeof( filename ), "models/players/%s/lower.md3", modelName );
+	trap_R_RegisterModel( filename );
+
+	Com_sprintf( filename, sizeof( filename ), "models/players/%s/upper.md3", modelName );
+	trap_R_RegisterModel( filename );
+
+	if ( headModelName[0] == '*' ) {
+		Com_sprintf( filename, sizeof( filename ), "models/players/heads/%s/%s.md3", &headModelName[1], &headModelName[1] );
+	} else {
+		Com_sprintf( filename, sizeof( filename ), "models/players/%s/head.md3", headModelName );
+	}
+
+	if ( !trap_R_RegisterModel( filename ) && headModelName[0] != '*' ) {
+		Com_sprintf( filename, sizeof( filename ), "models/players/heads/%s/%s.md3", headModelName, headModelName );
+		trap_R_RegisterModel( filename );
+	}
+}
 
 /*
 =============================================================================
@@ -498,6 +548,8 @@ qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append ) {
 	char		surfName[MAX_QPATH];
 	char		shaderName[MAX_QPATH];
 	qhandle_t	hShader;
+	int			initialSurfaces;
+	int			totalSurfaces;
 
 	if ( !name || !name[0] ) {
 		Com_DPrintf( "Empty name passed to RE_RegisterSkin\n" );
@@ -517,6 +569,9 @@ qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append ) {
 	if ( !append ) {
 		skin->numSurfaces = 0;
 	}
+
+	initialSurfaces = skin->numSurfaces;
+	totalSurfaces = skin->numSurfaces;
 
 	// load the file
 	len = trap_FS_FOpenFile( name, &f, FS_READ );
@@ -563,20 +618,24 @@ qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append ) {
 		token = COM_ParseExt2( &text_p, qfalse, ',' );
 		Q_strncpyz( shaderName, token, sizeof( shaderName ) );
 
-		if ( skin->numSurfaces >= MAX_CG_SKIN_SURFACES ) {
-			Com_Printf( "WARNING: Ignoring surfaces in '%s', the max is %d surfaces!\n", name, MAX_CG_SKIN_SURFACES );
-			break;
+		if ( skin->numSurfaces < MAX_CG_SKIN_SURFACES ) {
+			hShader = trap_R_RegisterShaderEx( shaderName, LIGHTMAP_NONE, qtrue );
+
+			// for compatibility with quake3 skins, don't render missing shaders listed in skins
+			if ( !hShader ) {
+				hShader = cgs.media.nodrawShader;
+			}
+
+			skin->surfaces[skin->numSurfaces] = trap_R_AllocSkinSurface( surfName, hShader );
+			skin->numSurfaces++;
 		}
 
-		hShader = trap_R_RegisterShaderEx( shaderName, LIGHTMAP_NONE, qtrue );
+		totalSurfaces++;
+	}
 
-		// for compatibility with quake3 skins, don't render missing shaders listed in skins
-		if ( !hShader ) {
-			hShader = cgs.media.nodrawShader;
-		}
-
-		skin->surfaces[skin->numSurfaces] = trap_R_AllocSkinSurface( surfName, hShader );
-		skin->numSurfaces++;
+	if ( totalSurfaces > MAX_CG_SKIN_SURFACES ) {
+		CG_Printf( "WARNING: Ignoring excess surfaces (found %d, max is %d) in skin '%s'!\n",
+					totalSurfaces - initialSurfaces, MAX_CG_SKIN_SURFACES - initialSurfaces, name );
 	}
 
 	// failed to load surfaces
@@ -807,6 +866,8 @@ This will usually be deferred to a safe time
 ===================
 */
 static void CG_LoadPlayerInfo( int playerNum, playerInfo_t *pi ) {
+	const char	*defaultModel, *defaultHeadModel;
+	const char	*skinName, *headSkinName;
 	const char	*dir, *fallback;
 	int			i, modelloaded;
 	const char	*s;
@@ -831,21 +892,23 @@ static void CG_LoadPlayerInfo( int playerNum, playerInfo_t *pi ) {
 			CG_Error( "CG_RegisterPlayerModelname( %s, %s, %s, %s %s ) failed", pi->modelName, pi->skinName, pi->headModelName, pi->headSkinName, teamname );
 		}
 
-		// fall back to default team name
-		if( cgs.gametype >= GT_TEAM) {
+		if ( cgs.gametype >= GT_TEAM ) {
+			defaultModel = cg_defaultTeamModelGender.string[0] == 'f' ? cg_defaultFemaleTeamModel.string : cg_defaultMaleTeamModel.string;
+			defaultHeadModel = cg_defaultModelGender.string[0] == 'f' ? cg_defaultFemaleTeamHeadModel.string : cg_defaultMaleTeamHeadModel.string;
+
 			// keep skin name
-			if( pi->team == TEAM_BLUE ) {
-				Q_strncpyz(teamname, DEFAULT_BLUETEAM_NAME, sizeof(teamname) );
-			} else {
-				Q_strncpyz(teamname, DEFAULT_REDTEAM_NAME, sizeof(teamname) );
-			}
-			if ( !CG_RegisterPlayerModelname( pi, DEFAULT_TEAM_MODEL, pi->skinName, DEFAULT_TEAM_HEAD, pi->skinName, teamname ) ) {
-				CG_Error( "DEFAULT_TEAM_MODEL / skin (%s/%s) failed to register", DEFAULT_TEAM_MODEL, pi->skinName );
-			}
+			skinName = pi->skinName;
+			headSkinName = pi->headSkinName;
 		} else {
-			if ( !CG_RegisterPlayerModelname( pi, DEFAULT_MODEL, "default", DEFAULT_HEAD, "default", teamname ) ) {
-				CG_Error( "DEFAULT_MODEL (%s) failed to register", DEFAULT_MODEL );
-			}
+			defaultModel = cg_defaultModelGender.string[0] == 'f' ? cg_defaultFemaleModel.string : cg_defaultMaleModel.string;
+			defaultHeadModel = cg_defaultModelGender.string[0] == 'f' ? cg_defaultFemaleHeadModel.string : cg_defaultMaleHeadModel.string;
+
+			skinName = "default";
+			headSkinName = "default";
+		}
+
+		if ( !CG_RegisterPlayerModelname( pi, defaultModel, skinName, defaultHeadModel, headSkinName, teamname ) ) {
+			CG_Error( "Default%s player model (model %s/%s, head %s/%s) failed to register", (cgs.gametype >= GT_TEAM) ? " team" : "", defaultModel, skinName, defaultHeadModel, headSkinName );
 		}
 		modelloaded = qfalse;
 	}
@@ -862,9 +925,9 @@ static void CG_LoadPlayerInfo( int playerNum, playerInfo_t *pi ) {
 	// sounds
 	dir = pi->modelName;
 	if (cgs.gametype >= GT_TEAM) {
-		fallback = (pi->gender == GENDER_FEMALE) ? DEFAULT_TEAM_MODEL_FEMALE : DEFAULT_TEAM_MODEL_MALE;
+		fallback = (pi->gender == GENDER_FEMALE) ? cg_defaultFemaleTeamModel.string : cg_defaultMaleTeamModel.string;
 	} else {
-		fallback = (pi->gender == GENDER_FEMALE) ? DEFAULT_MODEL_FEMALE : DEFAULT_MODEL_MALE;
+		fallback = (pi->gender == GENDER_FEMALE) ? cg_defaultFemaleModel.string : cg_defaultMaleModel.string;
 	}
 
 	for ( i = 0 ; i < MAX_CUSTOM_SOUNDS ; i++ ) {
@@ -1117,19 +1180,18 @@ void CG_NewPlayerInfo( int playerNum ) {
 		char *skin;
 
 		if( cgs.gametype >= GT_TEAM ) {
-			Q_strncpyz( newInfo.modelName, DEFAULT_TEAM_MODEL, sizeof( newInfo.modelName ) );
-			Q_strncpyz( newInfo.skinName, "default", sizeof( newInfo.skinName ) );
+			trap_Cvar_VariableStringBuffer( "team_model", modelStr, sizeof( modelStr ) );
 		} else {
 			trap_Cvar_VariableStringBuffer( "model", modelStr, sizeof( modelStr ) );
-			if ( ( skin = strchr( modelStr, '/' ) ) == NULL) {
-				skin = "default";
-			} else {
-				*skin++ = 0;
-			}
-
-			Q_strncpyz( newInfo.skinName, skin, sizeof( newInfo.skinName ) );
-			Q_strncpyz( newInfo.modelName, modelStr, sizeof( newInfo.modelName ) );
 		}
+		if ( ( skin = strchr( modelStr, '/' ) ) == NULL) {
+			skin = "default";
+		} else {
+			*skin++ = 0;
+		}
+
+		Q_strncpyz( newInfo.skinName, skin, sizeof( newInfo.skinName ) );
+		Q_strncpyz( newInfo.modelName, modelStr, sizeof( newInfo.modelName ) );
 
 		if ( cgs.gametype >= GT_TEAM ) {
 			// keep skin name
@@ -1161,19 +1223,18 @@ void CG_NewPlayerInfo( int playerNum ) {
 		char *skin;
 
 		if( cgs.gametype >= GT_TEAM ) {
-			Q_strncpyz( newInfo.headModelName, DEFAULT_TEAM_HEAD, sizeof( newInfo.headModelName ) );
-			Q_strncpyz( newInfo.headSkinName, "default", sizeof( newInfo.headSkinName ) );
+			trap_Cvar_VariableStringBuffer( "team_headmodel", modelStr, sizeof( modelStr ) );
 		} else {
 			trap_Cvar_VariableStringBuffer( "headmodel", modelStr, sizeof( modelStr ) );
-			if ( ( skin = strchr( modelStr, '/' ) ) == NULL) {
-				skin = "default";
-			} else {
-				*skin++ = 0;
-			}
-
-			Q_strncpyz( newInfo.headSkinName, skin, sizeof( newInfo.headSkinName ) );
-			Q_strncpyz( newInfo.headModelName, modelStr, sizeof( newInfo.headModelName ) );
 		}
+		if ( ( skin = strchr( modelStr, '/' ) ) == NULL) {
+			skin = "default";
+		} else {
+			*skin++ = 0;
+		}
+
+		Q_strncpyz( newInfo.headSkinName, skin, sizeof( newInfo.headSkinName ) );
+		Q_strncpyz( newInfo.headModelName, modelStr, sizeof( newInfo.headModelName ) );
 
 		if ( cgs.gametype >= GT_TEAM ) {
 			// keep skin name
@@ -2593,8 +2654,14 @@ void CG_Player( centity_t *cent ) {
 	CG_PlayerAnimation( cent, &legs.oldframe, &legs.frame, &legs.backlerp,
 		 &torso.oldframe, &torso.frame, &torso.backlerp );
 
-	if ( cent->currentState.number != playerNum && ( cent->currentState.contents & CONTENTS_CORPSE ) ) {
+	if ( cent->currentState.number != playerNum && ( ( cent->currentState.contents & CONTENTS_CORPSE ) || ( cent->currentState.eFlags & EF_GIBBED ) ) ) {
 		CG_Corpse( cent, playerNum, &bodySinkOffset, &shadowAlpha );
+
+		// if the corpse is for a local player use the unsnapped origin to avoid
+		// player moving when switching from player state to corpse entity state.
+		if ( ( cent->currentState.eFlags & EF_MOVER_STOP ) && CG_LocalPlayerState( playerNum ) ) {
+			VectorCopy (cent->currentState.origin2, cent->lerpOrigin);
+		}
 	} else {
 		bodySinkOffset = 0;
 		shadowAlpha = 1;

@@ -783,6 +783,7 @@ static void GraphicsOptions_ApplyChanges( void *unused, int notification )
 	}
 
 	trap_Cvar_SetValue( "r_ext_multisample", s_graphicsoptions.multisample.curvalue * 2 );
+	trap_Cvar_SetValue( "r_ext_framebuffer_multisample", s_graphicsoptions.multisample.curvalue * 2 );
 
 	trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
 }
@@ -875,6 +876,8 @@ GraphicsOptions_SetMenuItems
 */
 static void GraphicsOptions_SetMenuItems( void )
 {
+	int multisample;
+
 	s_graphicsoptions.mode.curvalue =
 		GraphicsOptions_FindDetectedResolution( trap_Cvar_VariableValue( "r_mode" ) );
 
@@ -990,18 +993,20 @@ static void GraphicsOptions_SetMenuItems( void )
 		}
 	}
 
-	switch ( trap_Cvar_VariableIntegerValue( "r_ext_multisample" ) )
-	{
-		case 0:
-		default:
-			s_graphicsoptions.multisample.curvalue = 0;
-			break;
-		case 2:
-			s_graphicsoptions.multisample.curvalue = 1;
-			break;
-		case 4:
-			s_graphicsoptions.multisample.curvalue = 2;
-			break;
+	// use higher multisample value
+	// r_ext_framebuffer_multisample is currently only used by the OpenGL2 renderer
+	multisample = MAX( trap_Cvar_VariableIntegerValue( "r_ext_multisample" ),
+					   trap_Cvar_VariableIntegerValue( "r_ext_framebuffer_multisample" ) );
+
+	if ( multisample < 2 ) {
+		// Off
+		s_graphicsoptions.multisample.curvalue = 0;
+	} else if ( multisample < 4 ) {
+		// 2x MSAA
+		s_graphicsoptions.multisample.curvalue = 1;
+	} else {
+		// 4x MSAA
+		s_graphicsoptions.multisample.curvalue = 2;
 	}
 }
 

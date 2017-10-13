@@ -66,7 +66,7 @@ static const char *rate_items[] = {
 static const char *antilag_items[] = {
 	"None",
 	"One Server Frame",
-	"Full",
+	"Full Compensation",
 	NULL
 };
 
@@ -259,7 +259,7 @@ static void UI_NetworkOptionsMenu_Init( void ) {
 
 	y += BIGCHAR_HEIGHT+2;
 	networkOptionsInfo.antilag.generic.type		= MTYPE_SPINCONTROL;
-	networkOptionsInfo.antilag.generic.name		= "Lag Compensation:";
+	networkOptionsInfo.antilag.generic.name		= "Weapon Anti-Lag:";
 	networkOptionsInfo.antilag.generic.flags	= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
 	networkOptionsInfo.antilag.generic.callback	= UI_NetworkOptionsMenu_Event;
 	networkOptionsInfo.antilag.generic.id		= ID_ANTILAG;

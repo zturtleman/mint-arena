@@ -452,6 +452,8 @@ void Menu_SetScreenPlacement(menuDef_t *menu, screenPlacement_e hpos, screenPlac
 void Display_CacheAll( void );
 qboolean Display_DebugMode( void );
 
+itemDef_t *Menu_FindItemByName(menuDef_t *menu, const char *p);
+
 void *UI_Alloc( int size );
 void UI_InitMemory( void );
 qboolean UI_OutOfMemory( void );

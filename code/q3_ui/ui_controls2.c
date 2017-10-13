@@ -132,6 +132,7 @@ enum {
 	ID_FREELOOK,
 	ID_INVERTMOUSE,
 	ID_ALWAYSRUN,
+	ID_CYCLEPASTGAUNTLET,
 	ID_AUTOSWITCH,
 	ID_MOUSESPEED,
 	ID_SELECTJOY,
@@ -228,6 +229,7 @@ typedef struct
 	menuradiobutton_s	smoothmouse;
 	menuradiobutton_s	alwaysrun;
 	menuaction_s		showscores;
+	menuradiobutton_s	cyclepastgauntlet;
 	menuradiobutton_s	autoswitch;
 	menuaction_s		useitem;
 	uiPlayerInfo_t		playerinfo;
@@ -297,7 +299,7 @@ static bind_t g_bindings[] =
 	{"weapon 13",		"chain gun",		ID_WEAPON13,	ANIM_WEAPON13,	-1,				-1,		-1, -1},
 #endif
 	{"+attack", 		"attack",			ID_ATTACK,		ANIM_ATTACK,	K_CTRL,			-1,		-1, -1},
-	{"weapprev",		"prev weapon",		ID_WEAPPREV,	ANIM_IDLE,		'[',			-1,		-1, -1},
+	{"weapprev",		"previous weapon",	ID_WEAPPREV,	ANIM_IDLE,		'[',			-1,		-1, -1},
 	{"weapnext", 		"next weapon",		ID_WEAPNEXT,	ANIM_IDLE,		']',			-1,		-1, -1},
 	{"+button3", 		"gesture",			ID_GESTURE,		ANIM_GESTURE,	K_MOUSE3,		-1,		-1, -1},
 	{"messagemode", 	"chat",				ID_CHAT,		ANIM_CHAT,		't',			-1,		-1, -1},
@@ -457,6 +459,10 @@ static configcvar_t g_configcvars[] =
 	{"3cl_run",			0,					0},
 	{"4cl_run",			0,					0},
 	{"m_pitch",			0,					0},
+	{"cg_cyclePastGauntlet",0,				0},
+	{"2cg_cyclePastGauntlet",0,				0},
+	{"3cg_cyclePastGauntlet",0,				0},
+	{"4cg_cyclePastGauntlet",0,				0},
 	{"cg_autoswitch",	0,					0},
 	{"2cg_autoswitch",	0,					0},
 	{"3cg_autoswitch",	0,					0},
@@ -495,6 +501,7 @@ static menucommon_s *g_weapons_controls[] = {
 	(menucommon_s *)&s_controls.attack,           
 	(menucommon_s *)&s_controls.nextweapon,
 	(menucommon_s *)&s_controls.prevweapon,
+	(menucommon_s *)&s_controls.cyclepastgauntlet,
 	(menucommon_s *)&s_controls.autoswitch,    
 	(menucommon_s *)&s_controls.gauntlet,         
 	(menucommon_s *)&s_controls.machinegun,
@@ -1121,6 +1128,7 @@ static void Controls_GetConfig( void )
 	}
 
 	s_controls.alwaysrun.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cl_run" ) ) );
+	s_controls.cyclepastgauntlet.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_cyclePastGauntlet" ) ) );
 	s_controls.autoswitch.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_autoswitch" ) ) );
 	s_controls.joyanalog.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickUseAnalog" ) ) );
 	s_controls.joythreshold.curvalue = Com_Clamp( 0.05f, 0.75f, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickThreshold" ) ) );
@@ -1159,6 +1167,7 @@ static void Controls_SetConfig( void )
 
 	if (s_controls.localPlayerNum != 0) {
 		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cl_run" ), s_controls.alwaysrun.curvalue );
+		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_cyclePastGauntlet" ), s_controls.cyclepastgauntlet.curvalue );
 		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_autoswitch" ), s_controls.autoswitch.curvalue );
 		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickUseAnalog" ), s_controls.joyanalog.curvalue );
 		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickThreshold" ), s_controls.joythreshold.curvalue );
@@ -1172,6 +1181,7 @@ static void Controls_SetConfig( void )
 
 	trap_Cvar_SetValue( "m_filter", s_controls.smoothmouse.curvalue );
 	trap_Cvar_SetValue( "cl_run", s_controls.alwaysrun.curvalue );
+	trap_Cvar_SetValue( "cg_cyclePastGauntlet", s_controls.cyclepastgauntlet.curvalue );
 	trap_Cvar_SetValue( "cg_autoswitch", s_controls.autoswitch.curvalue );
 	trap_Cvar_SetValue( "sensitivity", s_controls.sensitivity.curvalue );
 	trap_Cvar_SetValue( "in_joystickUseAnalog", s_controls.joyanalog.curvalue );
@@ -1204,6 +1214,7 @@ static void Controls_SetDefaults( void )
 
 	if (s_controls.localPlayerNum != 0) {
 		s_controls.alwaysrun.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cl_run" ) );
+		s_controls.cyclepastgauntlet.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_cyclePastGauntlet" ) );
 		s_controls.autoswitch.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_autoswitch" ) );
 		trap_Cvar_SetValue(Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystick"), 0);
 		trap_Cvar_SetValue(Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickNo"), 0);
@@ -1215,6 +1226,7 @@ static void Controls_SetDefaults( void )
 	s_controls.invertmouse.curvalue  = Controls_GetCvarDefault( "m_pitch" ) < 0;
 	s_controls.smoothmouse.curvalue  = Controls_GetCvarDefault( "m_filter" );
 	s_controls.alwaysrun.curvalue    = Controls_GetCvarDefault( "cl_run" );
+	s_controls.cyclepastgauntlet.curvalue   = Controls_GetCvarDefault( "cg_cyclePastGauntlet" );
 	s_controls.autoswitch.curvalue   = Controls_GetCvarDefault( "cg_autoswitch" );
 	s_controls.sensitivity.curvalue  = Controls_GetCvarDefault( "sensitivity" );
 	trap_Cvar_SetValue("in_joystick", 0);
@@ -1496,6 +1508,7 @@ static void Controls_MenuEvent( void* ptr, int event )
 		case ID_INVERTMOUSE:
 		case ID_SMOOTHMOUSE:
 		case ID_ALWAYSRUN:
+		case ID_CYCLEPASTGAUNTLET:
 		case ID_AUTOSWITCH:
 		case ID_JOYANALOG:
 		case ID_JOYTHRESHOLD:
@@ -1934,6 +1947,14 @@ static void Controls_MenuInit( int localPlayerNum )
 	s_controls.alwaysrun.generic.callback  = Controls_MenuEvent;
 	s_controls.alwaysrun.generic.statusbar = Controls_StatusBar;
 
+	s_controls.cyclepastgauntlet.generic.type      = MTYPE_RADIOBUTTON;
+	s_controls.cyclepastgauntlet.generic.flags     = QMF_SMALLFONT;
+	s_controls.cyclepastgauntlet.generic.x         = SCREEN_WIDTH/2;
+	s_controls.cyclepastgauntlet.generic.name      = "skip gauntlet";
+	s_controls.cyclepastgauntlet.generic.id        = ID_CYCLEPASTGAUNTLET;
+	s_controls.cyclepastgauntlet.generic.callback  = Controls_MenuEvent;
+	s_controls.cyclepastgauntlet.generic.statusbar = Controls_StatusBar;
+
 	s_controls.autoswitch.generic.type      = MTYPE_RADIOBUTTON;
 	s_controls.autoswitch.generic.flags	    = QMF_SMALLFONT;
 	s_controls.autoswitch.generic.x	        = SCREEN_WIDTH/2;
@@ -2064,6 +2085,7 @@ static void Controls_MenuInit( int localPlayerNum )
 	Menu_AddItem( &s_controls.menu, &s_controls.attack );
 	Menu_AddItem( &s_controls.menu, &s_controls.nextweapon );
 	Menu_AddItem( &s_controls.menu, &s_controls.prevweapon );
+	Menu_AddItem( &s_controls.menu, &s_controls.cyclepastgauntlet );
 	Menu_AddItem( &s_controls.menu, &s_controls.autoswitch );
 	Menu_AddItem( &s_controls.menu, &s_controls.gauntlet );
 	Menu_AddItem( &s_controls.menu, &s_controls.machinegun );

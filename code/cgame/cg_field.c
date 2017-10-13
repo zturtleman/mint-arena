@@ -39,7 +39,7 @@ Handles horizontal scrolling and cursor blinking
 x, y, charWidth, charHeight, are in 640*480 virtual screen size
 ===================
 */
-void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor ) {
+void MField_Draw( mfield_t *edit, int x, int y, int style, const fontInfo_t *font, vec4_t color, qboolean drawCursor ) {
 	int		i;
 	int		len;
 	int		drawLen;
@@ -84,7 +84,7 @@ void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolea
 		cursorChar = -1;
 	}
 
-	CG_DrawStringWithCursor( x, y, str, style, color, ( edit->cursor - prestep ), cursorChar );
+	CG_DrawStringWithCursor( x, y, str, style, font, color, ( edit->cursor - prestep ), cursorChar );
 }
 
 /*

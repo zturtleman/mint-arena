@@ -89,7 +89,7 @@ CG_MessageMode_f
 */
 void CG_MessageMode_f( void ) {
 	Q_strncpyz( cg.messageCommand, "say", sizeof (cg.messageCommand) );
-	Q_strncpyz( cg.messagePrompt, "Say:", sizeof (cg.messagePrompt) );
+	Q_strncpyz( cg.messagePrompt, "Say: ", sizeof (cg.messagePrompt) );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 30;
 	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
@@ -102,7 +102,7 @@ CG_MessageMode2_f
 */
 void CG_MessageMode2_f( void ) {
 	Q_strncpyz( cg.messageCommand, "say_team", sizeof (cg.messageCommand) );
-	Q_strncpyz( cg.messagePrompt, "Team Say:", sizeof (cg.messagePrompt) );
+	Q_strncpyz( cg.messagePrompt, "Team Say: ", sizeof (cg.messagePrompt) );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 25;
 	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
@@ -119,7 +119,7 @@ void CG_MessageMode3_f( void ) {
 		return;
 	}
 	Com_sprintf( cg.messageCommand, sizeof (cg.messageCommand), "tell %d", playerNum );
-	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s:", cgs.playerinfo[ playerNum ].name );
+	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s: ", cgs.playerinfo[ playerNum ].name );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 30;
 	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
@@ -136,7 +136,7 @@ void CG_MessageMode4_f( void ) {
 		return;
 	}
 	Com_sprintf( cg.messageCommand, sizeof (cg.messageCommand), "tell %d", playerNum );
-	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s:", cgs.playerinfo[ playerNum ].name );
+	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s: ", cgs.playerinfo[ playerNum ].name );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 30;
 	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
@@ -353,31 +353,26 @@ static void CG_ScrollScoresUp_f( int localPlayerNum ) {
 }
 #endif
 
-static void CG_CameraOrbit( int speed, int delay ) {
-	int i;
+static void CG_CameraOrbit( int localPlayerNum, float speed ) {
+	localPlayer_t *player;
 
-	trap_Cvar_SetValue( "cg_cameraOrbit", speed );
-	if ( delay > 0 ) {
-		trap_Cvar_SetValue( "cg_cameraOrbitDelay", delay );
-	}
+	player = &cg.localPlayers[localPlayerNum];
 
-	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
-		trap_Cvar_SetValue(Com_LocalPlayerCvarName( i, "cg_thirdPerson" ), speed == 0 ? 0 : 1 );
-		trap_Cvar_SetValue(Com_LocalPlayerCvarName( i, "cg_thirdPersonAngle" ), 0 );
-		trap_Cvar_SetValue(Com_LocalPlayerCvarName( i, "cg_thirdPersonRange" ), 100 );
-	}
+	player->cameraOrbit = speed;
+	player->cameraOrbitAngle = 0;
+	player->cameraOrbitRange = 100;
 }
 
 #ifdef MISSIONPACK
 static void CG_spWin_f( void) {
-	CG_CameraOrbit( 2, 35 );
+	CG_CameraOrbit( 0, 30 );
 	CG_AddBufferedSound(cgs.media.winnerSound);
 	//trap_S_StartLocalSound(cgs.media.winnerSound, CHAN_ANNOUNCER);
 	CG_GlobalCenterPrint("YOU WIN!", SCREEN_HEIGHT/2, 2.0);
 }
 
 static void CG_spLose_f( void) {
-	CG_CameraOrbit( 2, 35 );
+	CG_CameraOrbit( 0, 30 );
 	CG_AddBufferedSound(cgs.media.loserSound);
 	//trap_S_StartLocalSound(cgs.media.loserSound, CHAN_ANNOUNCER);
 	CG_GlobalCenterPrint("YOU LOSE...", SCREEN_HEIGHT/2, 2.0);
@@ -645,21 +640,74 @@ static void CG_EditHud_f( void ) {
 
 /*
 ==================
+CG_VstrDown_f
+==================
+*/
+static void CG_VstrDown_f( void ) {
+	const char *cvarName;
+
+	if ( trap_Argc() < 3 ) {
+		Com_Printf( "+vstr <press variable name> <release variable name> : execute a variable command on key press and release\n" );
+		return;
+	}
+
+	cvarName = CG_Argv( 1 );
+	if ( *cvarName ) {
+		trap_Cmd_ExecuteText( EXEC_NOW, va( "vstr %s\n", cvarName ) );
+	}
+}
+
+/*
+==================
+CG_VstrUp_f
+==================
+*/
+static void CG_VstrUp_f( void ) {
+	const char *cvarName;
+
+	if ( trap_Argc() < 3 ) {
+		Com_Printf( "-vstr <press variable name> <release variable name> : execute a variable command on key press and release\n" );
+		return;
+	}
+
+	cvarName = CG_Argv( 2 );
+	if ( *cvarName ) {
+		trap_Cmd_ExecuteText( EXEC_NOW, va( "vstr %s\n", cvarName ) );
+	}
+}
+
+/*
+==================
+CG_VstrComplete
+
+complete cvar name for second and third arguments for +vstr and -vstr
+==================
+*/
+static void CG_VstrComplete( char *args, int argNum ) {
+	if ( argNum == 2 || argNum == 3 ) {
+		// Skip "<cmd> "
+		char *p = Com_SkipTokens( args, argNum - 1, " " );
+
+		if( p > args )
+			trap_Field_CompleteCommand( p, qfalse, qtrue );
+	}
+}
+
+/*
+==================
 CG_StartOrbit_f
 ==================
 */
 
 static void CG_StartOrbit_f( void ) {
-	char var[MAX_TOKEN_CHARS];
+	int i;
 
-	trap_Cvar_VariableStringBuffer( "developer", var, sizeof( var ) );
-	if ( !atoi(var) ) {
-		return;
-	}
-	if (cg_cameraOrbit.value != 0) {
-		CG_CameraOrbit( 0, -1 );
-	} else {
-		CG_CameraOrbit( 5, -1 );
+	for ( i = 0; i < MAX_SPLITVIEW; i++ ) {
+		if (cg.localPlayers[i].cameraOrbit != 0) {
+			CG_CameraOrbit( i, 0 );
+		} else {
+			CG_CameraOrbit( i, 30 );
+		}
 	}
 }
 
@@ -753,7 +801,16 @@ void CG_Play_f( void ) {
 
 /*
 =================
-S_Music_f
+CG_PlayComplete
+=================
+*/
+static void CG_PlayComplete( char *args, int argNum ) {
+	trap_Field_CompleteFilename( "", "$sounds", qfalse, qfalse );
+}
+
+/*
+=================
+CG_Music_f
 =================
 */
 void CG_StopMusicPlaylist( void ); // cg_main.c
@@ -791,6 +848,17 @@ void CG_Music_f( void ) {
 
 /*
 =================
+CG_MusicComplete
+=================
+*/
+static void CG_MusicComplete( char *args, int argNum ) {
+	if ( argNum == 2 || argNum == 3 ) {
+		trap_Field_CompleteFilename( "", "$sounds", qfalse, qfalse );
+	}
+}
+
+/*
+=================
 CG_StopMusic_f
 =================
 */
@@ -804,12 +872,15 @@ CG_StopCinematic_f
 =================
 */
 void CG_StopCinematic_f( void ) {
-	if ( cg.cinematicHandle < 0 )
+	if ( !cg.cinematicPlaying ) {
 		return;
+	}
 
-	trap_CIN_StopCinematic(cg.cinematicHandle);
-	cg.cinematicHandle = -1;
-	//trap_S_StopAllSounds();
+	trap_S_StopAllSounds();
+	trap_CIN_StopCinematic( cg.cinematicHandle );
+
+	cg.cinematicHandle = 0;
+	cg.cinematicPlaying = qfalse;
 }
 
 /*
@@ -822,21 +893,30 @@ void CG_Cinematic_f( void ) {
 	char	s[6];
 	float	x, y, width, height;
 	int		bits = CIN_system;
+	int		c;
 
-	Com_DPrintf("CG_Cinematic_f\n");
-	CG_StopCinematic_f();
+	c = trap_Argc();
+
+	if ( c < 2 || c > 3 ) {
+		Com_Printf( "Usage: cinematic <videofile> [hold|loop]\n" );
+		return;
+	}
+
+	if ( cg.cinematicPlaying ) {
+		CG_StopCinematic_f();
+	}
 
 	trap_Argv( 1, arg, sizeof( arg ) );
 	trap_Argv( 2, s, sizeof( s ) );
 
-	if (s[0] == '1' || Q_stricmp(arg,"demoend.roq")==0 || Q_stricmp(arg,"end.roq")==0) {
+	if (s[0] == '1' || Q_stricmp(s,"hold")==0 || Q_stricmp(arg,"demoend.roq")==0 || Q_stricmp(arg,"end.roq")==0) {
 		bits |= CIN_hold;
 	}
-	if (s[0] == '2') {
+	if (s[0] == '2' || Q_stricmp(s,"loop")==0) {
 		bits |= CIN_loop;
 	}
 
-	//trap_S_StopAllSounds();
+	trap_S_StopAllSounds();
 
 	x = 0;
 	y = 0;
@@ -846,6 +926,20 @@ void CG_Cinematic_f( void ) {
 	CG_AdjustFrom640( &x, &y, &width, &height );
 
 	cg.cinematicHandle = trap_CIN_PlayCinematic( arg, x, y, width, height, bits );
+	if ( cg.cinematicHandle >= 0 ) {
+		cg.cinematicPlaying = qtrue;
+	}
+}
+
+/*
+=================
+CG_CinematicComplete
+=================
+*/
+static void CG_CinematicComplete( char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		trap_Field_CompleteFilename( "", "$videos", qfalse, qfalse );
+	}
 }
 
 /*
@@ -859,6 +953,8 @@ void CG_ToggleMenu_f( void ) {
 }
 
 static consoleCommand_t	cg_commands[] = {
+	{ "+vstr", CG_VstrDown_f, 0, CG_VstrComplete },
+	{ "-vstr", CG_VstrUp_f, 0, CG_VstrComplete },
 	{ "testgun", CG_TestGun_f, CMD_INGAME },
 	{ "testmodel", CG_TestModel_f, CMD_INGAME },
 	{ "nextframe", CG_TestModelNextFrame_f, CMD_INGAME },
@@ -879,10 +975,10 @@ static consoleCommand_t	cg_commands[] = {
 	{ "loaddeferred", CG_LoadDeferredPlayers, CMD_INGAME },
 	{ "generateTracemap", CG_GenerateTracemap, CMD_INGAME },
 	{ "remapShader", CG_RemapShader_f, 0 },
-	{ "play", CG_Play_f, 0 },
-	{ "music", CG_Music_f, 0 },
+	{ "play", CG_Play_f, 0, CG_PlayComplete },
+	{ "music", CG_Music_f, 0, CG_MusicComplete },
 	{ "stopmusic", CG_StopMusic_f, 0 },
-	{ "cinematic", CG_Cinematic_f, 0 },
+	{ "cinematic", CG_Cinematic_f, 0, CG_CinematicComplete },
 	{ "stopcinematic", CG_StopCinematic_f, 0 },
 	{ "messageMode", CG_MessageMode_f },
 	{ "messageMode2", CG_MessageMode2_f },
@@ -899,6 +995,7 @@ typedef struct {
 	char	*cmd;
 	void	(*function)(int);
 	int		flags;
+	void	(*complete)(int, char *, int);
 } playerConsoleCommand_t;
 
 static playerConsoleCommand_t	playerCommands[] = {
@@ -938,6 +1035,8 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "-button9", IN_Button9Up, 0 },
 	{ "+forward",IN_ForwardDown, 0 },
 	{ "-forward",IN_ForwardUp, 0 },
+	{ "+gesture",IN_Button3Down, 0 },
+	{ "-gesture",IN_Button3Up, 0 },
 	{ "+left",IN_LeftDown, 0 },
 	{ "-left",IN_LeftUp, 0 },
 	{ "+lookdown", IN_LookdownDown, 0 },
@@ -962,6 +1061,8 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "-speed", IN_SpeedUp, 0 },
 	{ "+strafe", IN_StrafeDown, 0 },
 	{ "-strafe", IN_StrafeUp, 0 },
+	{ "+useitem",IN_Button2Down, 0 },
+	{ "-useitem",IN_Button2Up, 0 },
 	{ "+zoom", CG_ZoomDown_f, CMD_INGAME },
 	{ "-zoom", CG_ZoomUp_f, CMD_INGAME },
 	{ "centerecho", CG_CenterEcho_f, CMD_INGAME },
@@ -1000,7 +1101,8 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "viewpos", CG_Viewpos_f, CMD_INGAME },
 	{ "weapnext", CG_NextWeapon_f, CMD_INGAME },
 	{ "weapprev", CG_PrevWeapon_f, CMD_INGAME },
-	{ "weapon", CG_Weapon_f, CMD_INGAME }
+	{ "weapon", CG_Weapon_f, CMD_INGAME },
+	{ "weaponToggle", CG_WeaponToggle_f, CMD_INGAME }
 };
 
 static int numPlayerCommands = ARRAY_LEN( playerCommands );
@@ -1021,26 +1123,6 @@ static qboolean CG_CheckCmdFlags( const char *cmd, int flags ) {
 		return qtrue;
 	}
 
-	return qfalse;
-}
-
-/*
-=================
-CG_CheckCommands
-=================
-*/
-static qboolean CG_CheckCommands( consoleCommand_t *commands, int numCommands, const char *cmd ) {
-	int i;
-
-	for ( i = 0 ; i < numCommands ; i++ ) {
-		if ( !Q_stricmp( cmd, commands[i].cmd )) {
-			if ( CG_CheckCmdFlags( cmd, commands[i].flags ) ) {
-				return qtrue;
-			}
-			commands[i].function();
-			return qtrue;
-		}
-	}
 	return qfalse;
 }
 
@@ -1080,12 +1162,24 @@ qboolean CG_ConsoleCommand( connstate_t state, int realTime ) {
 	}
 
 	if ( localPlayerNum == 0 ) {
-		if ( CG_CheckCommands( cg_commands, cg_numCommands, cmd ) ) {
-			return qtrue;
+		for ( i = 0 ; i < cg_numCommands ; i++ ) {
+			if ( !Q_stricmp( cmd, cg_commands[i].cmd )) {
+				if ( CG_CheckCmdFlags( cmd, cg_commands[i].flags ) ) {
+					return qtrue;
+				}
+				cg_commands[i].function();
+				return qtrue;
+			}
 		}
 
-		if ( CG_CheckCommands( ui_commands, ui_numCommands, cmd ) ) {
-			return qtrue;
+		for ( i = 0 ; i < ui_numCommands ; i++ ) {
+			if ( !Q_stricmp( cmd, ui_commands[i].cmd )) {
+				if ( CG_CheckCmdFlags( cmd, ui_commands[i].flags ) ) {
+					return qtrue;
+				}
+				ui_commands[i].function();
+				return qtrue;
+			}
 		}
 	}
 
@@ -1094,6 +1188,55 @@ qboolean CG_ConsoleCommand( connstate_t state, int realTime ) {
 		trap_LiteralArgs( buffer, sizeof ( buffer ) );
 		trap_SendClientCommand( buffer );
 		return qtrue;
+	}
+
+	return qfalse;
+}
+
+/*
+=================
+CG_ConsoleCompleteArgument
+
+The string has been tokenized and can be retrieved with
+Cmd_Argc() / Cmd_Argv()
+=================
+*/
+qboolean CG_ConsoleCompleteArgument( connstate_t state, int realTime, int completeArgument ) {
+	char	args[BIG_INFO_STRING];
+	char	cmd[MAX_TOKEN_CHARS];
+	int		i;
+	int		localPlayerNum;
+	const char	*baseCmd;
+
+	cg.connState = state;
+
+	trap_Argv( 0, cmd, sizeof( cmd ) );
+	trap_LiteralArgs( args, sizeof ( args ) );
+
+	localPlayerNum = Com_LocalPlayerForCvarName( cmd );
+	baseCmd = Com_LocalPlayerBaseCvarName( cmd );
+
+	for ( i = 0 ; i < numPlayerCommands ; i++ ) {
+		if ( playerCommands[i].complete && !Q_stricmp( baseCmd, playerCommands[i].cmd ) ) {
+			playerCommands[i].complete( localPlayerNum, args, completeArgument );
+			return qtrue;
+		}
+	}
+
+	if ( localPlayerNum == 0 ) {
+		for ( i = 0 ; i < cg_numCommands ; i++ ) {
+			if ( cg_commands[i].complete && !Q_stricmp( cmd, cg_commands[i].cmd ) ) {
+				cg_commands[i].complete( args, completeArgument );
+				return qtrue;
+			}
+		}
+
+		for ( i = 0 ; i < ui_numCommands ; i++ ) {
+			if ( ui_commands[i].complete && !Q_stricmp( cmd, ui_commands[i].cmd ) ) {
+				ui_commands[i].complete( args, completeArgument );
+				return qtrue;
+			}
+		}
 	}
 
 	return qfalse;

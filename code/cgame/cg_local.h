@@ -47,16 +47,19 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	SCREEN_HEIGHT		480
 
 #define TINYCHAR_WIDTH		8
-#define TINYCHAR_HEIGHT		cgs.media.tinyFont.pointSize // default: 8
+#define TINYCHAR_HEIGHT		8
 
 #define SMALLCHAR_WIDTH		8
-#define SMALLCHAR_HEIGHT	cgs.media.smallFont.pointSize // default: 16 (bitmap), 12 (true type)
+#define SMALLCHAR_HEIGHT	16
 
 #define BIGCHAR_WIDTH		16
-#define BIGCHAR_HEIGHT		cgs.media.textFont.pointSize // default: 16
+#define BIGCHAR_HEIGHT		16
 
 #define	GIANTCHAR_WIDTH		32
-#define	GIANTCHAR_HEIGHT	cgs.media.bigFont.pointSize // default: 48 (bitmap), 20 (true type)
+#define	GIANTCHAR_HEIGHT	48
+
+#define	CONCHAR_WIDTH		8
+#define	CONCHAR_HEIGHT		16
 
 #define	POWERUP_BLINKS		5
 
@@ -150,7 +153,7 @@ void	MField_KeyDownEvent( mfield_t *edit, int key );
 void	MField_CharEvent( mfield_t *edit, int ch );
 void	MField_SetText( mfield_t *edit, const char *text );
 const char *MField_Buffer( mfield_t *edit );
-void	MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor );
+void	MField_Draw( mfield_t *edit, int x, int y, int style, const fontInfo_t *font, vec4_t color, qboolean drawCursor );
 
 //=================================================
 
@@ -201,7 +204,8 @@ typedef struct {
 } playerEntity_t;
 
 
-#define MAX_CG_SKIN_SURFACES 32
+// skin surfaces array shouldn't be dynamically allocated because players reuse the same skin structure when changing models
+#define MAX_CG_SKIN_SURFACES 100
 typedef struct {
 	int numSurfaces;
 	qhandle_t surfaces[MAX_CG_SKIN_SURFACES];
@@ -634,6 +638,7 @@ typedef struct {
 	int			weaponSelectTime;
 	int			weaponAnimation;
 	int			weaponAnimationTime;
+	int			weaponToggledFrom;
 
 	// blend blobs
 	float		damageTime;
@@ -662,6 +667,11 @@ typedef struct {
 
 	//qboolean cameraMode;		// if rendering from a loaded camera
 
+	// orbit camera around player
+	float cameraOrbit;			// angles per second to orbit, forces third person.
+	float cameraOrbitAngle;
+	float cameraOrbitRange;
+
 	vec3_t		lastViewPos;
 	vec3_t		lastViewAngles;
 
@@ -677,6 +687,12 @@ typedef struct {
 	consoleLine_t	consoleLines[ MAX_CONSOLE_LINES ];
 	int				numConsoleLines;
 
+	// teamchat width is *3 because of embedded color codes
+	char			teamChatMsgs[TEAMCHAT_HEIGHT][TEAMCHAT_WIDTH*3+1];
+	int				teamChatMsgTimes[TEAMCHAT_HEIGHT];
+	int				teamChatPos;
+	int				teamLastChatPos;
+
 } localPlayer_t;
  
 #define MAX_SPAWN_VARS          64
@@ -688,6 +704,7 @@ typedef struct {
 	
 	int			clientFrame;		// incremented each frame
 
+	int			cinematicPlaying;	// playing fullscreen cinematic
 	int			cinematicHandle;	// handle for fullscreen cinematic
 	qboolean	demoPlayback;
 	qboolean	levelShot;			// taking a level menu screenshot
@@ -734,7 +751,7 @@ typedef struct {
 	// view rendering
 	refdef_t	refdef;
 	vec3_t		refdefViewAngles;		// will be converted to refdef.viewaxis
-	float		fov;					// either range checked cg_fov or forced value
+	float		viewWeaponFov;			// either range checked cg_weaponFov or forced value
 
 	// first person view pos, set even when rendering third person view
 	vec3_t		firstPersonViewOrg;
@@ -829,7 +846,6 @@ typedef struct {
 	float		bobfracsin;
 	int			bobcycle;
 	float		xyspeed;
-	int     	nextOrbitTime;
 
 	// development tool
 	refEntity_t		testModelEntity;
@@ -855,6 +871,7 @@ typedef struct {
 	fontInfo_t	textFont;
 	fontInfo_t	bigFont;
 	fontInfo_t	numberFont; // status bar giant number font
+	fontInfo_t	consoleFont;
 
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
@@ -1268,12 +1285,6 @@ typedef struct {
 
 	playerInfo_t	playerinfo[MAX_CLIENTS];
 
-	// teamchat width is *3 because of embedded color codes
-	char			teamChatMsgs[TEAMCHAT_HEIGHT][TEAMCHAT_WIDTH*3+1];
-	int				teamChatMsgTimes[TEAMCHAT_HEIGHT];
-	int				teamChatPos;
-	int				teamLastChatPos;
-
 	int cursorX;
 	int cursorY;
 	qboolean eventHandling;
@@ -1361,6 +1372,7 @@ extern	vmCvar_t		cg_ignore;
 extern	vmCvar_t		cg_simpleItems;
 extern	vmCvar_t		cg_fov;
 extern	vmCvar_t		cg_zoomFov;
+extern	vmCvar_t		cg_weaponFov;
 extern	vmCvar_t		cg_splitviewVertical;
 extern	vmCvar_t		cg_splitviewThirdEqual;
 extern	vmCvar_t		cg_splitviewTextScale;
@@ -1369,8 +1381,10 @@ extern	vmCvar_t		cg_drawLagometer;
 extern	vmCvar_t		cg_drawAttacker;
 extern	vmCvar_t		cg_synchronousClients;
 extern	vmCvar_t		cg_singlePlayer;
+#ifndef MISSIONPACK_HUD
 extern	vmCvar_t		cg_teamChatTime;
 extern	vmCvar_t		cg_teamChatHeight;
+#endif
 extern	vmCvar_t		cg_stats;
 extern	vmCvar_t 		cg_forceModel;
 extern	vmCvar_t 		cg_buildScript;
@@ -1390,15 +1404,17 @@ extern	vmCvar_t		pmove_overbounce;
 extern	vmCvar_t		pmove_fixed;
 extern	vmCvar_t		pmove_msec;
 //extern	vmCvar_t		cg_pmove_fixed;
-extern	vmCvar_t		cg_cameraOrbit;
-extern	vmCvar_t		cg_cameraOrbitDelay;
 extern	vmCvar_t		cg_timescaleFadeEnd;
 extern	vmCvar_t		cg_timescaleFadeSpeed;
 extern	vmCvar_t		cg_timescale;
 extern	vmCvar_t		cg_cameraMode;
+#ifdef MISSIONPACK_HUD
 extern  vmCvar_t		cg_smallFont;
 extern  vmCvar_t		cg_bigFont;
+#endif
+#ifdef MISSIONPACK
 extern	vmCvar_t		cg_noTaunt;
+#endif
 extern	vmCvar_t		cg_noProjectileTrail;
 extern	vmCvar_t		cg_oldRail;
 extern	vmCvar_t		cg_oldRocket;
@@ -1418,13 +1434,21 @@ extern	vmCvar_t		cg_coronas;
 extern	vmCvar_t		cg_fovAspectAdjust;
 extern	vmCvar_t		cg_fadeExplosions;
 extern	vmCvar_t		cg_skybox;
+#ifndef MISSIONPACK_HUD
 extern	vmCvar_t		cg_drawScores;
+#endif
+extern	vmCvar_t		cg_drawPickupItems;
 extern	vmCvar_t		cg_oldBubbles;
 extern	vmCvar_t		cg_smoothBodySink;
 extern	vmCvar_t		cg_antiLag;
 extern	vmCvar_t		cg_forceBitmapFonts;
 extern	vmCvar_t		cg_drawGrappleHook;
 extern	vmCvar_t		cg_drawBBox;
+extern	vmCvar_t		cg_consoleFont;
+extern	vmCvar_t		cg_hudFont;
+extern	vmCvar_t		cg_hudFontBorder;
+extern	vmCvar_t		cg_numberFont;
+extern	vmCvar_t		cg_numberFontBorder;
 extern	vmCvar_t		ui_stretch;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;
@@ -1436,12 +1460,25 @@ extern  vmCvar_t		cg_recordSPDemoName;
 extern	vmCvar_t		cg_obeliskRespawnDelay;
 #endif
 
+extern	vmCvar_t		cg_defaultModelGender;
+extern	vmCvar_t		cg_defaultMaleModel;
+extern	vmCvar_t		cg_defaultMaleHeadModel;
+extern	vmCvar_t		cg_defaultFemaleModel;
+extern	vmCvar_t		cg_defaultFemaleHeadModel;
+
+extern	vmCvar_t		cg_defaultTeamModelGender;
+extern	vmCvar_t		cg_defaultMaleTeamModel;
+extern	vmCvar_t		cg_defaultMaleTeamHeadModel;
+extern	vmCvar_t		cg_defaultFemaleTeamModel;
+extern	vmCvar_t		cg_defaultFemaleTeamHeadModel;
+
 extern	vmCvar_t		cg_color1[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_color2[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_handicap[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_teamtask[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_teampref[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_autoswitch[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_cyclePastGauntlet[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_drawGun[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_thirdPerson[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_thirdPersonRange[MAX_SPLITVIEW];
@@ -1558,25 +1595,28 @@ screenPlacement_e CG_GetScreenVerticalPlacement(void);
 void CG_AdjustFrom640( float *x, float *y, float *w, float *h );
 void CG_FillRect( float x, float y, float width, float height, const float *color );
 void CG_DrawPic( float x, float y, float width, float height, qhandle_t hShader );
+void CG_DrawPicColor( float x, float y, float width, float height, qhandle_t hShader, const float *color );
 void CG_DrawNamedPic( float x, float y, float width, float height, const char *picname );
 void CG_SetClipRegion( float x, float y, float w, float h );
 void CG_ClearClipRegion( void );
 void CG_LerpColor( const vec4_t a, const vec4_t b, vec4_t c, float t );
 
 void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color );
-void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const vec4_t color, int cursorPos, int cursorChar );
+void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const fontInfo_t *font, const vec4_t color, int cursorPos, int cursorChar );
 void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset );
-void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar );
 void CG_DrawStringAutoWrap( int x, int y, const char* str, int style, const vec4_t color, float scale, float shadowOffset, float gradient, float wrapX );
-void CG_DrawStringDirect( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar, float wrapX );
+void CG_DrawStringCommon( int x, int y, const char* str, int style, const fontInfo_t *font, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar, float wrapX );
 void CG_DrawBigString( int x, int y, const char *s, float alpha );
 void CG_DrawBigStringColor( int x, int y, const char *s, vec4_t color );
 void CG_DrawSmallString( int x, int y, const char *s, float alpha );
 void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color );
 
-float CG_DrawStrlenEx( const char *str, int style, int maxchars );
+float CG_DrawStrlenCommon( const char *str, int style, const fontInfo_t *font, int maxchars );
+float CG_DrawStrlenMaxChars( const char *str, int style, int maxchars );
 float CG_DrawStrlen( const char *str, int style );
 int CG_DrawStringLineHeight( int style );
+
+void CG_MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor );
 
 float	*CG_FadeColor( int startMsec, int totalMsec );
 float *CG_TeamColor( int team );
@@ -1645,7 +1685,7 @@ qboolean CG_AnyScoreboardShowing( void );
 #define GLYPH_OVERSTRIKE 11
 #define GLYPH_ARROW 13
 
-void CG_TextInit( void );
+void CG_HudTextInit( void );
 void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth );
 void CG_InitBitmapNumberFont( fontInfo_t *font, int charHeight, int charWidth );
 qboolean CG_InitTrueTypeFont( const char *name, int pointSize, float borderWidth, fontInfo_t *font );
@@ -1654,12 +1694,11 @@ fontInfo_t *CG_FontForScale( float scale );
 const glyphInfo_t *Text_GetGlyph( const fontInfo_t *font, unsigned long index );
 float Text_Width( const char *text, const fontInfo_t *font, float scale, int limit );
 float Text_Height( const char *text, const fontInfo_t *font, float scale, int limit );
-void Text_PaintChar( float x, float y, float width, float height, float useScale, float s, float t, float s2, float t2, qhandle_t hShader );
-void Text_PaintGlyph( float x, float y, float useScale, const glyphInfo_t *glyph, float *gradientColor );
-void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor );
-void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor );
-void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit );
-void Text_Paint_AutoWrapped( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *str, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, float xmax, float ystep, int style );
+void Text_PaintGlyph( float x, float y, float w, float h, const glyphInfo_t *glyph, float *gradientColor );
+void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, qboolean textInMotion );
+void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, qboolean textInMotion );
+void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit, qboolean textInMotion );
+void Text_Paint_AutoWrapped( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *str, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, qboolean textInMotion, float xmax, float ystep, int style );
 
 void CG_Text_Paint( float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle );
 void CG_Text_PaintWithCursor( float x, float y, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, int textStyle );
@@ -1669,7 +1708,7 @@ int CG_Text_Height( const char *text, float scale, int limit );
 
 
 //
-// cg_player.c
+// cg_players.c
 //
 void CG_Player( centity_t *cent );
 void CG_ResetPlayerEntity( centity_t *cent );
@@ -1678,6 +1717,8 @@ qhandle_t CG_AddSkinToFrame( const cgSkin_t *skin );
 qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append );
 void CG_NewPlayerInfo( int playerNum );
 sfxHandle_t	CG_CustomSound( int playerNum, const char *soundName );
+void CG_CachePlayerSounds( const char *modelName );
+void CG_CachePlayerModels( const char *modelName, const char *headModelName );
 void CG_PlayerColorFromIndex( int val, vec3_t color );
 
 //
@@ -1722,6 +1763,7 @@ qboolean CG_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *
 void CG_NextWeapon_f( int localPlayerNum );
 void CG_PrevWeapon_f( int localPlayerNum );
 void CG_Weapon_f( int localPlayerNum );
+void CG_WeaponToggle_f( int localPlayerNum );
 
 void CG_RegisterWeapon( int weaponNum );
 void CG_RegisterItemVisuals( int itemNum );
@@ -1843,6 +1885,7 @@ void CG_DrawTourneyScoreboard( void );
 // cg_console.c
 //
 void CG_ConsoleInit( void );
+void CG_ConsoleResized( void );
 void CG_ConsolePrint( const char *text );
 void CG_CloseConsole( void );
 void Con_ClearConsole_f( void );
@@ -1860,9 +1903,11 @@ typedef struct {
 	char	*cmd;
 	void	(*function)(void);
 	int		flags;
+	void	(*complete)(char *, int);
 } consoleCommand_t;
 
 qboolean CG_ConsoleCommand( connstate_t state, int realTime );
+qboolean CG_ConsoleCompleteArgument( connstate_t state, int realTime, int completeArgument );
 void CG_InitConsoleCommands( void );
 
 void CG_StopCinematic_f( void );

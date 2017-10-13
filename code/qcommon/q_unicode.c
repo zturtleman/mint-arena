@@ -146,7 +146,8 @@ unsigned long Q_UTF8_CodePoint( const char **str )
   }
   else
   {
-    Com_DPrintf( "Unrecognised UTF-8 lead byte: 0x%x\n", (unsigned int)*c );
+    // Unrecognised UTF-8 lead byte.
+    // Don't print a debug message as it may cause an infinite loop / segfault.
     c++;
   }
 

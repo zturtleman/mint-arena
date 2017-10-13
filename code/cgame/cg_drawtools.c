@@ -254,7 +254,7 @@ void CG_DrawRect( float x, float y, float width, float height, float size, const
 	trap_R_SetColor( color );
 
   CG_DrawTopBottom(x, y, width, height, size);
-  CG_DrawSides(x, y+size, width, height-size*2, size);
+  CG_DrawSides(x, y + size, width, height - size * 2, size);
 
 	trap_R_SetColor( NULL );
 }
@@ -325,6 +325,19 @@ void CG_DrawNamedPic( float x, float y, float width, float height, const char *p
 
 /*
 ================
+CG_DrawPicColor
+
+Coordinates are 640*480 virtual values
+=================
+*/
+void CG_DrawPicColor( float x, float y, float width, float height, qhandle_t hShader, const float *color ) {
+	trap_R_SetColor( color );
+	CG_DrawPic( x, y, width, height, hShader );
+	trap_R_SetColor( NULL );
+}
+
+/*
+================
 CG_SetClipRegion
 =================
 */
@@ -370,52 +383,13 @@ void CG_LerpColor( const vec4_t a, const vec4_t b, vec4_t c, float t )
 	}
 }
 
-
 /*
-==================
-CG_DrawString
-
-Draws a multi-colored string with a drop shadow, optionally forcing
-to a fixed color.
-
-Coordinates are at 640 by 480 virtual resolution
-
-Gradient value is how much to darken color at bottom of text.
-==================
+=================
+CG_FontForStyle
+=================
 */
-void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color ) {
-	CG_DrawStringExtWithCursor( x, y, str, style, color, 0, 0, 0, 0, -1, -1 );
-}
-void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const vec4_t color, int cursorPos, int cursorChar ) {
-	CG_DrawStringExtWithCursor( x, y, str, style, color, 0, 0, 0, 0, cursorPos, cursorChar );
-}
-void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset ) {
-	CG_DrawStringExtWithCursor( x, y, str, style, color, scale, maxChars, shadowOffset, 0, -1, -1 );
-}
-void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar ) {
-	CG_DrawStringDirect( x, y, str, style, color, scale, maxChars, shadowOffset, gradient, cursorPos, cursorChar, 0 );
-}
-void CG_DrawStringAutoWrap( int x, int y, const char* str, int style, const vec4_t color, float scale, float shadowOffset, float gradient, float wrapX ) {
-	CG_DrawStringDirect( x, y, str, style, color, scale, 0, shadowOffset, gradient, -1, -1, wrapX );
-}
-void CG_DrawStringDirect( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar, float wrapX ) {
-	int		charh;
-	vec4_t	newcolor;
-	vec4_t	lowlight;
-	const float	*drawcolor;
+const fontInfo_t *CG_FontForStyle( int style ) {
 	const fontInfo_t *font;
-	int			decent;
-
-	if( !str ) {
-		return;
-	}
-
-	if ( !color ) {
-		color = colorWhite;
-	}
-
-	if ((style & UI_BLINK) && ((cg.realTime/BLINK_DIVISOR) & 1))
-		return;
 
 	switch (style & UI_FONTMASK)
 	{
@@ -438,12 +412,68 @@ void CG_DrawStringDirect( int x, int y, const char* str, int style, const vec4_t
 
 		case UI_NUMBERFONT:
 			font = &cgs.media.numberFont;
-
-			// the original number bitmaps already have a gradient
-			if ( font->glyphs[(int)'a'].xSkip == 0 ) {
-				style &= ~UI_GRADIENT;
-			}
 			break;
+
+		case UI_CONSOLEFONT:
+			font = &cgs.media.consoleFont;
+			break;
+	}
+
+	return font;
+}
+
+/*
+==================
+CG_DrawString
+
+Draws a multi-colored string with a drop shadow, optionally forcing
+to a fixed color.
+
+Coordinates are at 640 by 480 virtual resolution
+
+Gradient value is how much to darken color at bottom of text.
+==================
+*/
+void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color ) {
+	CG_DrawStringCommon( x, y, str, style, CG_FontForStyle( style ), color, 0, 0, 0, 0, -1, -1, 0 );
+}
+
+void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const fontInfo_t *font, const vec4_t color, int cursorPos, int cursorChar ) {
+	CG_DrawStringCommon( x, y, str, style, font, color, 0, 0, 0, 0, cursorPos, cursorChar, 0 );
+}
+
+void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset ) {
+	CG_DrawStringCommon( x, y, str, style, CG_FontForStyle( style ), color, scale, maxChars, shadowOffset, 0, -1, -1, 0 );
+}
+
+void CG_DrawStringAutoWrap( int x, int y, const char* str, int style, const vec4_t color, float scale, float shadowOffset, float gradient, float wrapX ) {
+	CG_DrawStringCommon( x, y, str, style, CG_FontForStyle( style ), color, scale, 0, shadowOffset, gradient, -1, -1, wrapX );
+}
+
+// Note: Update UI_DrawString in q3_ui if arguments are changed.
+void CG_DrawStringCommon( int x, int y, const char* str, int style, const fontInfo_t *font, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar, float wrapX ) {
+	int		charh;
+	vec4_t	newcolor;
+	vec4_t	lowlight;
+	const float	*drawcolor;
+	int			decent;
+
+	if( !str ) {
+		return;
+	}
+
+	if ( !color ) {
+		color = colorWhite;
+	}
+
+	if ((style & UI_BLINK) && ((cg.realTime/BLINK_DIVISOR) & 1))
+		return;
+
+	if ( (style & UI_FONTMASK) == UI_NUMBERFONT ) {
+		// the original number bitmaps already have a gradient
+		if ( font->glyphs[(int)'a'].xSkip == 0 ) {
+			style &= ~UI_GRADIENT;
+		}
 	}
 
 	charh = font->pointSize;
@@ -536,11 +566,11 @@ void CG_DrawStringDirect( int x, int y, const char* str, int style, const vec4_t
 	}
 
 	if ( cursorChar >= 0 ) {
-		Text_PaintWithCursor( x, y, font, scale, drawcolor, str, cursorPos, cursorChar, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ) );
+		Text_PaintWithCursor( x, y, font, scale, drawcolor, str, cursorPos, cursorChar, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ) );
 	} else if ( wrapX > 0 ) {
 		// replace 'char height' in line height with our scaled charh
 		// ZTM: TODO: This text gap handling is kind of messy. Passing scale to CG_DrawStringLineHeight might make cleaner code here.
-		int gap = CG_DrawStringLineHeight( style ) - font->pointSize;
+		int gap = CG_DrawStringLineHeight( style | UI_NOSCALE ) - font->pointSize;
 
 		if ( !( style & UI_NOSCALE ) && cg.cur_lc ) {
 			if ( cg.numViewports != 1 ) {
@@ -550,9 +580,9 @@ void CG_DrawStringDirect( int x, int y, const char* str, int style, const vec4_t
 			}
 		}
 
-		Text_Paint_AutoWrapped( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ), wrapX, charh + gap, style );
+		Text_Paint_AutoWrapped( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ), wrapX, charh + gap, style );
 	} else {
-		Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ) );
+		Text_Paint( x, y, font, scale, drawcolor, str, 0, maxChars, shadowOffset, gradient, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ) );
 	}
 }
 
@@ -582,38 +612,13 @@ void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color ) {
 
 /*
 =================
-CG_DrawStrlenEx
+CG_DrawStrlenCommon
 
 Returns draw width, skiping color escape codes
 =================
 */
-float CG_DrawStrlenEx( const char *str, int style, int maxchars ) {
-	const fontInfo_t *font;
+float CG_DrawStrlenCommon( const char *str, int style, const fontInfo_t *font, int maxchars ) {
 	int charh;
-
-	switch (style & UI_FONTMASK)
-	{
-		case UI_TINYFONT:
-			font = &cgs.media.tinyFont;
-			break;
-
-		case UI_SMALLFONT:
-			font = &cgs.media.smallFont;
-			break;
-
-		case UI_BIGFONT:
-		default:
-			font = &cgs.media.textFont;
-			break;
-
-		case UI_GIANTFONT:
-			font = &cgs.media.bigFont;
-			break;
-
-		case UI_NUMBERFONT:
-			font = &cgs.media.numberFont;
-			break;
-	}
 
 	charh = font->pointSize;
 
@@ -630,50 +635,24 @@ float CG_DrawStrlenEx( const char *str, int style, int maxchars ) {
 
 /*
 =================
+CG_DrawStrlenMaxChars
+
+Returns draw width, skiping color escape codes
+=================
+*/
+float CG_DrawStrlenMaxChars( const char *str, int style, int maxchars ) {
+	return CG_DrawStrlenCommon( str, style, CG_FontForStyle( style ), maxchars );
+}
+
+/*
+=================
 CG_DrawStrlen
 
 Returns draw width, skiping color escape codes
 =================
 */
 float CG_DrawStrlen( const char *str, int style ) {
-	const fontInfo_t *font;
-	int charh;
-
-	switch (style & UI_FONTMASK)
-	{
-		case UI_TINYFONT:
-			font = &cgs.media.tinyFont;
-			break;
-
-		case UI_SMALLFONT:
-			font = &cgs.media.smallFont;
-			break;
-
-		case UI_BIGFONT:
-		default:
-			font = &cgs.media.textFont;
-			break;
-
-		case UI_GIANTFONT:
-			font = &cgs.media.bigFont;
-			break;
-
-		case UI_NUMBERFONT:
-			font = &cgs.media.numberFont;
-			break;
-	}
-
-	charh = font->pointSize;
-
-	if ( !( style & UI_NOSCALE ) && cg.cur_lc ) {
-		if ( cg.numViewports != 1 ) {
-			charh *= cg_splitviewTextScale.value;
-		} else {
-			charh *= cg_hudTextScale.value;
-		}
-	}
-
-	return Text_Width( str, font, charh / 48.0f, 0 );
+	return CG_DrawStrlenCommon( str, style, CG_FontForStyle( style ), 0 );
 }
 
 /*
@@ -716,6 +695,11 @@ int CG_DrawStringLineHeight( int style ) {
 		case UI_NUMBERFONT:
 			font = &cgs.media.numberFont;
 			break;
+
+		case UI_CONSOLEFONT:
+			font = &cgs.media.consoleFont;
+			gap = 2;
+			break;
 	}
 
 	charh = font->pointSize;
@@ -730,6 +714,15 @@ int CG_DrawStringLineHeight( int style ) {
 	}
 
 	return lineHeight;
+}
+
+/*
+=================
+CG_MField_Draw
+=================
+*/
+void CG_MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor ) {
+	MField_Draw( edit, x, y, style, CG_FontForStyle( style ), color, drawCursor );
 }
 
 /*

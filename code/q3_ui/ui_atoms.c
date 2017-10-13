@@ -360,7 +360,7 @@ void UI_DrawBannerString( int x, int y, const char* str, int style, vec4_t color
 	decent = -uis.fontPropB.glyphs[(int)'g'].top + uis.fontPropB.glyphs[(int)'g'].height;
 	y = y + PROPB_HEIGHT - decent * PROPB_HEIGHT / 48.0f * uis.fontPropB.glyphScale;
 
-	Text_Paint( x, y, &uis.fontPropB, PROPB_HEIGHT / 48.0f, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, qfalse );
+	Text_Paint( x, y, &uis.fontPropB, PROPB_HEIGHT / 48.0f, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ) );
 }
 
 
@@ -500,22 +500,22 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 		drawcolor[1] = color[1] * 0.7;
 		drawcolor[2] = color[2] * 0.7;
 		drawcolor[3] = color[3];
-		Text_Paint( x, y, &uis.fontProp, scale, drawcolor, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, qfalse );
+		Text_Paint( x, y, &uis.fontProp, scale, drawcolor, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ) );
 		return;
 	}
 
 	if ( style & UI_PULSE ) {
-		Text_Paint( x, y, &uis.fontProp, scale, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, qfalse );
+		Text_Paint( x, y, &uis.fontProp, scale, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ) );
 
 		drawcolor[0] = color[0];
 		drawcolor[1] = color[1];
 		drawcolor[2] = color[2];
 		drawcolor[3] = 0.5 + 0.5 * sin( uis.realtime / PULSE_DIVISOR );
-		Text_Paint( x, glowY, &uis.fontPropGlow, scale, drawcolor, str, 0, 0, 0, 0, qfalse );
+		Text_Paint( x, glowY, &uis.fontPropGlow, scale, drawcolor, str, 0, 0, 0, 0, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ) );
 		return;
 	}
 
-	Text_Paint( x, y, &uis.fontProp, scale, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, qfalse );
+	Text_Paint( x, y, &uis.fontProp, scale, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ) );
 }
 
 /*
@@ -584,12 +584,58 @@ void UI_DrawProportionalString_AutoWrapped( int x, int y, int xmax, int ystep, c
 
 /*
 =================
+UI_FontForStyle
+=================
+*/
+const fontInfo_t *UI_FontForStyle( int style ) {
+	const fontInfo_t *font;
+
+	switch (style & UI_FONTMASK)
+	{
+		case UI_SMALLFONT:
+			font = &uis.smallFont;
+			break;
+
+		case UI_BIGFONT:
+		default:
+			font = &uis.textFont;
+			break;
+
+		case UI_CONSOLEFONT:
+			font = &cgs.media.consoleFont;
+			break;
+	}
+
+	return font;
+}
+
+/*
+=================
 UI_DrawString
 =================
 */
 void UI_DrawString( int x, int y, const char* str, int style, vec4_t color )
 {
-	CG_DrawString( x, y, str, style, color );
+	CG_DrawStringCommon( x, y, str, style, UI_FontForStyle( style ), color, 0, 0, 0, 0, -1, -1, 0 );
+}
+
+/*
+=================
+UI_DrawStrlen
+=================
+*/
+float UI_DrawStrlen( const char *str, int style )
+{
+	return CG_DrawStrlenCommon( str, style, UI_FontForStyle( style ), 0 );
+}
+
+/*
+=================
+UI_MField_Draw
+=================
+*/
+void UI_MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor ) {
+	MField_Draw( edit, x, y, style, UI_FontForStyle( style ), color, drawCursor );
 }
 
 /*

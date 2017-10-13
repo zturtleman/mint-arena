@@ -382,7 +382,7 @@ static void Action_Init( menuaction_s *a )
 	int	len;
 
 	// calculate bounds
-	len = CG_DrawStrlen( a->generic.name, UI_BIGFONT );
+	len = UI_DrawStrlen( a->generic.name, UI_BIGFONT );
 
 	// left justify text
 	a->generic.left   = a->generic.x; 
@@ -445,7 +445,7 @@ static void RadioButton_Init( menuradiobutton_s *rb )
 	int	len;
 
 	// calculate bounds
-	len = CG_DrawStrlen( rb->generic.name, UI_SMALLFONT );
+	len = UI_DrawStrlen( rb->generic.name, UI_SMALLFONT );
 
 	rb->generic.left   = rb->generic.x - len - SMALLCHAR_WIDTH;
 	rb->generic.right  = rb->generic.x + 6*SMALLCHAR_WIDTH;
@@ -574,7 +574,7 @@ static void Slider_Init( menuslider_s *s )
 	int len;
 
 	// calculate bounds
-	len = CG_DrawStrlen( s->generic.name, UI_SMALLFONT );
+	len = UI_DrawStrlen( s->generic.name, UI_SMALLFONT );
 
 	s->generic.left   = s->generic.x - len - SMALLCHAR_WIDTH;
 	s->generic.right  = s->generic.x + (SLIDER_RANGE+2+1)*SMALLCHAR_WIDTH;
@@ -788,14 +788,14 @@ static void SpinControl_Init( menulist_s *s ) {
 	int	l;
 	const char* str;
 
-	len = CG_DrawStrlen( s->generic.name, UI_SMALLFONT );
+	len = UI_DrawStrlen( s->generic.name, UI_SMALLFONT );
 
 	s->generic.left	= s->generic.x - SMALLCHAR_WIDTH - len;
 
 	len = s->numitems = 0;
 	while ( (str = s->itemnames[s->numitems]) != 0 )
 	{
-		l = CG_DrawStrlen( str, UI_SMALLFONT );
+		l = UI_DrawStrlen( str, UI_SMALLFONT );
 		if (l > len)
 			len = l;
 
@@ -1068,6 +1068,50 @@ sfxHandle_t ScrollList_Key( menulist_s *l, int key )
 					l->generic.callback( l, QM_GOTFOCUS );
 
 				return (menu_move_sound);
+			}
+			return (menu_buzz_sound);
+
+		case K_MWHEELUP:
+			if( l->columns > 1 ) {
+				return menu_null_sound;
+			}
+
+			if (l->top > 0)
+			{
+				// if scrolling 3 lines would replace over half of the
+				// displayed items, only scroll 1 item at a time.
+				int scroll = l->height < 6 ? 1 : 3;
+				l->top -= scroll;
+				if (l->top < 0)
+					l->top = 0;
+
+				if (l->generic.callback)
+					l->generic.callback( l, QM_GOTFOCUS );
+
+				// make scrolling silent
+				return (menu_null_sound);
+			}
+			return (menu_buzz_sound);
+
+		case K_MWHEELDOWN:
+			if( l->columns > 1 ) {
+				return menu_null_sound;
+			}
+
+			if (l->top < l->numitems-l->height)
+			{
+				// if scrolling 3 items would replace over half of the
+				// displayed items, only scroll 1 item at a time.
+				int scroll = l->height < 6 ? 1 : 3;
+				l->top += scroll;
+				if (l->top > l->numitems-l->height)
+					l->top = l->numitems-l->height;
+
+				if (l->generic.callback)
+					l->generic.callback( l, QM_GOTFOCUS );
+
+				// make scrolling silent
+				return (menu_null_sound);
 			}
 			return (menu_buzz_sound);
 
@@ -1760,13 +1804,21 @@ Menu_Cache
 */
 void Menu_Cache( void )
 {
-	if ( !CG_InitTrueTypeFont( "fonts/font1_prop", PROP_HEIGHT, 0, &uis.fontProp ) ) {
+	if ( !CG_InitTrueTypeFont( ui_menuFont.string, SMALLCHAR_HEIGHT, 0, &uis.smallFont ) ) {
+		CG_InitBitmapFont( &uis.smallFont, SMALLCHAR_HEIGHT, SMALLCHAR_WIDTH );
+	}
+	if ( !CG_InitTrueTypeFont( ui_menuFont.string, BIGCHAR_HEIGHT, 0, &uis.textFont ) ) {
+		CG_InitBitmapFont( &uis.textFont, BIGCHAR_HEIGHT, BIGCHAR_WIDTH );
+	}
+
+	if ( !CG_InitTrueTypeFont( ui_menuFontProp.string, PROP_HEIGHT, 0, &uis.fontProp ) ) {
 		UI_InitPropFont( &uis.fontProp, qfalse );
 	}
-	if ( !CG_InitTrueTypeFont( "fonts/font1_prop_glo", PROP_HEIGHT, 0, &uis.fontPropGlow ) ) {
+	if ( !CG_InitTrueTypeFont( ui_menuFontProp.string, PROP_HEIGHT, 0, &uis.fontPropGlow ) ) {
 		UI_InitPropFont( &uis.fontPropGlow, qtrue );
 	}
-	if ( CG_InitTrueTypeFont( "fonts/font2_prop", PROPB_HEIGHT, 0, &uis.fontPropB ) ) {
+
+	if ( CG_InitTrueTypeFont( ui_menuFontBanner.string, PROPB_HEIGHT, 0, &uis.fontPropB ) ) {
 		uis.bannerNumbers = qtrue;
 		Vector4Copy( ttf_banner_color, text_banner_color );
 	} else {

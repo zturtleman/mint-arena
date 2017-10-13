@@ -121,7 +121,7 @@ static cvarTable_t		gameCvarTable[] = {
 
 	// noset vars
 	{ NULL, "gameversion", GAME_VERSION , CVAR_SERVERINFO | CVAR_ROM, 0, RANGE_ALL },
-	{ NULL, "gamedate", __DATE__ , CVAR_ROM, 0, RANGE_ALL },
+	{ NULL, "gamedate", PRODUCT_DATE , CVAR_ROM, 0, RANGE_ALL },
 	{ &g_restarted, "g_restarted", "0", CVAR_ROM, 0, RANGE_ALL },
 
 	// latched vars
@@ -240,8 +240,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		PlayerUserinfoChanged( arg0 );
 		return 0;
 	case GAME_PLAYER_DISCONNECT:
-		PlayerDisconnect( arg0 );
-		return 0;
+		return PlayerDisconnect( arg0, arg1 );
 	case GAME_PLAYER_BEGIN:
 		PlayerBegin( arg0 );
 		return 0;
@@ -252,7 +251,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		G_RunFrame( arg0 );
 		return 0;
 	case GAME_CONSOLE_COMMAND:
-		return ConsoleCommand();
+		return G_ConsoleCommand();
 	case GAME_SNAPSHOT_CALLBACK:
 		return G_SnapshotCallback( arg0, arg1 );
 	case GAME_VID_RESTART:
@@ -262,6 +261,8 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		return G_MapRestart( arg0, arg1 );
 	case BOTAI_START_FRAME:
 		return BotAIStartFrame( arg0 );
+	case GAME_CONSOLE_COMPLETEARGUMENT:
+		return G_ConsoleCompleteArgument(arg0);
 	default:
 		G_Error( "game vmMain: unknown command %i", command );
 		break;
@@ -326,7 +327,7 @@ void G_FindTeams( void ) {
 
 	c = 0;
 	c2 = 0;
-	for ( i=MAX_CLIENTS, e=g_entities+i ; i < level.num_entities ; i++, e++ ) {
+	for ( i=MAX_CLIENTS, e=g_entities+i ; i < level.num_entities ; i++,e++ ) {
 		if (!e->inuse)
 			continue;
 		if (!e->team)
@@ -469,11 +470,13 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	G_DPrintf ("------- Game Initialization -------\n");
 	G_DPrintf ("gameversion: %s\n", GAME_VERSION);
-	G_DPrintf ("gamedate: %s\n", __DATE__);
+	G_DPrintf ("gamedate: %s\n", PRODUCT_DATE);
 
 	srand( randomSeed );
 
 	Swap_Init();
+
+	G_BotInitBotLib();
 
 	G_RegisterCvars();
 

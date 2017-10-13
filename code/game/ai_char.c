@@ -40,6 +40,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "g_local.h"
 #include "../botlib/botlib.h"
 #include "../botlib/be_aas.h"
+#include "../botlib/l_log.h"
 //
 #include "ai_char.h"
 #include "ai_chat_sys.h"
@@ -69,9 +70,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define DEFAULT_CHARACTER		"bots/default_c.c"
 
-// interpolation requires 3 slots per-character plus 2 default character slots, and account for handle 0 being a dummy
-#define MAX_BOT_CHARACTERS ( 3 * MAX_CLIENTS + 2 + 1 )
-
 //characteristic value
 union cvalue
 {
@@ -91,10 +89,10 @@ typedef struct bot_character_s
 {
 	char filename[MAX_QPATH];
 	float skill;
-	bot_characteristic_t c[MAX_CHARACTERISTICS];
+	bot_characteristic_t c[1];		//variable sized
 } bot_character_t;
 
-bot_character_t botcharacters[MAX_BOT_CHARACTERS];
+bot_character_t *botcharacters[MAX_CLIENTS + 1];
 
 //========================================================================
 //
@@ -104,17 +102,17 @@ bot_character_t botcharacters[MAX_BOT_CHARACTERS];
 //========================================================================
 bot_character_t *BotCharacterFromHandle(int handle)
 {
-	if (handle <= 0 || handle >= MAX_BOT_CHARACTERS)
+	if (handle <= 0 || handle > MAX_CLIENTS)
 	{
 		BotAI_Print(PRT_FATAL, "character handle %d out of range\n", handle);
 		return NULL;
 	} //end if
-	if (!botcharacters[handle].skill)
+	if (!botcharacters[handle])
 	{
 		BotAI_Print(PRT_FATAL, "invalid character %d\n", handle);
 		return NULL;
 	} //end if
-	return &botcharacters[handle];
+	return botcharacters[handle];
 } //end of the function BotCharacterFromHandle
 //===========================================================================
 //
@@ -126,19 +124,19 @@ void BotDumpCharacter(bot_character_t *ch)
 {
 	int i;
 
-	G_Printf("%s\n", ch->filename);
-	G_Printf("skill %.1f\n", ch->skill);
-	G_Printf("{\n");
+	Log_Write("%s\n", ch->filename);
+	Log_Write("skill %.1f\n", ch->skill);
+	Log_Write("{\n");
 	for (i = 0; i < MAX_CHARACTERISTICS; i++)
 	{
 		switch(ch->c[i].type)
 		{
-			case CT_INTEGER: G_Printf(" %4d %d\n", i, ch->c[i].value.integer); break;
-			case CT_FLOAT: G_Printf(" %4d %f\n", i, ch->c[i].value._float); break;
-			case CT_STRING: G_Printf(" %4d %s\n", i, ch->c[i].value.string); break;
+			case CT_INTEGER: Log_Write(" %4d %d\n", i, ch->c[i].value.integer); break;
+			case CT_FLOAT: Log_Write(" %4d %f\n", i, ch->c[i].value._float); break;
+			case CT_STRING: Log_Write(" %4d %s\n", i, ch->c[i].value.string); break;
 		} //end case
 	} //end for
-	G_Printf("}\n");
+	Log_Write("}\n");
 } //end of the function BotDumpCharacter
 //========================================================================
 //
@@ -148,17 +146,15 @@ void BotDumpCharacter(bot_character_t *ch)
 //========================================================================
 void BotFreeCharacterStrings(bot_character_t *ch)
 {
-#if 0 // ZTM: FIXME: No support for freeing memory
 	int i;
 
 	for (i = 0; i < MAX_CHARACTERISTICS; i++)
 	{
 		if (ch->c[i].type == CT_STRING)
 		{
-			FreeMemory(ch->c[i].value.string);
+			trap_HeapFree(ch->c[i].value.string);
 		} //end if
 	} //end for
-#endif
 } //end of the function BotFreeCharacterStrings
 //========================================================================
 //
@@ -168,18 +164,19 @@ void BotFreeCharacterStrings(bot_character_t *ch)
 //========================================================================
 void BotFreeCharacter2(int handle)
 {
-	if (handle <= 0 || handle >= MAX_BOT_CHARACTERS)
+	if (handle <= 0 || handle > MAX_CLIENTS)
 	{
 		BotAI_Print(PRT_FATAL, "character handle %d out of range\n", handle);
 		return;
 	} //end if
-	if (!botcharacters[handle].skill)
+	if (!botcharacters[handle])
 	{
 		BotAI_Print(PRT_FATAL, "invalid character %d\n", handle);
 		return;
 	} //end if
-	BotFreeCharacterStrings(&botcharacters[handle]);
-	Com_Memset(&botcharacters[handle], 0, sizeof (bot_character_t));
+	BotFreeCharacterStrings(botcharacters[handle]);
+	trap_HeapFree(botcharacters[handle]);
+	botcharacters[handle] = NULL;
 } //end of the function BotFreeCharacter2
 //========================================================================
 //
@@ -230,9 +227,10 @@ void BotDefaultCharacteristics(bot_character_t *ch, bot_character_t *defaultch)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-qboolean BotLoadCharacterFromFile(char *charfile, int skill, bot_character_t *ch)
+bot_character_t *BotLoadCharacterFromFile(char *charfile, int skill)
 {
 	int indent, index, foundcharacter;
+	bot_character_t *ch;
 	int	source;
 	pc_token_t token;
 
@@ -242,8 +240,10 @@ qboolean BotLoadCharacterFromFile(char *charfile, int skill, bot_character_t *ch
 	if (!source)
 	{
 		BotAI_Print(PRT_ERROR, "counldn't load %s\n", charfile);
-		return qfalse;
+		return NULL;
 	} //end if
+	ch = (bot_character_t *) trap_HeapMalloc(sizeof(bot_character_t) +
+					MAX_CHARACTERISTICS * sizeof(bot_characteristic_t));
 	strcpy(ch->filename, charfile);
 	while(trap_PC_ReadToken(source, &token))
 	{
@@ -253,13 +253,15 @@ qboolean BotLoadCharacterFromFile(char *charfile, int skill, bot_character_t *ch
 			{
 				trap_PC_FreeSource(source);
 				BotFreeCharacterStrings(ch);
-				return qfalse;
+				trap_HeapFree(ch);
+				return NULL;
 			} //end if
 			if (!PC_ExpectTokenString(source, "{"))
 			{
 				trap_PC_FreeSource(source);
 				BotFreeCharacterStrings(ch);
-				return qfalse;
+				trap_HeapFree(ch);
+				return NULL;
 			} //end if
 			//if it's the correct skill
 			if (skill < 0 || token.intvalue == skill)
@@ -274,7 +276,8 @@ qboolean BotLoadCharacterFromFile(char *charfile, int skill, bot_character_t *ch
 						PC_SourceError(source, "expected integer index, found %s", token.string);
 						trap_PC_FreeSource(source);
 						BotFreeCharacterStrings(ch);
-						return qfalse;
+						trap_HeapFree(ch);
+						return NULL;
 					} //end if
 					index = token.intvalue;
 					if (index < 0 || index > MAX_CHARACTERISTICS)
@@ -282,20 +285,23 @@ qboolean BotLoadCharacterFromFile(char *charfile, int skill, bot_character_t *ch
 						PC_SourceError(source, "characteristic index out of range [0, %d]", MAX_CHARACTERISTICS);
 						trap_PC_FreeSource(source);
 						BotFreeCharacterStrings(ch);
-						return qfalse;
+						trap_HeapFree(ch);
+						return NULL;
 					} //end if
 					if (ch->c[index].type)
 					{
 						PC_SourceError(source, "characteristic %d already initialized", index);
 						trap_PC_FreeSource(source);
 						BotFreeCharacterStrings(ch);
-						return qfalse;
+						trap_HeapFree(ch);
+						return NULL;
 					} //end if
 					if (!PC_ExpectAnyToken(source, &token))
 					{
 						trap_PC_FreeSource(source);
 						BotFreeCharacterStrings(ch);
-						return qfalse;
+						trap_HeapFree(ch);
+						return NULL;
 					} //end if
 					if (token.type == TT_NUMBER)
 					{
@@ -312,8 +318,6 @@ qboolean BotLoadCharacterFromFile(char *charfile, int skill, bot_character_t *ch
 					} //end if
 					else if (token.type == TT_STRING)
 					{
-						// ZTM: FIXME: ### I think I made this be done in the engine
-						//StripDoubleQuotes(token.string);
 						ch->c[index].value.string = trap_HeapMalloc(strlen(token.string)+1);
 						strcpy(ch->c[index].value.string, token.string);
 						ch->c[index].type = CT_STRING;
@@ -323,7 +327,8 @@ qboolean BotLoadCharacterFromFile(char *charfile, int skill, bot_character_t *ch
 						PC_SourceError(source, "expected integer, float or string, found %s", token.string);
 						trap_PC_FreeSource(source);
 						BotFreeCharacterStrings(ch);
-						return qfalse;
+						trap_HeapFree(ch);
+						return NULL;
 					} //end else
 				} //end if
 				break;
@@ -337,7 +342,8 @@ qboolean BotLoadCharacterFromFile(char *charfile, int skill, bot_character_t *ch
 					{
 						trap_PC_FreeSource(source);
 						BotFreeCharacterStrings(ch);
-						return qfalse;
+						trap_HeapFree(ch);
+						return NULL;
 					} //end if
 					if (!strcmp(token.string, "{")) indent++;
 					else if (!strcmp(token.string, "}")) indent--;
@@ -349,7 +355,8 @@ qboolean BotLoadCharacterFromFile(char *charfile, int skill, bot_character_t *ch
 			PC_SourceError(source, "unknown definition %s", token.string);
 			trap_PC_FreeSource(source);
 			BotFreeCharacterStrings(ch);
-			return qfalse;
+			trap_HeapFree(ch);
+			return NULL;
 		} //end else
 	} //end while
 	trap_PC_FreeSource(source);
@@ -357,9 +364,10 @@ qboolean BotLoadCharacterFromFile(char *charfile, int skill, bot_character_t *ch
 	if (!foundcharacter)
 	{
 		BotFreeCharacterStrings(ch);
-		return qfalse;
+		trap_HeapFree(ch);
+		return NULL;
 	} //end if
-	return qtrue;
+	return ch;
 } //end of the function BotLoadCharacterFromFile
 //===========================================================================
 //
@@ -371,11 +379,11 @@ int BotFindCachedCharacter(char *charfile, float skill)
 {
 	int handle;
 
-	for (handle = 1; handle < MAX_BOT_CHARACTERS; handle++)
+	for (handle = 1; handle <= MAX_CLIENTS; handle++)
 	{
-		if ( !botcharacters[handle].skill ) continue;
-		if ( strcmp( botcharacters[handle].filename, charfile ) == 0 &&
-			(skill < 0 || fabs(botcharacters[handle].skill - skill) < 0.01) )
+		if ( !botcharacters[handle] ) continue;
+		if ( strcmp( botcharacters[handle]->filename, charfile ) == 0 &&
+			(skill < 0 || fabs(botcharacters[handle]->skill - skill) < 0.01) )
 		{
 			return handle;
 		} //end if
@@ -391,6 +399,7 @@ int BotFindCachedCharacter(char *charfile, float skill)
 int BotLoadCachedCharacter(char *charfile, float skill, int reload)
 {
 	int handle, cachedhandle, intskill;
+	bot_character_t *ch = NULL;
 #ifdef DEBUG
 	int starttime;
 
@@ -398,11 +407,11 @@ int BotLoadCachedCharacter(char *charfile, float skill, int reload)
 #endif //DEBUG
 
 	//find a free spot for a character
-	for (handle = 1; handle < MAX_BOT_CHARACTERS; handle++)
+	for (handle = 1; handle <= MAX_CLIENTS; handle++)
 	{
-		if (!botcharacters[handle].skill) break;
+		if (!botcharacters[handle]) break;
 	} //end for
-	if (handle >= MAX_BOT_CHARACTERS) return 0;
+	if (handle > MAX_CLIENTS) return 0;
 	//try to load a cached character with the given skill
 	if (!reload)
 	{
@@ -416,8 +425,10 @@ int BotLoadCachedCharacter(char *charfile, float skill, int reload)
 	//
 	intskill = (int) (skill + 0.5);
 	//try to load the character with the given skill
-	if (BotLoadCharacterFromFile(charfile, intskill, &botcharacters[handle]))
+	ch = BotLoadCharacterFromFile(charfile, intskill);
+	if (ch)
 	{
+		botcharacters[handle] = ch;
 		//
 		BotAI_Print(PRT_DEVELOPER, "loaded skill %d from %s\n", intskill, charfile);
 #ifdef DEBUG
@@ -439,8 +450,10 @@ int BotLoadCachedCharacter(char *charfile, float skill, int reload)
 		} //end if
 	} //end if
 	//try to load the default character with the given skill
-	if (BotLoadCharacterFromFile(DEFAULT_CHARACTER, intskill, &botcharacters[handle]))
+	ch = BotLoadCharacterFromFile(DEFAULT_CHARACTER, intskill);
+	if (ch)
 	{
+		botcharacters[handle] = ch;
 		BotAI_Print(PRT_MESSAGE, "loaded default skill %d from %s\n", intskill, charfile);
 		return handle;
 	} //end if
@@ -451,14 +464,16 @@ int BotLoadCachedCharacter(char *charfile, float skill, int reload)
 		cachedhandle = BotFindCachedCharacter(charfile, -1);
 		if (cachedhandle)
 		{
-			BotAI_Print(PRT_DEVELOPER, "loaded cached skill %f from %s\n", botcharacters[cachedhandle].skill, charfile);
+			BotAI_Print(PRT_DEVELOPER, "loaded cached skill %f from %s\n", botcharacters[cachedhandle]->skill, charfile);
 			return cachedhandle;
 		} //end if
 	} //end if
 	//try to load a character with any skill
-	if (BotLoadCharacterFromFile(charfile, -1, &botcharacters[handle]))
+	ch = BotLoadCharacterFromFile(charfile, -1);
+	if (ch)
 	{
-		BotAI_Print(PRT_DEVELOPER, "loaded skill %f from %s\n", botcharacters[handle].skill, charfile);
+		botcharacters[handle] = ch;
+		BotAI_Print(PRT_DEVELOPER, "loaded skill %f from %s\n", ch->skill, charfile);
 		return handle;
 	} //end if
 	//
@@ -468,14 +483,16 @@ int BotLoadCachedCharacter(char *charfile, float skill, int reload)
 		cachedhandle = BotFindCachedCharacter(DEFAULT_CHARACTER, -1);
 		if (cachedhandle)
 		{
-			BotAI_Print(PRT_MESSAGE, "loaded cached default skill %f from %s\n", botcharacters[cachedhandle].skill, charfile);
+			BotAI_Print(PRT_MESSAGE, "loaded cached default skill %f from %s\n", botcharacters[cachedhandle]->skill, charfile);
 			return cachedhandle;
 		} //end if
 	} //end if
 	//try to load a character with any skill
-	if (BotLoadCharacterFromFile(DEFAULT_CHARACTER, -1, &botcharacters[handle]))
+	ch = BotLoadCharacterFromFile(DEFAULT_CHARACTER, -1);
+	if (ch)
 	{
-		BotAI_Print(PRT_MESSAGE, "loaded default skill %f from %s\n", botcharacters[handle].skill, charfile);
+		botcharacters[handle] = ch;
+		BotAI_Print(PRT_MESSAGE, "loaded default skill %f from %s\n", ch->skill, charfile);
 		return handle;
 	} //end if
 	//
@@ -498,7 +515,7 @@ int BotLoadCharacterSkill(char *charfile, float skill)
 
 	if (defaultch && ch)
 	{
-		BotDefaultCharacteristics(&botcharacters[ch], &botcharacters[defaultch]);
+		BotDefaultCharacteristics(botcharacters[ch], botcharacters[defaultch]);
 	} //end if
 
 	return ch;
@@ -520,14 +537,16 @@ int BotInterpolateCharacters(int handle1, int handle2, float desiredskill)
 	if (!ch1 || !ch2)
 		return 0;
 	//find a free spot for a character
-	for (handle = 1; handle < MAX_BOT_CHARACTERS; handle++)
+	for (handle = 1; handle <= MAX_CLIENTS; handle++)
 	{
-		if (!botcharacters[handle].skill) break;
+		if (!botcharacters[handle]) break;
 	} //end for
-	if (handle >= MAX_BOT_CHARACTERS) return 0;
-	out = &botcharacters[handle];
+	if (handle > MAX_CLIENTS) return 0;
+	out = (bot_character_t *) trap_HeapMalloc(sizeof(bot_character_t) +
+					MAX_CHARACTERISTICS * sizeof(bot_characteristic_t));
 	out->skill = desiredskill;
 	strcpy(out->filename, ch1->filename);
+	botcharacters[handle] = out;
 
 	scale = (float) (desiredskill - ch1->skill) / (ch2->skill - ch1->skill);
 	for (i = 0; i < MAX_CHARACTERISTICS; i++)
@@ -597,10 +616,8 @@ int BotLoadCharacter(char *charfile, float skill)
 	//interpolate between the two skills
 	handle = BotInterpolateCharacters(firstskill, secondskill, skill);
 	if (!handle) return 0;
-#if 0 // ZTM: FIXME: add new bot logfile for game to write to?
 	//write the character to the log file
-	BotDumpCharacter(&botcharacters[handle]);
-#endif
+	BotDumpCharacter(botcharacters[handle]);
 	//
 	return handle;
 } //end of the function BotLoadCharacter
@@ -772,9 +789,9 @@ void BotShutdownCharacters(void)
 {
 	int handle;
 
-	for (handle = 1; handle < MAX_BOT_CHARACTERS; handle++)
+	for (handle = 1; handle <= MAX_CLIENTS; handle++)
 	{
-		if (botcharacters[handle].skill)
+		if (botcharacters[handle])
 		{
 			BotFreeCharacter2(handle);
 		} //end if

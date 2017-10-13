@@ -346,251 +346,26 @@ void trap_ClientCommand(int playerNum, const char *command) {
 	syscall( G_CLIENT_COMMAND, playerNum, command );
 }
 
-// BotLib traps start here
-int trap_BotLibSetup( void ) {
-	return syscall( BOTLIB_SETUP );
-}
-
-int trap_BotLibShutdown( void ) {
-	return syscall( BOTLIB_SHUTDOWN );
-}
-
-int trap_BotLibVarSet(const char *var_name, char *value) {
-	return syscall( BOTLIB_LIBVAR_SET, var_name, value );
-}
-
-int trap_BotLibVarGet(const char *var_name, char *value, int size) {
-	return syscall( BOTLIB_LIBVAR_GET, var_name, value, size );
-}
-
-int trap_BotLibStartFrame(float time) {
-	return syscall( BOTLIB_START_FRAME, PASSFLOAT( time ) );
-}
-
-int trap_BotLibLoadMap(const char *mapname) {
-	return syscall( BOTLIB_LOAD_MAP, mapname );
-}
-
-int trap_BotLibUpdateEntity(int ent, void /* struct bot_updateentity_s */ *bue) {
-	return syscall( BOTLIB_UPDATENTITY, ent, bue );
-}
-
-int trap_BotLibTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3) {
-	return syscall( BOTLIB_TEST, parm0, parm1, parm2, parm3 );
-}
 
 int trap_BotGetSnapshotEntity( int playerNum, int sequence ) {
-	return syscall( BOTLIB_GET_SNAPSHOT_ENTITY, playerNum, sequence );
+	return syscall( G_BOT_GET_SNAPSHOT_ENTITY, playerNum, sequence );
 }
 
-int trap_BotGetServerCommand(int playerNum, char *message, int size) {
-	return syscall( BOTLIB_GET_CONSOLE_MESSAGE, playerNum, message, size );
+int trap_BotGetServerCommand(int playerNum, char *command, int size) {
+	return syscall( G_BOT_GET_SERVER_COMMAND, playerNum, command, size );
 }
 
 void trap_BotUserCommand(int playerNum, usercmd_t *ucmd) {
-	syscall( BOTLIB_USER_COMMAND, playerNum, ucmd );
-}
-
-int trap_AAS_Loaded(void) {
-	return syscall( BOTLIB_AAS_LOADED );
-}
-
-int trap_AAS_Initialized(void) {
-	return syscall( BOTLIB_AAS_INITIALIZED );
-}
-
-void trap_AAS_PresenceTypeBoundingBox(int presencetype, vec3_t mins, vec3_t maxs) {
-	syscall( BOTLIB_AAS_PRESENCE_TYPE_BOUNDING_BOX, presencetype, mins, maxs );
-}
-
-float trap_AAS_Time(void) {
-	floatint_t fi;
-	fi.i = syscall( BOTLIB_AAS_TIME );
-	return fi.f;
-}
-
-int trap_AAS_PointAreaNum(vec3_t point) {
-	return syscall( BOTLIB_AAS_POINT_AREA_NUM, point );
-}
-
-int trap_AAS_PointReachabilityAreaIndex(vec3_t point) {
-	return syscall( BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX, point );
-}
-
-void trap_AAS_TracePlayerBBox(void /* aas_trace_t */ *trace, vec3_t start, vec3_t end, int presencetype, int passent, int contentmask) {
-	syscall( BOTLIB_AAS_TRACE_PLAYER_BBOX, trace, start, end, presencetype, passent, contentmask );
-}
-
-int trap_AAS_TraceAreas(vec3_t start, vec3_t end, int *areas, vec3_t *points, int maxareas) {
-	return syscall( BOTLIB_AAS_TRACE_AREAS, start, end, areas, points, maxareas );
-}
-
-int trap_AAS_BBoxAreas(vec3_t absmins, vec3_t absmaxs, int *areas, int maxareas) {
-	return syscall( BOTLIB_AAS_BBOX_AREAS, absmins, absmaxs, areas, maxareas );
-}
-
-int trap_AAS_AreaInfo( int areanum, void /* struct aas_areainfo_s */ *info ) {
-	return syscall( BOTLIB_AAS_AREA_INFO, areanum, info );
-}
-
-int trap_AAS_PointContents(vec3_t point) {
-	return syscall( BOTLIB_AAS_POINT_CONTENTS, point );
-}
-
-int trap_AAS_NextBSPEntity(int ent) {
-	return syscall( BOTLIB_AAS_NEXT_BSP_ENTITY, ent );
-}
-
-int trap_AAS_ValueForBSPEpairKey(int ent, char *key, char *value, int size) {
-	return syscall( BOTLIB_AAS_VALUE_FOR_BSP_EPAIR_KEY, ent, key, value, size );
-}
-
-int trap_AAS_VectorForBSPEpairKey(int ent, char *key, vec3_t v) {
-	return syscall( BOTLIB_AAS_VECTOR_FOR_BSP_EPAIR_KEY, ent, key, v );
-}
-
-int trap_AAS_FloatForBSPEpairKey(int ent, char *key, float *value) {
-	return syscall( BOTLIB_AAS_FLOAT_FOR_BSP_EPAIR_KEY, ent, key, value );
-}
-
-int trap_AAS_IntForBSPEpairKey(int ent, char *key, int *value) {
-	return syscall( BOTLIB_AAS_INT_FOR_BSP_EPAIR_KEY, ent, key, value );
+	syscall( G_BOT_USER_COMMAND, playerNum, ucmd );
 }
 
 
-
-int trap_AAS_AreaReachability(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_REACHABILITY, areanum );
+int trap_PC_AddGlobalDefine( const char *define ) {
+	return syscall( G_PC_ADD_GLOBAL_DEFINE, define );
 }
 
-int trap_AAS_BestReachableArea(vec3_t origin, vec3_t mins, vec3_t maxs, vec3_t goalorigin) {
-	return syscall( BOTLIB_AAS_BEST_REACHABLE_AREA, origin, mins, maxs, goalorigin );
-}
-
-int trap_AAS_BestReachableFromJumpPadArea(vec3_t origin, vec3_t mins, vec3_t maxs) {
-	return syscall( BOTLIB_AAS_BEST_REACHABLE_FROM_JUMP_PAD_AREA, origin, mins, maxs );
-}
-
-int trap_AAS_NextModelReachability(int num, int modelnum) {
-	return syscall( BOTLIB_AAS_NEXT_MODEL_REACHABILITY, num, modelnum );
-}
-
-float trap_AAS_AreaGroundFaceArea(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_GROUND_FACE_AREA, areanum );
-}
-
-int trap_AAS_AreaCrouch(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_CROUCH, areanum );
-}
-
-int trap_AAS_AreaSwim(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_SWIM, areanum );
-}
-
-int trap_AAS_AreaLiquid(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_LIQUID, areanum );
-}
-
-int trap_AAS_AreaLava(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_LAVA, areanum );
-}
-
-int trap_AAS_AreaSlime(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_SLIME, areanum );
-}
-
-int trap_AAS_AreaGrounded(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_GROUNDED, areanum );
-}
-
-int trap_AAS_AreaLadder(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_LADDER, areanum );
-}
-
-int trap_AAS_AreaJumpPad(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_JUMP_PAD, areanum );
-}
-
-int trap_AAS_AreaDoNotEnter(int areanum) {
-	return syscall( BOTLIB_AAS_AREA_DO_NOT_ENTER, areanum );
-}
-
-
-int trap_AAS_TravelFlagForType( int traveltype ) {
-	return syscall( BOTLIB_AAS_TRAVEL_FLAG_FOR_TYPE, traveltype );
-}
-
-int trap_AAS_AreaContentsTravelFlags( int areanum ) {
-	return syscall( BOTLIB_AAS_AREA_CONTENTS_TRAVEL_FLAGS, areanum );
-}
-
-int trap_AAS_NextAreaReachability( int areanum, int reachnum ) {
-	return syscall( BOTLIB_AAS_NEXT_AREA_REACHABILITY, areanum, reachnum );
-}
-
-int trap_AAS_ReachabilityFromNum( int num, void /*struct aas_reachability_s*/ *reach ) {
-	return syscall( BOTLIB_AAS_REACHABILITY_FROM_NUM, num, reach );
-}
-
-int trap_AAS_RandomGoalArea( int areanum, int travelflags, int contentmask, int *goalareanum, vec3_t goalorigin ) {
-	return syscall( BOTLIB_AAS_RANDOM_GOAL_AREA, areanum, travelflags, contentmask, goalareanum, goalorigin );
-}
-
-int trap_AAS_EnableRoutingArea( int areanum, int enable ) {
-	return syscall( BOTLIB_AAS_ENABLE_ROUTING_AREA, areanum, enable );
-}
-
-unsigned short int trap_AAS_AreaTravelTime(int areanum, vec3_t start, vec3_t end) {
-	return syscall( BOTLIB_AAS_AREA_TRAVEL_TIME, areanum, start, end );
-}
-
-int trap_AAS_AreaTravelTimeToGoalArea(int areanum, vec3_t origin, int goalareanum, int travelflags) {
-	return syscall( BOTLIB_AAS_AREA_TRAVEL_TIME_TO_GOAL_AREA, areanum, origin, goalareanum, travelflags );
-}
-
-int trap_AAS_PredictRoute(void /*struct aas_predictroute_s*/ *route, int areanum, vec3_t origin,
-							int goalareanum, int travelflags, int maxareas, int maxtime,
-							int stopevent, int stopcontents, int stoptfl, int stopareanum) {
-	return syscall( BOTLIB_AAS_PREDICT_ROUTE, route, areanum, origin, goalareanum, travelflags, maxareas, maxtime, stopevent, stopcontents, stoptfl, stopareanum );
-}
-
-int trap_AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, int goalareanum, int travelflags,
-										void /*struct aas_altroutegoal_s*/ *altroutegoals, int maxaltroutegoals,
-										int type) {
-	return syscall( BOTLIB_AAS_ALTERNATIVE_ROUTE_GOAL, start, startareanum, goal, goalareanum, travelflags, altroutegoals, maxaltroutegoals, type );
-}
-
-
-int trap_AAS_PredictPlayerMovement(void /* struct aas_clientmove_s */ *move, int entnum, vec3_t origin, int presencetype, int onground, vec3_t velocity, vec3_t cmdmove, int cmdframes, int maxframes, float frametime, int stopevent, int stopareanum, int visualize, int contentmask) {
-	return syscall( BOTLIB_AAS_PREDICT_PLAYER_MOVEMENT, move, entnum, origin, presencetype, onground, velocity, cmdmove, cmdframes, maxframes, PASSFLOAT(frametime), stopevent, stopareanum, visualize, contentmask );
-}
-
-int trap_AAS_OnGround(vec3_t origin, int presencetype, int passent, int contentmask) {
-	return syscall( BOTLIB_AAS_ON_GROUND, origin, presencetype, passent, contentmask );
-}
-
-int trap_AAS_Swimming(vec3_t origin) {
-	return syscall( BOTLIB_AAS_SWIMMING, origin );
-}
-
-void trap_AAS_JumpReachRunStart(void /* struct aas_reachability_s */ *reach, vec3_t runstart, int contentmask) {
-	syscall( BOTLIB_AAS_JUMP_REACH_RUN_START, reach, runstart, contentmask );
-}
-
-int trap_AAS_AgainstLadder(vec3_t origin) {
-	return syscall( BOTLIB_AAS_AGAINST_LADDER, origin );
-}
-
-int trap_AAS_HorizontalVelocityForJump(float zvel, vec3_t start, vec3_t end, float *velocity) {
-	return syscall( BOTLIB_AAS_HORIZONTAL_VELOCITY_FOR_JUMP, PASSFLOAT( zvel ), start, end, velocity );
-}
-int trap_AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs, int passent, int contentmask) {
-	return syscall( BOTLIB_AAS_DROP_TO_FLOOR, origin, mins, maxs, passent, contentmask );
-}
-
-
-int trap_PC_AddGlobalDefine(char *string) {
-	return syscall( G_PC_ADD_GLOBAL_DEFINE, string );
+int trap_PC_RemoveGlobalDefine( const char *define ) {
+	return syscall( G_PC_REMOVE_GLOBAL_DEFINE, define );
 }
 
 void trap_PC_RemoveAllGlobalDefines( void ) {
@@ -603,6 +378,10 @@ int trap_PC_LoadSource( const char *filename, const char *basepath ) {
 
 int trap_PC_FreeSource( int handle ) {
 	return syscall( G_PC_FREE_SOURCE, handle );
+}
+
+int trap_PC_AddDefine( int handle, const char *define ) {
+	return syscall( G_PC_ADD_DEFINE, handle, define );
 }
 
 int trap_PC_ReadToken( int handle, pc_token_t *pc_token ) {
@@ -627,4 +406,16 @@ int trap_HeapAvailable( void ) {
 
 void trap_HeapFree( void *data ) {
 	syscall( G_HEAP_FREE, data );
+}
+
+void trap_Field_CompleteFilename( const char *dir, const char *ext, qboolean stripExt, qboolean allowNonPureFilesOnDisk ) {
+	syscall( G_FIELD_COMPLETEFILENAME, dir, ext, stripExt, allowNonPureFilesOnDisk );
+}
+
+void trap_Field_CompleteCommand( const char *cmd, qboolean doCommands, qboolean doCvars ) {
+	syscall( G_FIELD_COMPLETECOMMAND, cmd, doCommands, doCvars );
+}
+
+void	trap_Field_CompleteList( const char *list ) {
+	syscall( G_FIELD_COMPLETELIST, list );
 }

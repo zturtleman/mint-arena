@@ -193,6 +193,9 @@ typedef struct bot_stringlist_s
 	struct bot_stringlist_s *next;
 } bot_stringlist_t;
 
+//may use up to MAX_CLIENTS * 2 console messages on map change
+#define MAX_CHATSTATE_MESSAGES 128
+
 //chat state of a bot
 typedef struct bot_chatstate_s
 {
@@ -200,10 +203,9 @@ typedef struct bot_chatstate_s
 	int playernum;										//player number
 	char name[32];										//name of the bot
 	char chatmessage[MAX_MESSAGE_SIZE];
-	int handle;
 	//the console messages visible to the bot
-	bot_consolemessage_t *firstmessage;			//first message is the first typed message
-	bot_consolemessage_t *lastmessage;			//last message is the last typed message, bottom of console
+	//index 0 is the oldest message
+	bot_consolemessage_t *consolemessages[MAX_CHATSTATE_MESSAGES];
 	//number of console messages stored in the state
 	int numconsolemessages;
 	//the bot chat lines
@@ -216,13 +218,21 @@ typedef struct {
 	char		chatname[MAX_QPATH];
 } bot_ichatdata_t;
 
+// enable for debuging console message heap / chatstate console message queues
+//#define MESSAGE_DEBUG
+
 bot_ichatdata_t	*ichatdata[MAX_CLIENTS];
 
 bot_chatstate_t *botchatstates[MAX_CLIENTS+1];
 //console message heap
 #define MAX_MESSAGES	1024
 bot_consolemessage_t consolemessageheap[MAX_MESSAGES];
+bot_consolemessage_t *activeconsolemessages = NULL;
 bot_consolemessage_t *freeconsolemessages = NULL;
+int consolemessagehandle = 1;
+#ifdef MESSAGE_DEBUG
+int consolemessagescount = 0;
+#endif
 //list with match strings
 bot_matchtemplate_t *matchtemplates = NULL;
 //list with synonyms
@@ -276,6 +286,12 @@ void InitConsoleMessageHeap(void)
 	consolemessageheap[MAX_MESSAGES-1].next = NULL;
 	//pointer to the free console messages
 	freeconsolemessages = consolemessageheap;
+
+	activeconsolemessages = NULL;
+	consolemessagehandle = 1;
+#ifdef MESSAGE_DEBUG
+	consolemessagescount = 0;
+#endif
 } //end of the function InitConsoleMessageHeap
 //===========================================================================
 // allocate one console message from the heap
@@ -284,13 +300,46 @@ void InitConsoleMessageHeap(void)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-bot_consolemessage_t *AllocConsoleMessage(void)
+bot_consolemessage_t *AllocConsoleMessage(int type, const char *message, float time)
 {
-	bot_consolemessage_t *message;
-	message = freeconsolemessages;
+	bot_consolemessage_t *m;
+
+	for (m = activeconsolemessages; m; m = m->next)
+	{
+		if (m->time == time && m->type == type && strcmp(m->message, message) == 0)
+		{
+			m->references++;
+			return m;
+		}
+	}
+
+	m = freeconsolemessages;
 	if (freeconsolemessages) freeconsolemessages = freeconsolemessages->next;
 	if (freeconsolemessages) freeconsolemessages->prev = NULL;
-	return message;
+
+	if (m)
+	{
+		consolemessagehandle++;
+		if (consolemessagehandle <= 0 || consolemessagehandle > 8192) {
+			consolemessagehandle = 1;
+		}
+		m->handle = consolemessagehandle;
+		m->time = time;
+		m->type = type;
+		Q_strncpyz(m->message, message, MAX_MESSAGE_SIZE);
+		m->references = 1;
+
+		if (activeconsolemessages) activeconsolemessages->prev = m;
+		m->prev = NULL;
+		m->next = activeconsolemessages;
+		activeconsolemessages = m;
+
+#ifdef MESSAGE_DEBUG
+		consolemessagescount++;
+#endif
+	}
+
+	return m;
 } //end of the function AllocConsoleMessage
 //===========================================================================
 // deallocate one console message from the heap
@@ -301,10 +350,24 @@ bot_consolemessage_t *AllocConsoleMessage(void)
 //===========================================================================
 void FreeConsoleMessage(bot_consolemessage_t *message)
 {
+	message->references--;
+	if ( message->references > 0 )
+		return;
+
+	if (message->prev)
+		message->prev->next = message->next;
+	if (message->next)
+		message->next->prev = message->prev;
+	if (message == activeconsolemessages)
+		activeconsolemessages = activeconsolemessages->next;
+
 	if (freeconsolemessages) freeconsolemessages->prev = message;
 	message->prev = NULL;
 	message->next = freeconsolemessages;
 	freeconsolemessages = message;
+#ifdef MESSAGE_DEBUG
+	consolemessagescount--;
+#endif
 } //end of the function FreeConsoleMessage
 //===========================================================================
 //
@@ -314,23 +377,27 @@ void FreeConsoleMessage(bot_consolemessage_t *message)
 //===========================================================================
 void BotRemoveConsoleMessage(int chatstate, int handle)
 {
-	bot_consolemessage_t *m, *nextm;
 	bot_chatstate_t *cs;
+	int i;
 
 	cs = BotChatStateFromHandle(chatstate);
 	if (!cs) return;
 
-	for (m = cs->firstmessage; m; m = nextm)
+	for (i = 0; i < cs->numconsolemessages; i++)
 	{
-		nextm = m->next;
-		if (m->handle == handle)
+		if (cs->consolemessages[i]->handle == handle)
 		{
-			if (m->next) m->next->prev = m->prev;
-			else cs->lastmessage = m->prev;
-			if (m->prev) m->prev->next = m->next;
-			else cs->firstmessage = m->next;
+			FreeConsoleMessage(cs->consolemessages[i]);
 
-			FreeConsoleMessage(m);
+			if (i+1 == cs->numconsolemessages)
+			{
+				cs->consolemessages[i] = NULL;
+			}
+			else
+			{
+				memmove( &cs->consolemessages[i], &cs->consolemessages[i+1], sizeof (cs->consolemessages[0]) * ( cs->numconsolemessages - ( i + 1 ) ) );
+			}
+
 			cs->numconsolemessages--;
 			break;
 		} //end if
@@ -350,31 +417,23 @@ void BotQueueConsoleMessage(int chatstate, int type, char *message)
 	cs = BotChatStateFromHandle(chatstate);
 	if (!cs) return;
 
-	m = AllocConsoleMessage();
+	if (cs->numconsolemessages >= MAX_CHATSTATE_MESSAGES)
+	{
+		BotAI_Print(PRT_ERROR, "max chatstate console messages reached\n");
+		return;
+	}
+
+	m = AllocConsoleMessage(type, message, trap_AAS_Time());
+#ifdef MESSAGE_DEBUG
+	BotAI_Print(PRT_MESSAGE, "BotQueueConsoleMessage( %d, %s, %s ), index %d, bot queue %d, heap total %d\n",
+		chatstate, type == CMS_CHAT ? "CMS_CHAT" : "CHAT_NORMAL", message, m ? (int)(m - consolemessageheap) : -1, cs->numconsolemessages, consolemessagescount );
+#endif
 	if (!m)
 	{
 		BotAI_Print(PRT_ERROR, "empty console message heap\n");
 		return;
 	} //end if
-	cs->handle++;
-	if (cs->handle <= 0 || cs->handle > 8192) cs->handle = 1;
-	m->handle = cs->handle;
-	m->time = trap_AAS_Time();
-	m->type = type;
-	strncpy(m->message, message, MAX_MESSAGE_SIZE);
-	m->next = NULL;
-	if (cs->lastmessage)
-	{
-		cs->lastmessage->next = m;
-		m->prev = cs->lastmessage;
-		cs->lastmessage = m;
-	} //end if
-	else
-	{
-		cs->lastmessage = m;
-		cs->firstmessage = m;
-		m->prev = NULL;
-	} //end if
+	cs->consolemessages[cs->numconsolemessages] = m;
 	cs->numconsolemessages++;
 } //end of the function BotQueueConsoleMessage
 //===========================================================================
@@ -390,8 +449,9 @@ int BotNextConsoleMessage(int chatstate, bot_consolemessage_t *cm)
 
 	cs = BotChatStateFromHandle(chatstate);
 	if (!cs) return 0;
-	if ((firstmsg = cs->firstmessage))
+	if (cs->numconsolemessages > 0)
 	{
+		firstmsg = cs->consolemessages[0];
 		cm->handle = firstmsg->handle;
 		cm->time = firstmsg->time;
 		cm->type = firstmsg->type;
@@ -3086,6 +3146,8 @@ void BotShutdownChatAI(void)
 		} //end if
 	} //end for
 	Com_Memset( &consolemessageheap, 0, sizeof ( consolemessageheap ) );
+	activeconsolemessages = NULL;
+	freeconsolemessages = NULL;
 	if (matchtemplates) BotFreeMatchTemplates(matchtemplates);
 	matchtemplates = NULL;
 	if (randomstrings) FreeMemory(randomstrings);

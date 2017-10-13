@@ -173,7 +173,7 @@ void CG_ConsolePrint( const char *p ) {
 			continue;
 		}
 
-		lineDrawLen = CG_DrawStrlen( con.lines[con.current % CON_MAXLINES], UI_SMALLFONT );
+		lineDrawLen = CG_DrawStrlen( con.lines[con.current % CON_MAXLINES], UI_CONSOLEFONT );
 		wordDrawLen = charDrawLen = 0;
 
 		for ( i = 0; i < CON_LINELENGTH; /**/ ) {
@@ -197,7 +197,7 @@ void CG_ConsolePrint( const char *p ) {
 				break;
 			}
 
-			charDrawLen = CG_DrawStrlenEx( &p[i], UI_SMALLFONT, 1 );
+			charDrawLen = CG_DrawStrlenMaxChars( &p[i], UI_CONSOLEFONT, 1 );
 
 			// make sure the word will fit on screen, even if it needs a whole line to do so.
 			if ( wordDrawLen + charDrawLen >= con.screenFakeWidth - ( con.sideMargin * 2 ) ) {
@@ -281,11 +281,11 @@ void Con_DrawInput ( connstate_t state, int lines ) {
 		return;
 	}
 
-	y = lines - ( SMALLCHAR_HEIGHT * 2 );
+	y = lines - ( CG_DrawStringLineHeight( UI_CONSOLEFONT ) * 2 );
 
-	CG_DrawSmallStringColor( con.sideMargin, y, "]", g_color_table[ColorIndex(COLOR_WHITE)] );
+	CG_DrawString( con.sideMargin, y, "]", UI_CONSOLEFONT, NULL );
 
-	MField_Draw( &g_consoleField, con.sideMargin + CG_DrawStrlen( "]", UI_SMALLFONT ), y, UI_SMALLFONT, NULL, qtrue );
+	CG_MField_Draw( &g_consoleField, con.sideMargin + CG_DrawStrlen( "]", UI_CONSOLEFONT ), y, UI_CONSOLEFONT, NULL, qtrue );
 }
 
 /*
@@ -297,11 +297,12 @@ Draws the console with the solid background
 */
 void Con_DrawSolidConsole( connstate_t state, float frac ) {
 	int				i;
-	int				x, y;
+	int				y;
 	int				rows;
 	char			*text;
 	int				row;
 	int				lines;
+	int				lineHeight;
 	vec4_t			color;
 
 	if ( frac > 1 )
@@ -330,24 +331,31 @@ void Con_DrawSolidConsole( connstate_t state, float frac ) {
 
 	CG_SetScreenPlacement( PLACE_RIGHT, PLACE_TOP );
 
+	lineHeight = CG_DrawStringLineHeight( UI_CONSOLEFONT );
+
 	// draw the version number
-	CG_DrawString( SCREEN_WIDTH, lines - SMALLCHAR_HEIGHT, con.version, UI_RIGHT|UI_SMALLFONT, color );
+	CG_DrawString( SCREEN_WIDTH - con.sideMargin, lines - lineHeight, con.version, UI_RIGHT|UI_CONSOLEFONT, color );
 
 	CG_SetScreenPlacement( PLACE_LEFT, PLACE_TOP );
 
 	// draw the text
-	rows = (lines-SMALLCHAR_HEIGHT)/SMALLCHAR_HEIGHT;		// rows of text to draw
+	rows = (lines-lineHeight)/lineHeight;		// rows of text to draw
 
-	y = lines - (SMALLCHAR_HEIGHT*3);
+	y = lines - (lineHeight*3);
 
 	// draw from the bottom up
 	if (con.display != con.current)
 	{
-		int linewidth = con.screenFakeWidth / SMALLCHAR_WIDTH;
+		char *symbol = "^";
+		float symbolWidth = CG_DrawStrlen( symbol, UI_CONSOLEFONT );
+		int symbolCount = 20;
+		float xgap = (con.screenFakeWidth - con.sideMargin*2 - symbolWidth) / (float)symbolCount;
+		float x;
+
 		// draw arrows to show the buffer is backscrolled
-		for (x=0 ; x<linewidth ; x+=4)
-			CG_DrawString( (x+1)*SMALLCHAR_WIDTH, y, "^", UI_CENTER|UI_SMALLFONT, color );
-		y -= SMALLCHAR_HEIGHT;
+		for (x=con.sideMargin ; x<con.screenFakeWidth ; x+=xgap)
+			CG_DrawString( x, y, symbol, UI_CONSOLEFONT, color );
+		y -= lineHeight;
 		rows--;
 	}
 	
@@ -357,7 +365,7 @@ void Con_DrawSolidConsole( connstate_t state, float frac ) {
 		row--;
 	}
 
-	for (i=0 ; i<rows ; i++, y -= SMALLCHAR_HEIGHT, row--)
+	for (i=0 ; i<rows ; i++, y -= lineHeight, row--)
 	{
 		if (row < 0)
 			break;
@@ -367,7 +375,7 @@ void Con_DrawSolidConsole( connstate_t state, float frac ) {
 		}
 
 		text = con.lines[row % CON_MAXLINES];
-		CG_DrawSmallString( con.sideMargin, y, text, 1.0f );
+		CG_DrawString( con.sideMargin, y, text, UI_CONSOLEFONT, NULL );
 	}
 
 	// draw the input prompt, user text, and cursor if desired
@@ -782,26 +790,48 @@ CG_ConsoleInit
 void CG_ConsoleInit( void ) {
 	int i;
 
+	if ( !CG_InitTrueTypeFont( cg_consoleFont.string, CONCHAR_HEIGHT, 0, &cgs.media.consoleFont ) ) {
+		CG_InitBitmapFont( &cgs.media.consoleFont, CONCHAR_HEIGHT, CONCHAR_WIDTH );
+	}
+
 	trap_Cvar_VariableStringBuffer( "version", con.version, sizeof ( con.version ) );
 
-	con.sideMargin = SMALLCHAR_WIDTH;
+	con.sideMargin = CONCHAR_WIDTH;
+
+	MField_Clear( &g_consoleField );
+
+	for ( i = 0 ; i < COMMAND_HISTORY ; i++ ) {
+		MField_Clear( &historyEditLines[i] );
+	}
+
+	CG_ConsoleResized();
+
+	CG_LoadConsoleHistory();
+}
+
+/*
+================
+CG_ConsoleResized
+
+Called when window is resized.
+================
+*/
+void CG_ConsoleResized( void ) {
+	int i;
+
 	// fit across whole screen inside of a 640x480 box
 	con.screenFakeWidth = cgs.glconfig.vidWidth / cgs.screenXScale;
 
-	g_console_field_width = con.screenFakeWidth / SMALLCHAR_WIDTH - 2;
+	g_console_field_width = ( con.screenFakeWidth - con.sideMargin * 2 ) / CONCHAR_WIDTH;
 
 	if ( g_console_field_width > MAX_EDIT_LINE ) {
 		g_console_field_width = MAX_EDIT_LINE;
 	}
 
-	MField_Clear( &g_consoleField );
 	g_consoleField.widthInChars = g_console_field_width;
 
 	for ( i = 0 ; i < COMMAND_HISTORY ; i++ ) {
-		MField_Clear( &historyEditLines[i] );
 		historyEditLines[i].widthInChars = g_console_field_width;
 	}
-
-	CG_LoadConsoleHistory();
 }
 

@@ -307,11 +307,11 @@ static InitialVideoOptions_s s_ivo_templates[] =
 {
 	// very high
 	{
-		6, qtrue, 3, 0, 2, 3, 5, 2, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
+		6, qtrue, 3, 0, 2, 4, 5, 2, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
 	},
 	// high
 	{
-		6, qtrue, 3, 0, 2, 2, 2, 1, qtrue
+		6, qtrue, 3, 0, 2, 3, 2, 1, qtrue
 	},
 	// normal
 	{
@@ -716,25 +716,35 @@ static void GraphicsOptions_ApplyChanges( void *unused, int notification )
 	trap_Cvar_SetValue( "r_vertexLight", s_graphicsoptions.lighting.curvalue );
 	trap_Cvar_SetValue( "r_flares", s_graphicsoptions.flares.curvalue );
 
-	if ( s_graphicsoptions.geometry.curvalue == 3 )
+	if ( s_graphicsoptions.geometry.curvalue == 4 )
+	{
+		trap_Cvar_SetValue( "r_lodBias", -2 );
+		trap_Cvar_SetValue( "r_subdivisions", 1 );
+		trap_Cvar_SetValue( "r_lodCurveError", 10000 );
+	}
+	else if ( s_graphicsoptions.geometry.curvalue == 3 )
 	{
 		trap_Cvar_SetValue( "r_lodBias", -2 );
 		trap_Cvar_SetValue( "r_subdivisions", 4 );
+		trap_Cvar_SetValue( "r_lodCurveError", 1000 );
 	}
 	else if ( s_graphicsoptions.geometry.curvalue == 2 )
 	{
 		trap_Cvar_SetValue( "r_lodBias", 0 );
 		trap_Cvar_SetValue( "r_subdivisions", 4 );
+		trap_Cvar_SetValue( "r_lodCurveError", 250 );
 	}
 	else if ( s_graphicsoptions.geometry.curvalue == 1 )
 	{
 		trap_Cvar_SetValue( "r_lodBias", 1 );
 		trap_Cvar_SetValue( "r_subdivisions", 12 );
+		trap_Cvar_SetValue( "r_lodCurveError", 250 );
 	}
 	else
 	{
 		trap_Cvar_SetValue( "r_lodBias", 1 );
 		trap_Cvar_SetValue( "r_subdivisions", 20 );
+		trap_Cvar_SetValue( "r_lodCurveError", 250 );
 	}
 
 	if ( s_graphicsoptions.filter.curvalue >= 2 )
@@ -773,6 +783,7 @@ static void GraphicsOptions_ApplyChanges( void *unused, int notification )
 	}
 
 	trap_Cvar_SetValue( "r_ext_multisample", s_graphicsoptions.multisample.curvalue * 2 );
+	trap_Cvar_SetValue( "r_ext_framebuffer_multisample", s_graphicsoptions.multisample.curvalue * 2 );
 
 	trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
 }
@@ -865,6 +876,8 @@ GraphicsOptions_SetMenuItems
 */
 static void GraphicsOptions_SetMenuItems( void )
 {
+	int multisample;
+
 	s_graphicsoptions.mode.curvalue =
 		GraphicsOptions_FindDetectedResolution( trap_Cvar_VariableValue( "r_mode" ) );
 
@@ -970,21 +983,30 @@ static void GraphicsOptions_SetMenuItems( void )
 	}
 	else
 	{
-		s_graphicsoptions.geometry.curvalue = 3;
+		if ( trap_Cvar_VariableValue( "r_subdivisions" ) == 1 )
+		{
+			s_graphicsoptions.geometry.curvalue = 4;
+		}
+		else
+		{
+			s_graphicsoptions.geometry.curvalue = 3;
+		}
 	}
 
-	switch ( trap_Cvar_VariableIntegerValue( "r_ext_multisample" ) )
-	{
-		case 0:
-		default:
-			s_graphicsoptions.multisample.curvalue = 0;
-			break;
-		case 2:
-			s_graphicsoptions.multisample.curvalue = 1;
-			break;
-		case 4:
-			s_graphicsoptions.multisample.curvalue = 2;
-			break;
+	// use higher multisample value
+	// r_ext_framebuffer_multisample is currently only used by the OpenGL2 renderer
+	multisample = MAX( trap_Cvar_VariableIntegerValue( "r_ext_multisample" ),
+					   trap_Cvar_VariableIntegerValue( "r_ext_framebuffer_multisample" ) );
+
+	if ( multisample < 2 ) {
+		// Off
+		s_graphicsoptions.multisample.curvalue = 0;
+	} else if ( multisample < 4 ) {
+		// 2x MSAA
+		s_graphicsoptions.multisample.curvalue = 1;
+	} else {
+		// 4x MSAA
+		s_graphicsoptions.multisample.curvalue = 2;
 	}
 }
 
@@ -1035,6 +1057,7 @@ void GraphicsOptions_MenuInit( void )
 	{
 		"Low",
 		"Medium",
+		"Standard",
 		"High",
 		"Very High",
 		NULL

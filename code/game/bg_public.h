@@ -40,6 +40,13 @@ Suite 120, Rockville, Maryland 20850 USA.
   #endif
 #endif
 
+#define PRODUCT_NAME				MODDIR
+
+// Keep this in-sync with VERSION in Makefile.
+#ifndef PRODUCT_VERSION
+	#define PRODUCT_VERSION			"0.5"
+#endif
+
 // because games can change separately from the main system version, we need a
 // second version that must match between game and cgame
 

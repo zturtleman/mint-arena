@@ -359,6 +359,8 @@ typedef struct {
 #define RANGE_FLOAT(min,max) min, max, qfalse
 
 static cvarTable_t cgameCvarTable[] = {
+	{ NULL, "cgameversion", PRODUCT_NAME " " PRODUCT_VERSION " " PLATFORM_STRING " " PRODUCT_DATE, CVAR_ROM, RANGE_ALL },
+
 	{ &con_conspeed, "scr_conspeed", "3", 0, RANGE_FLOAT(0.1, 100) },
 	{ &con_autochat, "con_autochat", "0", CVAR_ARCHIVE, RANGE_ALL },
 	{ &con_autoclear, "con_autoclear", "0", CVAR_ARCHIVE, RANGE_ALL },

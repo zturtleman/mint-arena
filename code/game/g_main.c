@@ -120,6 +120,8 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_cheats, "sv_cheats", "", 0, 0, RANGE_ALL },
 
 	// noset vars
+	{ NULL, "gameversionstring", PRODUCT_NAME " " PRODUCT_VERSION " " PLATFORM_STRING " " PRODUCT_DATE, CVAR_SERVERINFO | CVAR_ROM, 0, RANGE_ALL },
+	// TODO: Rename gameversion to gameprotocol
 	{ NULL, "gameversion", GAME_VERSION , CVAR_SERVERINFO | CVAR_ROM, 0, RANGE_ALL },
 	{ NULL, "gamedate", PRODUCT_DATE , CVAR_ROM, 0, RANGE_ALL },
 	{ &g_restarted, "g_restarted", "0", CVAR_ROM, 0, RANGE_ALL },

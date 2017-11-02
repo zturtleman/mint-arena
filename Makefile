@@ -189,9 +189,9 @@ ifneq ($(BUILD_FINAL),1)
 # Add git version info
 USE_GIT=
 ifeq ($(wildcard .git),.git)
-  GIT_REV=$(shell git show -s --pretty=format:%h-%ad --date=short)
+  GIT_REV=$(shell git show -s --pretty=format:%ad+%h --date=short | tr -d '-')
   ifneq ($(GIT_REV),)
-    VERSION:=$(VERSION)_GIT_$(GIT_REV)
+    VERSION:=$(VERSION)+$(GIT_REV)
     USE_GIT=1
   endif
 endif
@@ -697,17 +697,18 @@ endif
 
 # https://reproducible-builds.org/specs/source-date-epoch/
 ifdef SOURCE_DATE_EPOCH
-  BASE_CFLAGS += -DPRODUCT_DATE=\\\"$(shell date --date="@$$SOURCE_DATE_EPOCH" "+%b %_d %Y" | sed -e 's/ /\\\ /'g)\\\"
+  BASE_BUILD_DEFINES += -DPRODUCT_DATE=\\\"$(shell date --date="@$$SOURCE_DATE_EPOCH" "+%b %_d %Y" | sed -e 's/ /\\\ /g')\\\"
 endif
 
-BASE_CFLAGS += -DPRODUCT_VERSION=\\\"$(VERSION)\\\"
-BASE_CFLAGS += -DBASEGAME=\\\"$(BASEGAME)\\\"
+BASE_BUILD_DEFINES += -DPRODUCT_VERSION=\\\"$(VERSION)\\\"
+ifeq ($(USE_GIT),1)
+  BASE_BUILD_DEFINES += -DPRODUCT_VERSION_HAS_DATE
+endif
+
 BASE_CFLAGS += -Wformat=2 -Wno-format-zero-length -Wformat-security -Wno-format-nonliteral
 BASE_CFLAGS += -Wstrict-aliasing=2 -Wmissing-format-attribute
 BASE_CFLAGS += -Wdisabled-optimization
 BASE_CFLAGS += -Werror-implicit-function-declaration
-
-BASE_CFLAGS += $(BUILD_DEFINES)
 
 ifeq ($(V),1)
 echo_cmd=@:
@@ -766,14 +767,16 @@ default: release
 all: debug release
 
 debug:
-	@$(MAKE) targets B=$(BD) CFLAGS="$(CFLAGS) $(BASE_CFLAGS) $(DEPEND_CFLAGS)" \
+	@$(MAKE) targets B=$(BD) CFLAGS="$(CFLAGS) $(BASE_BUILD_DEFINES) $(BASE_CFLAGS) $(BUILD_DEFINES) $(DEPEND_CFLAGS)" \
 	  OPTIMIZE="$(DEBUG_CFLAGS)" OPTIMIZEVM="$(DEBUG_CFLAGS)" \
-	  CLIENT_CFLAGS="$(CLIENT_CFLAGS)" SERVER_CFLAGS="$(SERVER_CFLAGS)" V=$(V)
+	  CLIENT_CFLAGS="$(CLIENT_CFLAGS)" SERVER_CFLAGS="$(SERVER_CFLAGS)" V=$(V) \
+	  BUILD_DEFINES="$(BASE_BUILD_DEFINES) $(BUILD_DEFINES)"
 
 release:
-	@$(MAKE) targets B=$(BR) CFLAGS="$(CFLAGS) $(BASE_CFLAGS) $(DEPEND_CFLAGS)" \
+	@$(MAKE) targets B=$(BR) CFLAGS="$(CFLAGS) $(BASE_BUILD_DEFINES) $(BASE_CFLAGS) $(BUILD_DEFINES) $(DEPEND_CFLAGS)" \
 	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" OPTIMIZEVM="-DNDEBUG $(OPTIMIZEVM)" \
-	  CLIENT_CFLAGS="$(CLIENT_CFLAGS)" SERVER_CFLAGS="$(SERVER_CFLAGS)" V=$(V)
+	  CLIENT_CFLAGS="$(CLIENT_CFLAGS)" SERVER_CFLAGS="$(SERVER_CFLAGS)" V=$(V) \
+	  BUILD_DEFINES="$(BASE_BUILD_DEFINES) $(BUILD_DEFINES)"
 
 ifneq ($(call bin_path, tput),)
   TERM_COLUMNS=$(shell if c=`tput cols`; then echo $$(($$c-4)); else echo 76; fi)
@@ -1401,10 +1404,20 @@ $(B)/$(MISSIONPACK)/vm/$(VM_PREFIX)game.qvm: $(MPGVMOBJ) $(GDIR)/bg_syscalls.asm
 
 
 # Extra dependencies to ensure the git version is incorporated
-#ifeq ($(USE_GIT),1)
-#  $(B)/$(BASEGAME)/bg_misc.o : .git
-#  $(B)/$(MISSIONPACK)/bg_misc.o : .git
-#endif
+ifeq ($(USE_GIT),1)
+  GITVEROBJ = \
+    $(B)/$(BASEGAME)/cgame/cg_main.o \
+    $(B)/$(BASEGAME)/cgame/cg_console.o \
+    $(B)/$(BASEGAME)/game/g_main.o \
+    $(B)/$(MISSIONPACK)/cgame/cg_main.o \
+    $(B)/$(MISSIONPACK)/cgame/cg_console.o \
+    $(B)/$(MISSIONPACK)/game/g_main.o
+
+  GITVERVMOBJ = $(GITVEROBJ:%.o=%.asm)
+
+  $(GITVEROBJ) : .git
+  $(GITVERVMOBJ) : .git
+endif
 
 
 #############################################################################

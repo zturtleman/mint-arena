@@ -789,12 +789,26 @@ CG_ConsoleInit
 */
 void CG_ConsoleInit( void ) {
 	int i;
+	char engineString[MAX_CVAR_VALUE_STRING];
+	char *cgameString;
 
 	if ( !CG_InitTrueTypeFont( cg_consoleFont.string, CONCHAR_HEIGHT, 0, &cgs.media.consoleFont ) ) {
 		CG_InitBitmapFont( &cgs.media.consoleFont, CONCHAR_HEIGHT, CONCHAR_WIDTH );
 	}
 
-	trap_Cvar_VariableStringBuffer( "version", con.version, sizeof ( con.version ) );
+	trap_Cvar_VariableStringBuffer( "versionshort", engineString, sizeof ( engineString ) );
+	if ( !engineString[0] ) {
+		// Fallback for Spearmint 0.5. Includes platform and possibly git version which makes the version too long to append cgame version.
+		trap_Cvar_VariableStringBuffer( "version", engineString, sizeof ( engineString ) );
+	}
+
+#ifdef PRODUCT_VERSION_HAS_DATE
+	cgameString = PRODUCT_NAME " " PRODUCT_VERSION;
+#else
+	cgameString = PRODUCT_NAME " " PRODUCT_VERSION " " PRODUCT_DATE;
+#endif
+
+	Com_sprintf( con.version, sizeof ( con.version ), "%s / %s", engineString, cgameString );
 
 	con.sideMargin = CONCHAR_WIDTH;
 

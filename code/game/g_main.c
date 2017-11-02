@@ -120,10 +120,8 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_cheats, "sv_cheats", "", 0, 0, RANGE_ALL },
 
 	// noset vars
-	{ NULL, "gameversionstring", PRODUCT_NAME " " PRODUCT_VERSION " " PLATFORM_STRING " " PRODUCT_DATE, CVAR_SERVERINFO | CVAR_ROM, 0, RANGE_ALL },
-	// TODO: Rename gameversion to gameprotocol
-	{ NULL, "gameversion", GAME_VERSION , CVAR_SERVERINFO | CVAR_ROM, 0, RANGE_ALL },
-	{ NULL, "gamedate", PRODUCT_DATE , CVAR_ROM, 0, RANGE_ALL },
+	{ NULL, "gameversion", PRODUCT_NAME " " PRODUCT_VERSION " " PLATFORM_STRING " " PRODUCT_DATE, CVAR_SERVERINFO | CVAR_ROM, 0, RANGE_ALL },
+	{ NULL, "gameprotocol", GAME_PROTOCOL, CVAR_SERVERINFO | CVAR_ROM, 0, RANGE_ALL },
 	{ &g_restarted, "g_restarted", "0", CVAR_ROM, 0, RANGE_ALL },
 
 	// latched vars
@@ -471,8 +469,8 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	int					i, j;
 
 	G_DPrintf ("------- Game Initialization -------\n");
-	G_DPrintf ("gameversion: %s\n", GAME_VERSION);
-	G_DPrintf ("gamedate: %s\n", PRODUCT_DATE);
+	G_DPrintf ("gameversion: %s\n", PRODUCT_NAME " " PRODUCT_VERSION " " PLATFORM_STRING " " PRODUCT_DATE);
+	G_DPrintf ("gameprotocol: %s\n", GAME_PROTOCOL);
 
 	srand( randomSeed );
 

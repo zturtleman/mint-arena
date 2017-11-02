@@ -2712,10 +2712,10 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	// get the gamestate from the client system
 	trap_GetGameState( &cgs.gameState );
 
-	// check version
-	s = CG_ConfigString( CS_GAME_VERSION );
-	if ( strcmp( s, GAME_VERSION ) ) {
-		CG_Error( "Client/Server game mismatch: %s/%s", GAME_VERSION, s );
+	// check game protocol
+	s = CG_ConfigString( CS_GAME_PROTOCOL );
+	if ( strcmp( s, GAME_PROTOCOL ) ) {
+		CG_Error( "Client/Server game mismatch: %s/%s", GAME_PROTOCOL, s );
 	}
 
 	CG_HudTextInit();

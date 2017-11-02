@@ -1170,11 +1170,16 @@ void PlayerSpawn(gentity_t *ent) {
 
 	player->ps.playerNum = index;
 
-	player->ps.stats[STAT_WEAPONS] = ( 1 << WP_MACHINEGUN );
-	if ( g_gametype.integer == GT_TEAM ) {
-		player->ps.ammo[WP_MACHINEGUN] = 50;
+	if ( g_instagib.integer ) {
+		player->ps.stats[STAT_WEAPONS] = ( 1 << WP_RAILGUN );
+		player->ps.ammo[WP_RAILGUN] = 999;
 	} else {
-		player->ps.ammo[WP_MACHINEGUN] = 100;
+		player->ps.stats[STAT_WEAPONS] = ( 1 << WP_MACHINEGUN );
+		if ( g_gametype.integer == GT_TEAM ) {
+			player->ps.ammo[WP_MACHINEGUN] = 50;
+		} else {
+			player->ps.ammo[WP_MACHINEGUN] = 100;
+		}
 	}
 
 	player->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GAUNTLET );

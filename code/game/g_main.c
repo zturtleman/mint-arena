@@ -114,6 +114,7 @@ vmCvar_t	g_blueteam;
 vmCvar_t	g_proxMineTimeout;
 #endif
 vmCvar_t	g_playerCapsule;
+vmCvar_t	g_instagib;
 
 static cvarTable_t		gameCvarTable[] = {
 	// don't override the cheat state set by the system
@@ -126,6 +127,7 @@ static cvarTable_t		gameCvarTable[] = {
 
 	// latched vars
 	{ &g_gametype, "g_gametype", "0", CVAR_SERVERINFO | CVAR_USERINFO | CVAR_LATCH, GCF_DO_RESTART, RANGE_INT(0, GT_MAX_GAME_TYPE-1)  },
+	{ &g_instagib, "g_instagib", "0", CVAR_LATCH, GCF_DO_RESTART, RANGE_BOOL },
 
 	{ &g_maxplayers, "sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH | CVAR_ARCHIVE, 0, RANGE_ALL },
 	{ &g_maxGamePlayers, "g_maxGameClients", "0", CVAR_SERVERINFO | CVAR_LATCH | CVAR_ARCHIVE, 0, RANGE_INT(0, MAX_CLIENTS-1) },
@@ -419,8 +421,19 @@ void G_RegisterCvars( void ) {
 		trap_Cvar_Update( &g_gametype );
 	}
 
-	trap_Cvar_Set( "sv_gametypeName", bg_displayGametypeNames[g_gametype.integer] );
-	trap_Cvar_Set( "sv_gametypeNetName", bg_netGametypeNames[g_gametype.integer] );
+	// Don't allow instagib in single player mode.
+	if ( g_singlePlayer.integer && g_instagib.integer) {
+		trap_Cvar_SetValue( "g_instagib", 0 );
+		trap_Cvar_Update( &g_instagib );
+	}
+
+	if ( g_instagib.integer ) {
+		trap_Cvar_Set( "sv_gametypeName", va( "Instagib %s", bg_displayGametypeNames[g_gametype.integer] ) );
+		trap_Cvar_Set( "sv_gametypeNetName", va( "Insta%s", bg_netGametypeNames[g_gametype.integer] ) );
+	} else {
+		trap_Cvar_Set( "sv_gametypeName", bg_displayGametypeNames[g_gametype.integer] );
+		trap_Cvar_Set( "sv_gametypeNetName", bg_netGametypeNames[g_gametype.integer] );
+	}
 
 	level.warmupModificationCount = g_warmup.modificationCount;
 }

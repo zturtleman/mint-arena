@@ -111,8 +111,13 @@ qboolean CheckGauntletAttack( gentity_t *ent ) {
 		return qfalse;
 	}
 
-	if (ent->player->ps.powerups[PW_QUAD] ) {
+	if ( ent->player->ps.powerups[PW_QUAD] ) {
 		G_AddEvent( ent, EV_POWERUP_QUAD, 0 );
+	}
+
+	if ( g_instagib.integer ) {
+		s_quadFactor = 100;
+	} else if ( ent->player->ps.powerups[PW_QUAD] ) {
 		s_quadFactor = g_quadfactor.value;
 	} else {
 		s_quadFactor = 1;
@@ -818,7 +823,9 @@ FireWeapon
 ===============
 */
 void FireWeapon( gentity_t *ent ) {
-	if (ent->player->ps.powerups[PW_QUAD] ) {
+	if ( g_instagib.integer ) {
+		s_quadFactor = 100;
+	} else if ( ent->player->ps.powerups[PW_QUAD] ) {
 		s_quadFactor = g_quadfactor.value;
 	} else {
 		s_quadFactor = 1;

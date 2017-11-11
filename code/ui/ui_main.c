@@ -5410,6 +5410,7 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_teamArenaFirstRun, "ui_teamArenaFirstRun", "0", CVAR_ARCHIVE},
 	{ NULL, "g_warmup", "20", CVAR_ARCHIVE},
 	{ NULL, "fraglimit", "20", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_NORESTART},
+	{ NULL, "timelimit", "0", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_NORESTART},
 	{ NULL, "capturelimit", "8", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_NORESTART},
 	{ &ui_serverStatusTimeOut, "ui_serverStatusTimeOut", "7000", CVAR_ARCHIVE},
 	{ &ui_defaultMaleTeamModel, "default_male_team_model", DEFAULT_TEAM_MODEL_MALE, CVAR_ARCHIVE},

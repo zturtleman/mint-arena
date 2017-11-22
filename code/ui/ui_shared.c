@@ -28,7 +28,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // 
-// string allocation/managment
+// string allocation/management
 
 #include "../cgame/cg_local.h"
 #include "ui_shared.h"

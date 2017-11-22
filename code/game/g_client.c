@@ -56,7 +56,7 @@ void SP_info_player_deathmatch( gentity_t *ent ) {
 }
 
 /*QUAKED info_player_start (1 0 0) (-16 -16 -24) (16 16 32)
-equivelant to info_player_deathmatch
+equivalent to info_player_deathmatch
 */
 void SP_info_player_start(gentity_t *ent) {
 	ent->classname = "info_player_deathmatch";
@@ -949,7 +949,7 @@ char *PlayerConnect( int playerNum, qboolean firstTime, qboolean isBot, int conn
 	}
 	G_ReadSessionData( player );
 
-	// get and distribute relevent paramters
+	// get and distribute relevant parameters
 	G_LogPrintf( "PlayerConnect: %i\n", playerNum );
 	PlayerUserinfoChanged( playerNum );
 

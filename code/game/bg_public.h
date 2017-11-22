@@ -537,7 +537,7 @@ typedef enum {
 	STAT_WEAPONS,					// 16 bit fields
 	STAT_ARMOR,				
 	STAT_DEAD_YAW,					// look this direction when dead (FIXME: get rid of?)
-	STAT_MAX_HEALTH,				// health / armor limit, changable by handicap
+	STAT_MAX_HEALTH,				// health / armor limit, changeable by handicap
 //#ifdef MISSIONPACK
 	STAT_PERSISTANT_POWERUP
 //#endif

@@ -34,7 +34,7 @@ uiStatic_t uis;
 currentMenu_t currentMenu;
 cvarValuePair_t cp_resolution[MAX_RESOLUTIONS];
 
-void	UI_Init( qboolean inGameLoad, int maxSplitView ) {
+void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	int i;
 
 	(void)inGameLoad;
@@ -73,11 +73,11 @@ void	UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	Com_Memset( &currentMenu, 0, sizeof ( currentMenu ) );
 }
 
-void	UI_Shutdown( void ) {
+void UI_Shutdown( void ) {
 
 }
 
-void	UI_SetActiveMenu( uiMenuCommand_t menu ) {
+void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 	if ( menu == UIMENU_NONE ) {
 		Key_SetCatcher( Key_GetCatcher() & ~KEYCATCH_UI );
 		UI_SetMenu( &currentMenu, M_NONE );
@@ -109,13 +109,23 @@ void	UI_SetActiveMenu( uiMenuCommand_t menu ) {
 	}
 }
 
-void	UI_KeyEvent( int key, qboolean down ) {
+// called from UI_SetMenu( M_NONE )
+void UI_NoActiveMenu( void ) {
+	if ( cg.connected ) {
+		trap_Mouse_SetState( 0, MOUSE_CLIENT );
+		Key_SetCatcher( 0 );
+		trap_Cvar_SetValue( "cl_paused", 0 );
+	}
+}
+
+void UI_KeyEvent( int key, qboolean down ) {
 
 	if ( key & K_CHAR_FLAG )
 		return;
 
-	if ( !currentMenu.menu )
+	if ( !currentMenu.menu ) {
 		return;
+	}
 
 	if ( currentMenu.mouseClickDown == key && !down ) {
 		currentMenu.mouseClickDown = 0;
@@ -124,18 +134,66 @@ void	UI_KeyEvent( int key, qboolean down ) {
 		return;
 	}
 
-	if ( !down )
+	if ( !down ) {
 		return;
+	}
 
 	switch ( key ) {
-		case K_F11:
-			// Q3A/TA toggle debug drawing mode
+		case K_MOUSE1: // left click
+		case K_MOUSE3: // middle click
+			// ignore if in the middle of a mouse item operation
+			if ( currentMenu.mouseClickDown ) {
+				break;
+			}
+
+			UI_MenuCursorPoint( &currentMenu, uis.cursors[0].x, uis.cursors[0].y );
+			if ( currentMenu.mouseItem != -1 ) {
+				if ( UI_MenuMouseAction( &currentMenu, currentMenu.mouseItem, uis.cursors[0].x, uis.cursors[0].y, MACTION_PRESS ) ) {
+					currentMenu.mouseClickDown = key;
+				} else {
+					UI_MenuAction( &currentMenu, currentMenu.mouseItem, 1 );
+				}
+			}
 			break;
 
-		case K_F12:
-			trap_Cmd_ExecuteText( EXEC_APPEND, "screenshot\n" );
+		case K_MOUSE2: // right click
+			// ignore if in the middle of a mouse item operation
+			if ( currentMenu.mouseClickDown ) {
+				break;
+			}
+
+			UI_MenuCursorPoint( &currentMenu, uis.cursors[0].x, uis.cursors[0].y );
+			if ( currentMenu.mouseItem != -1 ) {
+				UI_MenuAction( &currentMenu, currentMenu.mouseItem, -1 );
+			}
 			break;
 
+		case K_JOY_A:
+		case K_2JOY_A:
+		case K_3JOY_A:
+		case K_4JOY_A:
+		case K_AUX1:
+		case K_AUX2:
+		case K_AUX3:
+		case K_AUX4:
+		case K_AUX5:
+		case K_AUX6:
+		case K_AUX7:
+		case K_AUX8:
+		case K_AUX9:
+		case K_AUX10:
+		case K_AUX11:
+		case K_AUX12:
+		case K_AUX13:
+		case K_AUX14:
+		case K_AUX15:
+		case K_AUX16:
+		case K_KP_ENTER:
+		case K_ENTER:
+			UI_MenuAction( &currentMenu, currentMenu.selectedItem, 1 );
+			break;
+
+		case K_JOY_B:
 		case K_JOY_BACK:
 		case K_2JOY_BACK:
 		case K_3JOY_BACK:
@@ -200,58 +258,12 @@ void	UI_KeyEvent( int key, qboolean down ) {
 			UI_MenuAdjustCursor( &currentMenu, 4 );
 			break;
 
-		case K_JOY_A:
-		case K_2JOY_A:
-		case K_3JOY_A:
-		case K_4JOY_A:
-		case K_AUX1:
-		case K_AUX2:
-		case K_AUX3:
-		case K_AUX4:
-		case K_AUX5:
-		case K_AUX6:
-		case K_AUX7:
-		case K_AUX8:
-		case K_AUX9:
-		case K_AUX10:
-		case K_AUX11:
-		case K_AUX12:
-		case K_AUX13:
-		case K_AUX14:
-		case K_AUX15:
-		case K_AUX16:
-		case K_KP_ENTER:
-		case K_ENTER:
-			UI_MenuAction( &currentMenu, currentMenu.selectedItem, 1 );
+		case K_F11:
+			// Q3A/TA toggle debug drawing mode
 			break;
 
-		case K_MOUSE1: // left click
-		case K_MOUSE3: // middle click
-			// ignore if in the middle of a mouse item operation
-			if ( currentMenu.mouseClickDown ) {
-				break;
-			}
-
-			UI_MenuCursorPoint( &currentMenu, uis.cursors[0].x, uis.cursors[0].y );
-			if ( currentMenu.mouseItem != -1 ) {
-				if ( UI_MenuMouseAction( &currentMenu, currentMenu.mouseItem, uis.cursors[0].x, uis.cursors[0].y, MACTION_PRESS ) ) {
-					currentMenu.mouseClickDown = key;
-				} else {
-					UI_MenuAction( &currentMenu, currentMenu.mouseItem, 1 );
-				}
-			}
-			break;
-
-		case K_MOUSE2: // right click
-			// ignore if in the middle of a mouse item operation
-			if ( currentMenu.mouseClickDown ) {
-				break;
-			}
-
-			UI_MenuCursorPoint( &currentMenu, uis.cursors[0].x, uis.cursors[0].y );
-			if ( currentMenu.mouseItem != -1 ) {
-				UI_MenuAction( &currentMenu, currentMenu.mouseItem, -1 );
-			}
+		case K_F12:
+			trap_Cmd_ExecuteText( EXEC_APPEND, "screenshot\n" );
 			break;
 
 		default:
@@ -259,7 +271,7 @@ void	UI_KeyEvent( int key, qboolean down ) {
 	}
 }
 
-void	UI_MouseEvent( int localClientNum, int dx, int dy ) {
+void UI_MouseEvent( int localClientNum, int dx, int dy ) {
 	float ax, ay, aw, ah;
 	float xbias, ybias;
 
@@ -286,12 +298,12 @@ void	UI_MouseEvent( int localClientNum, int dx, int dy ) {
 	}
 }
 
-void	UI_GetCursorPos( int localClientNum, int *x, int *y ) {
+void UI_GetCursorPos( int localClientNum, int *x, int *y ) {
 	if ( x ) *x = uis.cursors[localClientNum].x;
 	if ( y ) *y = uis.cursors[localClientNum].y;
 }
 
-void	UI_SetCursorPos( int localClientNum, int x, int y ) {
+void UI_SetCursorPos( int localClientNum, int x, int y ) {
 	if ( uis.cursors[localClientNum].x == x && uis.cursors[localClientNum].y == y ) {
 		// ignore duplicate events
 		return;
@@ -307,7 +319,7 @@ qboolean UI_IsFullscreen( void ) {
 	return ( Key_GetCatcher() & KEYCATCH_UI ) && !cg.connected;
 }
 
-void	UI_Refresh( int time ) {
+void UI_Refresh( int time ) {
 	int i;
 
 	if ( !( Key_GetCatcher() & KEYCATCH_UI ) ) {
@@ -346,7 +358,7 @@ void UI_WindowResized( void ) {
 	UI_GetResolutions();
 }
 
-void	UI_DrawConnectScreen( qboolean overlay ) {
+void UI_DrawConnectScreen( qboolean overlay ) {
 	if ( !overlay ) {
 		CG_ClearViewport();
 		UI_DrawConnectBackground();

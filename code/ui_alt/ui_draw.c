@@ -39,10 +39,10 @@ vec4_t color_bigtext          = {1.00f, 1.00f, 1.00f, 1.00f};
 vec4_t color_bigSelected      = {1.00f, 0.75f, 0.00f, 1.00f};
 #else
 //vec4_t text_color_disabled  = {0.50f, 0.50f, 0.50f, 1.00f};	// light gray
-vec4_t color_smalltext        = {1.00f, 0.43f, 0.00f, 1.00f};	// light orange // text_color_normal
-vec4_t color_smallSelected    = {1.00f, 1.00f, 0.00f, 1.00f};	// bright yellow // text_color_highlight
+vec4_t color_smalltext        = {1.00f, 0.43f, 0.00f, 1.00f};	// light orange
+vec4_t color_smallSelected    = {1.00f, 1.00f, 0.00f, 1.00f};	// bright yellow
 vec4_t color_bigtext          = {0.70f, 0.00f, 0.00f, 1.00f};	// bright red with UI_INVERSE effect already applied
-vec4_t color_bigSelected      = {1.00f, 0.00f, 0.00f, 1.00f};	// bright red // text_big_color
+vec4_t color_bigSelected      = {1.00f, 0.00f, 0.00f, 1.00f};	// bright red
 #endif
 
 uiAssets_t uiAssets;

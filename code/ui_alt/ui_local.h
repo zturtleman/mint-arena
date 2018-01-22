@@ -410,6 +410,7 @@ extern uiAssets_t uiAssets;
 extern uiBitmap_t ui_bitmaps[];
 
 // ui_main.c
+void UI_NoActiveMenu( void );
 #define MAX_RESOLUTIONS	32
 extern cvarValuePair_t cp_resolution[MAX_RESOLUTIONS];
 void UI_GetResolutions( void );

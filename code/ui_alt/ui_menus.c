@@ -675,7 +675,7 @@ menuitem_t stubmenu_items[] =
 menudef_t ui_menus[M_NUM_MENUS] = {
 	{ 0, NULL, NULL, 0 },										// M_NONE
 
-	QMENUDEF( errormenu_items, MF_MAINMENU, NULL ),	// M_ERROR
+	QMENUDEF( errormenu_items, MF_MAINMENU, NULL ),				// M_ERROR
 
 	QMENUDEF( mainmenu_items, MF_MAINMENU, NULL ),				// M_MAIN
 	QMENUDEF( singleplayermenu_items, 0, "Single Player" ),		// M_SINGLEPLAYER
@@ -694,7 +694,7 @@ menudef_t ui_menus[M_NUM_MENUS] = {
 #endif
 
 	// Setup menus
-	QMENUDEF( playermenu_items, 0, "Player Settings" ),	// M_PLAYER
+	QMENUDEF( playermenu_items, 0, "Player Settings" ),		// M_PLAYER
 	QMENUSTUB( controlsmenu_items, 0, "Controls" ),			// M_CONTROLS
 	QMENUDEF( systemmenu_items, 0, "System Setup" ),		// M_SYSTEM
 	QMENUDEF( gameoptionsmenu_items, 0, "Game Options" ),	// M_GAME_OPTIONS

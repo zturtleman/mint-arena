@@ -164,13 +164,13 @@ static void UI_BuiltinSliderBar( float x, float y, float width, float height, fl
 
 	VectorSet( verts[0].xyz, x, y+height, 0 ); // left lower
 	verts[0].st[0] = 0;
-	verts[0].st[1] = 0;
+	verts[0].st[1] = 1;
 
 	VectorSet( verts[1].xyz, x+width, y, 0 ); // right upper
 	verts[1].st[0] = 1;
 	verts[1].st[1] = 0;
 
-	VectorSet( verts[2].xyz, x+width, y+height, 0 ); // right upper
+	VectorSet( verts[2].xyz, x+width, y+height, 0 ); // right lower
 	verts[2].st[0] = 1;
 	verts[2].st[1] = 1;
 

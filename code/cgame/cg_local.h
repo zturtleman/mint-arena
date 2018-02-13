@@ -58,9 +58,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	GIANTCHAR_WIDTH		32
 #define	GIANTCHAR_HEIGHT	48
 
-#define	CONCHAR_WIDTH		8
-#define	CONCHAR_HEIGHT		16
-
 #define	POWERUP_BLINKS		5
 
 #define	POWERUP_BLINK_TIME	1000
@@ -1445,6 +1442,7 @@ extern	vmCvar_t		cg_forceBitmapFonts;
 extern	vmCvar_t		cg_drawGrappleHook;
 extern	vmCvar_t		cg_drawBBox;
 extern	vmCvar_t		cg_consoleFont;
+extern	vmCvar_t		cg_consoleFontSize;
 extern	vmCvar_t		cg_hudFont;
 extern	vmCvar_t		cg_hudFontBorder;
 extern	vmCvar_t		cg_numberFont;

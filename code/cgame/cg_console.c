@@ -792,8 +792,8 @@ void CG_ConsoleInit( void ) {
 	char engineString[MAX_CVAR_VALUE_STRING];
 	char *cgameString;
 
-	if ( !CG_InitTrueTypeFont( cg_consoleFont.string, CONCHAR_HEIGHT, 0, &cgs.media.consoleFont ) ) {
-		CG_InitBitmapFont( &cgs.media.consoleFont, CONCHAR_HEIGHT, CONCHAR_WIDTH );
+	if ( !CG_InitTrueTypeFont( cg_consoleFont.string, cg_consoleFontSize.integer, 0, &cgs.media.consoleFont ) ) {
+		CG_InitBitmapFont( &cgs.media.consoleFont, cg_consoleFontSize.integer, ( cg_consoleFontSize.integer / 2 ) );
 	}
 
 	trap_Cvar_VariableStringBuffer( "versionshort", engineString, sizeof ( engineString ) );
@@ -810,7 +810,7 @@ void CG_ConsoleInit( void ) {
 
 	Com_sprintf( con.version, sizeof ( con.version ), "%s / %s", engineString, cgameString );
 
-	con.sideMargin = CONCHAR_WIDTH;
+	con.sideMargin = ( cg_consoleFontSize.integer / 2 );
 
 	MField_Clear( &g_consoleField );
 
@@ -836,7 +836,7 @@ void CG_ConsoleResized( void ) {
 	// fit across whole screen inside of a 640x480 box
 	con.screenFakeWidth = cgs.glconfig.vidWidth / cgs.screenXScale;
 
-	g_console_field_width = ( con.screenFakeWidth - con.sideMargin * 2 ) / CONCHAR_WIDTH;
+	g_console_field_width = ( con.screenFakeWidth - con.sideMargin * 2 ) / ( cg_consoleFontSize.integer / 2 );
 
 	if ( g_console_field_width > MAX_EDIT_LINE ) {
 		g_console_field_width = MAX_EDIT_LINE;

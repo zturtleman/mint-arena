@@ -137,6 +137,7 @@ int UI_AdjustTimeByGame(int time);
 void UI_ShowPostGame(qboolean newHigh);
 void UI_ClearScores( void );
 void UI_LoadArenas(void);
+void UI_LoadArenasIntoMapList(void);
 void UI_RegisterCvars(void);
 void UI_UpdateCvars(void);
 

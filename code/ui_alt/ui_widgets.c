@@ -44,11 +44,11 @@ static void Caption_Init( currentMenuItem_t *item, const char *extData ) {
 		item->captionPos.width = UI_ProportionalStringWidth( item->caption );
 		item->captionPos.height = PROP_HEIGHT;
 #else
-		item->captionPos.width = CG_DrawStrlen( item->caption, UI_BIGFONT );
+		item->captionPos.width = UI_DrawStrlen( item->caption, UI_BIGFONT );
 		item->captionPos.height = BIGCHAR_HEIGHT;
 #endif
 	} else {
-		item->captionPos.width = CG_DrawStrlen( item->caption, UI_SMALLFONT );
+		item->captionPos.width = UI_DrawStrlen( item->caption, UI_SMALLFONT );
 		item->captionPos.height = SMALLCHAR_HEIGHT;
 	}
 }
@@ -60,7 +60,7 @@ static float Caption_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style,
 	} else
 #endif
 	{
-		CG_DrawString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|style, drawcolor );
+		UI_DrawString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|style, drawcolor );
 	}
 
 	// Q3A bitmap prop font doesn't have this glyph
@@ -74,7 +74,7 @@ static float Caption_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style,
 		} else
 #endif
 		{
-			CG_DrawString( x, item->captionPos.y, cursorStr, UI_BLINK|style, drawcolor );
+			UI_DrawString( x, item->captionPos.y, cursorStr, UI_BLINK|style, drawcolor );
 		}
 	}
 
@@ -131,7 +131,7 @@ static void Generic_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style )
 	} else
 #endif
 	{
-		CG_DrawString( x, item->captionPos.y, value, UI_DROPSHADOW|style, drawcolor );
+		UI_DrawString( x, item->captionPos.y, value, UI_DROPSHADOW|style, drawcolor );
 	}
 }
 
@@ -339,7 +339,7 @@ void UI_DrawSlider( currentMenuItem_t *item, float x, float y, int style, float 
 	} else
 #endif
 	{
-		CG_DrawString( x + sliderWidth + 8, y, va("%g", value), UI_DROPSHADOW|style, drawcolor );
+		UI_DrawString( x + sliderWidth + 8, y, va("%g", value), UI_DROPSHADOW|style, drawcolor );
 	}
 }
 
@@ -494,7 +494,7 @@ static void ListBox_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style )
 		} else
 #endif
 		{
-			CG_DrawString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|style, drawcolor );
+			UI_DrawString( item->captionPos.x, item->captionPos.y, item->caption, UI_DROPSHADOW|style, drawcolor );
 		}
 	}
 
@@ -535,7 +535,7 @@ static void ListBox_Draw( currentMenuItem_t *item, vec4_t drawcolor, int style )
 		} else
 #endif
 		{
-			CG_DrawString( x, y, string, UI_DROPSHADOW|style, drawcolor );
+			UI_DrawString( x, y, string, UI_DROPSHADOW|style, drawcolor );
 		}
 
 		y += BIGCHAR_HEIGHT+2;

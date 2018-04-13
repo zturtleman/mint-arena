@@ -240,7 +240,7 @@ void UI_DrawMainMenuBackground( void ) {
 	trap_R_RenderScene( &refdef );
 #endif
 
-	CG_DrawString( SCREEN_WIDTH / 2, SCREEN_HEIGHT - SMALLCHAR_HEIGHT*2, MENU_COPYRIGHT, UI_CENTER|UI_SMALLFONT, color_copyright );
+	UI_DrawString( SCREEN_WIDTH / 2, SCREEN_HEIGHT - SMALLCHAR_HEIGHT*2, MENU_COPYRIGHT, UI_CENTER|UI_SMALLFONT, color_copyright );
 }
 
 #ifdef MISSIONPACK
@@ -341,7 +341,7 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 			UI_DrawBannerString( current->header.captionPos.x, current->header.captionPos.y, menuInfo->header, 0, color_header );
 		}
 #else
-		CG_DrawString( current->header.captionPos.x, current->header.captionPos.y, menuInfo->header, UI_DROPSHADOW|UI_BIGFONT, color_header );
+		UI_DrawString( current->header.captionPos.x, current->header.captionPos.y, menuInfo->header, UI_DROPSHADOW|UI_BIGFONT, color_header );
 #endif
 	}
 
@@ -442,7 +442,7 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 
 				// if next button is selected draw lightning between back button and caption, and caption and next button
 				if ( item->flags & MIF_NEXTBUTTON ) {
-					int captionWidth = CG_DrawStrlen( item->caption, style );
+					int captionWidth = UI_DrawStrlen( item->caption, style );
 					int lightningOverlap = 16; // lightning doesn't do to the edge of the image so overlay onto buttons and caption
 					int padSize = ui_bitmaps[item->bitmapIndex].offWidth + ui_bitmaps[item->bitmapIndex].horizontalPad - lightningOverlap;
 					int lightningWidth = ( SCREEN_WIDTH - captionWidth ) / 2 - padSize + lightningOverlap;
@@ -455,7 +455,7 @@ void UI_DrawCurrentMenu( currentMenu_t *current ) {
 				if ( item->flags & (MIF_BACKBUTTON|MIF_NEXTBUTTON) ) {
 					// this has white text, instead of selected color
 					// TODO: use unselected small/big color?
-					CG_DrawString( SCREEN_WIDTH / 2, onImage.y + onImage.height / 2 - BIGCHAR_HEIGHT / 2, item->caption, UI_CENTER|UI_DROPSHADOW|style, colorWhite );
+					UI_DrawString( SCREEN_WIDTH / 2, onImage.y + onImage.height / 2 - BIGCHAR_HEIGHT / 2, item->caption, UI_CENTER|UI_DROPSHADOW|style, colorWhite );
 				}
 #endif
 			}
@@ -506,7 +506,7 @@ void UI_BuildCurrentMenu( currentMenu_t *current ) {
 			current->header.captionPos.height = PROPB_HEIGHT;
 		}
 #else
-		current->header.captionPos.width = CG_DrawStrlen( menuInfo->header, UI_BIGFONT );
+		current->header.captionPos.width = UI_DrawStrlen( menuInfo->header, UI_BIGFONT );
 		current->header.captionPos.height = BIGCHAR_HEIGHT;
 #endif
 		current->header.captionPos.x = ( SCREEN_WIDTH - current->header.captionPos.width ) / 2;

@@ -35,6 +35,7 @@ currentMenu_t currentMenu;
 cvarValuePair_t cp_resolution[MAX_RESOLUTIONS];
 
 void UI_Init( qboolean inGameLoad, int maxSplitView ) {
+	vmCvar_t	ui_menuFont;
 	int i;
 
 	(void)inGameLoad;
@@ -44,6 +45,15 @@ void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 
 	UI_LoadAssets();
 	UI_GetResolutions();
+
+	trap_Cvar_Register( &ui_menuFont, "ui_menuFont", "fonts/LiberationSans-Bold.ttf", CVAR_ARCHIVE | CVAR_LATCH );
+
+	if ( !CG_InitTrueTypeFont( ui_menuFont.string, SMALLCHAR_HEIGHT, 0, &uis.smallFont ) ) {
+		CG_InitBitmapFont( &uis.smallFont, SMALLCHAR_HEIGHT, SMALLCHAR_WIDTH );
+	}
+	if ( !CG_InitTrueTypeFont( ui_menuFont.string, BIGCHAR_HEIGHT, 0, &uis.textFont ) ) {
+		CG_InitBitmapFont( &uis.textFont, BIGCHAR_HEIGHT, BIGCHAR_WIDTH );
+	}
 
 #ifdef Q3UIFONTS
 	if ( !CG_InitTrueTypeFont( "fonts/font1_prop", PROP_HEIGHT, 0, &uis.fontProp ) ) {
@@ -367,10 +377,57 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 	// ZTM: TODO: draw status
 }
 
+/*
+=================
+UI_FontForStyle
+=================
+*/
+const fontInfo_t *UI_FontForStyle( int style ) {
+	const fontInfo_t *font;
+
+	switch (style & UI_FONTMASK)
+	{
+		case UI_SMALLFONT:
+			font = &uis.smallFont;
+			break;
+
+		case UI_BIGFONT:
+		default:
+			font = &uis.textFont;
+			break;
+
+		case UI_CONSOLEFONT:
+			font = &cgs.media.consoleFont;
+			break;
+	}
+
+	return font;
+}
+
+/*
+=================
+UI_DrawString
+=================
+*/
+void UI_DrawString( int x, int y, const char* str, int style, vec4_t color )
+{
+	CG_DrawStringCommon( x, y, str, style, UI_FontForStyle( style ), color, 0, 0, 0, 0, -1, -1, 0 );
+}
+
+/*
+=================
+UI_DrawStrlen
+=================
+*/
+float UI_DrawStrlen( const char *str, int style )
+{
+	return CG_DrawStrlenCommon( str, style, UI_FontForStyle( style ), 0 );
+}
+
 #ifndef Q3UIFONTS
 // used by cg_info.c
 void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color ) {
-	CG_DrawString( x, y, str, style, color );
+	UI_DrawString( x, y, str, style, color );
 }
 #endif
 

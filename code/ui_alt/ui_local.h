@@ -328,6 +328,8 @@ typedef struct {
 } cursor_t;
 
 typedef struct {
+	fontInfo_t smallFont;
+	fontInfo_t textFont;
 #ifdef Q3UIFONTS
 	fontInfo_t fontProp;
 	fontInfo_t fontPropGlow;
@@ -411,6 +413,8 @@ extern uiBitmap_t ui_bitmaps[];
 
 // ui_main.c
 void UI_NoActiveMenu( void );
+void UI_DrawString( int x, int y, const char* str, int style, vec4_t color );
+float UI_DrawStrlen( const char *str, int style );
 #define MAX_RESOLUTIONS	32
 extern cvarValuePair_t cp_resolution[MAX_RESOLUTIONS];
 void UI_GetResolutions( void );

@@ -677,6 +677,7 @@ typedef struct {
 	menufield_s			flaglimit;
 	menuradiobutton_s	friendlyfire;
 	menufield_s			hostname;
+	menuradiobutton_s	instagib;
 	menuradiobutton_s	pure;
 	menulist_s			botSkill;
 
@@ -777,6 +778,7 @@ static void ServerOptions_Start( void ) {
 	int		dedicated;
 	int		friendlyfire;
 	int		flaglimit;
+	int		instagib;
 	int		pure;
 	int		skill;
 	int		n;
@@ -789,6 +791,7 @@ static void ServerOptions_Start( void ) {
 	publicserver = s_serveroptions.publicserver.curvalue;
 	dedicated	 = s_serveroptions.dedicated.curvalue;
 	friendlyfire = s_serveroptions.friendlyfire.curvalue;
+	instagib	 = s_serveroptions.instagib.curvalue;
 	pure		 = s_serveroptions.pure.curvalue;
 	skill		 = s_serveroptions.botSkill.curvalue + 1;
 
@@ -816,23 +819,27 @@ static void ServerOptions_Start( void ) {
 	default:
 		trap_Cvar_SetValue( "ui_ffa_fraglimit", fraglimit );
 		trap_Cvar_SetValue( "ui_ffa_timelimit", timelimit );
+		trap_Cvar_SetValue( "ui_ffa_instagib", instagib );
 		break;
 
 	case GT_TOURNAMENT:
 		trap_Cvar_SetValue( "ui_tourney_fraglimit", fraglimit );
 		trap_Cvar_SetValue( "ui_tourney_timelimit", timelimit );
+		trap_Cvar_SetValue( "ui_tourney_instagib", instagib );
 		break;
 
 	case GT_TEAM:
 		trap_Cvar_SetValue( "ui_team_fraglimit", fraglimit );
 		trap_Cvar_SetValue( "ui_team_timelimit", timelimit );
 		trap_Cvar_SetValue( "ui_team_friendly", friendlyfire );
+		trap_Cvar_SetValue( "ui_team_instagib", instagib );
 		break;
 
 	case GT_CTF:
 		trap_Cvar_SetValue( "ui_ctf_capturelimit", flaglimit );
 		trap_Cvar_SetValue( "ui_ctf_timelimit", timelimit );
 		trap_Cvar_SetValue( "ui_ctf_friendly", friendlyfire );
+		trap_Cvar_SetValue( "ui_ctf_instagib", instagib );
 		break;
 
 #ifdef MISSIONPACK
@@ -840,18 +847,21 @@ static void ServerOptions_Start( void ) {
 		trap_Cvar_SetValue( "ui_1flag_capturelimit", flaglimit );
 		trap_Cvar_SetValue( "ui_1flag_timelimit", timelimit );
 		trap_Cvar_SetValue( "ui_1flag_friendly", friendlyfire );
+		trap_Cvar_SetValue( "ui_1flag_instagib", instagib );
 		break;
 
 	case GT_OBELISK:
 		trap_Cvar_SetValue( "ui_obelisk_capturelimit", flaglimit );
 		trap_Cvar_SetValue( "ui_obelisk_timelimit", timelimit );
 		trap_Cvar_SetValue( "ui_obelisk_friendly", friendlyfire );
+		trap_Cvar_SetValue( "ui_obelisk_instagib", instagib );
 		break;
 
 	case GT_HARVESTER:
 		trap_Cvar_SetValue( "ui_harvester_capturelimit", flaglimit );
 		trap_Cvar_SetValue( "ui_harvester_timelimit", timelimit );
 		trap_Cvar_SetValue( "ui_harvester_friendly", friendlyfire );
+		trap_Cvar_SetValue( "ui_harvester_instagib", instagib );
 		break;
 #endif
 	}
@@ -868,6 +878,7 @@ static void ServerOptions_Start( void ) {
 	trap_Cvar_SetValue ("fraglimit", Com_Clamp( 0, fraglimit, fraglimit ) );
 	trap_Cvar_SetValue ("capturelimit", Com_Clamp( 0, flaglimit, flaglimit ) );
 	trap_Cvar_SetValue( "g_friendlyfire", friendlyfire );
+	trap_Cvar_SetValue( "g_instagib", instagib );
 	trap_Cvar_SetValue( "sv_pure", pure );
 	trap_Cvar_Set("sv_hostname", MField_Buffer( &s_serveroptions.hostname.field ) );
 
@@ -1255,23 +1266,27 @@ static void ServerOptions_SetMenuItems( void ) {
 	default:
 		MField_SetText( &s_serveroptions.fraglimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_ffa_fraglimit" ) ) ) );
 		MField_SetText( &s_serveroptions.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_ffa_timelimit" ) ) ) );
+		s_serveroptions.instagib.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_ffa_instagib" ) );
 		break;
 
 	case GT_TOURNAMENT:
 		MField_SetText( &s_serveroptions.fraglimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_tourney_fraglimit" ) ) ) );
 		MField_SetText( &s_serveroptions.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_tourney_timelimit" ) ) ) );
+		s_serveroptions.instagib.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_tourney_instagib" ) );
 		break;
 
 	case GT_TEAM:
 		MField_SetText( &s_serveroptions.fraglimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_team_fraglimit" ) ) ) );
 		MField_SetText( &s_serveroptions.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_team_timelimit" ) ) ) );
 		s_serveroptions.friendlyfire.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_team_friendly" ) );
+		s_serveroptions.instagib.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_team_instagib" ) );
 		break;
 
 	case GT_CTF:
 		MField_SetText( &s_serveroptions.flaglimit.field, va( "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_ctf_capturelimit" ) ) ) );
 		MField_SetText( &s_serveroptions.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_ctf_timelimit" ) ) ) );
 		s_serveroptions.friendlyfire.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_ctf_friendly" ) );
+		s_serveroptions.instagib.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_ctf_instagib" ) );
 		break;
 
 #ifdef MISSIONPACK
@@ -1279,18 +1294,21 @@ static void ServerOptions_SetMenuItems( void ) {
 		MField_SetText( &s_serveroptions.flaglimit.field, va( "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_1flag_capturelimit" ) ) ) );
 		MField_SetText( &s_serveroptions.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_1flag_timelimit" ) ) ) );
 		s_serveroptions.friendlyfire.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_1flag_friendly" ) );
+		s_serveroptions.instagib.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_1flag_instagib" ) );
 		break;
 
 	case GT_OBELISK:
 		MField_SetText( &s_serveroptions.flaglimit.field, va( "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_obelisk_capturelimit" ) ) ) );
 		MField_SetText( &s_serveroptions.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_obelisk_timelimit" ) ) ) );
 		s_serveroptions.friendlyfire.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_obelisk_friendly" ) );
+		s_serveroptions.instagib.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_obelisk_instagib" ) );
 		break;
 
 	case GT_HARVESTER:
 		MField_SetText( &s_serveroptions.flaglimit.field, va( "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_harvester_capturelimit" ) ) ) );
 		MField_SetText( &s_serveroptions.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_harvester_timelimit" ) ) ) );
 		s_serveroptions.friendlyfire.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_harvester_friendly" ) );
+		s_serveroptions.instagib.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_harvester_instagib" ) );
 		break;
 #endif
 	}
@@ -1456,6 +1474,13 @@ static void ServerOptions_MenuInit( qboolean multiplayer ) {
 	}
 
 	y += BIGCHAR_HEIGHT+2;
+	s_serveroptions.instagib.generic.type		= MTYPE_RADIOBUTTON;
+	s_serveroptions.instagib.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	s_serveroptions.instagib.generic.x			= OPTIONS_X;
+	s_serveroptions.instagib.generic.y			= y;
+	s_serveroptions.instagib.generic.name		= "Instagib:";
+
+	y += BIGCHAR_HEIGHT+2;
 	s_serveroptions.pure.generic.type			= MTYPE_RADIOBUTTON;
 	s_serveroptions.pure.generic.flags			= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
 	s_serveroptions.pure.generic.x				= OPTIONS_X;
@@ -1612,6 +1637,7 @@ static void ServerOptions_MenuInit( qboolean multiplayer ) {
 	if( s_serveroptions.gametype >= GT_TEAM ) {
 		Menu_AddItem( &s_serveroptions.menu, &s_serveroptions.friendlyfire );
 	}
+	Menu_AddItem( &s_serveroptions.menu, &s_serveroptions.instagib );
 	Menu_AddItem( &s_serveroptions.menu, &s_serveroptions.pure );
 	if( s_serveroptions.multiplayer ) {
 		Menu_AddItem( &s_serveroptions.menu, &s_serveroptions.publicserver );

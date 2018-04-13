@@ -658,7 +658,7 @@ void SetTeam( gentity_t *ent, const char *s ) {
 		CheckTeamLeader( oldTeam );
 	}
 
-	// get and distribute relevent paramters
+	// get and distribute relevant parameters
 	PlayerUserinfoChanged( playerNum );
 
 	// player hasn't spawned yet, they sent teampref or g_teamAutoJoin is enabled
@@ -991,7 +991,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		return;
 	}
 
-	// send it to all the apropriate clients
+	// send it to all the appropriate clients
 	for (i = 0; i < level.maxconnections; i++) {
 		for (  j = 0; j < MAX_SPLITVIEW; j++ ) {
 			if ( level.connections[i].localPlayerNums[j] == -1 )
@@ -1159,7 +1159,7 @@ void G_Voice( gentity_t *ent, gentity_t *target, int mode, const char *id, qbool
 		return;
 	}
 
-	// send it to all the apropriate clients
+	// send it to all the appropriate clients
 	for (i = 0; i < level.maxconnections; i++) {
 		for (  j = 0; j < MAX_SPLITVIEW; j++ ) {
 			if ( level.connections[i].localPlayerNums[j] == -1 )

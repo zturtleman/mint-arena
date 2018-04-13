@@ -1453,7 +1453,7 @@ void ServerList_Draw( void *data )
 
 			y += SMALLCHAR_HEIGHT;
 		}
-		x += (l->width + l->seperation) * SMALLCHAR_WIDTH;
+		x += (l->width + l->separation) * SMALLCHAR_WIDTH;
 	}
 }
 

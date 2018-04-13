@@ -671,9 +671,10 @@ void CG_LoadConsoleHistory( void )
 		return;
 	}
 
-	if( consoleSaveBufferSize <= MAX_CONSOLE_SAVE_BUFFER &&
+	if( consoleSaveBufferSize < MAX_CONSOLE_SAVE_BUFFER &&
 			trap_FS_Read( consoleSaveBuffer, consoleSaveBufferSize, f ) == consoleSaveBufferSize )
 	{
+		consoleSaveBuffer[consoleSaveBufferSize] = '\0';
 		text_p = consoleSaveBuffer;
 
 		for( i = COMMAND_HISTORY - 1; i >= 0; i-- )
@@ -789,14 +790,28 @@ CG_ConsoleInit
 */
 void CG_ConsoleInit( void ) {
 	int i;
+	char engineString[MAX_CVAR_VALUE_STRING];
+	char *cgameString;
 
-	if ( !CG_InitTrueTypeFont( cg_consoleFont.string, CONCHAR_HEIGHT, 0, &cgs.media.consoleFont ) ) {
-		CG_InitBitmapFont( &cgs.media.consoleFont, CONCHAR_HEIGHT, CONCHAR_WIDTH );
+	if ( !CG_InitTrueTypeFont( cg_consoleFont.string, cg_consoleFontSize.integer, 0, &cgs.media.consoleFont ) ) {
+		CG_InitBitmapFont( &cgs.media.consoleFont, cg_consoleFontSize.integer, ( cg_consoleFontSize.integer / 2 ) );
 	}
 
-	trap_Cvar_VariableStringBuffer( "version", con.version, sizeof ( con.version ) );
+	trap_Cvar_VariableStringBuffer( "versionshort", engineString, sizeof ( engineString ) );
+	if ( !engineString[0] ) {
+		// Fallback for Spearmint 0.5. Includes platform and possibly git version which makes the version too long to append cgame version.
+		trap_Cvar_VariableStringBuffer( "version", engineString, sizeof ( engineString ) );
+	}
 
-	con.sideMargin = CONCHAR_WIDTH;
+#ifdef PRODUCT_VERSION_HAS_DATE
+	cgameString = PRODUCT_NAME " " PRODUCT_VERSION;
+#else
+	cgameString = PRODUCT_NAME " " PRODUCT_VERSION " " PRODUCT_DATE;
+#endif
+
+	Com_sprintf( con.version, sizeof ( con.version ), "%s / %s", engineString, cgameString );
+
+	con.sideMargin = ( cg_consoleFontSize.integer / 2 );
 
 	MField_Clear( &g_consoleField );
 
@@ -822,7 +837,7 @@ void CG_ConsoleResized( void ) {
 	// fit across whole screen inside of a 640x480 box
 	con.screenFakeWidth = cgs.glconfig.vidWidth / cgs.screenXScale;
 
-	g_console_field_width = ( con.screenFakeWidth - con.sideMargin * 2 ) / CONCHAR_WIDTH;
+	g_console_field_width = ( con.screenFakeWidth - con.sideMargin * 2 ) / ( cg_consoleFontSize.integer / 2 );
 
 	if ( g_console_field_width > MAX_EDIT_LINE ) {
 		g_console_field_width = MAX_EDIT_LINE;

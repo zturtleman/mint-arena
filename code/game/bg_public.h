@@ -40,10 +40,17 @@ Suite 120, Rockville, Maryland 20850 USA.
   #endif
 #endif
 
-// because games can change separately from the main system version, we need a
-// second version that must match between game and cgame
+#define PRODUCT_NAME				MODDIR
 
-#define	GAME_VERSION		MODDIR "-4"
+// Keep this in-sync with VERSION in Makefile.
+#ifndef PRODUCT_VERSION
+	#define PRODUCT_VERSION			"0.5"
+#endif
+
+// because games can change separately from the main system protocol, we need a
+// second protocol that must match between game and cgame
+
+#define	GAME_PROTOCOL		MODDIR "-4"
 
 // used for switching fs_game
 #ifndef BASEQ3
@@ -130,7 +137,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	CS_TEAMVOTE_YES			16
 #define	CS_TEAMVOTE_NO			18
 
-#define	CS_GAME_VERSION			20
+#define	CS_GAME_PROTOCOL		20
 #define	CS_LEVEL_START_TIME		21		// so the timer only shows the current level
 #define	CS_INTERMISSION			22		// when 1, fraglimit/timelimit has been hit and intermission will start in a second or two
 #define CS_FLAGSTATUS			23		// string indicating flag status in CTF
@@ -530,7 +537,7 @@ typedef enum {
 	STAT_WEAPONS,					// 16 bit fields
 	STAT_ARMOR,				
 	STAT_DEAD_YAW,					// look this direction when dead (FIXME: get rid of?)
-	STAT_MAX_HEALTH,				// health / armor limit, changable by handicap
+	STAT_MAX_HEALTH,				// health / armor limit, changeable by handicap
 //#ifdef MISSIONPACK
 	STAT_PERSISTANT_POWERUP
 //#endif

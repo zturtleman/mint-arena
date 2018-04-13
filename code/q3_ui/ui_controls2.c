@@ -1165,28 +1165,22 @@ static void Controls_SetConfig( void )
 		}
 	}
 
-	if (s_controls.localPlayerNum != 0) {
-		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cl_run" ), s_controls.alwaysrun.curvalue );
-		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_cyclePastGauntlet" ), s_controls.cyclepastgauntlet.curvalue );
-		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_autoswitch" ), s_controls.autoswitch.curvalue );
-		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickUseAnalog" ), s_controls.joyanalog.curvalue );
-		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickThreshold" ), s_controls.joythreshold.curvalue );
-		return;
+	if (s_controls.localPlayerNum == 0) {
+		if ( s_controls.invertmouse.curvalue )
+			trap_Cvar_SetValue( "m_pitch", -fabs( trap_Cvar_VariableValue( "m_pitch" ) ) );
+		else
+			trap_Cvar_SetValue( "m_pitch", fabs( trap_Cvar_VariableValue( "m_pitch" ) ) );
+
+		trap_Cvar_SetValue( "m_filter", s_controls.smoothmouse.curvalue );
+		trap_Cvar_SetValue( "sensitivity", s_controls.sensitivity.curvalue );
+		trap_Cvar_SetValue( "cl_freelook", s_controls.freelook.curvalue );
 	}
 
-	if ( s_controls.invertmouse.curvalue )
-		trap_Cvar_SetValue( "m_pitch", -fabs( trap_Cvar_VariableValue( "m_pitch" ) ) );
-	else
-		trap_Cvar_SetValue( "m_pitch", fabs( trap_Cvar_VariableValue( "m_pitch" ) ) );
-
-	trap_Cvar_SetValue( "m_filter", s_controls.smoothmouse.curvalue );
-	trap_Cvar_SetValue( "cl_run", s_controls.alwaysrun.curvalue );
-	trap_Cvar_SetValue( "cg_cyclePastGauntlet", s_controls.cyclepastgauntlet.curvalue );
-	trap_Cvar_SetValue( "cg_autoswitch", s_controls.autoswitch.curvalue );
-	trap_Cvar_SetValue( "sensitivity", s_controls.sensitivity.curvalue );
-	trap_Cvar_SetValue( "in_joystickUseAnalog", s_controls.joyanalog.curvalue );
-	trap_Cvar_SetValue( "in_joystickThreshold", s_controls.joythreshold.curvalue );
-	trap_Cvar_SetValue( "cl_freelook", s_controls.freelook.curvalue );
+	trap_Cvar_SetValue( Com_LocalPlayerCvarName( s_controls.localPlayerNum, "cl_run" ), s_controls.alwaysrun.curvalue );
+	trap_Cvar_SetValue( Com_LocalPlayerCvarName( s_controls.localPlayerNum, "cg_cyclePastGauntlet" ), s_controls.cyclepastgauntlet.curvalue );
+	trap_Cvar_SetValue( Com_LocalPlayerCvarName( s_controls.localPlayerNum, "cg_autoswitch" ), s_controls.autoswitch.curvalue );
+	trap_Cvar_SetValue( Com_LocalPlayerCvarName( s_controls.localPlayerNum, "in_joystickUseAnalog" ), s_controls.joyanalog.curvalue );
+	trap_Cvar_SetValue( Com_LocalPlayerCvarName( s_controls.localPlayerNum, "in_joystickThreshold" ), s_controls.joythreshold.curvalue );
 }
 
 /*
@@ -1212,28 +1206,20 @@ static void Controls_SetDefaults( void )
 		bindptr->bind2 = bindptr->defaultbind2;
 	}
 
-	if (s_controls.localPlayerNum != 0) {
-		s_controls.alwaysrun.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cl_run" ) );
-		s_controls.cyclepastgauntlet.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_cyclePastGauntlet" ) );
-		s_controls.autoswitch.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_autoswitch" ) );
-		trap_Cvar_SetValue(Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystick"), 0);
-		trap_Cvar_SetValue(Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickNo"), 0);
-		s_controls.joyanalog.curvalue    = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickUseAnalog" ) );
-		s_controls.joythreshold.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickThreshold" ) );
-		return;
+	if (s_controls.localPlayerNum == 0) {
+		s_controls.invertmouse.curvalue  = Controls_GetCvarDefault( "m_pitch" ) < 0;
+		s_controls.smoothmouse.curvalue  = Controls_GetCvarDefault( "m_filter" );
+		s_controls.sensitivity.curvalue  = Controls_GetCvarDefault( "sensitivity" );
+		s_controls.freelook.curvalue     = Controls_GetCvarDefault( "cl_freelook" );
 	}
 
-	s_controls.invertmouse.curvalue  = Controls_GetCvarDefault( "m_pitch" ) < 0;
-	s_controls.smoothmouse.curvalue  = Controls_GetCvarDefault( "m_filter" );
-	s_controls.alwaysrun.curvalue    = Controls_GetCvarDefault( "cl_run" );
-	s_controls.cyclepastgauntlet.curvalue   = Controls_GetCvarDefault( "cg_cyclePastGauntlet" );
-	s_controls.autoswitch.curvalue   = Controls_GetCvarDefault( "cg_autoswitch" );
-	s_controls.sensitivity.curvalue  = Controls_GetCvarDefault( "sensitivity" );
-	trap_Cvar_SetValue("in_joystick", 0);
-	trap_Cvar_SetValue("in_joystickNo", 0);
-	s_controls.joyanalog.curvalue    = Controls_GetCvarDefault( "in_joystickUseAnalog" );
-	s_controls.joythreshold.curvalue = Controls_GetCvarDefault( "in_joystickThreshold" );
-	s_controls.freelook.curvalue     = Controls_GetCvarDefault( "cl_freelook" );
+	s_controls.alwaysrun.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cl_run" ) );
+	s_controls.cyclepastgauntlet.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_cyclePastGauntlet" ) );
+	s_controls.autoswitch.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_autoswitch" ) );
+	trap_Cvar_SetValue(Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystick"), 0);
+	trap_Cvar_SetValue(Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickNo"), 0);
+	s_controls.joyanalog.curvalue    = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickUseAnalog" ) );
+	s_controls.joythreshold.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickThreshold" ) );
 }
 
 /*

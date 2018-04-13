@@ -278,6 +278,7 @@ typedef struct {
 	menulist_s  	lighting;
 	menulist_s  	flares;
 	menulist_s  	texturebits;
+	menulist_s  	colordepth;
 	menulist_s  	geometry;
 	menulist_s  	filter;
 	menulist_s  	multisample;
@@ -293,6 +294,7 @@ typedef struct
 	qboolean fullscreen;
 	int tq;
 	int lighting;
+	int colordepth;
 	int texturebits;
 	int geometry;
 	int filter;
@@ -307,27 +309,27 @@ static InitialVideoOptions_s s_ivo_templates[] =
 {
 	// very high
 	{
-		6, qtrue, 3, 0, 2, 4, 5, 2, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
+		6, qtrue, 3, 0, 2, 2, 4, 5, 2, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
 	},
 	// high
 	{
-		6, qtrue, 3, 0, 2, 3, 2, 1, qtrue
+		6, qtrue, 3, 0, 2, 2, 3, 2, 1, qtrue
 	},
 	// normal
 	{
-		6, qtrue, 3, 0, 2, 2, 1, 0, qtrue
+		6, qtrue, 3, 0, 0, 2, 2, 1, 0, qtrue
 	},
 	// fast
 	{
-		4, qtrue, 2, 0, 0, 1, 0, 0, qfalse
+		4, qtrue, 2, 0, 1, 0, 1, 0, 0, qfalse
 	},
 	// fastest
 	{
-		3, qtrue, 1, 1, 0, 0, 0, 0, qfalse
+		3, qtrue, 1, 1, 1, 0, 0, 0, 0, qfalse
 	},
 	// custom
 	{
-		3, qtrue, 1, 0, 0, 1, 0, 0, qfalse
+		3, qtrue, 1, 0, 0, 0, 1, 0, 0, qfalse
 	}
 };
 
@@ -509,6 +511,7 @@ GraphicsOptions_GetInitialVideo
 */
 static void GraphicsOptions_GetInitialVideo( void )
 {
+	s_ivo.colordepth  = s_graphicsoptions.colordepth.curvalue;
 	s_ivo.mode        = s_graphicsoptions.mode.curvalue;
 	s_ivo.fullscreen  = s_graphicsoptions.fs.curvalue;
 	s_ivo.tq          = s_graphicsoptions.tq.curvalue;
@@ -520,11 +523,12 @@ static void GraphicsOptions_GetInitialVideo( void )
 	s_ivo.texturebits = s_graphicsoptions.texturebits.curvalue;
 
 #if 0
-	Com_Printf( "DEBUG: s_ivo = { %d, %d, %d, %d, %d, %d, %d, %d, %s }\n",
+	Com_Printf( "DEBUG: s_ivo = { %d, %d, %d, %d, %d, %d, %d, %d, %d, %s }\n",
 			s_ivo.mode,
 			s_ivo.fullscreen,
 			s_ivo.tq,
 			s_ivo.lighting,
+			s_ivo.colordepth,
 			s_ivo.texturebits,
 			s_ivo.geometry,
 			s_ivo.filter,
@@ -583,6 +587,8 @@ static void GraphicsOptions_CheckConfig( void )
 
 	for ( i = 0; i < NUM_IVO_TEMPLATES-1; i++ )
 	{
+		if ( s_ivo_templates[i].colordepth != s_graphicsoptions.colordepth.curvalue )
+			continue;
 		if ( GraphicsOptions_FindDetectedResolution(s_ivo_templates[i].mode) != s_graphicsoptions.mode.curvalue )
 			continue;
 //		if ( s_ivo_templates[i].fullscreen != s_graphicsoptions.fs.curvalue )
@@ -616,6 +622,16 @@ GraphicsOptions_UpdateMenuItems
 */
 static void GraphicsOptions_UpdateMenuItems( void )
 {
+	if ( s_graphicsoptions.fs.curvalue == 0 )
+	{
+		s_graphicsoptions.colordepth.curvalue = 0;
+		s_graphicsoptions.colordepth.generic.flags |= QMF_GRAYED;
+	}
+	else
+	{
+		s_graphicsoptions.colordepth.generic.flags &= ~QMF_GRAYED;
+	}
+
 	s_graphicsoptions.apply.generic.flags |= QMF_HIDDEN|QMF_INACTIVE;
 
 	if ( s_ivo.mode != s_graphicsoptions.mode.curvalue )
@@ -631,6 +647,10 @@ static void GraphicsOptions_UpdateMenuItems( void )
 		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
 	}
 	if ( s_ivo.lighting != s_graphicsoptions.lighting.curvalue )
+	{
+		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
+	}
+	if ( s_ivo.colordepth != s_graphicsoptions.colordepth.curvalue )
 	{
 		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
 	}
@@ -708,11 +728,24 @@ static void GraphicsOptions_ApplyChanges( void *unused, int notification )
 		trap_Cvar_SetValue( "r_mode", s_graphicsoptions.mode.curvalue );
 
 	trap_Cvar_SetValue( "r_fullscreen", s_graphicsoptions.fs.curvalue );
-
-	trap_Cvar_Reset("r_colorbits");
-	trap_Cvar_Reset("r_depthbits");
-	trap_Cvar_Reset("r_stencilbits");
-
+	switch ( s_graphicsoptions.colordepth.curvalue )
+	{
+	case 0:
+		trap_Cvar_SetValue( "r_colorbits", 0 );
+		trap_Cvar_SetValue( "r_depthbits", 0 );
+		trap_Cvar_Reset( "r_stencilbits" );
+		break;
+	case 1:
+		trap_Cvar_SetValue( "r_colorbits", 16 );
+		trap_Cvar_SetValue( "r_depthbits", 16 );
+		trap_Cvar_SetValue( "r_stencilbits", 0 );
+		break;
+	case 2:
+		trap_Cvar_SetValue( "r_colorbits", 32 );
+		trap_Cvar_SetValue( "r_depthbits", 24 );
+		trap_Cvar_SetValue( "r_stencilbits", 8 );
+		break;
+	}
 	trap_Cvar_SetValue( "r_vertexLight", s_graphicsoptions.lighting.curvalue );
 	trap_Cvar_SetValue( "r_flares", s_graphicsoptions.flares.curvalue );
 
@@ -819,6 +852,7 @@ static void GraphicsOptions_Event( void* ptr, int event ) {
 			resToRatio[ s_graphicsoptions.mode.curvalue ];
 		s_graphicsoptions.tq.curvalue          = ivo->tq;
 		s_graphicsoptions.lighting.curvalue    = ivo->lighting;
+		s_graphicsoptions.colordepth.curvalue  = ivo->colordepth;
 		s_graphicsoptions.flares.curvalue      = ivo->flares;
 		s_graphicsoptions.texturebits.curvalue = ivo->texturebits;
 		s_graphicsoptions.geometry.curvalue    = ivo->geometry;
@@ -993,6 +1027,25 @@ static void GraphicsOptions_SetMenuItems( void )
 		}
 	}
 
+	switch ( ( int ) trap_Cvar_VariableValue( "r_colorbits" ) )
+	{
+	default:
+	case 0:
+		s_graphicsoptions.colordepth.curvalue = 0;
+		break;
+	case 16:
+		s_graphicsoptions.colordepth.curvalue = 1;
+		break;
+	case 32:
+		s_graphicsoptions.colordepth.curvalue = 2;
+		break;
+	}
+
+	if ( s_graphicsoptions.fs.curvalue == 0 )
+	{
+		s_graphicsoptions.colordepth.curvalue = 0;
+	}
+
 	// use higher multisample value
 	// r_ext_framebuffer_multisample is currently only used by the OpenGL2 renderer
 	multisample = MAX( trap_Cvar_VariableIntegerValue( "r_ext_multisample" ),
@@ -1040,6 +1093,14 @@ void GraphicsOptions_MenuInit( void )
 	{
 		"Lightmap (High)",
 		"Vertex (Low)",
+		NULL
+	};
+
+	static const char *colordepth_names[] =
+	{
+		"Default",
+		"16 bit",
+		"32 bit",
 		NULL
 	};
 
@@ -1193,6 +1254,15 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.mode.generic.id       = ID_MODE;
 	y += BIGCHAR_HEIGHT+2;
 
+	// references "r_colorbits"
+	s_graphicsoptions.colordepth.generic.type     = MTYPE_SPINCONTROL;
+	s_graphicsoptions.colordepth.generic.name     = "Color Depth:";
+	s_graphicsoptions.colordepth.generic.flags    = QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	s_graphicsoptions.colordepth.generic.x        = 400;
+	s_graphicsoptions.colordepth.generic.y        = y;
+	s_graphicsoptions.colordepth.itemnames        = colordepth_names;
+	y += BIGCHAR_HEIGHT+2;
+
 	// references/modifies "r_fullscreen"
 	s_graphicsoptions.fs.generic.type     = MTYPE_SPINCONTROL;
 	s_graphicsoptions.fs.generic.name	  = "Fullscreen:";
@@ -1308,6 +1378,7 @@ void GraphicsOptions_MenuInit( void )
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.list );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.ratio );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.mode );
+	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.colordepth );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.fs );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.multisample );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.lighting );

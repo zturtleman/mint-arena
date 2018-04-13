@@ -315,6 +315,10 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 			continue;
 		}
 		if ( !strcmp(item->classname, ent->classname) ) {
+			if ( g_instagib.integer && item->giType != IT_TEAM ) {
+				// only spawn team play items in instagib mode
+				return qfalse;
+			}
 			G_SpawnItem( ent, item );
 			return qtrue;
 		}
@@ -429,7 +433,7 @@ void G_ParseField( const char *key, const char *value, gentity_t *ent ) {
 G_SpawnGEntityFromSpawnVars
 
 Spawn an entity and fill in all of the level fields from
-level.spawnVars[], then call the class specfic spawn function
+level.spawnVars[], then call the class specific spawn function
 ===================
 */
 void G_SpawnGEntityFromSpawnVars( void ) {
@@ -563,7 +567,7 @@ void SP_worldspawn( void ) {
 	}
 
 	// make some data visible to connecting client
-	trap_SetConfigstring( CS_GAME_VERSION, GAME_VERSION );
+	trap_SetConfigstring( CS_GAME_PROTOCOL, GAME_PROTOCOL );
 
 	trap_SetConfigstring( CS_LEVEL_START_TIME, va("%i", level.startTime ) );
 

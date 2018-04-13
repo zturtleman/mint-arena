@@ -1315,7 +1315,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	}
 
 	// if the index of the nonPredictedCent is not the same as the playerNum
-	// then this is a fake player (like on teh single player podiums), so
+	// then this is a fake player (like on the single player podiums), so
 	// go ahead and use the cent
 	if( ( nonPredictedCent - cg_entities ) != cent->currentState.playerNum ) {
 		nonPredictedCent = cent;

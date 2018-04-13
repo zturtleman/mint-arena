@@ -65,7 +65,7 @@ Keybinding command
 =================
 */
 static void CG_SizeUp_f (void) {
-	// manually clamp here so cvar range warning isn't show
+	// manually clamp here so cvar range warning isn't shown
 	trap_Cvar_SetValue("cg_viewsize", Com_Clamp( 30, 100, (int)(cg_viewsize.integer+10) ) );
 }
 
@@ -78,7 +78,7 @@ Keybinding command
 =================
 */
 static void CG_SizeDown_f (void) {
-	// manually clamp here so cvar range warning isn't show
+	// manually clamp here so cvar range warning isn't shown
 	trap_Cvar_SetValue("cg_viewsize", Com_Clamp( 30, 100, (int)(cg_viewsize.integer-10) ) );
 }
 

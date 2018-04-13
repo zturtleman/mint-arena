@@ -452,6 +452,13 @@ qboolean CG_DrawOldScoreboard( void ) {
 		}
 	}
 
+	CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
+
+	// draw game type name
+	lineHeight = CG_DrawStringLineHeight( UI_BIGFONT );
+	y = SCREEN_HEIGHT - lineHeight * 2;
+	CG_DrawString( lineHeight, y, cgs.gametypeName, UI_DROPSHADOW|UI_BIGFONT, NULL );
+
 	return qtrue;
 }
 

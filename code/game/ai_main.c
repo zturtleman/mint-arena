@@ -1772,7 +1772,7 @@ int BotAISetupPlayer(int playernum, struct bot_settings_s *settings, qboolean re
 	if (restart) {
 		BotReadSessionData(bs);
 	}
-	//bot has been setup succesfully
+	//bot has been setup successfully
 	return qtrue;
 }
 

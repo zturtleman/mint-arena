@@ -1593,7 +1593,7 @@ static void CG_AddPainTwitch( centity_t *cent, vec3_t torsoAngles ) {
 ===============
 CG_PlayerAngles
 
-Handles seperate torso motion
+Handles separate torso motion
 
   legs pivot based on direction of movement
 
@@ -2952,6 +2952,8 @@ void CG_Player( centity_t *cent ) {
 
 		memcpy(&powerup, &torso, sizeof(torso));
 		powerup.hModel = cgs.media.invulnerabilityPowerupModel;
+		powerup.frame = 0;
+		powerup.oldframe = 0;
 		powerup.customSkin = 0;
 		// always draw
 		powerup.renderfx &= ~RF_ONLY_MIRROR;
@@ -2976,6 +2978,8 @@ void CG_Player( centity_t *cent ) {
 	if ( pi->medkitUsageTime && t < 500 ) {
 		memcpy(&powerup, &torso, sizeof(torso));
 		powerup.hModel = cgs.media.medkitUsageModel;
+		powerup.frame = 0;
+		powerup.oldframe = 0;
 		powerup.customSkin = 0;
 		// always draw
 		powerup.renderfx &= ~RF_ONLY_MIRROR;

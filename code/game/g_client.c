@@ -56,7 +56,7 @@ void SP_info_player_deathmatch( gentity_t *ent ) {
 }
 
 /*QUAKED info_player_start (1 0 0) (-16 -16 -24) (16 16 32)
-equivelant to info_player_deathmatch
+equivalent to info_player_deathmatch
 */
 void SP_info_player_start(gentity_t *ent) {
 	ent->classname = "info_player_deathmatch";
@@ -817,8 +817,8 @@ void PlayerUserinfoChanged( int playerNum ) {
 	teamLeader = player->sess.teamLeader;
 
 	// colors
-	strcpy(c1, Info_ValueForKey( userinfo, "color1" ));
-	strcpy(c2, Info_ValueForKey( userinfo, "color2" ));
+	Q_strncpyz(c1, Info_ValueForKey( userinfo, "color1" ), sizeof( c1 ));
+	Q_strncpyz(c2, Info_ValueForKey( userinfo, "color2" ), sizeof( c2 ));
 
 	// send over a subset of the userinfo keys so other clients can
 	// print scoreboards, display models, and play custom sounds
@@ -949,7 +949,7 @@ char *PlayerConnect( int playerNum, qboolean firstTime, qboolean isBot, int conn
 	}
 	G_ReadSessionData( player );
 
-	// get and distribute relevent paramters
+	// get and distribute relevant parameters
 	G_LogPrintf( "PlayerConnect: %i\n", playerNum );
 	PlayerUserinfoChanged( playerNum );
 
@@ -1170,11 +1170,16 @@ void PlayerSpawn(gentity_t *ent) {
 
 	player->ps.playerNum = index;
 
-	player->ps.stats[STAT_WEAPONS] = ( 1 << WP_MACHINEGUN );
-	if ( g_gametype.integer == GT_TEAM ) {
-		player->ps.ammo[WP_MACHINEGUN] = 50;
+	if ( g_instagib.integer ) {
+		player->ps.stats[STAT_WEAPONS] = ( 1 << WP_RAILGUN );
+		player->ps.ammo[WP_RAILGUN] = 999;
 	} else {
-		player->ps.ammo[WP_MACHINEGUN] = 100;
+		player->ps.stats[STAT_WEAPONS] = ( 1 << WP_MACHINEGUN );
+		if ( g_gametype.integer == GT_TEAM ) {
+			player->ps.ammo[WP_MACHINEGUN] = 50;
+		} else {
+			player->ps.ammo[WP_MACHINEGUN] = 100;
+		}
 	}
 
 	player->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GAUNTLET );

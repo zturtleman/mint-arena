@@ -283,6 +283,7 @@ vmCvar_t	cg_forceBitmapFonts;
 vmCvar_t	cg_drawGrappleHook;
 vmCvar_t	cg_drawBBox;
 vmCvar_t	cg_consoleFont;
+vmCvar_t	cg_consoleFontSize;
 vmCvar_t	cg_hudFont;
 vmCvar_t	cg_hudFontBorder;
 vmCvar_t	cg_numberFont;
@@ -359,6 +360,8 @@ typedef struct {
 #define RANGE_FLOAT(min,max) min, max, qfalse
 
 static cvarTable_t cgameCvarTable[] = {
+	{ NULL, "cgameversion", PRODUCT_NAME " " PRODUCT_VERSION " " PLATFORM_STRING " " PRODUCT_DATE, CVAR_ROM, RANGE_ALL },
+
 	{ &con_conspeed, "scr_conspeed", "3", 0, RANGE_FLOAT(0.1, 100) },
 	{ &con_autochat, "con_autochat", "0", CVAR_ARCHIVE, RANGE_ALL },
 	{ &con_autoclear, "con_autoclear", "0", CVAR_ARCHIVE, RANGE_ALL },
@@ -512,7 +515,8 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_forceBitmapFonts, "cg_forceBitmapFonts", "0", CVAR_ARCHIVE | CVAR_LATCH, RANGE_BOOL },
 	{ &cg_drawGrappleHook, "cg_drawGrappleHook", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_drawBBox, "cg_drawBBox", "0", CVAR_CHEAT, RANGE_BOOL },
-	{ &cg_consoleFont, "cg_consoleFont", "fonts/LiberationMono-Regular.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+	{ &cg_consoleFont, "cg_consoleFont", "fonts/LiberationMono-Bold.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+	{ &cg_consoleFontSize, "cg_consoleFontSize", "8", CVAR_ARCHIVE | CVAR_LATCH, RANGE_INT( 4, 24 ) },
 	{ &cg_hudFont, "cg_hudFont", "fonts/LiberationSans-Bold.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
 	{ &cg_hudFontBorder, "cg_hudFontBorder", "2", CVAR_ARCHIVE | CVAR_LATCH, RANGE_FLOAT( 0, 10 ) },
 	{ &cg_numberFont, "cg_numberFont", "", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
@@ -1186,7 +1190,7 @@ static void CG_RegisterItemSounds( int itemNum ) {
 		cgs.media.itemPickupSounds[ itemNum ] = trap_S_RegisterSound( item->pickup_sound, qfalse );
 	}
 
-	// parse the space seperated precache string for other media
+	// parse the space separated precache string for other media
 	s = item->sounds;
 	if (!s || !s[0])
 		return;
@@ -2710,10 +2714,10 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	// get the gamestate from the client system
 	trap_GetGameState( &cgs.gameState );
 
-	// check version
-	s = CG_ConfigString( CS_GAME_VERSION );
-	if ( strcmp( s, GAME_VERSION ) ) {
-		CG_Error( "Client/Server game mismatch: %s/%s", GAME_VERSION, s );
+	// check game protocol
+	s = CG_ConfigString( CS_GAME_PROTOCOL );
+	if ( strcmp( s, GAME_PROTOCOL ) ) {
+		CG_Error( "Client/Server game mismatch: %s/%s", GAME_PROTOCOL, s );
 	}
 
 	CG_HudTextInit();

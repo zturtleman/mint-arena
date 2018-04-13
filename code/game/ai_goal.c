@@ -588,6 +588,12 @@ void BotInitLevelItems(void)
 			li->flags |= IFL_ROAM;
 			trap_AAS_FloatForBSPEpairKey(ent, "weight", &li->weight);
 		} //end if
+		else if (g_instagib.integer && Q_stricmpn(classname, "team_", 5) != 0)
+		{
+			// instagib only spawns IT_TEAM items. treat non-team items as item_botroam so bots can still navigate the map.
+			li->flags |= IFL_ROAM;
+			li->weight = 1;
+		} //end if
 		//if not a stationary item
 		if (!(spawnflags & 1))
 		{

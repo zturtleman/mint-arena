@@ -2589,6 +2589,10 @@ CG_DrawAmmoWarning
 static void CG_DrawAmmoWarning( void ) {
 	const char	*s;
 
+	if ( cg.cur_ps->pm_flags & PMF_FOLLOW ) {
+		return; // behind following player name
+	}
+
 	if ( cg_drawAmmoWarning.integer == 0 ) {
 		return;
 	}

@@ -698,7 +698,13 @@ int CG_DrawStringLineHeight( int style ) {
 
 		case UI_CONSOLEFONT:
 			font = &cgs.media.consoleFont;
-			gap = 2;
+			if ( font->pointSize >= 16 ) {
+				gap = 2;
+			} else if ( font->pointSize >= 12 ) {
+				gap = 1;
+			} else {
+				gap = 0;
+			}
 			break;
 	}
 

@@ -3100,6 +3100,9 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 		CG_KeyEvent( key, down );
 	} else if ( keyCatcher & KEYCATCH_UI ) {
 		UI_KeyEvent( key, down );
+	} else if ( state == CA_DISCONNECTED ) {
+		// console is drawn if disconnected and not KEYCATCH_UI
+		Console_Key( key, down );
 	}
 }
 
@@ -3126,6 +3129,9 @@ void CG_DistributeCharEvent( int character, connstate_t state ) {
 		CG_KeyEvent( key, qtrue );
 	} else if ( keyCatcher & KEYCATCH_UI ) {
 		UI_KeyEvent( key, qtrue );
+	} else if ( state == CA_DISCONNECTED ) {
+		// console is drawn if disconnected and not KEYCATCH_UI
+		Console_Key( key, qtrue );
 	}
 }
 

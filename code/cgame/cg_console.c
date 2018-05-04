@@ -393,6 +393,7 @@ void Con_DrawConsole( connstate_t state ) {
 	// if disconnected, render console full screen
 	if ( state == CA_DISCONNECTED ) {
 		if ( !( Key_GetCatcher() & KEYCATCH_UI ) ) {
+			CG_ClearViewport();
 			Con_DrawSolidConsole( state, 1.0f );
 			return;
 		}

@@ -44,7 +44,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // Keep this in-sync with VERSION in Makefile.
 #ifndef PRODUCT_VERSION
-	#define PRODUCT_VERSION			"0.5"
+	#define PRODUCT_VERSION			"0.6"
 #endif
 
 // because games can change separately from the main system protocol, we need a

@@ -1199,7 +1199,7 @@ void	SnapVectorTowards( vec3_t v, vec3_t to );
 #define UI_FORCECOLOR	0x00010000
 #define UI_GRADIENT		0x00020000
 #define UI_NOSCALE		0x00040000 // fixed size with other UI elements, don't change it's scale
-#define UI_INMOTION		0x00040000 // use for scrolling / moving text to fix uneven scrolling caused by aligning to pixel boundary
+#define UI_INMOTION		0x00080000 // use for scrolling / moving text to fix uneven scrolling caused by aligning to pixel boundary
 
 
 typedef struct

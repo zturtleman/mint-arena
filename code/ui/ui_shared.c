@@ -3657,7 +3657,7 @@ void Item_Model_Paint(itemDef_t *item) {
 	w = item->window.rect.w-2;
 	h = item->window.rect.h-2;
 
-	CG_AdjustFrom640( &x, &y, &w, &h );
+	DC->adjustFrom640( &x, &y, &w, &h );
 
 	refdef.x = x;
 	refdef.y = y;
@@ -4343,7 +4343,7 @@ void Menu_Paint(menuDef_t *menu, qboolean forcePaint) {
 	}
 
 	if (menu->forceScreenPlacement) {
-		CG_SetScreenPlacement( menu->screenHPos, menu->screenVPos );
+		DC->setScreenPlacement( menu->screenHPos, menu->screenVPos );
 	}
 
 	// draw the background if necessary
@@ -4353,7 +4353,7 @@ void Menu_Paint(menuDef_t *menu, qboolean forcePaint) {
 		DC->drawHandlePic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, menu->window.background );
 	} else if (menu->window.background) {
 		// this allows a background shader without being full screen
-		//CG_DrawPic(menu->window.rect.x, menu->window.rect.y, menu->window.rect.w, menu->window.rect.h, menu->backgroundShader);
+		//DC->drawHandlePic(menu->window.rect.x, menu->window.rect.y, menu->window.rect.w, menu->window.rect.h, menu->backgroundShader);
 	}
 
 	// paint the background and or border
@@ -4371,7 +4371,7 @@ void Menu_Paint(menuDef_t *menu, qboolean forcePaint) {
 	}
 
 	if (menu->forceScreenPlacement) {
-		CG_PopScreenPlacement();
+		DC->popScreenPlacement();
 	}
 }
 

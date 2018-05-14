@@ -4762,6 +4762,9 @@ void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	uiInfo.uiDC.stopCinematic = &UI_StopCinematic;
 	uiInfo.uiDC.drawCinematic = &UI_DrawCinematic;
 	uiInfo.uiDC.runCinematicFrame = &UI_RunCinematicFrame;
+	uiInfo.uiDC.adjustFrom640 = &CG_AdjustFrom640;
+	uiInfo.uiDC.setScreenPlacement = &CG_SetScreenPlacement;
+	uiInfo.uiDC.popScreenPlacement = &CG_PopScreenPlacement;
 
 	Init_Display(&uiInfo.uiDC);
 

@@ -2499,6 +2499,9 @@ void CG_LoadHudMenu( void ) {
 	cgDC.stopCinematic = &CG_StopCinematic;
 	cgDC.drawCinematic = &CG_DrawCinematic;
 	cgDC.runCinematicFrame = &CG_RunCinematicFrame;
+	cgDC.adjustFrom640 = &CG_AdjustFrom640;
+	cgDC.setScreenPlacement = &CG_SetScreenPlacement;
+	cgDC.popScreenPlacement = &CG_PopScreenPlacement;
 	
 	Init_Display(&cgDC);
 

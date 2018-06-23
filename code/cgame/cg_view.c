@@ -256,16 +256,16 @@ void CG_CalcVrect (void) {
 	cgs.screenXScaleStretch = cg.viewportWidth * (1.0/640.0);
 	cgs.screenYScaleStretch = cg.viewportHeight * (1.0/480.0);
 	if ( cg.viewportWidth * 480 > cg.viewportHeight * 640 ) {
-		cgs.screenXScale = cg.viewportWidth * (1.0/640.0);
-		cgs.screenYScale = cg.viewportHeight * (1.0/480.0);
+		cgs.screenXScale = cgs.screenXScaleStretch;
+		cgs.screenYScale = cgs.screenYScaleStretch;
 		// wide screen
 		cgs.screenXBias = 0.5 * ( cg.viewportWidth - ( cg.viewportHeight * (640.0/480.0) ) );
 		cgs.screenXScale = cgs.screenYScale;
 		// no narrow screen
 		cgs.screenYBias = 0;
 	} else {
-		cgs.screenXScale = cg.viewportWidth * (1.0/640.0);
-		cgs.screenYScale = cg.viewportHeight * (1.0/480.0);
+		cgs.screenXScale = cgs.screenXScaleStretch;
+		cgs.screenYScale = cgs.screenYScaleStretch;
 		// narrow screen
 		cgs.screenYBias = 0.5 * ( cg.viewportHeight - ( cg.viewportWidth * (480.0/640.0) ) );
 		cgs.screenYScale = cgs.screenXScale;

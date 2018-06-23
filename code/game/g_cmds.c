@@ -1410,9 +1410,11 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 	} else if ( !Q_stricmp( arg1, "g_doWarmup" ) ) {
 	} else if ( !Q_stricmp( arg1, "timelimit" ) ) {
 	} else if ( !Q_stricmp( arg1, "fraglimit" ) ) {
+	} else if ( !Q_stricmp( arg1, "capturelimit" ) ) {
+	} else if ( !Q_stricmp( arg1, "g_instagib" ) ) {
 	} else {
 		trap_SendServerCommand( ent-g_entities, "print \"Invalid vote string.\n\"" );
-		trap_SendServerCommand( ent-g_entities, "print \"Vote commands are: map_restart, nextmap, map <mapname>, g_gametype <n>, kick <player>, kicknum <playernum>, g_doWarmup, timelimit <time>, fraglimit <frags>.\n\"" );
+		trap_SendServerCommand( ent-g_entities, "print \"Vote commands are: map_restart, nextmap, map <mapname>, g_gametype <n>, kick <player>, kicknum <playernum>, g_doWarmup <boolean>, timelimit <time>, fraglimit <frags>, capturelimit <captures>, g_instagib <boolean>.\n\"" );
 		return;
 	}
 

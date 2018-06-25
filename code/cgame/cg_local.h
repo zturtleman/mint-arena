@@ -1551,6 +1551,7 @@ void Key_SetCatcher( int catcher );
 // cg_view.c
 //
 void CG_TestModel_f (void);
+void CG_TestModelComplete( char *args, int argNum );
 void CG_TestGun_f (void);
 void CG_TestModelNextFrame_f (void);
 void CG_TestModelPrevFrame_f (void);

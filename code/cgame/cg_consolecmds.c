@@ -951,8 +951,8 @@ void CG_ToggleMenu_f( void ) {
 static consoleCommand_t	cg_commands[] = {
 	{ "+vstr", CG_VstrDown_f, 0, CG_VstrComplete },
 	{ "-vstr", CG_VstrUp_f, 0, CG_VstrComplete },
-	{ "testgun", CG_TestGun_f, CMD_INGAME },
-	{ "testmodel", CG_TestModel_f, CMD_INGAME },
+	{ "testgun", CG_TestGun_f, CMD_INGAME, CG_TestModelComplete },
+	{ "testmodel", CG_TestModel_f, CMD_INGAME, CG_TestModelComplete },
 	{ "nextframe", CG_TestModelNextFrame_f, CMD_INGAME },
 	{ "prevframe", CG_TestModelPrevFrame_f, CMD_INGAME },
 	{ "nextskin", CG_TestModelNextSkin_f, CMD_INGAME },

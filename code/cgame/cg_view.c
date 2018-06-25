@@ -109,6 +109,17 @@ void CG_TestModel_f (void) {
 
 /*
 =================
+CG_TestModelComplete
+=================
+*/
+void CG_TestModelComplete( char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		trap_Field_CompleteFilename( "", "$models", qfalse, qfalse );
+	}
+}
+
+/*
+=================
 CG_TestGun_f
 
 Replaces the current view weapon with the given model

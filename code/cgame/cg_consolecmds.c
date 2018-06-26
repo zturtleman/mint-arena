@@ -320,7 +320,7 @@ static void CG_AddStringToList( char *list, size_t listSize, int *listLength, ch
 	}
 
 	for ( listptr = list; *listptr; listptr += strlen( listptr ) + 1 ) {
-		val = strcmp( name, listptr );
+		val = Q_stricmp( name, listptr );
 		if ( val == 0 ) {
 			return;
 		}
@@ -1297,6 +1297,304 @@ void CG_ToggleMenu_f( void ) {
 	CG_DistributeKeyEvent( K_ESCAPE, qfalse, trap_Milliseconds(), cg.connState, -1, 0 );
 }
 
+/*
+===================
+CG_ForwardToServer_f
+===================
+*/
+static void CG_ForwardToServer_f( int localPlayerNum ) {
+	char		buffer[BIG_INFO_STRING];
+
+	if ( cg.connected && trap_GetDemoState() != DS_PLAYBACK ) {
+		// the game server will interpret these commands
+		trap_LiteralArgs( buffer, sizeof ( buffer ) );
+		trap_SendClientCommand( buffer );
+	}
+}
+
+/*
+=================
+CG_Field_CompletePlayerName
+=================
+*/
+static void CG_Field_CompletePlayerName( int team, qboolean excludeTeam, qboolean excludeLocalPlayers ) {
+	int		i;
+	playerInfo_t	*pi;
+	char name[MAX_QPATH];
+	char list[MAX_CLIENTS * MAX_QPATH];
+	int listTotalLength;
+
+	if ( !cg.snap ) {
+		return;
+	}
+
+	// ZTM: FIXME: have to clear whole list because CG_AddStringToList doesn't properly terminate list
+	memset( list, 0, sizeof( list ) );
+	listTotalLength = 0;
+
+	for ( i = 0 ; i < cgs.maxplayers ; i++ ) {
+		pi = &cgs.playerinfo[ i ];
+		if ( !pi->infoValid ) {
+			continue;
+		}
+
+		if ( team != -1 && ( ( excludeTeam && pi->team == team ) || ( !excludeTeam && pi->team != team ) ) ) {
+			continue;
+		}
+
+		if ( excludeLocalPlayers && CG_LocalPlayerState( i ) ) {
+			continue;
+		}
+
+		Q_strncpyz( name, pi->name, sizeof ( name ) );
+		Q_CleanStr( name );
+
+		// Use quotes if there is a space in the name
+		if ( strchr( name, ' ' ) != NULL ) {
+			CG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "\"%s\"", name ) );
+		} else {
+			CG_AddStringToList( list, sizeof( list ), &listTotalLength, name );
+		}
+	}
+
+	if ( listTotalLength > 0 ) {
+		list[listTotalLength++] = 0;
+		trap_Field_CompleteList( list );
+	}
+}
+
+/*
+=================
+CG_TellComplete
+=================
+*/
+static void CG_TellComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		CG_Field_CompletePlayerName( -1, qfalse, qfalse );
+	}
+}
+
+#ifdef MISSIONPACK
+/*
+=================
+CG_Field_CompleteVoiceChat
+=================
+*/
+static void CG_Field_CompleteVoiceChat( void ) {
+	trap_Field_CompleteList(
+		VOICECHAT_BASEATTACK "\0"
+		VOICECHAT_CAMP "\0"
+		VOICECHAT_DEATHINSULT "\0"
+		VOICECHAT_DEFEND "\0"
+		VOICECHAT_DEFENDFLAG "\0"
+		VOICECHAT_ENEMYHASFLAG "\0"
+		VOICECHAT_FOLLOWFLAGCARRIER "\0"
+		VOICECHAT_FOLLOWME "\0"
+		VOICECHAT_GETFLAG "\0"
+		VOICECHAT_IHAVEFLAG "\0"
+		VOICECHAT_INPOSITION "\0"
+		VOICECHAT_KILLGAUNTLET "\0"
+		VOICECHAT_KILLINSULT "\0"
+		VOICECHAT_NO "\0"
+		VOICECHAT_OFFENSE "\0"
+		VOICECHAT_ONCAMPING "\0"
+		VOICECHAT_ONDEFENSE "\0"
+		VOICECHAT_ONFOLLOW "\0"
+		VOICECHAT_ONFOLLOWCARRIER "\0"
+		VOICECHAT_ONGETFLAG "\0"
+		VOICECHAT_ONOFFENSE "\0"
+		VOICECHAT_ONPATROL "\0"
+		VOICECHAT_ONRETURNFLAG "\0"
+		VOICECHAT_PATROL "\0"
+		VOICECHAT_PRAISE "\0"
+		VOICECHAT_RETURNFLAG "\0"
+		VOICECHAT_STARTLEADER "\0"
+		VOICECHAT_STOPLEADER "\0"
+		VOICECHAT_TAUNT "\0"
+		VOICECHAT_TRASH "\0"
+		VOICECHAT_WANTONDEFENSE "\0"
+		VOICECHAT_WANTONOFFENSE "\0"
+		VOICECHAT_WHOISLEADER "\0"
+		VOICECHAT_YES "\0"
+	);
+}
+
+/*
+=================
+CG_VoiceSayComplete
+=================
+*/
+static void CG_VoiceSayComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		CG_Field_CompleteVoiceChat();
+	}
+}
+
+/*
+=================
+CG_VoiceTellComplete
+=================
+*/
+static void CG_VoiceTellComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		CG_Field_CompletePlayerName( -1, qfalse, qfalse );
+	}
+	if ( argNum == 3 ) {
+		CG_Field_CompleteVoiceChat();
+	}
+}
+#endif
+
+/*
+=================
+CG_GiveComplete
+
+Game VM combines all arguments but completion works on separate words.
+This is kind of an ugly hack to avoid having to quote item names containing spaces.
+=================
+*/
+static void CG_GiveComplete( int localPlayerNum, char *args, int argNum ) {
+	char builtinNames[] = "all\0ammo\0armor\0assist\0defend\0excellent\0gauntletaward\0health\0impressive\0weapons\0";
+	char list[2048], *name, *typedName;
+	int i, j, listTotalLength, typedNameLength;
+	gitem_t *item;
+
+	// ZTM: FIXME: have to clear whole list because CG_AddStringToList doesn't properly terminate list
+	memset( list, 0, sizeof( list ) );
+	listTotalLength = 0;
+
+	if ( argNum == 2 ) {
+		memcpy( list, builtinNames, ARRAY_LEN( builtinNames ) - 1 );
+		listTotalLength = ARRAY_LEN( builtinNames ) - 1;
+	}
+
+	// skip "give " or NULL if no space character
+	typedName = strchr( args, ' ' );
+	if ( typedName ) {
+		typedName++;
+		typedNameLength = strlen( typedName );
+	} else {
+		typedNameLength = 0;
+	}
+
+	for ( i = 1; i < BG_NumItems(); i++ ) {
+		item = BG_ItemForItemNum( i );
+		name = item->pickup_name;
+
+		//
+		// complete item names with spaces across multiple arguments instead of adding quotes
+		//
+
+		// check if matches previously typed words
+		if ( typedName && Q_stricmpn( typedName, name, typedNameLength ) ) {
+			continue;
+		}
+
+		// find current word for argument
+		for ( j = 0; j < argNum - 2 && name; j++ ) {
+			name = strchr( name, ' ' );
+			if ( name ) {
+				name++;
+			}
+		}
+
+		if ( name && *name ) {
+			CG_AddStringToList( list, sizeof( list ), &listTotalLength, name );
+		}
+	}
+
+	if ( listTotalLength > 0 ) {
+		list[listTotalLength++] = 0;
+		trap_Field_CompleteList( list );
+	}
+}
+
+/*
+=================
+CG_FollowComplete
+=================
+*/
+static void CG_FollowComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		CG_Field_CompletePlayerName( TEAM_SPECTATOR, qtrue, qtrue );
+	}
+}
+
+/*
+=================
+CG_TeamComplete
+=================
+*/
+static void CG_TeamComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		trap_Field_CompleteList( "blue\0follow1\0follow2\0free\0red\0scoreboard\0spectator\0" );
+	}
+}
+
+/*
+=================
+CG_CallVoteComplete
+=================
+*/
+static void CG_CallVoteComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		trap_Field_CompleteList( "capturelimit\0fraglimit\0g_doWarmup\0g_gametype\0g_instagib\0kick\0kicknum\0map\0map_restart\0nextmap\0timelimit\0" );
+	}
+	if ( argNum == 3 && !Q_stricmp( CG_Argv( 1 ), "kick" ) ) {
+		CG_Field_CompletePlayerName( -1, qfalse, qfalse );
+	}
+	if ( argNum == 3 && !Q_stricmp( CG_Argv( 1 ), "map" ) ) {
+		trap_Field_CompleteFilename( "maps", ".bsp", qtrue, qfalse );
+	}
+}
+
+/*
+=================
+CG_VoteComplete
+=================
+*/
+static void CG_VoteComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		trap_Field_CompleteList( "no\0yes\0" );
+	}
+}
+
+/*
+=================
+CG_CallTeamVoteComplete
+=================
+*/
+static void CG_CallTeamVoteComplete( int localPlayerNum, char *args, int argNum ) {
+	int playerNum, team;
+	playerInfo_t *pi;
+
+	if ( !cg.snap ) {
+		return;
+	}
+
+	playerNum = cg.localPlayers[localPlayerNum].playerNum;
+	if ( playerNum == -1 ) {
+		return;
+	}
+
+	pi = &cgs.playerinfo[playerNum];
+	if ( !pi->infoValid ) {
+		return;
+	}
+
+	team = pi->team;
+	if ( team != TEAM_BLUE && team != TEAM_RED ) {
+		return;
+	}
+
+	if ( argNum == 2 ) {
+		trap_Field_CompleteList( "leader\0" );
+	}
+	if ( argNum == 3 && !Q_stricmp( CG_Argv( 1 ), "leader" ) ) {
+		CG_Field_CompletePlayerName( team, qfalse, qfalse );
+	}
+}
+
 static consoleCommand_t	cg_commands[] = {
 	{ "+vstr", CG_VstrDown_f, 0, CG_VstrComplete },
 	{ "-vstr", CG_VstrUp_f, 0, CG_VstrComplete },
@@ -1419,8 +1717,8 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "tell_target", CG_TellTarget_f, CMD_INGAME },
 	{ "tell_attacker", CG_TellAttacker_f, CMD_INGAME },
 #ifdef MISSIONPACK
-	{ "vtell_target", CG_VoiceTellTarget_f, CMD_INGAME },
-	{ "vtell_attacker", CG_VoiceTellAttacker_f, CMD_INGAME },
+	{ "vtell_target", CG_VoiceTellTarget_f, CMD_INGAME, CG_VoiceSayComplete },
+	{ "vtell_attacker", CG_VoiceTellAttacker_f, CMD_INGAME, CG_VoiceSayComplete },
 	{ "nextTeamMember", CG_NextTeamMember_f, CMD_INGAME },
 	{ "prevTeamMember", CG_PrevTeamMember_f, CMD_INGAME },
 	{ "nextOrder", CG_NextOrder_f, CMD_INGAME },
@@ -1450,7 +1748,41 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "weapnext", CG_NextWeapon_f, CMD_INGAME },
 	{ "weapprev", CG_PrevWeapon_f, CMD_INGAME },
 	{ "weapon", CG_Weapon_f, CMD_INGAME },
-	{ "weaponToggle", CG_WeaponToggle_f, CMD_INGAME }
+	{ "weaponToggle", CG_WeaponToggle_f, CMD_INGAME },
+
+	//
+	// These commands will be forwarded to the server and interpret by the Game VM.
+	//
+	{ "say", CG_ForwardToServer_f, CMD_INGAME },
+	{ "say_team", CG_ForwardToServer_f, CMD_INGAME },
+	{ "tell", CG_ForwardToServer_f, CMD_INGAME, CG_TellComplete },
+#ifdef MISSIONPACK
+	{ "vsay", CG_ForwardToServer_f, CMD_INGAME, CG_VoiceSayComplete },
+	{ "vsay_team", CG_ForwardToServer_f, CMD_INGAME, CG_VoiceSayComplete },
+	{ "vtell", CG_ForwardToServer_f, CMD_INGAME, CG_VoiceTellComplete },
+	{ "vosay", CG_ForwardToServer_f, CMD_INGAME, CG_VoiceSayComplete },
+	{ "vosay_team", CG_ForwardToServer_f, CMD_INGAME, CG_VoiceSayComplete },
+	{ "votell", CG_ForwardToServer_f, CMD_INGAME, CG_VoiceTellComplete },
+	{ "vtaunt", CG_ForwardToServer_f, CMD_INGAME },
+#endif
+	{ "give", CG_ForwardToServer_f, CMD_INGAME, CG_GiveComplete },
+	{ "god", CG_ForwardToServer_f, CMD_INGAME },
+	{ "notarget", CG_ForwardToServer_f, CMD_INGAME },
+	{ "noclip", CG_ForwardToServer_f, CMD_INGAME },
+	{ "where", CG_ForwardToServer_f, CMD_INGAME },
+	{ "kill", CG_ForwardToServer_f, CMD_INGAME },
+	{ "teamtask", CG_ForwardToServer_f, CMD_INGAME },
+	{ "levelshot", CG_ForwardToServer_f, CMD_INGAME },
+	{ "follow", CG_ForwardToServer_f, CMD_INGAME, CG_FollowComplete },
+	{ "follownext", CG_ForwardToServer_f, CMD_INGAME },
+	{ "followprev", CG_ForwardToServer_f, CMD_INGAME },
+	{ "team", CG_ForwardToServer_f, CMD_INGAME, CG_TeamComplete },
+	{ "callvote", CG_ForwardToServer_f, CMD_INGAME, CG_CallVoteComplete },
+	{ "vote", CG_ForwardToServer_f, CMD_INGAME, CG_VoteComplete },
+	{ "callteamvote", CG_ForwardToServer_f, CMD_INGAME, CG_CallTeamVoteComplete },
+	{ "teamvote", CG_ForwardToServer_f, CMD_INGAME, CG_VoteComplete },
+	{ "setviewpos", CG_ForwardToServer_f, CMD_INGAME },
+	{ "stats", CG_ForwardToServer_f, CMD_INGAME }
 };
 
 static int numPlayerCommands = ARRAY_LEN( playerCommands );
@@ -1531,13 +1863,6 @@ qboolean CG_ConsoleCommand( connstate_t state, int realTime ) {
 		}
 	}
 
-	if ( cg.connected && trap_GetDemoState() != DS_PLAYBACK ) {
-		// the game server will interpret these commands
-		trap_LiteralArgs( buffer, sizeof ( buffer ) );
-		trap_SendClientCommand( buffer );
-		return qtrue;
-	}
-
 	return qfalse;
 }
 
@@ -1614,46 +1939,5 @@ void CG_InitConsoleCommands( void ) {
 		for ( j = 0; j < CG_MaxSplitView(); j++ ) {
 			trap_AddCommand( Com_LocalPlayerCvarName( j, playerCommands[i].cmd ) );
 		}
-	}
-
-	if ( !cg.connected ) {
-		return;
-	}
-
-	//
-	// the game server will interpret these commands, which will be automatically
-	// forwarded to the server after they are not recognized locally
-	//
-	for (i = 0; i < CG_MaxSplitView(); i++) {
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "say"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "say_team"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "tell"));
-#ifdef MISSIONPACK
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "vsay"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "vsay_team"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "vtell"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "vosay"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "vosay_team"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "votell"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "vtaunt"));
-#endif
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "give"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "god"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "notarget"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "noclip"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "where"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "kill"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "teamtask"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "levelshot"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "follow"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "follownext"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "followprev"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "team"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "callvote"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "vote"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "callteamvote"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "teamvote"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "setviewpos"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "stats"));
 	}
 }

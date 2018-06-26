@@ -731,62 +731,62 @@ static void CG_spLose_f( void) {
 
 static void CG_TellTarget_f( int localPlayerNum ) {
 	int		playerNum;
-	char	command[128];
-	char	message[128];
+	char	command[MAX_SAY_TEXT + 16];
+	char	message[MAX_SAY_TEXT];
 
 	playerNum = CG_CrosshairPlayer( localPlayerNum );
 	if ( playerNum == -1 ) {
 		return;
 	}
 
-	trap_Args( message, 128 );
-	Com_sprintf( command, 128, "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "tell" ), playerNum, message );
+	trap_Args( message, sizeof( message ) );
+	Com_sprintf( command, sizeof( command ), "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "tell" ), playerNum, message );
 	trap_SendClientCommand( command );
 }
 
 static void CG_TellAttacker_f( int localPlayerNum ) {
 	int		playerNum;
-	char	command[128];
-	char	message[128];
+	char	command[MAX_SAY_TEXT + 16];
+	char	message[MAX_SAY_TEXT];
 
 	playerNum = CG_LastAttacker( localPlayerNum );
 	if ( playerNum == -1 ) {
 		return;
 	}
 
-	trap_Args( message, 128 );
-	Com_sprintf( command, 128, "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "tell" ), playerNum, message );
+	trap_Args( message, sizeof( message ) );
+	Com_sprintf( command, sizeof( command ), "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "tell" ), playerNum, message );
 	trap_SendClientCommand( command );
 }
 
 #ifdef MISSIONPACK
 static void CG_VoiceTellTarget_f( int localPlayerNum ) {
 	int		playerNum;
-	char	command[128];
-	char	message[128];
+	char	command[MAX_SAY_TEXT + 16];
+	char	message[MAX_SAY_TEXT];
 
 	playerNum = CG_CrosshairPlayer( localPlayerNum );
 	if ( playerNum == -1 ) {
 		return;
 	}
 
-	trap_Args( message, 128 );
-	Com_sprintf( command, 128, "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "vtell" ), playerNum, message );
+	trap_Args( message, sizeof( message ) );
+	Com_sprintf( command, sizeof( command ), "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "vtell" ), playerNum, message );
 	trap_SendClientCommand( command );
 }
 
 static void CG_VoiceTellAttacker_f( int localPlayerNum ) {
 	int		playerNum;
-	char	command[128];
-	char	message[128];
+	char	command[MAX_SAY_TEXT + 16];
+	char	message[MAX_SAY_TEXT];
 
 	playerNum = CG_LastAttacker( localPlayerNum );
 	if ( playerNum == -1 ) {
 		return;
 	}
 
-	trap_Args( message, 128 );
-	Com_sprintf( command, 128, "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "vtell" ), playerNum, message );
+	trap_Args( message, sizeof( message ) );
+	Com_sprintf( command, sizeof( command ), "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "vtell" ), playerNum, message );
 	trap_SendClientCommand( command );
 }
 

@@ -1449,16 +1449,18 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 		return;
 	}
 
-	if ( ( arg2Flags & CALLVOTE_ARG2_NONE ) && arg2[0] != '\0' ) {
-		trap_SendServerCommand( ent-g_entities, va( "print \"Vote command %s does not accept an argument.\n\"", arg1 ) );
-		return;
+	if ( arg2Flags & CALLVOTE_ARG2_NONE ) {
+		if ( arg2[0] != '\0' ) {
+			trap_SendServerCommand( ent-g_entities, va( "print \"Vote command %s does not accept an argument.\n\"", arg1 ) );
+			return;
+		}
 	}
 	else if ( arg2[0] == '\0' ) {
 		trap_SendServerCommand( ent-g_entities, va( "print \"Vote command %s requires an argument.\n\"", arg1 ) );
 		return;
 	}
 
-	if ( ( arg2Flags & CALLVOTE_ARG2_INTREGAL ) ) {
+	if ( arg2Flags & CALLVOTE_ARG2_INTREGAL ) {
 		if ( !StringIsInteger( arg2 ) ) {
 			trap_SendServerCommand( ent-g_entities, va( "print \"Vote command %s argument must be a number.\n\"", arg1 ) );
 			return;

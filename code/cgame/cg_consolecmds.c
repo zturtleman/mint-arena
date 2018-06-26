@@ -239,6 +239,355 @@ void CG_SetModel_f( int localPlayerNum ) {
 	}
 }
 
+/*
+=============
+CG_SetHeadmodel_f
+=============
+*/
+void CG_SetHeadmodel_f( int localPlayerNum ) {
+	const char	*arg;
+	char	name[256];
+	char	cvarName[32];
+
+	Q_strncpyz( cvarName, Com_LocalPlayerCvarName( localPlayerNum, "headmodel"), sizeof (cvarName) );
+
+	arg = CG_Argv( 1 );
+	if ( arg[0] ) {
+		trap_Cvar_Set( cvarName, arg );
+	} else {
+		trap_Cvar_VariableStringBuffer( cvarName, name, sizeof(name) );
+		Com_Printf("%s is set to %s\n", cvarName, name);
+	}
+}
+
+/*
+=============
+CG_SetTeamModel_f
+=============
+*/
+void CG_SetTeamModel_f( int localPlayerNum ) {
+	const char	*arg;
+	char	name[256];
+	char	cvarName[32];
+
+	Q_strncpyz( cvarName, Com_LocalPlayerCvarName( localPlayerNum, "team_model"), sizeof (cvarName) );
+
+	arg = CG_Argv( 1 );
+	if ( arg[0] ) {
+		trap_Cvar_Set( cvarName, arg );
+		trap_Cvar_Set( Com_LocalPlayerCvarName( localPlayerNum, "team_headmodel"), arg );
+	} else {
+		trap_Cvar_VariableStringBuffer( cvarName, name, sizeof(name) );
+		Com_Printf("%s is set to %s\n", cvarName, name);
+	}
+}
+
+/*
+=============
+CG_SetTeamHeadmodel_f
+=============
+*/
+void CG_SetTeamHeadmodel_f( int localPlayerNum ) {
+	const char	*arg;
+	char	name[256];
+	char	cvarName[32];
+
+	Q_strncpyz( cvarName, Com_LocalPlayerCvarName( localPlayerNum, "team_headmodel"), sizeof (cvarName) );
+
+	arg = CG_Argv( 1 );
+	if ( arg[0] ) {
+		trap_Cvar_Set( cvarName, arg );
+	} else {
+		trap_Cvar_VariableStringBuffer( cvarName, name, sizeof(name) );
+		Com_Printf("%s is set to %s\n", cvarName, name);
+	}
+}
+
+/*
+=============
+CG_AddStringToList
+=============
+*/
+static void CG_AddStringToList( char *list, size_t listSize, int *listLength, char *name ) {
+	size_t namelen;
+	int val;
+	char *listptr;
+
+	namelen = strlen( name );
+
+	if ( *listLength + namelen + 1 >= listSize ) {
+		return;
+	}
+
+	for ( listptr = list; *listptr; listptr += strlen( listptr ) + 1 ) {
+		val = strcmp( name, listptr );
+		if ( val == 0 ) {
+			return;
+		}
+		// insert into list
+		else if ( val < 0 ) {
+			int moveBytes = *listLength - (int)( listptr - list ) + 1;
+
+			memmove( listptr + namelen + 1, listptr, moveBytes );
+			strncpy( listptr, name, namelen + 1 );
+			*listLength += namelen + 1;
+			return;
+		}
+	}
+
+	strncpy( listptr, name, namelen + 1 );
+	*listLength += namelen + 1;
+}
+
+/*
+==================
+CG_Field_CompletePlayerModel
+==================
+*/
+static void CG_Field_CompletePlayerModel( int argNum, qboolean lookingForHead, char *lookingForSkin, team_t lookingForTeam ) {
+	int		numdirs;
+	int		numfiles;
+	char	dirlist[2048];
+	char	filelist[2048];
+	char	skinname[MAX_QPATH];
+	int		skinnameLength;
+	char*	dirptr;
+	char*	fileptr;
+	char*	skinptr;
+	int		i;
+	int		j;
+	int		dirlen;
+	int		filelen;
+	char	list[8192];
+	int		listTotalLength;
+	char	completeModel[MAX_QPATH];
+	int		completeModelLength;
+	char	teamName[MAX_QPATH];
+	int		teamNameLength;
+	char	*skinPrefix;
+	int		skinPrefixLength;
+	char	*skinTeamSuffix;
+	int		skinTeamSuffixLength;
+
+	trap_Argv( argNum - 1, completeModel, sizeof( completeModel ) );
+
+	// remove skin
+	completeModelLength = 0;
+	while ( completeModel[completeModelLength] != '\0' && completeModel[completeModelLength] != '/' ) {
+		completeModelLength++;
+	}
+	completeModel[completeModelLength] = '\0';
+
+	teamName[0] = 0;
+#ifdef MISSIONPACK
+	if ( lookingForTeam != TEAM_FREE ) {
+		if ( lookingForTeam == TEAM_BLUE ) {
+			Q_strncpyz( teamName, cg_blueTeamName.string, sizeof( teamName ) );
+		} else {
+			Q_strncpyz( teamName, cg_redTeamName.string, sizeof( teamName ) );
+		}
+	}
+	if ( teamName[0] ) {
+		strcat( teamName, "/" );
+	}
+#endif
+	teamNameLength = strlen( teamName );
+
+	skinPrefix = ( lookingForHead ) ? "head_" : "upper_";
+	skinPrefixLength = ( lookingForHead ) ? 5 : 6;
+
+	skinTeamSuffix = ( lookingForTeam == TEAM_BLUE ) ? "_blue" : "_red";
+	skinTeamSuffixLength = ( lookingForTeam == TEAM_BLUE ) ? 5 : 6;
+
+	// ZTM: FIXME: have to clear whole list because CG_AddStringToList doesn't properly terminate list
+	memset( list, 0, sizeof( list ) );
+	listTotalLength = 0;
+
+	if ( !lookingForHead || completeModelLength == 0 || completeModel[0] != '*' ) {
+		// iterate directory of all player models
+		numdirs = trap_FS_GetFileList("models/players", "/", dirlist, 2048 );
+		dirptr  = dirlist;
+		for (i=0; i<numdirs; i++,dirptr+=dirlen+1)
+		{
+			dirlen = strlen(dirptr);
+
+			if ( dirlen == 0 )
+				continue;
+
+			if (dirptr[dirlen-1]=='/')
+				dirptr[dirlen-1]='\0';
+
+			if (!strcmp(dirptr,".") || !strcmp(dirptr,"..") || !strcmp(dirptr,"heads"))
+				continue;
+
+			// not a partial match
+			if ( completeModelLength > 0 && Q_stricmpn( completeModel, dirptr, completeModelLength ) != 0 ) {
+				continue;
+			}
+
+			// iterate all skin files in directory
+			numfiles = trap_FS_GetFileList( va("models/players/%s",dirptr), "skin", filelist, 2048 );
+			fileptr  = filelist;
+			for (j=0; j<numfiles;j++,fileptr+=filelen+1)
+			{
+				filelen = strlen(fileptr);
+				skinptr = fileptr;
+
+				// models/players/example/stroggs/upper_lily_red.skin
+				if ( teamNameLength > 0 && Q_stricmpn( skinptr, teamName, teamNameLength ) == 0 ) {
+					skinptr += teamNameLength;
+				}
+
+				// look for upper_???? or head_????
+				if ( Q_stricmpn( skinptr, skinPrefix, skinPrefixLength ) != 0 ) {
+					continue;
+				}
+
+				COM_StripExtension( skinptr + skinPrefixLength, skinname, sizeof( skinname ) );
+
+				if ( Q_stricmp( skinname, lookingForSkin ) == 0 ) {
+					// models/players/example/upper_default.skin
+					// add default skin as just the model name
+					// for team models this is red or blue
+					CG_AddStringToList( list, sizeof( list ), &listTotalLength, dirptr );
+				} else if ( lookingForTeam != TEAM_FREE ) {
+					// models/players/example/upper_lily_red.skin
+					// for team model add lily_red skin as lily
+					skinnameLength = strlen( skinname );
+
+					if ( skinnameLength - skinPrefixLength > skinTeamSuffixLength
+							&& COM_CompareExtension( skinname, skinTeamSuffix ) ) {
+						// remove _red
+						skinname[skinnameLength - 1 - skinTeamSuffixLength] = '\0';
+						CG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "%s/%s", dirptr, skinname ) );
+					}
+				} else {
+					// models/players/example/upper_lily.skin
+					// misc ffa skins
+					CG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "%s/%s", dirptr, skinname ) );
+				}
+			}
+		}
+	}
+
+	if ( lookingForHead && ( completeModelLength == 0 || completeModel[0] == '*' ) ) {
+		// iterate directory of all head models
+		numdirs = trap_FS_GetFileList("models/players/heads", "/", dirlist, 2048 );
+		dirptr  = dirlist;
+		for (i=0; i<numdirs; i++,dirptr+=dirlen+1)
+		{
+			dirlen = strlen(dirptr);
+
+			if ( dirlen == 0 )
+				continue;
+
+			if (dirptr[dirlen-1]=='/')
+				dirptr[dirlen-1]='\0';
+
+			if (!strcmp(dirptr,".") || !strcmp(dirptr,".."))
+				continue;
+
+			// not a partial match
+			// completeModel[0] is '*' which means heads directory
+			if ( completeModelLength > 1 && Q_stricmpn( completeModel+1, dirptr, completeModelLength-1 ) != 0 ) {
+				continue;
+			}
+
+			// iterate all skin files in directory
+			numfiles = trap_FS_GetFileList( va("models/players/heads/%s",dirptr), "skin", filelist, 2048 );
+			fileptr  = filelist;
+			for (j=0; j<numfiles;j++,fileptr+=filelen+1)
+			{
+				filelen = strlen(fileptr);
+				skinptr = fileptr;
+
+				// models/players/heads/example/stroggs/head_lily_red.skin
+				if ( teamNameLength > 0 && Q_stricmpn( skinptr, teamName, teamNameLength ) == 0 ) {
+					skinptr += teamNameLength;
+				}
+
+				// look for upper_???? or head_????
+				if ( Q_stricmpn( skinptr, skinPrefix, skinPrefixLength ) != 0 ) {
+					continue;
+				}
+
+				COM_StripExtension( skinptr + skinPrefixLength, skinname, sizeof( skinname ) );
+
+				if ( Q_stricmp( skinname, lookingForSkin ) == 0 ) {
+					// models/players/heads/example/head_default.skin
+					// add default skin as just the model name
+					// for team models this is red or blue
+					CG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "*%s", dirptr ) );
+				} else if ( lookingForTeam != TEAM_FREE ) {
+					// models/players/heads/example/head_lily_red.skin
+					// for team model add lily_red skin as lily
+					skinnameLength = strlen( skinname );
+
+					if ( skinnameLength - skinPrefixLength > skinTeamSuffixLength
+							&& COM_CompareExtension( skinname, skinTeamSuffix ) ) {
+						// remove _red
+						skinname[skinnameLength - 1 - skinTeamSuffixLength] = '\0';
+						CG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "*%s/%s", dirptr, skinname ) );
+					}
+				} else {
+					// models/players/heads/example/head_lily.skin
+					// misc ffa skins
+					CG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "*%s/%s", dirptr, skinname ) );
+				}
+			}
+		}
+	}
+
+	if ( listTotalLength > 0 ) {
+		list[listTotalLength++] = 0;
+		trap_Field_CompleteList( list );
+	}
+}
+
+/*
+==================
+CG_ModelComplete
+==================
+*/
+static void CG_ModelComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		CG_Field_CompletePlayerModel( argNum, qfalse, "default", TEAM_FREE );
+	}
+}
+
+/*
+==================
+CG_HeadmodelComplete
+==================
+*/
+static void CG_HeadmodelComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		CG_Field_CompletePlayerModel( argNum, qtrue, "default", TEAM_FREE );
+	}
+}
+
+/*
+==================
+CG_TeamModelComplete
+==================
+*/
+static void CG_TeamModelComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		CG_Field_CompletePlayerModel( argNum, qfalse, "red", TEAM_RED );
+	}
+}
+
+/*
+==================
+CG_TeamHeadmodelComplete
+==================
+*/
+static void CG_TeamHeadmodelComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		CG_Field_CompletePlayerModel( argNum, qtrue, "red", TEAM_RED );
+	}
+}
+
 #ifdef MISSIONPACK_HUD
 extern menuDef_t *menuScoreboard;
 extern displayContextDef_t cgDC;
@@ -1063,7 +1412,10 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "-zoom", CG_ZoomUp_f, CMD_INGAME },
 	{ "centerecho", CG_CenterEcho_f, CMD_INGAME },
 	{ "centerview", IN_CenterView, 0 },
+	{ "headmodel", CG_SetHeadmodel_f, 0, CG_HeadmodelComplete },
 	{ "tcmd", CG_TargetCommand_f, CMD_INGAME },
+	{ "team_model", CG_SetTeamModel_f, 0, CG_TeamModelComplete },
+	{ "team_headmodel", CG_SetTeamHeadmodel_f, 0, CG_TeamHeadmodelComplete },
 	{ "tell_target", CG_TellTarget_f, CMD_INGAME },
 	{ "tell_attacker", CG_TellAttacker_f, CMD_INGAME },
 #ifdef MISSIONPACK
@@ -1093,7 +1445,7 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "scoresDown", CG_ScrollScoresDown_f, CMD_INGAME },
 	{ "scoresUp", CG_ScrollScoresUp_f, CMD_INGAME },
 #endif
-	{ "model", CG_SetModel_f, 0 },
+	{ "model", CG_SetModel_f, 0, CG_ModelComplete },
 	{ "viewpos", CG_Viewpos_f, CMD_INGAME },
 	{ "weapnext", CG_NextWeapon_f, CMD_INGAME },
 	{ "weapprev", CG_PrevWeapon_f, CMD_INGAME },

@@ -239,7 +239,7 @@ static void UI_LoadArenas( void ) {
 	n = ui_numSinglePlayerArenas % ARENAS_PER_TIER;
 	if( n != 0 ) {
 		ui_numSinglePlayerArenas -= n;
-		trap_Print( va( "%i arenas ignored to make count divisible by %i\n", n, ARENAS_PER_TIER ) );
+		Com_DPrintf( "%i single player arenas ignored to make count divisible by %i\n", n, ARENAS_PER_TIER );
 	}
 
 	// go through once more and assign number to the levels

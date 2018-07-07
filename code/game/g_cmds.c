@@ -1547,6 +1547,8 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s", level.voteString );
 	}
 
+	G_LogPrintf( "callvote: %s: %s\n", ent->player->pers.netname, level.voteDisplayString );
+
 	trap_SendServerCommand( -1, va("print \"%s called a vote.\n\"", ent->player->pers.netname ) );
 
 	// start the voting, the caller automatically votes yes
@@ -1595,9 +1597,11 @@ void Cmd_Vote_f( gentity_t *ent ) {
 	if ( tolower( msg[0] ) == 'y' || msg[0] == '1' ) {
 		level.voteYes++;
 		trap_SetConfigstring( CS_VOTE_YES, va("%i", level.voteYes ) );
+		G_LogPrintf( "vote: %s: yes\n", ent->player->pers.netname );
 	} else {
 		level.voteNo++;
 		trap_SetConfigstring( CS_VOTE_NO, va("%i", level.voteNo ) );	
+		G_LogPrintf( "vote: %s: no\n", ent->player->pers.netname );
 	}
 
 	// a majority will be determined in CheckVote, which will also account
@@ -1715,6 +1719,8 @@ void Cmd_CallTeamVote_f( gentity_t *ent ) {
 
 	Com_sprintf( level.teamVoteString[cs_offset], sizeof( level.teamVoteString[cs_offset] ), "%s %s", arg1, arg2 );
 
+	G_LogPrintf( "callteamvote: %s on %s team: %s\n", ent->player->pers.netname, TeamName( team ), level.teamVoteString[cs_offset] );
+
 	for ( i = 0 ; i < level.maxplayers ; i++ ) {
 		if ( level.players[i].pers.connected == CON_DISCONNECTED )
 			continue;
@@ -1778,9 +1784,11 @@ void Cmd_TeamVote_f( gentity_t *ent ) {
 	if ( tolower( msg[0] ) == 'y' || msg[0] == '1' ) {
 		level.teamVoteYes[cs_offset]++;
 		trap_SetConfigstring( CS_TEAMVOTE_YES + cs_offset, va("%i", level.teamVoteYes[cs_offset] ) );
+		G_LogPrintf( "teamvote: %s on %s team: yes\n", ent->player->pers.netname, TeamName( team ) );
 	} else {
 		level.teamVoteNo[cs_offset]++;
 		trap_SetConfigstring( CS_TEAMVOTE_NO + cs_offset, va("%i", level.teamVoteNo[cs_offset] ) );	
+		G_LogPrintf( "teamvote: %s on %s team: no\n", ent->player->pers.netname, TeamName( team ) );
 	}
 
 	// a majority will be determined in TeamCheckVote, which will also account

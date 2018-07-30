@@ -669,11 +669,11 @@ static int CG_CalcFov( void ) {
 	}
 
 	// set world fov
-	fov = cg_fov.integer;
+	fov = cg_fov.value;
 	CG_CalcFov2( &cg.refdef, &fov, &cg.refdef.fov_x, &cg.refdef.fov_y );
 
 	// set view weapon fov
-	cg.viewWeaponFov = cg_weaponFov.integer ? cg_weaponFov.integer : cg_fov.integer;
+	cg.viewWeaponFov = cg_weaponFov.value ? cg_weaponFov.value : cg_fov.value;
 	CG_CalcFov2( &cg.refdef, &cg.viewWeaponFov, &cg.refdef.weapon_fov_x, &cg.refdef.weapon_fov_y );
 
 	if ( !cg.cur_lc->zoomed ) {

@@ -847,6 +847,43 @@ void Svcmd_AddBot_f( void ) {
 
 /*
 ===============
+Svcmd_AddBotComplete
+===============
+*/
+void Svcmd_AddBotComplete( char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		int i;
+		char name[MAX_NAME_LENGTH];
+		char list[32000]; // [MAX_BOTS * MAX_NAME_LENGTH] is too big to fit in QVM locals (max 32k)
+		int listTotalLength;
+
+		// ZTM: FIXME: have to clear whole list because BG_AddStringToList doesn't properly terminate list
+		memset( list, 0, sizeof( list ) );
+		listTotalLength = 0;
+
+		for (i = 0; i < g_numBots; i++) {
+			Q_strncpyz( name, Info_ValueForKey( g_botInfos[i], "name" ), sizeof ( name ) );
+			Q_CleanStr( name );
+
+			// Use quotes if there is a space in the name
+			if ( strchr( name, ' ' ) != NULL ) {
+				BG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "\"%s\"", name ) );
+			} else {
+				BG_AddStringToList( list, sizeof( list ), &listTotalLength, name );
+			}
+		}
+
+		if ( listTotalLength > 0 ) {
+			list[listTotalLength++] = 0;
+			trap_Field_CompleteList( list );
+		}
+	} else if ( argNum == 4 ) {
+		trap_Field_CompleteList( "blue\0follow1\0follow2\0free\0red\0scoreboard\0spectator\0" );
+	}
+}
+
+/*
+===============
 Svcmd_BotList_f
 ===============
 */

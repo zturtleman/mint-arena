@@ -1123,6 +1123,8 @@ qboolean	BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTim
 int		BG_ComposeUserCmdValue( int weapon );
 void	BG_DecomposeUserCmdValue( int value, int *weapon );
 
+void	BG_AddStringToList( char *list, size_t listSize, int *listLength, char *name );
+
 void	SnapVectorTowards( vec3_t v, vec3_t to );
 
 #define ARENAS_PER_TIER		4

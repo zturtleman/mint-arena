@@ -304,42 +304,6 @@ void CG_SetTeamHeadmodel_f( int localPlayerNum ) {
 }
 
 /*
-=============
-CG_AddStringToList
-=============
-*/
-static void CG_AddStringToList( char *list, size_t listSize, int *listLength, char *name ) {
-	size_t namelen;
-	int val;
-	char *listptr;
-
-	namelen = strlen( name );
-
-	if ( *listLength + namelen + 1 >= listSize ) {
-		return;
-	}
-
-	for ( listptr = list; *listptr; listptr += strlen( listptr ) + 1 ) {
-		val = Q_stricmp( name, listptr );
-		if ( val == 0 ) {
-			return;
-		}
-		// insert into list
-		else if ( val < 0 ) {
-			int moveBytes = *listLength - (int)( listptr - list ) + 1;
-
-			memmove( listptr + namelen + 1, listptr, moveBytes );
-			strncpy( listptr, name, namelen + 1 );
-			*listLength += namelen + 1;
-			return;
-		}
-	}
-
-	strncpy( listptr, name, namelen + 1 );
-	*listLength += namelen + 1;
-}
-
-/*
 ==================
 CG_Field_CompletePlayerModel
 ==================
@@ -399,7 +363,7 @@ static void CG_Field_CompletePlayerModel( int argNum, qboolean lookingForHead, c
 	skinTeamSuffix = ( lookingForTeam == TEAM_BLUE ) ? "_blue" : "_red";
 	skinTeamSuffixLength = ( lookingForTeam == TEAM_BLUE ) ? 5 : 6;
 
-	// ZTM: FIXME: have to clear whole list because CG_AddStringToList doesn't properly terminate list
+	// ZTM: FIXME: have to clear whole list because BG_AddStringToList doesn't properly terminate list
 	memset( list, 0, sizeof( list ) );
 	listTotalLength = 0;
 
@@ -449,7 +413,7 @@ static void CG_Field_CompletePlayerModel( int argNum, qboolean lookingForHead, c
 					// models/players/example/upper_default.skin
 					// add default skin as just the model name
 					// for team models this is red or blue
-					CG_AddStringToList( list, sizeof( list ), &listTotalLength, dirptr );
+					BG_AddStringToList( list, sizeof( list ), &listTotalLength, dirptr );
 				} else if ( lookingForTeam != TEAM_FREE ) {
 					// models/players/example/upper_lily_red.skin
 					// for team model add lily_red skin as lily
@@ -459,12 +423,12 @@ static void CG_Field_CompletePlayerModel( int argNum, qboolean lookingForHead, c
 							&& COM_CompareExtension( skinname, skinTeamSuffix ) ) {
 						// remove _red
 						skinname[skinnameLength - 1 - skinTeamSuffixLength] = '\0';
-						CG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "%s/%s", dirptr, skinname ) );
+						BG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "%s/%s", dirptr, skinname ) );
 					}
 				} else {
 					// models/players/example/upper_lily.skin
 					// misc ffa skins
-					CG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "%s/%s", dirptr, skinname ) );
+					BG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "%s/%s", dirptr, skinname ) );
 				}
 			}
 		}
@@ -517,7 +481,7 @@ static void CG_Field_CompletePlayerModel( int argNum, qboolean lookingForHead, c
 					// models/players/heads/example/head_default.skin
 					// add default skin as just the model name
 					// for team models this is red or blue
-					CG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "*%s", dirptr ) );
+					BG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "*%s", dirptr ) );
 				} else if ( lookingForTeam != TEAM_FREE ) {
 					// models/players/heads/example/head_lily_red.skin
 					// for team model add lily_red skin as lily
@@ -527,12 +491,12 @@ static void CG_Field_CompletePlayerModel( int argNum, qboolean lookingForHead, c
 							&& COM_CompareExtension( skinname, skinTeamSuffix ) ) {
 						// remove _red
 						skinname[skinnameLength - 1 - skinTeamSuffixLength] = '\0';
-						CG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "*%s/%s", dirptr, skinname ) );
+						BG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "*%s/%s", dirptr, skinname ) );
 					}
 				} else {
 					// models/players/heads/example/head_lily.skin
 					// misc ffa skins
-					CG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "*%s/%s", dirptr, skinname ) );
+					BG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "*%s/%s", dirptr, skinname ) );
 				}
 			}
 		}
@@ -1328,7 +1292,7 @@ static void CG_Field_CompletePlayerName( int team, qboolean excludeTeam, qboolea
 		return;
 	}
 
-	// ZTM: FIXME: have to clear whole list because CG_AddStringToList doesn't properly terminate list
+	// ZTM: FIXME: have to clear whole list because BG_AddStringToList doesn't properly terminate list
 	memset( list, 0, sizeof( list ) );
 	listTotalLength = 0;
 
@@ -1351,9 +1315,9 @@ static void CG_Field_CompletePlayerName( int team, qboolean excludeTeam, qboolea
 
 		// Use quotes if there is a space in the name
 		if ( strchr( name, ' ' ) != NULL ) {
-			CG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "\"%s\"", name ) );
+			BG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "\"%s\"", name ) );
 		} else {
-			CG_AddStringToList( list, sizeof( list ), &listTotalLength, name );
+			BG_AddStringToList( list, sizeof( list ), &listTotalLength, name );
 		}
 	}
 
@@ -1459,7 +1423,7 @@ static void CG_GiveComplete( int localPlayerNum, char *args, int argNum ) {
 	int i, j, listTotalLength, typedNameLength;
 	gitem_t *item;
 
-	// ZTM: FIXME: have to clear whole list because CG_AddStringToList doesn't properly terminate list
+	// ZTM: FIXME: have to clear whole list because BG_AddStringToList doesn't properly terminate list
 	memset( list, 0, sizeof( list ) );
 	listTotalLength = 0;
 
@@ -1499,7 +1463,7 @@ static void CG_GiveComplete( int localPlayerNum, char *args, int argNum ) {
 		}
 
 		if ( name && *name ) {
-			CG_AddStringToList( list, sizeof( list ), &listTotalLength, name );
+			BG_AddStringToList( list, sizeof( list ), &listTotalLength, name );
 		}
 	}
 

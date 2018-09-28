@@ -56,13 +56,6 @@ typedef struct {
 	int		bind2;
 } bind_t;
 
-typedef struct
-{
-	char*	name;
-	float	defaultvalue;
-	float	value;	
-} configcvar_t;
-
 #define SAVE_NOOP		0
 #define SAVE_YES		1
 #define SAVE_NO			2
@@ -452,35 +445,6 @@ bind_t *g_bindings_list[MAX_SPLITVIEW] =
 	g_bindings4
 };
 
-static configcvar_t g_configcvars[] =
-{
-	{"cl_run",			0,					0},
-	{"2cl_run",			0,					0},
-	{"3cl_run",			0,					0},
-	{"4cl_run",			0,					0},
-	{"m_pitch",			0,					0},
-	{"cg_cyclePastGauntlet",0,				0},
-	{"2cg_cyclePastGauntlet",0,				0},
-	{"3cg_cyclePastGauntlet",0,				0},
-	{"4cg_cyclePastGauntlet",0,				0},
-	{"cg_autoswitch",	0,					0},
-	{"2cg_autoswitch",	0,					0},
-	{"3cg_autoswitch",	0,					0},
-	{"4cg_autoswitch",	0,					0},
-	{"sensitivity",		0,					0},
-	{"in_joystickUseAnalog",	0,			0},
-	{"2in_joystickUseAnalog",	0,			0},
-	{"3in_joystickUseAnalog",	0,			0},
-	{"4in_joystickUseAnalog",	0,			0},
-	{"in_joystickThreshold",	0,			0},
-	{"2in_joystickThreshold",	0,			0},
-	{"3in_joystickThreshold",	0,			0},
-	{"4in_joystickThreshold",	0,			0},
-	{"m_filter",		0,					0},
-	{"cl_freelook",		0,					0},
-	{NULL,				0,					0}
-};
-
 static menucommon_s *g_movement_controls[] =
 {
 	(menucommon_s *)&s_controls.alwaysrun,     
@@ -604,53 +568,16 @@ static menucommon_s **g_mini_controls[] = {
 
 /*
 =================
-Controls_InitCvars
-=================
-*/
-static void Controls_InitCvars( void )
-{
-	int				i;
-	configcvar_t*	cvarptr;
-
-	cvarptr = g_configcvars;
-	for (i=0; ;i++,cvarptr++)
-	{
-		if (!cvarptr->name)
-			break;
-
-		// get current value
-		cvarptr->value = trap_Cvar_VariableValue( cvarptr->name );
-
-		// get default value
-		trap_Cvar_Reset( cvarptr->name );
-		cvarptr->defaultvalue = trap_Cvar_VariableValue( cvarptr->name );
-
-		// restore current value
-		trap_Cvar_SetValue( cvarptr->name, cvarptr->value );
-	}
-}
-
-/*
-=================
 Controls_GetCvarDefault
 =================
 */
 static float Controls_GetCvarDefault( char* name )
 {
-	configcvar_t*	cvarptr;
-	int				i;
+	char defaultvaluebuf[MAX_CVAR_VALUE_STRING];
 
-	cvarptr = g_configcvars;
-	for (i=0; ;i++,cvarptr++)
-	{
-		if (!cvarptr->name)
-			return (0);
+	trap_Cvar_DefaultVariableStringBuffer( name, defaultvaluebuf, sizeof( defaultvaluebuf ) );
 
-		if (!strcmp(cvarptr->name,name))
-			break;
-	}
-
-	return (cvarptr->defaultvalue);
+	return atof( defaultvaluebuf );
 }
 
 /*
@@ -660,20 +587,7 @@ Controls_GetCvarValue
 */
 static float Controls_GetCvarValue( char* name )
 {
-	configcvar_t*	cvarptr;
-	int				i;
-
-	cvarptr = g_configcvars;
-	for (i=0; ;i++,cvarptr++)
-	{
-		if (!cvarptr->name)
-			return (0);
-
-		if (!strcmp(cvarptr->name,name))
-			break;
-	}
-
-	return (cvarptr->value);
+	return trap_Cvar_VariableValue( name );
 }
 
 
@@ -2101,9 +2015,6 @@ static void Controls_MenuInit( int localPlayerNum )
 
 	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "name"), s_controls.name.string, 16 );
 	Q_CleanStr( s_controls.name.string );
-
-	// initialize the configurable cvars
-	Controls_InitCvars();
 
 	// initialize the current config
 	Controls_GetConfig();

@@ -3223,13 +3223,6 @@ typedef struct {
 	int		bind2;
 } bind_t;
 
-typedef struct
-{
-	char*	name;
-	float	defaultvalue;
-	float	value;	
-} configcvar_t;
-
 
 static bind_t g_bindings[] = 
 {

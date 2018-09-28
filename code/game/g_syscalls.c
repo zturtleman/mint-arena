@@ -150,6 +150,10 @@ void trap_Cvar_LatchedVariableStringBuffer( const char *var_name, char *buffer, 
 	syscall( G_CVAR_LATCHED_VARIABLE_STRING_BUFFER, var_name, buffer, bufsize );
 }
 
+void trap_Cvar_DefaultVariableStringBuffer( const char *var_name, char *buffer, int bufsize ) {
+	syscall( G_CVAR_DEFAULT_VARIABLE_STRING_BUFFER, var_name, buffer, bufsize );
+}
+
 void trap_Cvar_InfoStringBuffer( int bit, char *buffer, int bufsize ) {
 	syscall( G_CVAR_INFO_STRING_BUFFER, bit, buffer, bufsize );
 }

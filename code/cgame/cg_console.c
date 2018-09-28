@@ -500,7 +500,7 @@ void Console_Key ( int key, qboolean down ) {
 	}
 
 	// ctrl-L clears screen
-	if ( key == 'l' && trap_Key_IsDown( K_CTRL ) ) {
+	if ( key == 'l' && ( trap_Key_IsDown( K_LEFTCTRL ) || trap_Key_IsDown( K_RIGHTCTRL ) ) ) {
 		trap_Cmd_ExecuteText( EXEC_APPEND, "clear\n" );
 		return;
 	}
@@ -576,8 +576,8 @@ void Console_Key ( int key, qboolean down ) {
 
 	// command history (ctrl-p ctrl-n for unix style)
 
-	if ( ( key == K_MWHEELUP && trap_Key_IsDown( K_SHIFT ) ) || ( key == K_UPARROW ) || ( key == K_KP_UPARROW ) ||
-		 ( ( tolower(key) == 'p' ) && trap_Key_IsDown( K_CTRL ) ) ) {
+	if ( ( key == K_MWHEELUP && ( trap_Key_IsDown( K_LEFTSHIFT ) || trap_Key_IsDown( K_RIGHTSHIFT ) ) ) || ( key == K_UPARROW ) || ( key == K_KP_UPARROW ) ||
+		 ( ( tolower(key) == 'p' ) && ( trap_Key_IsDown( K_LEFTCTRL ) || trap_Key_IsDown( K_RIGHTCTRL ) ) ) ) {
 		if ( nextHistoryLine - historyLine < COMMAND_HISTORY 
 			&& historyLine > 0 ) {
 			historyLine--;
@@ -586,8 +586,8 @@ void Console_Key ( int key, qboolean down ) {
 		return;
 	}
 
-	if ( ( key == K_MWHEELDOWN && trap_Key_IsDown( K_SHIFT ) ) || ( key == K_DOWNARROW ) || ( key == K_KP_DOWNARROW ) ||
-		 ( ( tolower(key) == 'n' ) && trap_Key_IsDown( K_CTRL ) ) ) {
+	if ( ( key == K_MWHEELDOWN && ( trap_Key_IsDown( K_LEFTSHIFT ) || trap_Key_IsDown( K_RIGHTSHIFT ) ) ) || ( key == K_DOWNARROW ) || ( key == K_KP_DOWNARROW ) ||
+		 ( ( tolower(key) == 'n' ) && ( trap_Key_IsDown( K_LEFTCTRL ) || trap_Key_IsDown( K_RIGHTCTRL ) ) ) ) {
 		historyLine++;
 		if (historyLine >= nextHistoryLine) {
 			historyLine = nextHistoryLine;
@@ -612,7 +612,7 @@ void Console_Key ( int key, qboolean down ) {
 
 	if ( key == K_MWHEELUP) {	//----(SA)	added some mousewheel functionality to the console
 		Con_PageUp();
-		if ( trap_Key_IsDown( K_CTRL ) ) {	// hold <ctrl> to accelerate scrolling
+		if ( trap_Key_IsDown( K_LEFTCTRL ) || trap_Key_IsDown( K_RIGHTCTRL ) ) {	// hold <ctrl> to accelerate scrolling
 			Con_PageUp();
 			Con_PageUp();
 		}
@@ -621,7 +621,7 @@ void Console_Key ( int key, qboolean down ) {
 
 	if ( key == K_MWHEELDOWN) {	//----(SA)	added some mousewheel functionality to the console
 		Con_PageDown();
-		if ( trap_Key_IsDown( K_CTRL ) ) {	// hold <ctrl> to accelerate scrolling
+		if ( trap_Key_IsDown( K_LEFTCTRL ) || trap_Key_IsDown( K_RIGHTCTRL ) ) {	// hold <ctrl> to accelerate scrolling
 			Con_PageDown();
 			Con_PageDown();
 		}
@@ -629,13 +629,13 @@ void Console_Key ( int key, qboolean down ) {
 	}
 
 	// ctrl-home = top of console
-	if ( ( key == K_HOME || key == K_KP_HOME ) && trap_Key_IsDown( K_CTRL ) ) {
+	if ( ( key == K_HOME || key == K_KP_HOME ) && ( trap_Key_IsDown( K_LEFTCTRL ) || trap_Key_IsDown( K_RIGHTCTRL ) ) ) {
 		Con_Top();
 		return;
 	}
 
 	// ctrl-end = bottom of console
-	if ( ( key == K_END || key == K_KP_END ) && trap_Key_IsDown( K_CTRL ) ) {
+	if ( ( key == K_END || key == K_KP_END ) && ( trap_Key_IsDown( K_LEFTCTRL ) || trap_Key_IsDown( K_RIGHTCTRL ) ) ) {
 		Con_Bottom();
 		return;
 	}

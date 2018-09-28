@@ -3053,7 +3053,7 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 	}
 
 	// console key is hardcoded, so the user can never unbind it
-	if( key == K_CONSOLE || ( key == K_ESCAPE && trap_Key_IsDown( K_SHIFT ) ) ) {
+	if( key == K_CONSOLE || ( key == K_ESCAPE && ( trap_Key_IsDown( K_LEFTSHIFT ) || trap_Key_IsDown( K_RIGHTSHIFT ) ) ) ) {
 		if ( down ) {
 			Con_ToggleConsole_f();
 		}

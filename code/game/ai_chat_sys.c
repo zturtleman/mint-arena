@@ -193,8 +193,8 @@ typedef struct bot_stringlist_s
 	struct bot_stringlist_s *next;
 } bot_stringlist_t;
 
-//may use up to MAX_CLIENTS * 2 console messages on map change
-#define MAX_CHATSTATE_MESSAGES 128
+//may use up to MAX_CLIENTS * 2 console messages plus a few chat messages on map change
+#define MAX_CHATSTATE_MESSAGES ( MAX_CLIENTS * 3 )
 
 //chat state of a bot
 typedef struct bot_chatstate_s

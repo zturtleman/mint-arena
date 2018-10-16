@@ -44,7 +44,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // Keep this in-sync with VERSION in Makefile.
 #ifndef PRODUCT_VERSION
-	#define PRODUCT_VERSION			"0.5"
+	#define PRODUCT_VERSION			"1.0.0"
 #endif
 
 // because games can change separately from the main system protocol, we need a
@@ -1123,6 +1123,8 @@ qboolean	BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTim
 int		BG_ComposeUserCmdValue( int weapon );
 void	BG_DecomposeUserCmdValue( int value, int *weapon );
 
+void	BG_AddStringToList( char *list, size_t listSize, int *listLength, char *name );
+
 void	SnapVectorTowards( vec3_t v, vec3_t to );
 
 #define ARENAS_PER_TIER		4
@@ -1199,7 +1201,7 @@ void	SnapVectorTowards( vec3_t v, vec3_t to );
 #define UI_FORCECOLOR	0x00010000
 #define UI_GRADIENT		0x00020000
 #define UI_NOSCALE		0x00040000 // fixed size with other UI elements, don't change it's scale
-#define UI_INMOTION		0x00040000 // use for scrolling / moving text to fix uneven scrolling caused by aligning to pixel boundary
+#define UI_INMOTION		0x00080000 // use for scrolling / moving text to fix uneven scrolling caused by aligning to pixel boundary
 
 
 typedef struct
@@ -1326,6 +1328,7 @@ int		trap_Cvar_VariableIntegerValue( const char *var_name );
 float	trap_Cvar_VariableValue( const char *var_name );
 void	trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
 void	trap_Cvar_LatchedVariableStringBuffer( const char *var_name, char *buffer, int bufsize );
+void	trap_Cvar_DefaultVariableStringBuffer( const char *var_name, char *buffer, int bufsize );
 void	trap_Cvar_InfoStringBuffer( int bit, char *buffer, int bufsize );
 void	trap_Cvar_CheckRange( const char *var_name, float min, float max, qboolean integral );
 

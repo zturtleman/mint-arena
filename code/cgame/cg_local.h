@@ -1515,6 +1515,7 @@ void CG_UpdateCvars( void );
 int CG_CrosshairPlayer( int localPlayerNum );
 int CG_LastAttacker( int localPlayerNum );
 void CG_LoadMenus(const char *menuFile);
+void CG_HudMenuHacks( void );
 void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state, int joystickNum, int axisNum );
 void CG_DistributeCharEvent( int key, connstate_t state );
 void CG_KeyEvent(int key, qboolean down);
@@ -1551,6 +1552,7 @@ void Key_SetCatcher( int catcher );
 // cg_view.c
 //
 void CG_TestModel_f (void);
+void CG_TestModelComplete( char *args, int argNum );
 void CG_TestGun_f (void);
 void CG_TestModelNextFrame_f (void);
 void CG_TestModelPrevFrame_f (void);

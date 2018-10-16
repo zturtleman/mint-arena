@@ -35,8 +35,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
-#define	GAME_API_MAJOR_VERSION	0
-#define	GAME_API_MINOR_VERSION	15
+// ZTM: FIXME: There is no way for the VM to know what the engine support API is
+//             so there is no way to add more system calls.
+#define	GAME_API_MAJOR_VERSION	1
+#define	GAME_API_MINOR_VERSION	0
 
 
 // entity->svFlags
@@ -154,6 +156,7 @@ typedef enum {
 	G_CVAR_VARIABLE_INTEGER_VALUE,			// ( const char *var_name );
 	G_CVAR_VARIABLE_STRING_BUFFER,			// ( const char *var_name, char *buffer, int bufsize );
 	G_CVAR_LATCHED_VARIABLE_STRING_BUFFER,	// ( const char *var_name, char *buffer, int bufsize );
+	G_CVAR_DEFAULT_VARIABLE_STRING_BUFFER,	// ( const char *var_name, char *buffer, int bufsize );
 	G_CVAR_INFO_STRING_BUFFER,				// ( int bit, char *buffer, int bufsize );
 	G_CVAR_CHECK_RANGE,						// (  const char *var_name, float min, float max, qboolean integral );
 

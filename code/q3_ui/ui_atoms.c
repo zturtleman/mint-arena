@@ -455,6 +455,10 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 	float	propScale;
 	float	scale;
 
+	if( !str ) {
+		return;
+	}
+
 	propScale = UI_ProportionalSizeScale( style );
 
 	charh = propScale * PROP_HEIGHT;

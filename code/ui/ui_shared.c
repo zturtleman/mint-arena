@@ -2162,13 +2162,13 @@ qboolean Item_TextField_HandleKey(itemDef_t *item, int key) {
 				return qtrue;
 			}
 
-			if ( key == K_HOME || key == K_KP_HOME) {// || ( tolower(key) == 'a' && trap_Key_IsDown( K_CTRL ) ) ) {
+			if ( key == K_HOME || key == K_KP_HOME) {// || ( tolower(key) == 'a' && ( trap_Key_IsDown( K_LEFTCTRL ) || trap_Key_IsDown( K_RIGHTCTRL ) ) ) ) {
 				item->cursorPos = 0;
 				editPtr->paintOffset = 0;
 				return qtrue;
 			}
 
-			if ( key == K_END || key == K_KP_END)  {// ( tolower(key) == 'e' && trap_Key_IsDown( K_CTRL ) ) ) {
+			if ( key == K_END || key == K_KP_END)  {// ( tolower(key) == 'e' && ( trap_Key_IsDown( K_LEFTCTRL ) || trap_Key_IsDown( K_RIGHTCTRL ) ) ) ) {
 				item->cursorPos = len;
 				if(item->cursorPos > editPtr->maxPaintChars) {
 					editPtr->paintOffset = len - editPtr->maxPaintChars;
@@ -3223,19 +3223,12 @@ typedef struct {
 	int		bind2;
 } bind_t;
 
-typedef struct
-{
-	char*	name;
-	float	defaultvalue;
-	float	value;	
-} configcvar_t;
-
 
 static bind_t g_bindings[] = 
 {
 	{"+scores",			 K_TAB,				-1,		-1, -1},
 	{"+button2",		 K_ENTER,			-1,		-1, -1},
-	{"+speed", 			 K_SHIFT,			-1,		-1,	-1},
+	{"+speed", 			 K_LEFTSHIFT,	K_RIGHTSHIFT, -1, -1},
 	{"+forward", 		 K_UPARROW,		-1,		-1, -1},
 	{"+back", 			 K_DOWNARROW,	-1,		-1, -1},
 	{"+moveleft", 	 ',',					-1,		-1, -1},
@@ -3244,7 +3237,7 @@ static bind_t g_bindings[] =
 	{"+movedown",		 'c',					-1,		-1, -1},
 	{"+left", 			 K_LEFTARROW,	-1,		-1, -1},
 	{"+right", 			 K_RIGHTARROW,	-1,		-1, -1},
-	{"+strafe", 		 K_ALT,				-1,		-1, -1},
+	{"+strafe", 		 K_LEFTALT,		K_RIGHTALT, -1, -1},
 	{"+lookup", 		 K_PGDN,				-1,		-1, -1},
 	{"+lookdown", 	 K_DEL,				-1,		-1, -1},
 	{"+mlook", 			 '/',					-1,		-1, -1},
@@ -3263,7 +3256,7 @@ static bind_t g_bindings[] =
 	{"weapon 11",		 -1,					-1,		-1, -1},
 	{"weapon 12",		 -1,					-1,		-1, -1},
 	{"weapon 13",		 -1,					-1,		-1, -1},
-	{"+attack", 		 K_CTRL,				-1,		-1, -1},
+	{"+attack", 		 K_LEFTCTRL,	K_RIGHTCTRL,		-1, -1},
 	{"weapprev",		 '[',					-1,		-1, -1},
 	{"weapnext", 		 ']',					-1,		-1, -1},
 	{"+button3", 		 K_MOUSE3,			-1,		-1, -1},
@@ -3563,8 +3556,14 @@ qboolean Item_Bind_HandleKey(itemDef_t *item, int key, qboolean down) {
 			case K_BACKSPACE:
 				id = BindingIDFromName(item->cvar);
 				if (id != -1) {
-					g_bindings[id].bind1 = -1;
-					g_bindings[id].bind2 = -1;
+					if( g_bindings[id].bind1 != -1 ) {
+						DC->setBinding( g_bindings[id].bind1, "" );
+						g_bindings[id].bind1 = -1;
+					}
+					if( g_bindings[id].bind2 != -1 ) {
+						DC->setBinding( g_bindings[id].bind2, "" );
+						g_bindings[id].bind2 = -1;
+					}
 				}
 				Controls_SetConfig(qtrue);
 				g_waitingForKey = qfalse;
@@ -3651,7 +3650,7 @@ void Item_Model_Paint(itemDef_t *item) {
 	w = item->window.rect.w-2;
 	h = item->window.rect.h-2;
 
-	CG_AdjustFrom640( &x, &y, &w, &h );
+	DC->adjustFrom640( &x, &y, &w, &h );
 
 	refdef.x = x;
 	refdef.y = y;
@@ -4337,7 +4336,7 @@ void Menu_Paint(menuDef_t *menu, qboolean forcePaint) {
 	}
 
 	if (menu->forceScreenPlacement) {
-		CG_SetScreenPlacement( menu->screenHPos, menu->screenVPos );
+		DC->setScreenPlacement( menu->screenHPos, menu->screenVPos );
 	}
 
 	// draw the background if necessary
@@ -4347,7 +4346,7 @@ void Menu_Paint(menuDef_t *menu, qboolean forcePaint) {
 		DC->drawHandlePic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, menu->window.background );
 	} else if (menu->window.background) {
 		// this allows a background shader without being full screen
-		//CG_DrawPic(menu->window.rect.x, menu->window.rect.y, menu->window.rect.w, menu->window.rect.h, menu->backgroundShader);
+		//DC->drawHandlePic(menu->window.rect.x, menu->window.rect.y, menu->window.rect.w, menu->window.rect.h, menu->backgroundShader);
 	}
 
 	// paint the background and or border
@@ -4365,7 +4364,7 @@ void Menu_Paint(menuDef_t *menu, qboolean forcePaint) {
 	}
 
 	if (menu->forceScreenPlacement) {
-		CG_PopScreenPlacement();
+		DC->popScreenPlacement();
 	}
 }
 

@@ -1361,11 +1361,14 @@ void Cmd_Where_f( gentity_t *ent ) {
 Cmd_CallVote_f
 ==================
 */
+#define CALLVOTE_ARG2_NONE 1
+#define CALLVOTE_ARG2_INTREGAL 2
 void Cmd_CallVote_f( gentity_t *ent ) {
 	char*	c;
 	int		i;
 	char	arg1[MAX_STRING_TOKENS];
 	char	arg2[MAX_STRING_TOKENS];
+	int		arg2Flags, arg2RangeMin, arg2RangeMax;
 
 	if ( !g_allowVote.integer ) {
 		trap_SendServerCommand( ent-g_entities, "print \"Voting not allowed here.\n\"" );
@@ -1401,19 +1404,73 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 		}
 	}
 
+	arg2Flags = 0;
+	arg2RangeMin = 0;
+	arg2RangeMax = INT_MAX;
+
 	if ( !Q_stricmp( arg1, "map_restart" ) ) {
+		arg2Flags = CALLVOTE_ARG2_INTREGAL;
+		arg2RangeMax = 60; // max 1 minute
+
+		// default to 5 seconds if no argument was specified
+		if ( !arg2[0] ) {
+			Q_strncpyz( arg2, "5", sizeof( arg2 ) );
+		}
 	} else if ( !Q_stricmp( arg1, "nextmap" ) ) {
+		arg2Flags = CALLVOTE_ARG2_NONE;
 	} else if ( !Q_stricmp( arg1, "map" ) ) {
+		// string
 	} else if ( !Q_stricmp( arg1, "g_gametype" ) ) {
+		arg2Flags = CALLVOTE_ARG2_INTREGAL;
+		arg2RangeMax = GT_MAX_GAME_TYPE - 1;
 	} else if ( !Q_stricmp( arg1, "kick" ) ) {
+		// string
 	} else if ( !Q_stricmp( arg1, "kicknum" ) ) {
+		arg2Flags = CALLVOTE_ARG2_INTREGAL;
+		arg2RangeMax = MAX_CLIENTS;
 	} else if ( !Q_stricmp( arg1, "g_doWarmup" ) ) {
+		arg2Flags = CALLVOTE_ARG2_INTREGAL;
+		arg2RangeMax = 1;
 	} else if ( !Q_stricmp( arg1, "timelimit" ) ) {
+		arg2Flags = CALLVOTE_ARG2_INTREGAL;
+		arg2RangeMax = 240; // 4 hours
 	} else if ( !Q_stricmp( arg1, "fraglimit" ) ) {
+		arg2Flags = CALLVOTE_ARG2_INTREGAL;
+		arg2RangeMax = 999;
+	} else if ( !Q_stricmp( arg1, "capturelimit" ) ) {
+		arg2Flags = CALLVOTE_ARG2_INTREGAL;
+		arg2RangeMax = 999;
+	} else if ( !Q_stricmp( arg1, "g_instagib" ) ) {
+		arg2Flags = CALLVOTE_ARG2_INTREGAL;
+		arg2RangeMax = 1;
 	} else {
 		trap_SendServerCommand( ent-g_entities, "print \"Invalid vote string.\n\"" );
-		trap_SendServerCommand( ent-g_entities, "print \"Vote commands are: map_restart, nextmap, map <mapname>, g_gametype <n>, kick <player>, kicknum <playernum>, g_doWarmup, timelimit <time>, fraglimit <frags>.\n\"" );
+		trap_SendServerCommand( ent-g_entities, "print \"Vote commands are: map_restart, nextmap, map <mapname>, g_gametype <n>, kick <player>, kicknum <playernum>, g_doWarmup <boolean>, timelimit <time>, fraglimit <frags>, capturelimit <captures>, g_instagib <boolean>.\n\"" );
 		return;
+	}
+
+	if ( arg2Flags & CALLVOTE_ARG2_NONE ) {
+		if ( arg2[0] != '\0' ) {
+			trap_SendServerCommand( ent-g_entities, va( "print \"Vote command %s does not accept an argument.\n\"", arg1 ) );
+			return;
+		}
+	}
+	else if ( arg2[0] == '\0' ) {
+		trap_SendServerCommand( ent-g_entities, va( "print \"Vote command %s requires an argument.\n\"", arg1 ) );
+		return;
+	}
+
+	if ( arg2Flags & CALLVOTE_ARG2_INTREGAL ) {
+		if ( !StringIsInteger( arg2 ) ) {
+			trap_SendServerCommand( ent-g_entities, va( "print \"Vote command %s argument must be a number.\n\"", arg1 ) );
+			return;
+		}
+
+		i = atoi( arg2 );
+		if ( i < arg2RangeMin || i > arg2RangeMax ) {
+			trap_SendServerCommand( ent-g_entities, va( "print \"Vote command %s argument must be %d to %d.\n\"", arg1, arg2RangeMin, arg2RangeMax ) );
+			return;
+		}
 	}
 
 	// if there is still a vote to be executed
@@ -1443,6 +1500,17 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 		// special case for map changes, we want to reset the nextmap setting
 		// this allows a player to change maps, but not upset the map rotation
 		char	s[MAX_STRING_CHARS];
+		char	filename[MAX_QPATH];
+
+		if ( strstr( arg2, ".." ) || strstr( arg2, "::" ) || strlen( arg2 ) + 9 >= MAX_QPATH ) {
+			trap_SendServerCommand( ent-g_entities, "print \"Invalid map name.\n\"" );
+			return;
+		}
+		Com_sprintf( filename, sizeof( filename ), "maps/%s.bsp", arg2 );
+		if ( trap_FS_FOpenFile( filename, NULL, FS_READ ) <= 0 ) {
+			trap_SendServerCommand( ent-g_entities, "print \"Map not found.\n\"" );
+			return;
+		}
 
 		trap_Cvar_VariableStringBuffer( "nextmap", s, sizeof(s) );
 		if (*s) {
@@ -1478,6 +1546,8 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s \"%s\"", arg1, arg2 );
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s", level.voteString );
 	}
+
+	G_LogPrintf( "callvote: %s: %s\n", ent->player->pers.netname, level.voteDisplayString );
 
 	trap_SendServerCommand( -1, va("print \"%s called a vote.\n\"", ent->player->pers.netname ) );
 
@@ -1527,9 +1597,11 @@ void Cmd_Vote_f( gentity_t *ent ) {
 	if ( tolower( msg[0] ) == 'y' || msg[0] == '1' ) {
 		level.voteYes++;
 		trap_SetConfigstring( CS_VOTE_YES, va("%i", level.voteYes ) );
+		G_LogPrintf( "vote: %s: yes\n", ent->player->pers.netname );
 	} else {
 		level.voteNo++;
 		trap_SetConfigstring( CS_VOTE_NO, va("%i", level.voteNo ) );	
+		G_LogPrintf( "vote: %s: no\n", ent->player->pers.netname );
 	}
 
 	// a majority will be determined in CheckVote, which will also account
@@ -1647,6 +1719,8 @@ void Cmd_CallTeamVote_f( gentity_t *ent ) {
 
 	Com_sprintf( level.teamVoteString[cs_offset], sizeof( level.teamVoteString[cs_offset] ), "%s %s", arg1, arg2 );
 
+	G_LogPrintf( "callteamvote: %s on %s team: %s\n", ent->player->pers.netname, TeamName( team ), level.teamVoteString[cs_offset] );
+
 	for ( i = 0 ; i < level.maxplayers ; i++ ) {
 		if ( level.players[i].pers.connected == CON_DISCONNECTED )
 			continue;
@@ -1710,9 +1784,11 @@ void Cmd_TeamVote_f( gentity_t *ent ) {
 	if ( tolower( msg[0] ) == 'y' || msg[0] == '1' ) {
 		level.teamVoteYes[cs_offset]++;
 		trap_SetConfigstring( CS_TEAMVOTE_YES + cs_offset, va("%i", level.teamVoteYes[cs_offset] ) );
+		G_LogPrintf( "teamvote: %s on %s team: yes\n", ent->player->pers.netname, TeamName( team ) );
 	} else {
 		level.teamVoteNo[cs_offset]++;
 		trap_SetConfigstring( CS_TEAMVOTE_NO + cs_offset, va("%i", level.teamVoteNo[cs_offset] ) );	
+		G_LogPrintf( "teamvote: %s on %s team: no\n", ent->player->pers.netname, TeamName( team ) );
 	}
 
 	// a majority will be determined in TeamCheckVote, which will also account

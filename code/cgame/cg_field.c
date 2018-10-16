@@ -158,7 +158,7 @@ Key events are used for non-printable characters, others are gotten from char ev
 */
 void MField_KeyDownEvent( mfield_t *edit, int key ) {
 	// shift-insert is paste
-	if ( ( ( key == K_INS ) || ( key == K_KP_INS ) ) && trap_Key_IsDown( K_SHIFT ) ) {
+	if ( ( ( key == K_INS ) || ( key == K_KP_INS ) ) && ( trap_Key_IsDown( K_LEFTSHIFT ) || trap_Key_IsDown( K_RIGHTSHIFT ) ) ) {
 		MField_Paste( edit );
 		return;
 	}
@@ -199,13 +199,13 @@ void MField_KeyDownEvent( mfield_t *edit, int key ) {
 		return;
 	}
 
-	if ( key == K_HOME || key == K_KP_HOME || ( tolower(key) == 'a' && trap_Key_IsDown( K_CTRL ) ) ) {
+	if ( key == K_HOME || key == K_KP_HOME || ( tolower(key) == 'a' && ( trap_Key_IsDown( K_LEFTCTRL ) || trap_Key_IsDown( K_RIGHTCTRL ) ) ) ) {
 		edit->cursor = 0;
 		edit->scroll = 0;
 		return;
 	}
 
-	if ( key == K_END || key == K_KP_END || ( tolower(key) == 'e' && trap_Key_IsDown( K_CTRL ) ) ) {
+	if ( key == K_END || key == K_KP_END || ( tolower(key) == 'e' && ( trap_Key_IsDown( K_LEFTCTRL ) || trap_Key_IsDown( K_RIGHTCTRL ) ) ) ) {
 		edit->cursor = edit->len;
 		edit->scroll = edit->len - edit->widthInChars + 1;
 		if (edit->scroll < 0)

@@ -328,11 +328,15 @@ void SpectatorThink( gentity_t *ent, usercmd_t *ucmd ) {
 
 	player = ent->player;
 
-	if ( player->sess.spectatorState != SPECTATOR_FOLLOW ) {
-		if ( player->noclip ) {
-			player->ps.pm_type = PM_NOCLIP;
+	if ( player->sess.spectatorState != SPECTATOR_FOLLOW || !( player->ps.pm_flags & PMF_FOLLOW ) ) {
+		if ( player->sess.spectatorState == SPECTATOR_FREE ) {
+			if ( player->noclip ) {
+				player->ps.pm_type = PM_NOCLIP;
+			} else {
+				player->ps.pm_type = PM_SPECTATOR;
+			}
 		} else {
-			player->ps.pm_type = PM_SPECTATOR;
+			player->ps.pm_type = PM_FREEZE;
 		}
 		player->ps.speed = 400;	// faster than normal
 
@@ -1061,13 +1065,16 @@ void SpectatorPlayerEndFrame( gentity_t *ent ) {
 				ent->player->ps.pm_flags |= PMF_FOLLOW;
 				ent->player->ps.eFlags = flags;
 				return;
-			} else {
-				// drop them to free spectators unless they are dedicated camera followers
-				if ( ent->player->sess.spectatorPlayer >= 0 ) {
-					ent->player->sess.spectatorState = SPECTATOR_FREE;
-					PlayerBegin( ent->player - level.players );
-				}
 			}
+		}
+
+		if ( ent->player->ps.pm_flags & PMF_FOLLOW ) {
+			// drop them to free spectators unless they are dedicated camera followers
+			if ( ent->player->sess.spectatorPlayer >= 0 ) {
+				ent->player->sess.spectatorState = SPECTATOR_FREE;
+			}
+
+			PlayerBegin( ent->player - level.players );
 		}
 	}
 

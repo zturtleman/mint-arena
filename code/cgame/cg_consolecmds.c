@@ -239,6 +239,319 @@ void CG_SetModel_f( int localPlayerNum ) {
 	}
 }
 
+/*
+=============
+CG_SetHeadmodel_f
+=============
+*/
+void CG_SetHeadmodel_f( int localPlayerNum ) {
+	const char	*arg;
+	char	name[256];
+	char	cvarName[32];
+
+	Q_strncpyz( cvarName, Com_LocalPlayerCvarName( localPlayerNum, "headmodel"), sizeof (cvarName) );
+
+	arg = CG_Argv( 1 );
+	if ( arg[0] ) {
+		trap_Cvar_Set( cvarName, arg );
+	} else {
+		trap_Cvar_VariableStringBuffer( cvarName, name, sizeof(name) );
+		Com_Printf("%s is set to %s\n", cvarName, name);
+	}
+}
+
+/*
+=============
+CG_SetTeamModel_f
+=============
+*/
+void CG_SetTeamModel_f( int localPlayerNum ) {
+	const char	*arg;
+	char	name[256];
+	char	cvarName[32];
+
+	Q_strncpyz( cvarName, Com_LocalPlayerCvarName( localPlayerNum, "team_model"), sizeof (cvarName) );
+
+	arg = CG_Argv( 1 );
+	if ( arg[0] ) {
+		trap_Cvar_Set( cvarName, arg );
+		trap_Cvar_Set( Com_LocalPlayerCvarName( localPlayerNum, "team_headmodel"), arg );
+	} else {
+		trap_Cvar_VariableStringBuffer( cvarName, name, sizeof(name) );
+		Com_Printf("%s is set to %s\n", cvarName, name);
+	}
+}
+
+/*
+=============
+CG_SetTeamHeadmodel_f
+=============
+*/
+void CG_SetTeamHeadmodel_f( int localPlayerNum ) {
+	const char	*arg;
+	char	name[256];
+	char	cvarName[32];
+
+	Q_strncpyz( cvarName, Com_LocalPlayerCvarName( localPlayerNum, "team_headmodel"), sizeof (cvarName) );
+
+	arg = CG_Argv( 1 );
+	if ( arg[0] ) {
+		trap_Cvar_Set( cvarName, arg );
+	} else {
+		trap_Cvar_VariableStringBuffer( cvarName, name, sizeof(name) );
+		Com_Printf("%s is set to %s\n", cvarName, name);
+	}
+}
+
+/*
+==================
+CG_Field_CompletePlayerModel
+==================
+*/
+static void CG_Field_CompletePlayerModel( int argNum, qboolean lookingForHead, char *lookingForSkin, team_t lookingForTeam ) {
+	int		numdirs;
+	int		numfiles;
+	char	dirlist[2048];
+	char	filelist[2048];
+	char	skinname[MAX_QPATH];
+	int		skinnameLength;
+	char*	dirptr;
+	char*	fileptr;
+	char*	skinptr;
+	int		i;
+	int		j;
+	int		dirlen;
+	int		filelen;
+	char	list[8192];
+	int		listTotalLength;
+	char	completeModel[MAX_QPATH];
+	int		completeModelLength;
+	char	teamName[MAX_QPATH];
+	int		teamNameLength;
+	char	*skinPrefix;
+	int		skinPrefixLength;
+	char	*skinTeamSuffix;
+	int		skinTeamSuffixLength;
+
+	trap_Argv( argNum - 1, completeModel, sizeof( completeModel ) );
+
+	// remove skin
+	completeModelLength = 0;
+	while ( completeModel[completeModelLength] != '\0' && completeModel[completeModelLength] != '/' ) {
+		completeModelLength++;
+	}
+	completeModel[completeModelLength] = '\0';
+
+	teamName[0] = 0;
+#ifdef MISSIONPACK
+	if ( lookingForTeam != TEAM_FREE ) {
+		if ( lookingForTeam == TEAM_BLUE ) {
+			Q_strncpyz( teamName, cg_blueTeamName.string, sizeof( teamName ) );
+		} else {
+			Q_strncpyz( teamName, cg_redTeamName.string, sizeof( teamName ) );
+		}
+	}
+	if ( teamName[0] ) {
+		strcat( teamName, "/" );
+	}
+#endif
+	teamNameLength = strlen( teamName );
+
+	skinPrefix = ( lookingForHead ) ? "head_" : "upper_";
+	skinPrefixLength = ( lookingForHead ) ? 5 : 6;
+
+	skinTeamSuffix = ( lookingForTeam == TEAM_BLUE ) ? "_blue" : "_red";
+	skinTeamSuffixLength = ( lookingForTeam == TEAM_BLUE ) ? 5 : 6;
+
+	// ZTM: FIXME: have to clear whole list because BG_AddStringToList doesn't properly terminate list
+	memset( list, 0, sizeof( list ) );
+	listTotalLength = 0;
+
+	if ( !lookingForHead || completeModelLength == 0 || completeModel[0] != '*' ) {
+		// iterate directory of all player models
+		numdirs = trap_FS_GetFileList("models/players", "/", dirlist, 2048 );
+		dirptr  = dirlist;
+		for (i=0; i<numdirs; i++,dirptr+=dirlen+1)
+		{
+			dirlen = strlen(dirptr);
+
+			if ( dirlen == 0 )
+				continue;
+
+			if (dirptr[dirlen-1]=='/')
+				dirptr[dirlen-1]='\0';
+
+			if (!strcmp(dirptr,".") || !strcmp(dirptr,"..") || !strcmp(dirptr,"heads"))
+				continue;
+
+			// not a partial match
+			if ( completeModelLength > 0 && Q_stricmpn( completeModel, dirptr, completeModelLength ) != 0 ) {
+				continue;
+			}
+
+			// iterate all skin files in directory
+			numfiles = trap_FS_GetFileList( va("models/players/%s",dirptr), "skin", filelist, 2048 );
+			fileptr  = filelist;
+			for (j=0; j<numfiles;j++,fileptr+=filelen+1)
+			{
+				filelen = strlen(fileptr);
+				skinptr = fileptr;
+
+				// models/players/example/stroggs/upper_lily_red.skin
+				if ( teamNameLength > 0 && Q_stricmpn( skinptr, teamName, teamNameLength ) == 0 ) {
+					skinptr += teamNameLength;
+				}
+
+				// look for upper_???? or head_????
+				if ( Q_stricmpn( skinptr, skinPrefix, skinPrefixLength ) != 0 ) {
+					continue;
+				}
+
+				COM_StripExtension( skinptr + skinPrefixLength, skinname, sizeof( skinname ) );
+
+				if ( Q_stricmp( skinname, lookingForSkin ) == 0 ) {
+					// models/players/example/upper_default.skin
+					// add default skin as just the model name
+					// for team models this is red or blue
+					BG_AddStringToList( list, sizeof( list ), &listTotalLength, dirptr );
+				} else if ( lookingForTeam != TEAM_FREE ) {
+					// models/players/example/upper_lily_red.skin
+					// for team model add lily_red skin as lily
+					skinnameLength = strlen( skinname );
+
+					if ( skinnameLength - skinPrefixLength > skinTeamSuffixLength
+							&& COM_CompareExtension( skinname, skinTeamSuffix ) ) {
+						// remove _red
+						skinname[skinnameLength - 1 - skinTeamSuffixLength] = '\0';
+						BG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "%s/%s", dirptr, skinname ) );
+					}
+				} else {
+					// models/players/example/upper_lily.skin
+					// misc ffa skins
+					BG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "%s/%s", dirptr, skinname ) );
+				}
+			}
+		}
+	}
+
+	if ( lookingForHead && ( completeModelLength == 0 || completeModel[0] == '*' ) ) {
+		// iterate directory of all head models
+		numdirs = trap_FS_GetFileList("models/players/heads", "/", dirlist, 2048 );
+		dirptr  = dirlist;
+		for (i=0; i<numdirs; i++,dirptr+=dirlen+1)
+		{
+			dirlen = strlen(dirptr);
+
+			if ( dirlen == 0 )
+				continue;
+
+			if (dirptr[dirlen-1]=='/')
+				dirptr[dirlen-1]='\0';
+
+			if (!strcmp(dirptr,".") || !strcmp(dirptr,".."))
+				continue;
+
+			// not a partial match
+			// completeModel[0] is '*' which means heads directory
+			if ( completeModelLength > 1 && Q_stricmpn( completeModel+1, dirptr, completeModelLength-1 ) != 0 ) {
+				continue;
+			}
+
+			// iterate all skin files in directory
+			numfiles = trap_FS_GetFileList( va("models/players/heads/%s",dirptr), "skin", filelist, 2048 );
+			fileptr  = filelist;
+			for (j=0; j<numfiles;j++,fileptr+=filelen+1)
+			{
+				filelen = strlen(fileptr);
+				skinptr = fileptr;
+
+				// models/players/heads/example/stroggs/head_lily_red.skin
+				if ( teamNameLength > 0 && Q_stricmpn( skinptr, teamName, teamNameLength ) == 0 ) {
+					skinptr += teamNameLength;
+				}
+
+				// look for upper_???? or head_????
+				if ( Q_stricmpn( skinptr, skinPrefix, skinPrefixLength ) != 0 ) {
+					continue;
+				}
+
+				COM_StripExtension( skinptr + skinPrefixLength, skinname, sizeof( skinname ) );
+
+				if ( Q_stricmp( skinname, lookingForSkin ) == 0 ) {
+					// models/players/heads/example/head_default.skin
+					// add default skin as just the model name
+					// for team models this is red or blue
+					BG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "*%s", dirptr ) );
+				} else if ( lookingForTeam != TEAM_FREE ) {
+					// models/players/heads/example/head_lily_red.skin
+					// for team model add lily_red skin as lily
+					skinnameLength = strlen( skinname );
+
+					if ( skinnameLength - skinPrefixLength > skinTeamSuffixLength
+							&& COM_CompareExtension( skinname, skinTeamSuffix ) ) {
+						// remove _red
+						skinname[skinnameLength - 1 - skinTeamSuffixLength] = '\0';
+						BG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "*%s/%s", dirptr, skinname ) );
+					}
+				} else {
+					// models/players/heads/example/head_lily.skin
+					// misc ffa skins
+					BG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "*%s/%s", dirptr, skinname ) );
+				}
+			}
+		}
+	}
+
+	if ( listTotalLength > 0 ) {
+		list[listTotalLength++] = 0;
+		trap_Field_CompleteList( list );
+	}
+}
+
+/*
+==================
+CG_ModelComplete
+==================
+*/
+static void CG_ModelComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		CG_Field_CompletePlayerModel( argNum, qfalse, "default", TEAM_FREE );
+	}
+}
+
+/*
+==================
+CG_HeadmodelComplete
+==================
+*/
+static void CG_HeadmodelComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		CG_Field_CompletePlayerModel( argNum, qtrue, "default", TEAM_FREE );
+	}
+}
+
+/*
+==================
+CG_TeamModelComplete
+==================
+*/
+static void CG_TeamModelComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		CG_Field_CompletePlayerModel( argNum, qfalse, "red", TEAM_RED );
+	}
+}
+
+/*
+==================
+CG_TeamHeadmodelComplete
+==================
+*/
+static void CG_TeamHeadmodelComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		CG_Field_CompletePlayerModel( argNum, qtrue, "red", TEAM_RED );
+	}
+}
+
 #ifdef MISSIONPACK_HUD
 extern menuDef_t *menuScoreboard;
 extern displayContextDef_t cgDC;
@@ -272,6 +585,7 @@ static void CG_LoadHud_f( void) {
 	}
 
 	CG_LoadMenus(hudSet);
+	CG_HudMenuHacks();
   menuScoreboard = NULL;
 }
 
@@ -382,62 +696,62 @@ static void CG_spLose_f( void) {
 
 static void CG_TellTarget_f( int localPlayerNum ) {
 	int		playerNum;
-	char	command[128];
-	char	message[128];
+	char	command[MAX_SAY_TEXT + 16];
+	char	message[MAX_SAY_TEXT];
 
 	playerNum = CG_CrosshairPlayer( localPlayerNum );
 	if ( playerNum == -1 ) {
 		return;
 	}
 
-	trap_Args( message, 128 );
-	Com_sprintf( command, 128, "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "tell" ), playerNum, message );
+	trap_Args( message, sizeof( message ) );
+	Com_sprintf( command, sizeof( command ), "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "tell" ), playerNum, message );
 	trap_SendClientCommand( command );
 }
 
 static void CG_TellAttacker_f( int localPlayerNum ) {
 	int		playerNum;
-	char	command[128];
-	char	message[128];
+	char	command[MAX_SAY_TEXT + 16];
+	char	message[MAX_SAY_TEXT];
 
 	playerNum = CG_LastAttacker( localPlayerNum );
 	if ( playerNum == -1 ) {
 		return;
 	}
 
-	trap_Args( message, 128 );
-	Com_sprintf( command, 128, "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "tell" ), playerNum, message );
+	trap_Args( message, sizeof( message ) );
+	Com_sprintf( command, sizeof( command ), "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "tell" ), playerNum, message );
 	trap_SendClientCommand( command );
 }
 
 #ifdef MISSIONPACK
 static void CG_VoiceTellTarget_f( int localPlayerNum ) {
 	int		playerNum;
-	char	command[128];
-	char	message[128];
+	char	command[MAX_SAY_TEXT + 16];
+	char	message[MAX_SAY_TEXT];
 
 	playerNum = CG_CrosshairPlayer( localPlayerNum );
 	if ( playerNum == -1 ) {
 		return;
 	}
 
-	trap_Args( message, 128 );
-	Com_sprintf( command, 128, "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "vtell" ), playerNum, message );
+	trap_Args( message, sizeof( message ) );
+	Com_sprintf( command, sizeof( command ), "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "vtell" ), playerNum, message );
 	trap_SendClientCommand( command );
 }
 
 static void CG_VoiceTellAttacker_f( int localPlayerNum ) {
 	int		playerNum;
-	char	command[128];
-	char	message[128];
+	char	command[MAX_SAY_TEXT + 16];
+	char	message[MAX_SAY_TEXT];
 
 	playerNum = CG_LastAttacker( localPlayerNum );
 	if ( playerNum == -1 ) {
 		return;
 	}
 
-	trap_Args( message, 128 );
-	Com_sprintf( command, 128, "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "vtell" ), playerNum, message );
+	trap_Args( message, sizeof( message ) );
+	Com_sprintf( command, sizeof( command ), "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "vtell" ), playerNum, message );
 	trap_SendClientCommand( command );
 }
 
@@ -948,11 +1262,309 @@ void CG_ToggleMenu_f( void ) {
 	CG_DistributeKeyEvent( K_ESCAPE, qfalse, trap_Milliseconds(), cg.connState, -1, 0 );
 }
 
+/*
+===================
+CG_ForwardToServer_f
+===================
+*/
+static void CG_ForwardToServer_f( int localPlayerNum ) {
+	char		buffer[BIG_INFO_STRING];
+
+	if ( cg.connected && trap_GetDemoState() != DS_PLAYBACK ) {
+		// the game server will interpret these commands
+		trap_LiteralArgs( buffer, sizeof ( buffer ) );
+		trap_SendClientCommand( buffer );
+	}
+}
+
+/*
+=================
+CG_Field_CompletePlayerName
+=================
+*/
+static void CG_Field_CompletePlayerName( int team, qboolean excludeTeam, qboolean excludeLocalPlayers ) {
+	int		i;
+	playerInfo_t	*pi;
+	char name[MAX_QPATH];
+	char list[MAX_CLIENTS * MAX_QPATH];
+	int listTotalLength;
+
+	if ( !cg.snap ) {
+		return;
+	}
+
+	// ZTM: FIXME: have to clear whole list because BG_AddStringToList doesn't properly terminate list
+	memset( list, 0, sizeof( list ) );
+	listTotalLength = 0;
+
+	for ( i = 0 ; i < cgs.maxplayers ; i++ ) {
+		pi = &cgs.playerinfo[ i ];
+		if ( !pi->infoValid ) {
+			continue;
+		}
+
+		if ( team != -1 && ( ( excludeTeam && pi->team == team ) || ( !excludeTeam && pi->team != team ) ) ) {
+			continue;
+		}
+
+		if ( excludeLocalPlayers && CG_LocalPlayerState( i ) ) {
+			continue;
+		}
+
+		Q_strncpyz( name, pi->name, sizeof ( name ) );
+		Q_CleanStr( name );
+
+		// Use quotes if there is a space in the name
+		if ( strchr( name, ' ' ) != NULL ) {
+			BG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "\"%s\"", name ) );
+		} else {
+			BG_AddStringToList( list, sizeof( list ), &listTotalLength, name );
+		}
+	}
+
+	if ( listTotalLength > 0 ) {
+		list[listTotalLength++] = 0;
+		trap_Field_CompleteList( list );
+	}
+}
+
+/*
+=================
+CG_TellComplete
+=================
+*/
+static void CG_TellComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		CG_Field_CompletePlayerName( -1, qfalse, qfalse );
+	}
+}
+
+#ifdef MISSIONPACK
+/*
+=================
+CG_Field_CompleteVoiceChat
+=================
+*/
+static void CG_Field_CompleteVoiceChat( void ) {
+	trap_Field_CompleteList(
+		VOICECHAT_BASEATTACK "\0"
+		VOICECHAT_CAMP "\0"
+		VOICECHAT_DEATHINSULT "\0"
+		VOICECHAT_DEFEND "\0"
+		VOICECHAT_DEFENDFLAG "\0"
+		VOICECHAT_ENEMYHASFLAG "\0"
+		VOICECHAT_FOLLOWFLAGCARRIER "\0"
+		VOICECHAT_FOLLOWME "\0"
+		VOICECHAT_GETFLAG "\0"
+		VOICECHAT_IHAVEFLAG "\0"
+		VOICECHAT_INPOSITION "\0"
+		VOICECHAT_KILLGAUNTLET "\0"
+		VOICECHAT_KILLINSULT "\0"
+		VOICECHAT_NO "\0"
+		VOICECHAT_OFFENSE "\0"
+		VOICECHAT_ONCAMPING "\0"
+		VOICECHAT_ONDEFENSE "\0"
+		VOICECHAT_ONFOLLOW "\0"
+		VOICECHAT_ONFOLLOWCARRIER "\0"
+		VOICECHAT_ONGETFLAG "\0"
+		VOICECHAT_ONOFFENSE "\0"
+		VOICECHAT_ONPATROL "\0"
+		VOICECHAT_ONRETURNFLAG "\0"
+		VOICECHAT_PATROL "\0"
+		VOICECHAT_PRAISE "\0"
+		VOICECHAT_RETURNFLAG "\0"
+		VOICECHAT_STARTLEADER "\0"
+		VOICECHAT_STOPLEADER "\0"
+		VOICECHAT_TAUNT "\0"
+		VOICECHAT_TRASH "\0"
+		VOICECHAT_WANTONDEFENSE "\0"
+		VOICECHAT_WANTONOFFENSE "\0"
+		VOICECHAT_WHOISLEADER "\0"
+		VOICECHAT_YES "\0"
+	);
+}
+
+/*
+=================
+CG_VoiceSayComplete
+=================
+*/
+static void CG_VoiceSayComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		CG_Field_CompleteVoiceChat();
+	}
+}
+
+/*
+=================
+CG_VoiceTellComplete
+=================
+*/
+static void CG_VoiceTellComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		CG_Field_CompletePlayerName( -1, qfalse, qfalse );
+	}
+	if ( argNum == 3 ) {
+		CG_Field_CompleteVoiceChat();
+	}
+}
+#endif
+
+/*
+=================
+CG_GiveComplete
+
+Game VM combines all arguments but completion works on separate words.
+This is kind of an ugly hack to avoid having to quote item names containing spaces.
+=================
+*/
+static void CG_GiveComplete( int localPlayerNum, char *args, int argNum ) {
+	char builtinNames[] = "all\0ammo\0armor\0assist\0defend\0excellent\0gauntletaward\0health\0impressive\0weapons\0";
+	char list[2048], *name, *typedName;
+	int i, j, listTotalLength, typedNameLength;
+	gitem_t *item;
+
+	// ZTM: FIXME: have to clear whole list because BG_AddStringToList doesn't properly terminate list
+	memset( list, 0, sizeof( list ) );
+	listTotalLength = 0;
+
+	if ( argNum == 2 ) {
+		memcpy( list, builtinNames, ARRAY_LEN( builtinNames ) - 1 );
+		listTotalLength = ARRAY_LEN( builtinNames ) - 1;
+	}
+
+	// skip "give " or NULL if no space character
+	typedName = strchr( args, ' ' );
+	if ( typedName ) {
+		typedName++;
+		typedNameLength = strlen( typedName );
+	} else {
+		typedNameLength = 0;
+	}
+
+	for ( i = 1; i < BG_NumItems(); i++ ) {
+		item = BG_ItemForItemNum( i );
+		name = item->pickup_name;
+
+		//
+		// complete item names with spaces across multiple arguments instead of adding quotes
+		//
+
+		// check if matches previously typed words
+		if ( typedName && Q_stricmpn( typedName, name, typedNameLength ) ) {
+			continue;
+		}
+
+		// find current word for argument
+		for ( j = 0; j < argNum - 2 && name; j++ ) {
+			name = strchr( name, ' ' );
+			if ( name ) {
+				name++;
+			}
+		}
+
+		if ( name && *name ) {
+			BG_AddStringToList( list, sizeof( list ), &listTotalLength, name );
+		}
+	}
+
+	if ( listTotalLength > 0 ) {
+		list[listTotalLength++] = 0;
+		trap_Field_CompleteList( list );
+	}
+}
+
+/*
+=================
+CG_FollowComplete
+=================
+*/
+static void CG_FollowComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		CG_Field_CompletePlayerName( TEAM_SPECTATOR, qtrue, qtrue );
+	}
+}
+
+/*
+=================
+CG_TeamComplete
+=================
+*/
+static void CG_TeamComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		trap_Field_CompleteList( "blue\0follow1\0follow2\0free\0red\0scoreboard\0spectator\0" );
+	}
+}
+
+/*
+=================
+CG_CallVoteComplete
+=================
+*/
+static void CG_CallVoteComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		trap_Field_CompleteList( "capturelimit\0fraglimit\0g_doWarmup\0g_gametype\0g_instagib\0kick\0kicknum\0map\0map_restart\0nextmap\0timelimit\0" );
+	}
+	if ( argNum == 3 && !Q_stricmp( CG_Argv( 1 ), "kick" ) ) {
+		CG_Field_CompletePlayerName( -1, qfalse, qfalse );
+	}
+	if ( argNum == 3 && !Q_stricmp( CG_Argv( 1 ), "map" ) ) {
+		trap_Field_CompleteFilename( "maps", ".bsp", qtrue, qfalse );
+	}
+}
+
+/*
+=================
+CG_VoteComplete
+=================
+*/
+static void CG_VoteComplete( int localPlayerNum, char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		trap_Field_CompleteList( "no\0yes\0" );
+	}
+}
+
+/*
+=================
+CG_CallTeamVoteComplete
+=================
+*/
+static void CG_CallTeamVoteComplete( int localPlayerNum, char *args, int argNum ) {
+	int playerNum, team;
+	playerInfo_t *pi;
+
+	if ( !cg.snap ) {
+		return;
+	}
+
+	playerNum = cg.localPlayers[localPlayerNum].playerNum;
+	if ( playerNum == -1 ) {
+		return;
+	}
+
+	pi = &cgs.playerinfo[playerNum];
+	if ( !pi->infoValid ) {
+		return;
+	}
+
+	team = pi->team;
+	if ( team != TEAM_BLUE && team != TEAM_RED ) {
+		return;
+	}
+
+	if ( argNum == 2 ) {
+		trap_Field_CompleteList( "leader\0" );
+	}
+	if ( argNum == 3 && !Q_stricmp( CG_Argv( 1 ), "leader" ) ) {
+		CG_Field_CompletePlayerName( team, qfalse, qfalse );
+	}
+}
+
 static consoleCommand_t	cg_commands[] = {
 	{ "+vstr", CG_VstrDown_f, 0, CG_VstrComplete },
 	{ "-vstr", CG_VstrUp_f, 0, CG_VstrComplete },
-	{ "testgun", CG_TestGun_f, CMD_INGAME },
-	{ "testmodel", CG_TestModel_f, CMD_INGAME },
+	{ "testgun", CG_TestGun_f, CMD_INGAME, CG_TestModelComplete },
+	{ "testmodel", CG_TestModel_f, CMD_INGAME, CG_TestModelComplete },
 	{ "nextframe", CG_TestModelNextFrame_f, CMD_INGAME },
 	{ "prevframe", CG_TestModelPrevFrame_f, CMD_INGAME },
 	{ "nextskin", CG_TestModelNextSkin_f, CMD_INGAME },
@@ -1063,12 +1675,15 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "-zoom", CG_ZoomUp_f, CMD_INGAME },
 	{ "centerecho", CG_CenterEcho_f, CMD_INGAME },
 	{ "centerview", IN_CenterView, 0 },
+	{ "headmodel", CG_SetHeadmodel_f, 0, CG_HeadmodelComplete },
 	{ "tcmd", CG_TargetCommand_f, CMD_INGAME },
+	{ "team_model", CG_SetTeamModel_f, 0, CG_TeamModelComplete },
+	{ "team_headmodel", CG_SetTeamHeadmodel_f, 0, CG_TeamHeadmodelComplete },
 	{ "tell_target", CG_TellTarget_f, CMD_INGAME },
 	{ "tell_attacker", CG_TellAttacker_f, CMD_INGAME },
 #ifdef MISSIONPACK
-	{ "vtell_target", CG_VoiceTellTarget_f, CMD_INGAME },
-	{ "vtell_attacker", CG_VoiceTellAttacker_f, CMD_INGAME },
+	{ "vtell_target", CG_VoiceTellTarget_f, CMD_INGAME, CG_VoiceSayComplete },
+	{ "vtell_attacker", CG_VoiceTellAttacker_f, CMD_INGAME, CG_VoiceSayComplete },
 	{ "nextTeamMember", CG_NextTeamMember_f, CMD_INGAME },
 	{ "prevTeamMember", CG_PrevTeamMember_f, CMD_INGAME },
 	{ "nextOrder", CG_NextOrder_f, CMD_INGAME },
@@ -1093,12 +1708,46 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "scoresDown", CG_ScrollScoresDown_f, CMD_INGAME },
 	{ "scoresUp", CG_ScrollScoresUp_f, CMD_INGAME },
 #endif
-	{ "model", CG_SetModel_f, 0 },
+	{ "model", CG_SetModel_f, 0, CG_ModelComplete },
 	{ "viewpos", CG_Viewpos_f, CMD_INGAME },
 	{ "weapnext", CG_NextWeapon_f, CMD_INGAME },
 	{ "weapprev", CG_PrevWeapon_f, CMD_INGAME },
 	{ "weapon", CG_Weapon_f, CMD_INGAME },
-	{ "weaponToggle", CG_WeaponToggle_f, CMD_INGAME }
+	{ "weaponToggle", CG_WeaponToggle_f, CMD_INGAME },
+
+	//
+	// These commands will be forwarded to the server and interpret by the Game VM.
+	//
+	{ "say", CG_ForwardToServer_f, CMD_INGAME },
+	{ "say_team", CG_ForwardToServer_f, CMD_INGAME },
+	{ "tell", CG_ForwardToServer_f, CMD_INGAME, CG_TellComplete },
+#ifdef MISSIONPACK
+	{ "vsay", CG_ForwardToServer_f, CMD_INGAME, CG_VoiceSayComplete },
+	{ "vsay_team", CG_ForwardToServer_f, CMD_INGAME, CG_VoiceSayComplete },
+	{ "vtell", CG_ForwardToServer_f, CMD_INGAME, CG_VoiceTellComplete },
+	{ "vosay", CG_ForwardToServer_f, CMD_INGAME, CG_VoiceSayComplete },
+	{ "vosay_team", CG_ForwardToServer_f, CMD_INGAME, CG_VoiceSayComplete },
+	{ "votell", CG_ForwardToServer_f, CMD_INGAME, CG_VoiceTellComplete },
+	{ "vtaunt", CG_ForwardToServer_f, CMD_INGAME },
+#endif
+	{ "give", CG_ForwardToServer_f, CMD_INGAME, CG_GiveComplete },
+	{ "god", CG_ForwardToServer_f, CMD_INGAME },
+	{ "notarget", CG_ForwardToServer_f, CMD_INGAME },
+	{ "noclip", CG_ForwardToServer_f, CMD_INGAME },
+	{ "where", CG_ForwardToServer_f, CMD_INGAME },
+	{ "kill", CG_ForwardToServer_f, CMD_INGAME },
+	{ "teamtask", CG_ForwardToServer_f, CMD_INGAME },
+	{ "levelshot", CG_ForwardToServer_f, CMD_INGAME },
+	{ "follow", CG_ForwardToServer_f, CMD_INGAME, CG_FollowComplete },
+	{ "follownext", CG_ForwardToServer_f, CMD_INGAME },
+	{ "followprev", CG_ForwardToServer_f, CMD_INGAME },
+	{ "team", CG_ForwardToServer_f, CMD_INGAME, CG_TeamComplete },
+	{ "callvote", CG_ForwardToServer_f, CMD_INGAME, CG_CallVoteComplete },
+	{ "vote", CG_ForwardToServer_f, CMD_INGAME, CG_VoteComplete },
+	{ "callteamvote", CG_ForwardToServer_f, CMD_INGAME, CG_CallTeamVoteComplete },
+	{ "teamvote", CG_ForwardToServer_f, CMD_INGAME, CG_VoteComplete },
+	{ "setviewpos", CG_ForwardToServer_f, CMD_INGAME },
+	{ "stats", CG_ForwardToServer_f, CMD_INGAME }
 };
 
 static int numPlayerCommands = ARRAY_LEN( playerCommands );
@@ -1131,7 +1780,6 @@ Cmd_Argc() / Cmd_Argv()
 =================
 */
 qboolean CG_ConsoleCommand( connstate_t state, int realTime ) {
-	char		buffer[BIG_INFO_STRING];
 	const char	*cmd;
 	int		i;
 	int		localPlayerNum;
@@ -1177,13 +1825,6 @@ qboolean CG_ConsoleCommand( connstate_t state, int realTime ) {
 				return qtrue;
 			}
 		}
-	}
-
-	if ( cg.connected && trap_GetDemoState() != DS_PLAYBACK ) {
-		// the game server will interpret these commands
-		trap_LiteralArgs( buffer, sizeof ( buffer ) );
-		trap_SendClientCommand( buffer );
-		return qtrue;
 	}
 
 	return qfalse;
@@ -1262,46 +1903,5 @@ void CG_InitConsoleCommands( void ) {
 		for ( j = 0; j < CG_MaxSplitView(); j++ ) {
 			trap_AddCommand( Com_LocalPlayerCvarName( j, playerCommands[i].cmd ) );
 		}
-	}
-
-	if ( !cg.connected ) {
-		return;
-	}
-
-	//
-	// the game server will interpret these commands, which will be automatically
-	// forwarded to the server after they are not recognized locally
-	//
-	for (i = 0; i < CG_MaxSplitView(); i++) {
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "say"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "say_team"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "tell"));
-#ifdef MISSIONPACK
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "vsay"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "vsay_team"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "vtell"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "vosay"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "vosay_team"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "votell"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "vtaunt"));
-#endif
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "give"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "god"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "notarget"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "noclip"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "where"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "kill"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "teamtask"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "levelshot"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "follow"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "follownext"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "followprev"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "team"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "callvote"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "vote"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "callteamvote"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "teamvote"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "setviewpos"));
-		trap_AddCommand(Com_LocalPlayerCvarName(i, "stats"));
 	}
 }

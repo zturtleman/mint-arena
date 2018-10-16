@@ -542,7 +542,7 @@ void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, fl
 	vec4_t newColor;
 	const glyphInfo_t *glyph;
 	const char *s;
-	float max;
+	float start, max;
 	float yadj, xadj;
 	float useScaleX, useScaleY;
 	float xscale, yscale;
@@ -553,10 +553,11 @@ void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, fl
 
 	xscale = 1.0f;
 	yscale = 1.0f;
+	start = 0.0f;
+	max = *maxX;
 	CG_AdjustFrom640( &x, &y, &xscale, &yscale );
-
-	max = *maxX * xscale;
-	adjust *= xscale;
+	CG_AdjustFrom640( &start, NULL, &adjust, NULL );
+	CG_AdjustFrom640( &max, NULL, NULL, NULL );
 
 	useScaleX = scale * font->glyphScale * xscale;
 	useScaleY = scale * font->glyphScale * yscale;
@@ -590,7 +591,7 @@ void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, fl
 		glyph = Text_GetGlyph( font, Q_UTF8_CodePoint( &s ) );
 
 		if ( x + ( glyph->xSkip * useScaleX ) > max ) {
-			*maxX = 0;
+			x = start;
 			break;
 		}
 
@@ -599,10 +600,12 @@ void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, fl
 
 		Text_PaintGlyph( x + xadj, y - yadj, glyph->imageWidth * useScaleX, glyph->imageHeight * useScaleY, glyph, NULL );
 		x += ( glyph->xSkip * useScaleX ) + adjust;
-		*maxX = x / xscale;
 		count++;
 	}
 	trap_R_SetColor( NULL );
+
+	// convert X to 640 coords
+	*maxX = ( x - start ) / xscale;
 }
 
 #define MAX_WRAP_BYTES 1024

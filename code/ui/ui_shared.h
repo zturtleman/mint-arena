@@ -381,6 +381,9 @@ typedef struct {
 	void (*stopCinematic)(int handle);
 	void (*drawCinematic)(int handle, float x, float y, float w, float h);
 	void (*runCinematicFrame)(int handle);
+	void (*adjustFrom640)( float *x, float *y, float *w, float *h );
+	void (*setScreenPlacement)( screenPlacement_e hpos, screenPlacement_e vpos );
+	void (*popScreenPlacement)( void );
 
   int				realTime;
   int				frameTime;

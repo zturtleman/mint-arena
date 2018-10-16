@@ -389,7 +389,7 @@ void	Svcmd_EntityList_f (void) {
 int PlayerForString( const char *s ) {
 	gplayer_t	*cl;
 	int			idnum;
-	char		cleanName[MAX_STRING_CHARS];
+	char		cleanName[MAX_NETNAME];
 
 	// numeric values could be slot numbers
 	if ( StringIsInteger( s ) ) {
@@ -421,6 +421,43 @@ int PlayerForString( const char *s ) {
 
 /*
 ===================
+G_Field_CompletePlayerName
+===================
+*/
+void G_Field_CompletePlayerName( void ) {
+	gplayer_t	*cl;
+	int			idnum;
+	char		cleanName[MAX_NETNAME];
+	char		list[MAX_CLIENTS * MAX_NETNAME];
+	int			listTotalLength;
+
+	// ZTM: FIXME: have to clear whole list because BG_AddStringToList doesn't properly terminate list
+	memset( list, 0, sizeof( list ) );
+	listTotalLength = 0;
+
+	for ( idnum=0,cl=level.players ; idnum < level.maxplayers ; idnum++,cl++ ) {
+		if ( cl->pers.connected != CON_CONNECTED ) {
+			continue;
+		}
+		Q_strncpyz(cleanName, cl->pers.netname, sizeof(cleanName));
+		Q_CleanStr(cleanName);
+
+		// Use quotes if there is a space in the name
+		if ( strchr( cleanName, ' ' ) != NULL ) {
+			BG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "\"%s\"", cleanName ) );
+		} else {
+			BG_AddStringToList( list, sizeof( list ), &listTotalLength, cleanName );
+		}
+	}
+
+	if ( listTotalLength > 0 ) {
+		list[listTotalLength++] = 0;
+		trap_Field_CompleteList( list );
+	}
+}
+
+/*
+===================
 Svcmd_ForceTeam_f
 
 forceTeam <player> <team>
@@ -445,6 +482,19 @@ void	Svcmd_ForceTeam_f( void ) {
 	// set the team
 	trap_Argv( 2, str, sizeof( str ) );
 	SetTeam( &g_entities[playerNum], str );
+}
+
+/*
+===================
+Svcmd_ForceTeamComplete
+===================
+*/
+void	Svcmd_ForceTeamComplete( char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		G_Field_CompletePlayerName();
+	} else if ( argNum == 3 ) {
+		trap_Field_CompleteList( "blue\0follow1\0follow2\0free\0red\0scoreboard\0spectator\0" );
+	}
 }
 
 /*
@@ -496,6 +546,17 @@ void	Svcmd_Teleport_f( void ) {
 	}
 
 	TeleportPlayer( ent, position, angles );
+}
+
+/*
+===================
+Svcmd_TeleportComplete
+===================
+*/
+void	Svcmd_TeleportComplete( char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		G_Field_CompletePlayerName();
+	}
 }
 
 /*
@@ -556,6 +617,17 @@ void	Svcmd_Tell_f( void ) {
 	G_Say( NULL, target, SAY_TELL, p );
 }
 
+/*
+===================
+Svcmd_TellComplete
+===================
+*/
+void	Svcmd_TellComplete( char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		G_Field_CompletePlayerName();
+	}
+}
+
 struct svcmd
 {
   char     *cmd;
@@ -564,17 +636,17 @@ struct svcmd
   void     ( *complete )( char *, int );
 } svcmds[ ] = {
   { "abort_podium", qfalse, Svcmd_AbortPodium_f },
-  { "addbot", qfalse, Svcmd_AddBot_f },
+  { "addbot", qfalse, Svcmd_AddBot_f, Svcmd_AddBotComplete },
   { "addip", qfalse, Svcmd_AddIP_f },
   { "botlist", qfalse, Svcmd_BotList_f },
   { "botreport", qfalse, Svcmd_BotTeamplayReport_f },
   { "entityList", qfalse, Svcmd_EntityList_f },
-  { "forceTeam", qfalse, Svcmd_ForceTeam_f },
+  { "forceTeam", qfalse, Svcmd_ForceTeam_f, Svcmd_ForceTeamComplete },
   { "listip", qfalse, Svcmd_ListIPs_f },
   { "removeip", qfalse, Svcmd_RemoveIP_f },
   { "say", qtrue, Svcmd_Say_f },
-  { "teleport", qfalse, Svcmd_Teleport_f },
-  { "tell", qtrue, Svcmd_Tell_f },
+  { "teleport", qfalse, Svcmd_Teleport_f, Svcmd_TeleportComplete },
+  { "tell", qtrue, Svcmd_Tell_f, Svcmd_TellComplete },
 };
 
 const size_t numSvCmds = ARRAY_LEN(svcmds);

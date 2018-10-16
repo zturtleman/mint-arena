@@ -1886,6 +1886,42 @@ void BG_DecomposeUserCmdValue( int value, int *weapon ) {
 }
 
 /*
+=============
+BG_AddStringToList
+=============
+*/
+void BG_AddStringToList( char *list, size_t listSize, int *listLength, char *name ) {
+	size_t namelen;
+	int val;
+	char *listptr;
+
+	namelen = strlen( name );
+
+	if ( *listLength + namelen + 1 >= listSize ) {
+		return;
+	}
+
+	for ( listptr = list; *listptr; listptr += strlen( listptr ) + 1 ) {
+		val = Q_stricmp( name, listptr );
+		if ( val == 0 ) {
+			return;
+		}
+		// insert into list
+		else if ( val < 0 ) {
+			int moveBytes = *listLength - (int)( listptr - list ) + 1;
+
+			memmove( listptr + namelen + 1, listptr, moveBytes );
+			strncpy( listptr, name, namelen + 1 );
+			*listLength += namelen + 1;
+			return;
+		}
+	}
+
+	strncpy( listptr, name, namelen + 1 );
+	*listLength += namelen + 1;
+}
+
+/*
 ======================
 SnapVectorTowards
 
@@ -1907,8 +1943,13 @@ void SnapVectorTowards( vec3_t v, vec3_t to ) {
 	}
 }
 
+/*
+=============
+cmdcmp
+=============
+*/
 int cmdcmp( const void *a, const void *b ) {
-  return Q_stricmp( (const char *)a, ((dummyCmd_t *)b)->name );
+	return Q_stricmp( (const char *)a, ((dummyCmd_t *)b)->name );
 }
 
 /*

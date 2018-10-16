@@ -193,8 +193,8 @@ typedef struct bot_stringlist_s
 	struct bot_stringlist_s *next;
 } bot_stringlist_t;
 
-//may use up to MAX_CLIENTS * 2 console messages on map change
-#define MAX_CHATSTATE_MESSAGES 128
+//may use up to MAX_CLIENTS * 2 console messages plus a few chat messages on map change
+#define MAX_CHATSTATE_MESSAGES ( MAX_CLIENTS * 3 )
 
 //chat state of a bot
 typedef struct bot_chatstate_s
@@ -1051,7 +1051,7 @@ bot_randomlist_t *BotLoadRandomStrings(char *filename)
 	bot_randomstring_t *randomstring;
 
 #ifdef DEBUG
-	int starttime = Sys_MilliSeconds();
+	int starttime = botimport.MilliSeconds();
 #endif //DEBUG
 
 	if ( !*filename )
@@ -1138,7 +1138,7 @@ bot_randomlist_t *BotLoadRandomStrings(char *filename)
 	BotAI_Print(PRT_DEVELOPER, "loaded %s\n", filename);
 	//
 #ifdef DEBUG
-	BotAI_Print(PRT_DEVELOPER, "random strings %d msec\n", Sys_MilliSeconds() - starttime);
+	BotAI_Print(PRT_DEVELOPER, "random strings %d msec\n", botimport.MilliSeconds() - starttime);
 	//BotDumpRandomStringList(randomlist);
 #endif //DEBUG
 	//
@@ -2174,7 +2174,7 @@ bot_chat_t *BotLoadInitialChat(char *chatfile, char *chatname)
 #ifdef DEBUG
 	int starttime;
 
-	starttime = Sys_MilliSeconds();
+	starttime = botimport.MilliSeconds();
 #endif //DEBUG
 	//
 	size = 0;
@@ -2322,7 +2322,7 @@ bot_chat_t *BotLoadInitialChat(char *chatfile, char *chatname)
 		BotCheckInitialChatIntegrety(chat);
 	} //end if
 #ifdef DEBUG
-	BotAI_Print(PRT_DEVELOPER, "initial chats loaded in %d msec\n", Sys_MilliSeconds() - starttime);
+	BotAI_Print(PRT_DEVELOPER, "initial chats loaded in %d msec\n", botimport.MilliSeconds() - starttime);
 #endif //DEBUG
 	//character was read successfully
 	return chat;
@@ -3098,7 +3098,7 @@ void BotFreeChatState(int handle)
 int BotSetupChatAI(void)
 {
 #ifdef DEBUG
-	int starttime = Sys_MilliSeconds();
+	int starttime = botimport.MilliSeconds();
 #endif //DEBUG
 
 	synonyms = BotLoadSynonyms("syn.c");
@@ -3113,7 +3113,7 @@ int BotSetupChatAI(void)
 	InitConsoleMessageHeap();
 
 #ifdef DEBUG
-	BotAI_Print(PRT_MESSAGE, "setup chat AI %d msec\n", Sys_MilliSeconds() - starttime);
+	BotAI_Print(PRT_MESSAGE, "setup chat AI %d msec\n", botimport.MilliSeconds() - starttime);
 #endif //DEBUG
 	return BLERR_NOERROR;
 } //end of the function BotSetupChatAI

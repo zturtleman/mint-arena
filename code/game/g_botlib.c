@@ -108,6 +108,7 @@ G_BotInitBotLib
 void G_BotInitBotLib(void) {
 	botlib_import_t	botlib_import;
 
+	botlib_import.MilliSeconds = trap_Milliseconds;
 	botlib_import.Print = BotAI_Print;
 	botlib_import.Trace = BotAI_Trace;
 	botlib_import.EntityTrace = BotAI_EntityTrace;

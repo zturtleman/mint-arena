@@ -79,6 +79,7 @@ can then be moved around
 void CG_TestModel_f (void) {
 	vec3_t		angles;
 
+	cg.testGun = qfalse;
 	memset( &cg.testModelEntity, 0, sizeof(cg.testModelEntity) );
 	if ( trap_Argc() < 2 ) {
 		return;
@@ -104,7 +105,17 @@ void CG_TestModel_f (void) {
 	angles[ROLL] = 0;
 
 	AnglesToAxis( angles, cg.testModelEntity.axis );
-	cg.testGun = qfalse;
+}
+
+/*
+=================
+CG_TestModelComplete
+=================
+*/
+void CG_TestModelComplete( char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		trap_Field_CompleteFilename( "", "$models", qfalse, qfalse );
+	}
 }
 
 /*
@@ -116,6 +127,11 @@ Replaces the current view weapon with the given model
 */
 void CG_TestGun_f (void) {
 	CG_TestModel_f();
+
+	if ( !cg.testModelEntity.hModel ) {
+		return;
+	}
+
 	cg.testGun = qtrue;
 	cg.testModelEntity.renderfx = RF_DEPTHHACK | RF_NO_MIRROR;
 }
@@ -256,16 +272,16 @@ void CG_CalcVrect (void) {
 	cgs.screenXScaleStretch = cg.viewportWidth * (1.0/640.0);
 	cgs.screenYScaleStretch = cg.viewportHeight * (1.0/480.0);
 	if ( cg.viewportWidth * 480 > cg.viewportHeight * 640 ) {
-		cgs.screenXScale = cg.viewportWidth * (1.0/640.0);
-		cgs.screenYScale = cg.viewportHeight * (1.0/480.0);
+		cgs.screenXScale = cgs.screenXScaleStretch;
+		cgs.screenYScale = cgs.screenYScaleStretch;
 		// wide screen
 		cgs.screenXBias = 0.5 * ( cg.viewportWidth - ( cg.viewportHeight * (640.0/480.0) ) );
 		cgs.screenXScale = cgs.screenYScale;
 		// no narrow screen
 		cgs.screenYBias = 0;
 	} else {
-		cgs.screenXScale = cg.viewportWidth * (1.0/640.0);
-		cgs.screenYScale = cg.viewportHeight * (1.0/480.0);
+		cgs.screenXScale = cgs.screenXScaleStretch;
+		cgs.screenYScale = cgs.screenYScaleStretch;
 		// narrow screen
 		cgs.screenYBias = 0.5 * ( cg.viewportHeight - ( cg.viewportWidth * (480.0/640.0) ) );
 		cgs.screenYScale = cgs.screenXScale;
@@ -653,11 +669,11 @@ static int CG_CalcFov( void ) {
 	}
 
 	// set world fov
-	fov = cg_fov.integer;
+	fov = cg_fov.value;
 	CG_CalcFov2( &cg.refdef, &fov, &cg.refdef.fov_x, &cg.refdef.fov_y );
 
 	// set view weapon fov
-	cg.viewWeaponFov = cg_weaponFov.integer ? cg_weaponFov.integer : cg_fov.integer;
+	cg.viewWeaponFov = cg_weaponFov.value ? cg_weaponFov.value : cg_fov.value;
 	CG_CalcFov2( &cg.refdef, &cg.viewWeaponFov, &cg.refdef.weapon_fov_x, &cg.refdef.weapon_fov_y );
 
 	if ( !cg.cur_lc->zoomed ) {

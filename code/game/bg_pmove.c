@@ -534,8 +534,11 @@ static void PM_WaterMove( void ) {
 		PM_ClipVelocity (pm->ps->velocity, pml.groundTrace.plane.normal, 
 			pm->ps->velocity, OVERCLIP );
 
-		VectorNormalize(pm->ps->velocity);
-		VectorScale(pm->ps->velocity, vel, pm->ps->velocity);
+		// don't decrease velocity when going up or down a slope
+		if ( pm->pmove_overbounce || VectorLength(pm->ps->velocity) > 1 ) {
+			VectorNormalize(pm->ps->velocity);
+			VectorScale(pm->ps->velocity, vel, pm->ps->velocity);
+		}
 	}
 
 	PM_SlideMove( qfalse );
@@ -800,8 +803,8 @@ static void PM_WalkMove( void ) {
 	PM_ClipVelocity (pm->ps->velocity, pml.groundTrace.plane.normal, 
 		pm->ps->velocity, OVERCLIP );
 
+	// don't decrease velocity when going up or down a slope
 	if ( pm->pmove_overbounce || VectorLength(pm->ps->velocity) > 1 ) {
-		// don't decrease velocity when going up or down a slope
 		VectorNormalize(pm->ps->velocity);
 		VectorScale(pm->ps->velocity, vel, pm->ps->velocity);
 	}

@@ -98,7 +98,7 @@ endif
 export CROSS_COMPILING
 
 ifndef VERSION
-VERSION=0.6
+VERSION=1.0.0
 endif
 
 ifndef VM_PREFIX
@@ -228,11 +228,11 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu" "gnu")
     HAVE_VM_COMPILED=true
   else
   ifeq ($(ARCH),ppc)
-    BASE_CFLAGS += -maltivec
+    ALTIVEC_CFLAGS = -maltivec
     HAVE_VM_COMPILED=true
   endif
   ifeq ($(ARCH),ppc64)
-    BASE_CFLAGS += -maltivec
+    ALTIVEC_CFLAGS = -maltivec
     HAVE_VM_COMPILED=true
   endif
   ifeq ($(ARCH),sparc)
@@ -294,10 +294,12 @@ ifeq ($(PLATFORM),darwin)
                  -DMAC_OS_X_VERSION_MIN_REQUIRED=$(MAC_OS_X_VERSION_MIN_REQUIRED)
 
   ifeq ($(ARCH),ppc)
-    BASE_CFLAGS += -arch ppc -faltivec
+    BASE_CFLAGS += -arch ppc
+    ALTIVEC_CFLAGS = -faltivec
   endif
   ifeq ($(ARCH),ppc64)
-    BASE_CFLAGS += -arch ppc64 -faltivec
+    BASE_CFLAGS += -arch ppc64
+    ALTIVEC_CFLAGS = -faltivec
   endif
   ifeq ($(ARCH),x86)
     OPTIMIZEVM += -march=prescott -mfpmath=sse
@@ -495,11 +497,11 @@ ifeq ($(PLATFORM),openbsd)
     HAVE_VM_COMPILED=true
   else
   ifeq ($(ARCH),ppc)
-    BASE_CFLAGS += -maltivec
+    ALTIVEC_CFLAGS = -maltivec
     HAVE_VM_COMPILED=true
   endif
   ifeq ($(ARCH),ppc64)
-    BASE_CFLAGS += -maltivec
+    ALTIVEC_CFLAGS = -maltivec
     HAVE_VM_COMPILED=true
   endif
   ifeq ($(ARCH),sparc64)
@@ -776,13 +778,13 @@ debug:
 	@$(MAKE) targets B=$(BD) CFLAGS="$(CFLAGS) $(BASE_BUILD_DEFINES) $(BASE_CFLAGS) $(BUILD_DEFINES) $(DEPEND_CFLAGS)" \
 	  OPTIMIZE="$(DEBUG_CFLAGS)" OPTIMIZEVM="$(DEBUG_CFLAGS)" \
 	  CLIENT_CFLAGS="$(CLIENT_CFLAGS)" SERVER_CFLAGS="$(SERVER_CFLAGS)" V=$(V) \
-	  BUILD_DEFINES="$(BASE_BUILD_DEFINES) $(BUILD_DEFINES)"
+	  QVM_CFLAGS="$(BASE_BUILD_DEFINES) $(BUILD_DEFINES)"
 
 release:
 	@$(MAKE) targets B=$(BR) CFLAGS="$(CFLAGS) $(BASE_BUILD_DEFINES) $(BASE_CFLAGS) $(BUILD_DEFINES) $(DEPEND_CFLAGS)" \
 	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" OPTIMIZEVM="-DNDEBUG $(OPTIMIZEVM)" \
 	  CLIENT_CFLAGS="$(CLIENT_CFLAGS)" SERVER_CFLAGS="$(SERVER_CFLAGS)" V=$(V) \
-	  BUILD_DEFINES="$(BASE_BUILD_DEFINES) $(BUILD_DEFINES)"
+	  QVM_CFLAGS="-DNDEBUG $(BASE_BUILD_DEFINES) $(BUILD_DEFINES)"
 
 ifneq ($(call bin_path, tput),)
   TERM_COLUMNS=$(shell if c=`tput cols`; then echo $$(($$c-4)); else echo 76; fi)
@@ -1003,32 +1005,32 @@ $(Q3LCC): $(Q3LCCOBJ) $(Q3RCC) $(Q3CPP)
 
 define DO_Q3LCC
 $(echo_cmd) "Q3LCC $<"
-$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) $(BUILD_DEFINES) -o $@ $<
+$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) $(QVM_CFLAGS) -o $@ $<
 endef
 
 define DO_CGAME_Q3LCC
 $(echo_cmd) "CGAME_Q3LCC $<"
-$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) -DCGAME $(BUILD_DEFINES) -o $@ $<
+$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) -DCGAME $(QVM_CFLAGS) -o $@ $<
 endef
 
 define DO_GAME_Q3LCC
 $(echo_cmd) "GAME_Q3LCC $<"
-$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) -DGAME $(BUILD_DEFINES) -o $@ $<
+$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) -DGAME $(QVM_CFLAGS) -o $@ $<
 endef
 
 define DO_Q3LCC_MISSIONPACK
 $(echo_cmd) "Q3LCC_MISSIONPACK $<"
-$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) $(BUILD_DEFINES) -o $@ $<
+$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) $(QVM_CFLAGS) -o $@ $<
 endef
 
 define DO_CGAME_Q3LCC_MISSIONPACK
 $(echo_cmd) "CGAME_Q3LCC_MISSIONPACK $<"
-$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) -DCGAME $(BUILD_DEFINES) -o $@ $<
+$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) -DCGAME $(QVM_CFLAGS) -o $@ $<
 endef
 
 define DO_GAME_Q3LCC_MISSIONPACK
 $(echo_cmd) "GAME_Q3LCC_MISSIONPACK $<"
-$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) -DGAME $(BUILD_DEFINES) -o $@ $<
+$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) -DGAME $(QVM_CFLAGS) -o $@ $<
 endef
 
 

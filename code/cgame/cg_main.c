@@ -2510,7 +2510,6 @@ CG_LoadHudMenu();
 void CG_LoadHudMenu( void ) {
 	char buff[1024];
 	const char *hudSet;
-	menuDef_t *menu;
 
 	cgDC.registerShaderNoMip = &trap_R_RegisterShaderNoMip;
 	cgDC.setColor = &trap_R_SetColor;
@@ -2562,6 +2561,9 @@ void CG_LoadHudMenu( void ) {
 	cgDC.stopCinematic = &CG_StopCinematic;
 	cgDC.drawCinematic = &CG_DrawCinematic;
 	cgDC.runCinematicFrame = &CG_RunCinematicFrame;
+	cgDC.adjustFrom640 = &CG_AdjustFrom640;
+	cgDC.setScreenPlacement = &CG_SetScreenPlacement;
+	cgDC.popScreenPlacement = &CG_PopScreenPlacement;
 	
 	Init_Display(&cgDC);
 
@@ -2574,6 +2576,18 @@ void CG_LoadHudMenu( void ) {
 	}
 
 	CG_LoadMenus(hudSet);
+	CG_HudMenuHacks();
+}
+
+/*
+=================
+CG_HudMenuHacks
+=================
+*/
+void CG_HudMenuHacks( void ) {
+	menuDef_t *menu;
+
+	Init_Display(&cgDC);
 
 	// make voice chat head stick to left side in widescreen
 	menu = Menus_FindByName( "voiceMenu" );
@@ -3116,7 +3130,7 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 	}
 
 	// console key is hardcoded, so the user can never unbind it
-	if( key == K_CONSOLE || ( key == K_ESCAPE && trap_Key_IsDown( K_SHIFT ) ) ) {
+	if( key == K_CONSOLE || ( key == K_ESCAPE && ( trap_Key_IsDown( K_LEFTSHIFT ) || trap_Key_IsDown( K_RIGHTSHIFT ) ) ) ) {
 		if ( down ) {
 			Con_ToggleConsole_f();
 		}
@@ -3166,6 +3180,9 @@ void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t s
 		CG_KeyEvent( key, down );
 	} else if ( keyCatcher & KEYCATCH_UI ) {
 		UI_KeyEvent( key, down );
+	} else if ( state == CA_DISCONNECTED ) {
+		// console is drawn if disconnected and not KEYCATCH_UI
+		Console_Key( key, down );
 	}
 }
 
@@ -3192,6 +3209,9 @@ void CG_DistributeCharEvent( int character, connstate_t state ) {
 		CG_KeyEvent( key, qtrue );
 	} else if ( keyCatcher & KEYCATCH_UI ) {
 		UI_KeyEvent( key, qtrue );
+	} else if ( state == CA_DISCONNECTED ) {
+		// console is drawn if disconnected and not KEYCATCH_UI
+		Console_Key( key, qtrue );
 	}
 }
 

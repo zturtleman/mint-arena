@@ -49,32 +49,32 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define TFL_INVALID				0x00000001	//traveling temporary not possible
 #define TFL_WALK				0x00000002	//walking
 #define TFL_CROUCH				0x00000004	//crouching
-#define TFL_BARRIERJUMP			0x00000008	//jumping onto a barrier
+#define TFL_BARRIERJUMP				0x00000008	//jumping onto a barrier
 #define TFL_JUMP				0x00000010	//jumping
 #define TFL_LADDER				0x00000020	//climbing a ladder
-#define TFL_WALKOFFLEDGE		0x00000080	//walking of a ledge
+#define TFL_WALKOFFLEDGE			0x00000080	//walking of a ledge
 #define TFL_SWIM				0x00000100	//swimming
-#define TFL_WATERJUMP			0x00000200	//jumping out of the water
-#define TFL_TELEPORT			0x00000400	//teleporting
-#define TFL_ELEVATOR			0x00000800	//elevator
-#define TFL_ROCKETJUMP			0x00001000	//rocket jumping
+#define TFL_WATERJUMP				0x00000200	//jumping out of the water
+#define TFL_TELEPORT				0x00000400	//teleporting
+#define TFL_ELEVATOR				0x00000800	//elevator
+#define TFL_ROCKETJUMP				0x00001000	//rocket jumping
 #define TFL_BFGJUMP				0x00002000	//bfg jumping
-#define TFL_GRAPPLEHOOK			0x00004000	//grappling hook
-#define TFL_DOUBLEJUMP			0x00008000	//double jump
-#define TFL_RAMPJUMP			0x00010000	//ramp jump
-#define TFL_STRAFEJUMP			0x00020000	//strafe jump
+#define TFL_GRAPPLEHOOK				0x00004000	//grappling hook
+#define TFL_DOUBLEJUMP				0x00008000	//double jump
+#define TFL_RAMPJUMP				0x00010000	//ramp jump
+#define TFL_STRAFEJUMP				0x00020000	//strafe jump
 #define TFL_JUMPPAD				0x00040000	//jump pad
 #define TFL_AIR					0x00080000	//travel through air
 #define TFL_WATER				0x00100000	//travel through water
 #define TFL_SLIME				0x00200000	//travel through slime
 #define TFL_LAVA				0x00400000	//travel through lava
-#define TFL_DONOTENTER			0x00800000	//travel through donotenter area
+#define TFL_DONOTENTER				0x00800000	//travel through donotenter area
 #define TFL_FUNCBOB				0x01000000	//func bobbing
 #define TFL_FLIGHT				0x02000000	//flight
 #define TFL_BRIDGE				0x04000000	//move over a bridge
 //
-#define TFL_NOTTEAM1			0x08000000	//not team 1
-#define TFL_NOTTEAM2			0x10000000	//not team 2
+#define TFL_NOTTEAM1				0x08000000	//not team 1
+#define TFL_NOTTEAM2				0x10000000	//not team 2
 
 //default travel flags
 #define TFL_DEFAULT	TFL_WALK|TFL_CROUCH|TFL_BARRIERJUMP|\
@@ -86,7 +86,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 typedef enum
 {
 	SOLID_NOT,			// no interaction with other objects
-	SOLID_TRIGGER,		// only touch when inside, after moving
+	SOLID_TRIGGER,			// only touch when inside, after moving
 	SOLID_BBOX,			// touch on edge
 	SOLID_BSP			// bsp clip, touch on edge
 } solid_t;
@@ -97,10 +97,10 @@ typedef struct aas_trace_s
 	qboolean	startsolid;	// if true, the initial point was in a solid area
 	float		fraction;	// time completed, 1.0 = didn't hit anything
 	vec3_t		endpos;		// final position
-	int			ent;		// entity blocking the trace
-	int			lastarea;	// last area the trace was in (zero if none)
-	int			area;		// area blocking the trace (zero if none)
-	int			planenum;	// number of the plane that was hit (zero if none or hit entity) // ZTM: FIXME: Is zero ever a valid value?
+	int		ent;		// entity blocking the trace
+	int		lastarea;	// last area the trace was in (zero if none)
+	int		area;		// area blocking the trace (zero if none)
+	int		planenum;	// number of the plane that was hit (zero if none or hit entity) // ZTM: FIXME: Is zero ever a valid value?
 	aas_plane_t	plane;		// surface normal at impact, transformed to world space
 } aas_trace_t;
 
@@ -174,5 +174,5 @@ typedef struct aas_predictroute_s
 	int endcontents;		//contents at the end of movement prediction
 	int endtravelflags;		//end travel flags
 	int numareas;			//number of areas predicted ahead
-	int time;				//time predicted ahead (in hundreth of a sec)
+	int time;				//time predicted ahead (in hundredths of a sec)
 } aas_predictroute_t;

@@ -177,7 +177,7 @@ static void UI_LoadArenas( void ) {
 	int			numdirs;
 	vmCvar_t	arenasFile;
 	char		filename[128];
-	char		dirlist[2048];
+	char		dirlist[4096];
 	char*		dirptr;
 	int			i, n;
 	int			dirlen;
@@ -196,7 +196,7 @@ static void UI_LoadArenas( void ) {
 	}
 
 	// get all arenas from .arena files
-	numdirs = trap_FS_GetFileList("scripts", ".arena", dirlist, 2048 );
+	numdirs = trap_FS_GetFileList("scripts", ".arena", dirlist, 4096 );
 	dirptr  = dirlist;
 	for (i = 0; i < numdirs; i++, dirptr += dirlen+1) {
 		dirlen = strlen(dirptr);
@@ -239,7 +239,7 @@ static void UI_LoadArenas( void ) {
 	n = ui_numSinglePlayerArenas % ARENAS_PER_TIER;
 	if( n != 0 ) {
 		ui_numSinglePlayerArenas -= n;
-		trap_Print( va( "%i arenas ignored to make count divisible by %i\n", n, ARENAS_PER_TIER ) );
+		Com_DPrintf( "%i single player arenas ignored to make count divisible by %i\n", n, ARENAS_PER_TIER );
 	}
 
 	// go through once more and assign number to the levels
@@ -815,7 +815,7 @@ void UI_SPUnlockMedals_f( void ) {
 
 	trap_Cvar_Set( "g_spAwards", awardData );
 
-	trap_Print( "All levels unlocked at 100\n" );
+	trap_Print( "All awards unlocked at 100\n" );
 }
 
 
@@ -830,5 +830,5 @@ void UI_InitGameinfo( void ) {
 	UI_LoadArenas();
 	UI_LoadBots();
 
-	uis.demoversion = qfalse;
+	uis.demoversion = !!trap_Cvar_VariableIntegerValue( "ui_demoq3" );
 }

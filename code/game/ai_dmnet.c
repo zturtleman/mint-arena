@@ -66,9 +66,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 // for the voice chats
 #include "../../ui/menudef.h"
 
-//goal flag, see ../botlib/be_ai_goal.h for the other GFL_*
-#define GFL_AIR			128
-
 int numnodeswitches;
 char nodeswitch[MAX_NODESWITCHES+1][144];
 
@@ -338,7 +335,7 @@ int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 ==================
 BotGetLongTermGoal
 
-we could also create a seperate AI node for every long term goal type
+we could also create a separate AI node for every long term goal type
 however this saves us a lot of code
 ==================
 */
@@ -561,11 +558,10 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			bs->teammessage_time = 0;
 		}
 		//
-		if (bs->lastkilledplayer == bs->teamgoal.entitynum) {
+		if (bs->killedenemy_time > bs->teamgoal_time - TEAM_KILL_SOMEONE && bs->lastkilledplayer == bs->teamgoal.entitynum) {
 			EasyPlayerName(bs->teamgoal.entitynum, buf, sizeof(buf));
 			BotAI_BotInitialChat(bs, "kill_done", buf, NULL);
 			BotEnterChat(bs->cs, bs->decisionmaker, CHAT_TELL);
-			bs->lastkilledplayer = -1;
 			bs->ltgtype = 0;
 		}
 		//
@@ -747,7 +743,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		memcpy(goal, &bs->curpatrolpoint->goal, sizeof(bot_goal_t));
 		return qtrue;
 	}
-#ifdef CTF
+
 	if (gametype == GT_CTF) {
 		//if going for enemy flag
 		if (bs->ltgtype == LTG_GETFLAG) {
@@ -832,7 +828,6 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			return qtrue;
 		}
 	}
-#endif //CTF
 #ifdef MISSIONPACK
 	else if (gametype == GT_1FCTF) {
 		if (bs->ltgtype == LTG_GETFLAG) {
@@ -1451,6 +1446,8 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 	int targetvisible;
 	bsp_trace_t bsptrace;
 	aas_entityinfo_t entinfo;
+	bot_aienter_t aienter;
+	qboolean activated;
 
 	if (BotIsObserver(bs)) {
 		BotClearActivateGoalStack(bs);
@@ -1471,21 +1468,22 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 	}
 	//
 	bs->tfl = TFL_DEFAULT;
-	if (bot_grapple.integer) bs->tfl |= TFL_GRAPPLEHOOK;
+	if (BotCanGrapple(bs)) bs->tfl |= TFL_GRAPPLEHOOK;
 	// if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) bs->tfl |= TFL_LAVA|TFL_SLIME;
 	// map specific code
 	BotMapScripts(bs);
-	// no enemy
-	bs->enemy = -1;
 	// if the bot has no activate goal
 	if (!bs->activatestack) {
 		BotClearActivateGoalStack(bs);
-		AIEnter_Seek_NBG(bs, "activate entity: no goal");
+		AIEnter_Seek_LTG(bs, "activate entity: no goal");
 		return qfalse;
 	}
 	//
 	goal = &bs->activatestack->goal;
+	aienter = bs->activatestack->aienter;
+	// initialize entity being activated to false
+	activated = qfalse;
 	// initialize target being visible to false
 	targetvisible = qfalse;
 	// if the bot has to shoot at a target to activate something
@@ -1514,6 +1512,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 		if (!VectorCompare(bs->activatestack->origin, entinfo.origin)) {
 			BotAI_Print(PRT_DEVELOPER, "hit shootable button or trigger\n");
 			bs->activatestack->time = 0;
+			activated = qtrue;
 		}
 		// if the activate goal has been activated or the bot takes too long
 		if (bs->activatestack->time < FloatTime()) {
@@ -1523,7 +1522,16 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 				bs->activatestack->time = FloatTime() + 10;
 				return qfalse;
 			}
-			AIEnter_Seek_NBG(bs, "activate entity: time out");
+			// if activated entity to get nbg, give more time to reach it
+			if (activated) {
+				if (bs->nbg_time) {
+					bs->nbg_time = FloatTime() + 10;
+				}
+				aienter(bs, "activate entity: activated");
+			} else {
+				bs->nbg_time = 0;
+				aienter(bs, "activate entity: time out");
+			}
 			return qfalse;
 		}
 		memset(&moveresult, 0, sizeof(bot_moveresult_t));
@@ -1539,6 +1547,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 			if (BotTouchingGoal(bs->origin, goal)) {
 				BotAI_Print(PRT_DEVELOPER, "touched button or trigger\n");
 				bs->activatestack->time = 0;
+				activated = qtrue;
 			}
 		}
 		// if the activate goal has been activated or the bot takes too long
@@ -1549,11 +1558,20 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 				bs->activatestack->time = FloatTime() + 10;
 				return qfalse;
 			}
-			AIEnter_Seek_NBG(bs, "activate entity: activated");
+			// if activated entity to get nbg, give more time to reach it
+			if (activated) {
+				if (bs->nbg_time) {
+					bs->nbg_time = FloatTime() + 10;
+				}
+				aienter(bs, "activate entity: activated");
+			} else {
+				bs->nbg_time = 0;
+				aienter(bs, "activate entity: time out");
+			}
 			return qfalse;
 		}
 		//predict obstacles
-		if (BotAIPredictObstacles(bs, goal))
+		if (BotAIPredictObstacles(bs, goal, AIEnter_Seek_ActivateEntity))
 			return qfalse;
 		//initialize the movement state
 		BotSetupForMovement(bs);
@@ -1567,7 +1585,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 			bs->activatestack->time = 0;
 		}
 		//check if the bot is blocked
-		BotAIBlocked(bs, &moveresult, qtrue);
+		BotAIBlocked(bs, &moveresult, AIEnter_Seek_ActivateEntity);
 	}
 	//
 	BotClearPath(bs, &moveresult);
@@ -1680,7 +1698,7 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 	}
 	//
 	bs->tfl = TFL_DEFAULT;
-	if (bot_grapple.integer) bs->tfl |= TFL_GRAPPLEHOOK;
+	if (BotCanGrapple(bs)) bs->tfl |= TFL_GRAPPLEHOOK;
 	//if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) bs->tfl |= TFL_LAVA|TFL_SLIME;
 	//
@@ -1710,7 +1728,7 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 		return qfalse;
 	}
 	//predict obstacles
-	if (BotAIPredictObstacles(bs, &goal))
+	if (BotAIPredictObstacles(bs, &goal, AIEnter_Seek_NBG))
 		return qfalse;
 	//initialize the movement state
 	BotSetupForMovement(bs);
@@ -1723,7 +1741,7 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 		bs->nbg_time = 0;
 	}
 	//check if the bot is blocked
-	BotAIBlocked(bs, &moveresult, qtrue);
+	BotAIBlocked(bs, &moveresult, AIEnter_Seek_NBG);
 	//
 	BotClearPath(bs, &moveresult);
 	//if the viewangles are used for the movement
@@ -1823,7 +1841,7 @@ int AINode_Seek_LTG(bot_state_t *bs)
 	}
 	//
 	bs->tfl = TFL_DEFAULT;
-	if (bot_grapple.integer) bs->tfl |= TFL_GRAPPLEHOOK;
+	if (BotCanGrapple(bs)) bs->tfl |= TFL_GRAPPLEHOOK;
 	//if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) bs->tfl |= TFL_LAVA|TFL_SLIME;
 	//
@@ -1871,13 +1889,11 @@ int AINode_Seek_LTG(bot_state_t *bs)
 		if (bs->ltgtype == LTG_DEFENDKEYAREA) range = 400;
 		else range = 150;
 		//
-#ifdef CTF
 		if (gametype == GT_CTF) {
 			//if carrying a flag the bot shouldn't be distracted too much
 			if (BotCTFCarryingFlag(bs))
 				range = 50;
 		}
-#endif //CTF
 #ifdef MISSIONPACK
 		else if (gametype == GT_1FCTF) {
 			if (Bot1FCTFCarryingFlag(bs))
@@ -1902,7 +1918,7 @@ int AINode_Seek_LTG(bot_state_t *bs)
 		}
 	}
 	//predict obstacles
-	if (BotAIPredictObstacles(bs, &goal))
+	if (BotAIPredictObstacles(bs, &goal, AIEnter_Seek_LTG))
 		return qfalse;
 	//initialize the movement state
 	BotSetupForMovement(bs);
@@ -1916,7 +1932,7 @@ int AINode_Seek_LTG(bot_state_t *bs)
 		bs->ltg_time = 0;
 	}
 	//
-	BotAIBlocked(bs, &moveresult, qtrue);
+	BotAIBlocked(bs, &moveresult, AIEnter_Seek_LTG);
 	//
 	BotClearPath(bs, &moveresult);
 	//if the viewangles are used for the movement
@@ -2103,7 +2119,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	BotBattleUseItems(bs);
 	//
 	bs->tfl = TFL_DEFAULT;
-	if (bot_grapple.integer) bs->tfl |= TFL_GRAPPLEHOOK;
+	if (BotCanGrapple(bs)) bs->tfl |= TFL_GRAPPLEHOOK;
 	//if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) bs->tfl |= TFL_LAVA|TFL_SLIME;
 	//
@@ -2122,7 +2138,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 		bs->ltg_time = 0;
 	}
 	//
-	BotAIBlocked(bs, &moveresult, qfalse);
+	BotAIBlocked(bs, &moveresult, NULL);
 	//aim at the enemy
 	BotAimAtEnemy(bs);
 	//attack the enemy if possible
@@ -2196,7 +2212,7 @@ int AINode_Battle_Chase(bot_state_t *bs)
 	}
 	//
 	bs->tfl = TFL_DEFAULT;
-	if (bot_grapple.integer) bs->tfl |= TFL_GRAPPLEHOOK;
+	if (BotCanGrapple(bs)) bs->tfl |= TFL_GRAPPLEHOOK;
 	//if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) bs->tfl |= TFL_LAVA|TFL_SLIME;
 	//
@@ -2233,6 +2249,9 @@ int AINode_Battle_Chase(bot_state_t *bs)
 	}
 	//
 	BotUpdateBattleInventory(bs, bs->enemy);
+	//predict obstacles
+	if (BotAIPredictObstacles(bs, &goal, AIEnter_Battle_Chase))
+		return qfalse;
 	//initialize the movement state
 	BotSetupForMovement(bs);
 	//move towards the goal
@@ -2245,7 +2264,7 @@ int AINode_Battle_Chase(bot_state_t *bs)
 		bs->ltg_time = 0;
 	}
 	//
-	BotAIBlocked(bs, &moveresult, qfalse);
+	BotAIBlocked(bs, &moveresult, AIEnter_Battle_Chase);
 	//
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEWSET|MOVERESULT_MOVEMENTVIEW|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
@@ -2331,7 +2350,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	}
 	//
 	bs->tfl = TFL_DEFAULT;
-	if (bot_grapple.integer) bs->tfl |= TFL_GRAPPLEHOOK;
+	if (BotCanGrapple(bs)) bs->tfl |= TFL_GRAPPLEHOOK;
 	//if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) bs->tfl |= TFL_LAVA|TFL_SLIME;
 	//map specific code
@@ -2393,13 +2412,11 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	if (bs->check_time < FloatTime()) {
 		bs->check_time = FloatTime() + 1;
 		range = 150;
-#ifdef CTF
 		if (gametype == GT_CTF) {
 			//if carrying a flag the bot shouldn't be distracted too much
 			if (BotCTFCarryingFlag(bs))
 				range = 50;
 		}
-#endif //CTF
 #ifdef MISSIONPACK
 		else if (gametype == GT_1FCTF) {
 			if (Bot1FCTFCarryingFlag(bs))
@@ -2419,6 +2436,9 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 			return qfalse;
 		}
 	}
+	//predict obstacles
+	if (BotAIPredictObstacles(bs, &goal, AIEnter_Battle_Retreat))
+		return qfalse;
 	//initialize the movement state
 	BotSetupForMovement(bs);
 	//move towards the goal
@@ -2431,7 +2451,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		bs->ltg_time = 0;
 	}
 	//
-	BotAIBlocked(bs, &moveresult, qfalse);
+	BotAIBlocked(bs, &moveresult, AIEnter_Battle_Retreat);
 	//choose the best weapon to fight with
 	BotChooseWeapon(bs);
 	//if the view is fixed for the movement
@@ -2514,7 +2534,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	}
 	//
 	bs->tfl = TFL_DEFAULT;
-	if (bot_grapple.integer) bs->tfl |= TFL_GRAPPLEHOOK;
+	if (BotCanGrapple(bs)) bs->tfl |= TFL_GRAPPLEHOOK;
 	//if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) bs->tfl |= TFL_LAVA|TFL_SLIME;
 	//
@@ -2563,6 +2583,9 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		//
 		return qfalse;
 	}
+	//predict obstacles
+	if (BotAIPredictObstacles(bs, &goal, AIEnter_Battle_NBG))
+		return qfalse;
 	//initialize the movement state
 	BotSetupForMovement(bs);
 	//move towards the goal
@@ -2575,7 +2598,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		bs->nbg_time = 0;
 	}
 	//
-	BotAIBlocked(bs, &moveresult, qfalse);
+	BotAIBlocked(bs, &moveresult, AIEnter_Battle_NBG);
 	//update the attack inventory values
 	BotUpdateBattleInventory(bs, bs->enemy);
 	//choose the best weapon to fight with

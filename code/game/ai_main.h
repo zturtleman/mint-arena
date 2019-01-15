@@ -40,8 +40,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define BOTFILESBASEFOLDER		"botfiles"
 
-#define CTF
-
 #define MAX_ITEMS					256
 //bot flags
 #define BFL_STRAFERIGHT				1	//strafe to the right
@@ -108,6 +106,10 @@ typedef struct bot_waypoint_s
 #define MAX_ACTIVATESTACK		8
 #define MAX_ACTIVATEAREAS		32
 
+struct bot_state_s;
+
+typedef void (*bot_aienter_t)(struct bot_state_s *bs, char *s);
+
 typedef struct bot_activategoal_s
 {
 	int inuse;
@@ -122,6 +124,7 @@ typedef struct bot_activategoal_s
 	int areas[MAX_ACTIVATEAREAS];			//routing areas disabled by blocking entity
 	int numareas;							//number of disabled routing areas
 	int areasdisabled;						//true if the areas are disabled for the routing
+	bot_aienter_t aienter;					//function to call to return to AI node from before going to activate entity
 	struct bot_activategoal_s *next;		//next activate goal on stack
 } bot_activategoal_t;
 
@@ -328,6 +331,12 @@ extern float floattime;
 void	QDECL BotAI_Print(int type, char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
 void	QDECL QDECL BotAI_BotInitialChat( bot_state_t *bs, char *type, ... );
 void	BotAI_Trace(bsp_trace_t *bsptrace, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int passent, int contentmask);
+void	BotAI_EntityTrace(bsp_trace_t *bsptrace, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int entnum, int contentmask);
+int		BotAI_PointContents(vec3_t point);
+int		BotAI_InPVS(vec3_t p1, vec3_t p2);
+int		BotAI_DebugLineCreate( void );
+void	BotAI_DebugLineDelete( int line );
+void	BotAI_DebugLineShow( int line, vec3_t start, vec3_t end, int color );
 int		BotAI_GetPlayerState( int playernum, playerState_t *state );
 int		BotAI_GetEntityState( int entitynum, entityState_t *state );
 int		BotAI_GetSnapshotEntity( int playernum, int sequence, entityState_t *state );

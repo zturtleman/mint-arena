@@ -28,7 +28,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // 
-// string allocation/managment
+// string allocation/management
 
 #include "../cgame/cg_local.h"
 #include "ui_shared.h"
@@ -197,6 +197,9 @@ const char *String_Alloc(const char *p) {
 		}
 
 		str  = UI_Alloc(sizeof(stringDef_t));
+		if (!str) {
+			return NULL;
+		}
 		str->next = NULL;
 		str->str = &strPool[ph];
 		if (last) {
@@ -1817,6 +1820,27 @@ qboolean Item_ListBox_HandleKey(itemDef_t *item, int key, qboolean down, qboolea
 				return qtrue;
 			}
 		}
+
+		// Use mouse wheel in vertical and horizontal menus.
+		// If scrolling 3 items would replace over half of the
+		// displayed items, only scroll 1 item at a time.
+		if ( key == K_MWHEELUP ) {
+			int scroll = viewmax < 6 ? 1 : 3;
+			listPtr->startPos -= scroll;
+			if (listPtr->startPos < 0) {
+				listPtr->startPos = 0;
+			}
+			return qtrue;
+		}
+		if ( key == K_MWHEELDOWN ) {
+			int scroll = viewmax < 6 ? 1 : 3;
+			listPtr->startPos += scroll;
+			if (listPtr->startPos > max) {
+				listPtr->startPos = max;
+			}
+			return qtrue;
+		}
+
 		// mouse hit
 		if (key == K_MOUSE1 || key == K_MOUSE2) {
 			if (item->window.flags & WINDOW_LB_LEFTARROW) {
@@ -1921,12 +1945,20 @@ qboolean Item_ListBox_HandleKey(itemDef_t *item, int key, qboolean down, qboolea
 
 qboolean Item_YesNo_HandleKey(itemDef_t *item, int key) {
 
-  if (Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && item->window.flags & WINDOW_HASFOCUS && item->cvar) {
-		if (key == K_MOUSE1 || key == K_ENTER || key == K_MOUSE2 || key == K_MOUSE3) {
-	    DC->setCVar(item->cvar, va("%i", !DC->getCVarValue(item->cvar)));
-		  return qtrue;
+	if (item->cvar) {
+		qboolean action = qfalse;
+		if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_MOUSE3) {
+			if (Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && item->window.flags & WINDOW_HASFOCUS) {
+				action = qtrue;
+			}
+		} else if (UI_SelectForKey(key) != 0) {
+			action = qtrue;
 		}
-  }
+		if (action) {
+			DC->setCVar(item->cvar, va("%i", !DC->getCVarValue(item->cvar)));
+			return qtrue;
+		}
+	}
 
   return qfalse;
 
@@ -1995,11 +2027,21 @@ const char *Item_Multi_Setting(itemDef_t *item) {
 qboolean Item_Multi_HandleKey(itemDef_t *item, int key) {
 	multiDef_t *multiPtr = (multiDef_t*)item->typeData;
 	if (multiPtr) {
-	  if (Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && item->window.flags & WINDOW_HASFOCUS && item->cvar) {
-			if (key == K_MOUSE1 || key == K_ENTER || key == K_MOUSE2 || key == K_MOUSE3) {
-				int current = Item_Multi_FindCvarByValue(item) + 1;
+		if (item->cvar) {
+			int select = 0;
+			if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_MOUSE3) {
+				if (Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && item->window.flags & WINDOW_HASFOCUS) {
+					select = (key == K_MOUSE2) ? -1 : 1;
+				}
+			} else {
+				select = UI_SelectForKey(key);
+			}
+			if (select != 0) {
+				int current = Item_Multi_FindCvarByValue(item) + select;
 				int max = Item_Multi_CountSettings(item);
-				if ( current < 0 || current >= max ) {
+				if ( current < 0 ) {
+					current = max-1;
+				} else if ( current >= max ) {
 					current = 0;
 				}
 				if (multiPtr->strDef) {
@@ -2120,13 +2162,13 @@ qboolean Item_TextField_HandleKey(itemDef_t *item, int key) {
 				return qtrue;
 			}
 
-			if ( key == K_HOME || key == K_KP_HOME) {// || ( tolower(key) == 'a' && trap_Key_IsDown( K_CTRL ) ) ) {
+			if ( key == K_HOME || key == K_KP_HOME) {// || ( tolower(key) == 'a' && ( trap_Key_IsDown( K_LEFTCTRL ) || trap_Key_IsDown( K_RIGHTCTRL ) ) ) ) {
 				item->cursorPos = 0;
 				editPtr->paintOffset = 0;
 				return qtrue;
 			}
 
-			if ( key == K_END || key == K_KP_END)  {// ( tolower(key) == 'e' && trap_Key_IsDown( K_CTRL ) ) ) {
+			if ( key == K_END || key == K_KP_END)  {// ( tolower(key) == 'e' && ( trap_Key_IsDown( K_LEFTCTRL ) || trap_Key_IsDown( K_RIGHTCTRL ) ) ) ) {
 				item->cursorPos = len;
 				if(item->cursorPos > editPtr->maxPaintChars) {
 					editPtr->paintOffset = len - editPtr->maxPaintChars;
@@ -2323,10 +2365,10 @@ qboolean Item_Slider_HandleKey(itemDef_t *item, int key, qboolean down) {
 	float x, value, width, work;
 
 	//DC->Print("slider handle key\n");
-	if (item->window.flags & WINDOW_HASFOCUS && item->cvar && Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory)) {
-		if (key == K_MOUSE1 || key == K_ENTER || key == K_MOUSE2 || key == K_MOUSE3) {
+	if (item->cvar) {
+		if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_MOUSE3) {
 			editFieldDef_t *editDef = item->typeData;
-			if (editDef) {
+			if (editDef && Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && item->window.flags & WINDOW_HASFOCUS) {
 				rectDef_t testRect;
 				width = SLIDER_WIDTH;
 				if (item->text) {
@@ -2349,6 +2391,23 @@ qboolean Item_Slider_HandleKey(itemDef_t *item, int key, qboolean down) {
 					// vm fuckage
 					// value = (((float)(DC->cursorx - x)/ SLIDER_WIDTH) * (editDef->maxVal - editDef->minVal));
 					value += editDef->minVal;
+					DC->setCVar(item->cvar, va("%f", value));
+					return qtrue;
+				}
+			}
+		} else {
+			int select = UI_SelectForKey(key);
+			if (select != 0) {
+				editFieldDef_t *editDef = item->typeData;
+				if (editDef) {
+					// 20 is number of steps
+					value = DC->getCVarValue(item->cvar) + (((editDef->maxVal - editDef->minVal)/20) * select);
+
+					if (value < editDef->minVal)
+						value = editDef->minVal;
+					else if (value > editDef->maxVal)
+						value = editDef->maxVal;
+
 					DC->setCVar(item->cvar, va("%f", value));
 					return qtrue;
 				}
@@ -2583,6 +2642,48 @@ static rectDef_t *Item_CorrectedTextRect(itemDef_t *item) {
 	return &rect;
 }
 
+// menu item key horizontal action: -1 = previous value, 1 = next value, 0 = no change
+int UI_SelectForKey(int key)
+{
+	switch (key) {
+		case K_MOUSE1:
+		case K_MOUSE3:
+		case K_ENTER:
+		case K_KP_ENTER:
+		case K_RIGHTARROW:
+		case K_KP_RIGHTARROW:
+		case K_JOY_A:
+		case K_2JOY_A:
+		case K_3JOY_A:
+		case K_4JOY_A:
+		case K_JOY_DPAD_RIGHT:
+		case K_JOY_LEFTSTICK_RIGHT:
+		case K_2JOY_DPAD_RIGHT:
+		case K_2JOY_LEFTSTICK_RIGHT:
+		case K_3JOY_DPAD_RIGHT:
+		case K_3JOY_LEFTSTICK_RIGHT:
+		case K_4JOY_DPAD_RIGHT:
+		case K_4JOY_LEFTSTICK_RIGHT:
+			return 1; // next
+
+		case K_MOUSE2:
+		case K_LEFTARROW:
+		case K_KP_LEFTARROW:
+		case K_JOY_DPAD_LEFT:
+		case K_JOY_LEFTSTICK_LEFT:
+		case K_2JOY_DPAD_LEFT:
+		case K_2JOY_LEFTSTICK_LEFT:
+		case K_3JOY_DPAD_LEFT:
+		case K_3JOY_LEFTSTICK_LEFT:
+		case K_4JOY_DPAD_LEFT:
+		case K_4JOY_LEFTSTICK_LEFT:
+			return -1; // previous
+	}
+
+	// no change
+	return 0;
+}
+
 void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 	int i;
 	itemDef_t *item = NULL;
@@ -2732,7 +2833,6 @@ void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 		case K_AUX14:
 		case K_AUX15:
 		case K_AUX16:
-			break;
 		case K_KP_ENTER:
 		case K_ENTER:
 			if (item) {
@@ -3051,12 +3151,10 @@ void Item_TextField_Paint(itemDef_t *item) {
 	if (item->window.flags & WINDOW_HASFOCUS && g_editingField) {
 		int cursorChar;
 
-		// NOTE: Team Arena didn't ship with these, they're copied over from '|' and '_'
-		//       in CG_InitTrueTypeFont.
 		if ( DC->getOverstrikeMode() ) {
-			cursorChar = 11; // full block
+			cursorChar = GLYPH_OVERSTRIKE;
 		} else {
-			cursorChar = 10; // full width low line
+			cursorChar = GLYPH_INSERT;
 		}
 
 		DC->drawTextWithCursor(item->textRect.x + item->textRect.w + offset, item->textRect.y, item->textscale, newColor, buff + editPtr->paintOffset, item->cursorPos - editPtr->paintOffset , cursorChar, editPtr->maxPaintChars, item->textStyle);
@@ -3125,19 +3223,12 @@ typedef struct {
 	int		bind2;
 } bind_t;
 
-typedef struct
-{
-	char*	name;
-	float	defaultvalue;
-	float	value;	
-} configcvar_t;
-
 
 static bind_t g_bindings[] = 
 {
 	{"+scores",			 K_TAB,				-1,		-1, -1},
 	{"+button2",		 K_ENTER,			-1,		-1, -1},
-	{"+speed", 			 K_SHIFT,			-1,		-1,	-1},
+	{"+speed", 			 K_LEFTSHIFT,	K_RIGHTSHIFT, -1, -1},
 	{"+forward", 		 K_UPARROW,		-1,		-1, -1},
 	{"+back", 			 K_DOWNARROW,	-1,		-1, -1},
 	{"+moveleft", 	 ',',					-1,		-1, -1},
@@ -3146,7 +3237,7 @@ static bind_t g_bindings[] =
 	{"+movedown",		 'c',					-1,		-1, -1},
 	{"+left", 			 K_LEFTARROW,	-1,		-1, -1},
 	{"+right", 			 K_RIGHTARROW,	-1,		-1, -1},
-	{"+strafe", 		 K_ALT,				-1,		-1, -1},
+	{"+strafe", 		 K_LEFTALT,		K_RIGHTALT, -1, -1},
 	{"+lookup", 		 K_PGDN,				-1,		-1, -1},
 	{"+lookdown", 	 K_DEL,				-1,		-1, -1},
 	{"+mlook", 			 '/',					-1,		-1, -1},
@@ -3165,7 +3256,7 @@ static bind_t g_bindings[] =
 	{"weapon 11",		 -1,					-1,		-1, -1},
 	{"weapon 12",		 -1,					-1,		-1, -1},
 	{"weapon 13",		 -1,					-1,		-1, -1},
-	{"+attack", 		 K_CTRL,				-1,		-1, -1},
+	{"+attack", 		 K_LEFTCTRL,	K_RIGHTCTRL,		-1, -1},
 	{"weapprev",		 '[',					-1,		-1, -1},
 	{"weapnext", 		 ']',					-1,		-1, -1},
 	{"+button3", 		 K_MOUSE3,			-1,		-1, -1},
@@ -3437,9 +3528,10 @@ qboolean Item_Bind_HandleKey(itemDef_t *item, int key, qboolean down) {
 	int			id;
 	int			i;
 
-	if (Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && !g_waitingForKey)
+	if (!g_waitingForKey)
 	{
-		if (down && (key == K_MOUSE1 || key == K_ENTER)) {
+		if (down && ((key == K_MOUSE1 && Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory))
+				|| key == K_ENTER || key == K_KP_ENTER || key == K_JOY_A || key == K_2JOY_A || key == K_3JOY_A || key == K_4JOY_A)) {
 			g_waitingForKey = qtrue;
 			g_bindItem = item;
 		}
@@ -3447,7 +3539,7 @@ qboolean Item_Bind_HandleKey(itemDef_t *item, int key, qboolean down) {
 	}
 	else
 	{
-		if (!g_waitingForKey || g_bindItem == NULL) {
+		if (g_bindItem == NULL) {
 			return qtrue;
 		}
 
@@ -3464,8 +3556,14 @@ qboolean Item_Bind_HandleKey(itemDef_t *item, int key, qboolean down) {
 			case K_BACKSPACE:
 				id = BindingIDFromName(item->cvar);
 				if (id != -1) {
-					g_bindings[id].bind1 = -1;
-					g_bindings[id].bind2 = -1;
+					if( g_bindings[id].bind1 != -1 ) {
+						DC->setBinding( g_bindings[id].bind1, "" );
+						g_bindings[id].bind1 = -1;
+					}
+					if( g_bindings[id].bind2 != -1 ) {
+						DC->setBinding( g_bindings[id].bind2, "" );
+						g_bindings[id].bind2 = -1;
+					}
 				}
 				Controls_SetConfig(qtrue);
 				g_waitingForKey = qfalse;
@@ -3552,7 +3650,7 @@ void Item_Model_Paint(itemDef_t *item) {
 	w = item->window.rect.w-2;
 	h = item->window.rect.h-2;
 
-	CG_AdjustFrom640( &x, &y, &w, &h );
+	DC->adjustFrom640( &x, &y, &w, &h );
 
 	refdef.x = x;
 	refdef.y = y;
@@ -4238,7 +4336,7 @@ void Menu_Paint(menuDef_t *menu, qboolean forcePaint) {
 	}
 
 	if (menu->forceScreenPlacement) {
-		CG_SetScreenPlacement( menu->screenHPos, menu->screenVPos );
+		DC->setScreenPlacement( menu->screenHPos, menu->screenVPos );
 	}
 
 	// draw the background if necessary
@@ -4248,7 +4346,7 @@ void Menu_Paint(menuDef_t *menu, qboolean forcePaint) {
 		DC->drawHandlePic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, menu->window.background );
 	} else if (menu->window.background) {
 		// this allows a background shader without being full screen
-		//CG_DrawPic(menu->window.rect.x, menu->window.rect.y, menu->window.rect.w, menu->window.rect.h, menu->backgroundShader);
+		//DC->drawHandlePic(menu->window.rect.x, menu->window.rect.y, menu->window.rect.w, menu->window.rect.h, menu->backgroundShader);
 	}
 
 	// paint the background and or border
@@ -4266,7 +4364,7 @@ void Menu_Paint(menuDef_t *menu, qboolean forcePaint) {
 	}
 
 	if (menu->forceScreenPlacement) {
-		CG_PopScreenPlacement();
+		DC->popScreenPlacement();
 	}
 }
 
@@ -5533,6 +5631,49 @@ qboolean MenuParse_fadeCycle( itemDef_t *item, int handle ) {
 	return qtrue;
 }
 
+// NOTE: This only affects the draw location. It's mainly for HUDs,
+// not interactive menus. Though it could be used for menu decorations.
+qboolean MenuParse_screenPlacement( itemDef_t *item, int handle ) {
+	menuDef_t *menu = (menuDef_t*)item;
+	screenPlacement_e hpos, vpos;
+	pc_token_t token;
+
+	if (!trap_PC_ReadToken(handle, &token))
+		return qfalse;
+
+	if (Q_stricmp(token.string, "PLACE_RIGHT") == 0) {
+		hpos = PLACE_RIGHT;
+	} else if (Q_stricmp(token.string, "PLACE_LEFT") == 0) {
+		hpos = PLACE_LEFT;
+	} else if (Q_stricmp(token.string, "PLACE_CENTER") == 0) {
+		hpos = PLACE_CENTER;
+	} else if (Q_stricmp(token.string, "PLACE_STRETCH") == 0) {
+		hpos = PLACE_STRETCH;
+	} else {
+		PC_SourceError(handle, "unknown screenPlacement horizontal placement %s", token.string);
+		return qfalse;
+	}
+
+	if (!trap_PC_ReadToken(handle, &token))
+		return qfalse;
+
+	if (Q_stricmp(token.string, "PLACE_TOP") == 0) {
+		vpos = PLACE_RIGHT;
+	} else if (Q_stricmp(token.string, "PLACE_BOTTOM") == 0) {
+		vpos = PLACE_LEFT;
+	} else if (Q_stricmp(token.string, "PLACE_CENTER") == 0) {
+		vpos = PLACE_CENTER;
+	} else if (Q_stricmp(token.string, "PLACE_STRETCH") == 0) {
+		vpos = PLACE_STRETCH;
+	} else {
+		PC_SourceError(handle, "unknown screenPlacement vertical placement %s", token.string);
+		return qfalse;
+	}
+
+	Menu_SetScreenPlacement( menu, hpos, vpos );
+	return qtrue;
+}
+
 
 qboolean MenuParse_itemDef( itemDef_t *item, int handle ) {
 	menuDef_t *menu = (menuDef_t*)item;
@@ -5580,6 +5721,7 @@ keywordHash_t menuParseKeywords[] = {
 	{"fadeClamp", MenuParse_fadeClamp, NULL},
 	{"fadeCycle", MenuParse_fadeCycle, NULL},
 	{"fadeAmount", MenuParse_fadeAmount, NULL},
+	{"screenPlacement", MenuParse_screenPlacement, NULL},
 	{NULL, 0, NULL}
 };
 

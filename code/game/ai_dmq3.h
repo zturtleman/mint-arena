@@ -100,6 +100,8 @@ int BotWantsToChase(bot_state_t *bs);
 int BotWantsToHelp(bot_state_t *bs);
 //returns true if the bot can and wants to rocketjump
 int BotCanAndWantsToRocketJump(bot_state_t *bs);
+//returns true if the bot can use grappling hook
+int BotCanGrapple(bot_state_t *bs);
 // returns true if the bot has a persistant powerup and a weapon
 int BotHasPersistantPowerupAndWeapon(bot_state_t *bs);
 //returns true if the bot wants to and goes camping
@@ -137,9 +139,9 @@ void BotCheckAttack(bot_state_t *bs);
 //check if the bot is blocking a teammate
 void BotCheckBlockedTeammates(bot_state_t *bs);
 //AI when the bot is blocked
-void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate);
+void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t activatedonefunc);
 //AI to predict obstacles
-int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal);
+int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal, bot_aienter_t activatedonefunc);
 //enable or disable the areas the blocking entity is in
 void BotEnableActivateGoalAreas(bot_activategoal_t *activategoal, int enable);
 //pop an activate goal from the stack
@@ -148,7 +150,7 @@ int BotPopFromActivateGoalStack(bot_state_t *bs);
 void BotClearActivateGoalStack(bot_state_t *bs);
 //returns the team the bot is in
 int BotTeam(bot_state_t *bs);
-//retuns the opposite team of the bot
+//returns the opposite team of the bot
 int BotOppositeTeam(bot_state_t *bs);
 //returns the flag the bot is carrying (CTFFLAG_?)
 int BotCTFCarryingFlag(bot_state_t *bs);

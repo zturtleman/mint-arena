@@ -29,7 +29,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 //
 // cg_servercmds.c -- reliably sequenced text commands sent by the server
-// these are processed at snapshot transition time, so there will definately
+// these are processed at snapshot transition time, so there will definitely
 // be a valid snapshot this frame
 
 #include "cg_local.h"
@@ -310,7 +310,7 @@ void CG_ShaderStateChanged(void) {
 	}
 
 	// Only need to do this once, unless a shader is remapped to new shader with fogvars.
-	trap_R_GetGlobalFog( &cgs.globalFogType, cgs.globalFogColor, &cgs.globalFogDepthForOpaque, &cgs.globalFogDensity );
+	trap_R_GetGlobalFog( &cgs.globalFogType, cgs.globalFogColor, &cgs.globalFogDepthForOpaque, &cgs.globalFogDensity, &cgs.globalFogFarClip );
 }
 
 /*
@@ -412,15 +412,22 @@ static void CG_ConfigStringModified( void ) {
 
 /*
 =======================
-CG_AddToTeamChat
+CG_AddToPlayerChatBox
 
 =======================
 */
-static void CG_AddToTeamChat( const char *str ) {
+static qboolean CG_AddToPlayerChatBox( int localPlayerNum, const char *str ) {
+#ifdef MISSIONPACK_HUD
+	// team chat box is not drawn
+	return qfalse;
+#else
 	int len;
 	char *p, *ls;
 	int lastcolor;
 	int chatHeight;
+	localPlayer_t *player;
+
+	player = &cg.localPlayers[localPlayerNum];
 
 	if (cg_teamChatHeight.integer < TEAMCHAT_HEIGHT) {
 		chatHeight = cg_teamChatHeight.integer;
@@ -430,13 +437,13 @@ static void CG_AddToTeamChat( const char *str ) {
 
 	if (chatHeight <= 0 || cg_teamChatTime.integer <= 0) {
 		// team chat disabled, dump into normal chat
-		cgs.teamChatPos = cgs.teamLastChatPos = 0;
-		return;
+		player->teamChatPos = player->teamLastChatPos = 0;
+		return qfalse;
 	}
 
 	len = 0;
 
-	p = cgs.teamChatMsgs[cgs.teamChatPos % chatHeight];
+	p = player->teamChatMsgs[player->teamChatPos % chatHeight];
 	*p = 0;
 
 	lastcolor = '7';
@@ -451,10 +458,10 @@ static void CG_AddToTeamChat( const char *str ) {
 			}
 			*p = 0;
 
-			cgs.teamChatMsgTimes[cgs.teamChatPos % chatHeight] = cg.time;
+			player->teamChatMsgTimes[player->teamChatPos % chatHeight] = cg.time;
 
-			cgs.teamChatPos++;
-			p = cgs.teamChatMsgs[cgs.teamChatPos % chatHeight];
+			player->teamChatPos++;
+			p = player->teamChatMsgs[player->teamChatPos % chatHeight];
 			*p = 0;
 			*p++ = Q_COLOR_ESCAPE;
 			*p++ = lastcolor;
@@ -476,11 +483,57 @@ static void CG_AddToTeamChat( const char *str ) {
 	}
 	*p = 0;
 
-	cgs.teamChatMsgTimes[cgs.teamChatPos % chatHeight] = cg.time;
-	cgs.teamChatPos++;
+	player->teamChatMsgTimes[player->teamChatPos % chatHeight] = cg.time;
+	player->teamChatPos++;
 
-	if (cgs.teamChatPos - cgs.teamLastChatPos > chatHeight)
-		cgs.teamLastChatPos = cgs.teamChatPos - chatHeight;
+	if (player->teamChatPos - player->teamLastChatPos > chatHeight)
+		player->teamLastChatPos = player->teamChatPos - chatHeight;
+
+	return qtrue;
+#endif
+}
+
+// copied from g_team.c
+const char *CG_TeamName(int team)  {
+	if (team==TEAM_RED)
+		return "RED";
+	else if (team==TEAM_BLUE)
+		return "BLUE";
+	else if (team==TEAM_SPECTATOR)
+		return "SPECTATOR";
+	return "FREE";
+}
+
+/*
+=======================
+CG_AddToTeamChat
+
+Add message to team chat box if enabled otherwise add message to notify messages.
+(for tell messages) Add message to notify messages if local player is on a different team.
+=======================
+*/
+static void CG_AddToTeamChat( int localPlayerBits, team_t team, const char *text ) {
+	int i, teamBits;
+	qboolean firstTime;
+
+	teamBits = CG_LocalPlayerBitsForTeam( team );
+	firstTime = qtrue;
+
+	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+		if ( ! ( localPlayerBits & ( 1 << i ) ) ) {
+			continue;
+		}
+
+		if ( ( teamBits & ( 1 << i ) ) && CG_AddToPlayerChatBox( i, text ) ) {
+			if ( firstTime ) {
+				//CG_NotifyPrintf( i, "[skipnotify]%s\n", text );
+				CG_Printf( "[skipnotify][%s team]%s\n", CG_TeamName( team ), text );
+				firstTime = qfalse;
+			}
+		} else {
+			CG_NotifyPrintf( i, "%s\n", text );
+		}
+	}
 }
 
 /*
@@ -527,7 +580,11 @@ static void CG_MapRestart( void ) {
 	// play the "fight" sound if this is a restart without warmup
 	if ( cg.warmup == 0 /* && cgs.gametype == GT_TOURNAMENT */) {
 		trap_S_StartLocalSound( cgs.media.countFightSound, CHAN_ANNOUNCER );
-		CG_GlobalCenterPrint( "FIGHT!", SCREEN_HEIGHT/2, 2.0 );
+		if ( CG_NumLocalPlayers() > 1 ) {
+			CG_GlobalCenterPrint( "FIGHT!", SCREEN_HEIGHT/2, 2.0 );
+		} else {
+			CG_GlobalCenterPrint( "FIGHT!", 112 + GIANTCHAR_HEIGHT/2, 2.0 );
+		}
 	}
 #ifdef MISSIONPACK
 	if (cg_singlePlayer.integer) {
@@ -542,9 +599,10 @@ static void CG_MapRestart( void ) {
 		cg.localPlayers[i].rewardTime = 0;
 		cg.localPlayers[i].rewardStack = 0;
 
-		trap_Cvar_SetValue( Com_LocalPlayerCvarName(i, "cg_thirdPerson"), 0 );
+		cg.localPlayers[i].cameraOrbit = 0;
 	}
 }
+
 
 #ifdef MISSIONPACK
 
@@ -624,7 +682,7 @@ int CG_ParseVoiceChats( const char *filename, voiceChatList_t *voiceChatList, in
 		voiceChats[i].id[0] = 0;
 	}
 	token = COM_ParseExt(p, qtrue);
-	if (!token || token[0] == 0) {
+	if (!token[0]) {
 		return qtrue;
 	}
 	if (!Q_stricmp(token, "female")) {
@@ -644,7 +702,7 @@ int CG_ParseVoiceChats( const char *filename, voiceChatList_t *voiceChatList, in
 	voiceChatList->numVoiceChats = 0;
 	while ( 1 ) {
 		token = COM_ParseExt(p, qtrue);
-		if (!token || token[0] == 0) {
+		if (!token[0]) {
 			return qtrue;
 		}
 		Com_sprintf(voiceChats[voiceChatList->numVoiceChats].id, sizeof( voiceChats[voiceChatList->numVoiceChats].id ), "%s", token);
@@ -656,7 +714,7 @@ int CG_ParseVoiceChats( const char *filename, voiceChatList_t *voiceChatList, in
 		voiceChats[voiceChatList->numVoiceChats].numSounds = 0;
 		while(1) {
 			token = COM_ParseExt(p, qtrue);
-			if (!token || token[0] == 0) {
+			if (!token[0]) {
 				return qtrue;
 			}
 			if (!Q_stricmp(token, "}"))
@@ -664,7 +722,7 @@ int CG_ParseVoiceChats( const char *filename, voiceChatList_t *voiceChatList, in
 			sound = trap_S_RegisterSound( token, compress );
 			voiceChats[voiceChatList->numVoiceChats].sounds[voiceChats[voiceChatList->numVoiceChats].numSounds] = sound;
 			token = COM_ParseExt(p, qtrue);
-			if (!token || token[0] == 0) {
+			if (!token[0]) {
 				return qtrue;
 			}
 			Com_sprintf(voiceChats[voiceChatList->numVoiceChats].chats[
@@ -732,7 +790,7 @@ int CG_HeadModelVoiceChats( char *filename ) {
 	p = &ptr;
 
 	token = COM_ParseExt(p, qtrue);
-	if (!token || token[0] == 0) {
+	if ( !token[0] ) {
 		return -1;
 	}
 
@@ -863,6 +921,7 @@ voiceChatList_t *CG_VoiceChatListForPlayer( int playerNum ) {
 
 typedef struct bufferedVoiceChat_s
 {
+	team_t team;
 	int localPlayerBits;
 	int playerNum;
 	sfxHandle_t snd;
@@ -887,7 +946,7 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 	}
 
 	// remove bits for non-valid players
-	vchat->localPlayerBits &= CG_LocalPlayerBitsForTeam( -1 );
+	vchat->localPlayerBits &= CG_LocalPlayerBitsForTeam( vchat->team );
 
 	if ( !cg_noVoiceChats.integer ) {
 		trap_S_StartLocalSound( vchat->snd, CHAN_VOICE);
@@ -912,8 +971,7 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 		}
 	}
 	if (!vchat->voiceOnly && !cg_noVoiceText.integer) {
-		CG_AddToTeamChat( vchat->message );
-		CG_NotifyBitsPrintf( vchat->localPlayerBits, "%s\n", vchat->message );
+		CG_AddToTeamChat( vchat->localPlayerBits, vchat->team, vchat->message );
 	}
 	voiceChatBuffer[cg.voiceChatBufferOut].snd = 0;
 }
@@ -990,12 +1048,15 @@ void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int p
 		Q_strncpyz(vchat.cmd, cmd, sizeof(vchat.cmd));
 		if ( mode == SAY_TELL ) {
 			Com_sprintf(vchat.message, sizeof(vchat.message), "[%s]: %c%c%s", pi->name, Q_COLOR_ESCAPE, color, chat);
+			vchat.team = -1;
 		}
 		else if ( mode == SAY_TEAM ) {
 			Com_sprintf(vchat.message, sizeof(vchat.message), "(%s): %c%c%s", pi->name, Q_COLOR_ESCAPE, color, chat);
+			vchat.team = pi->team;
 		}
 		else {
 			Com_sprintf(vchat.message, sizeof(vchat.message), "%s: %c%c%s", pi->name, Q_COLOR_ESCAPE, color, chat);
+			vchat.team = -1;
 		}
 		CG_AddBufferedVoiceChat(&vchat);
 	}
@@ -1099,8 +1160,10 @@ static void CG_ServerCommand( void ) {
 	const char	*cmd;
 	char		text[MAX_SAY_TEXT];
 	int			start = 0;
+	team_t		team = -1;
 	int			localPlayerBits = -1;
 	int			i;
+	int			chatPlayerNum;
 
 	cmd = CG_Argv(start);
 
@@ -1111,21 +1174,32 @@ static void CG_ServerCommand( void ) {
 
 	// Commands for team
 	if ( !Q_stricmp( cmd, "[RED]" ) ) {
-		localPlayerBits = CG_LocalPlayerBitsForTeam( TEAM_RED );
+		team = TEAM_RED;
+		localPlayerBits = CG_LocalPlayerBitsForTeam( team );
 
 		// Get command
 		start++;
 		cmd = CG_Argv(start);
 	}
 	else if ( !Q_stricmp( cmd, "[BLUE]" ) ) {
-		localPlayerBits = CG_LocalPlayerBitsForTeam( TEAM_BLUE );
+		team = TEAM_BLUE;
+		localPlayerBits = CG_LocalPlayerBitsForTeam( team );
 
 		// Get command
 		start++;
 		cmd = CG_Argv(start);
 	}
 	else if ( !Q_stricmp( cmd, "[SPECTATOR]" ) ) {
-		localPlayerBits = CG_LocalPlayerBitsForTeam( TEAM_SPECTATOR );
+		team = TEAM_SPECTATOR;
+		localPlayerBits = CG_LocalPlayerBitsForTeam( team );
+
+		// Get command
+		start++;
+		cmd = CG_Argv(start);
+	}
+	else if ( !Q_stricmp( cmd, "[FREE]" ) ) {
+		team = TEAM_FREE;
+		localPlayerBits = CG_LocalPlayerBitsForTeam( team );
 
 		// Get command
 		start++;
@@ -1135,10 +1209,11 @@ static void CG_ServerCommand( void ) {
 	else if ( cmd[0] == 'l' && cmd[1] =='c' && isdigit(cmd[2]) ) {
 		int num = atoi( &cmd[2] );
 
-		if ( num > CG_MaxSplitView() ) {
+		if ( num < 0 || num > CG_MaxSplitView() ) {
 			return;
 		}
 
+		team = cgs.playerinfo[ cg.localPlayers[num].playerNum ].team;
 		localPlayerBits = ( 1 << num );
 
 		// Get command
@@ -1194,7 +1269,15 @@ static void CG_ServerCommand( void ) {
 	}
 
 	if ( !strcmp( cmd, "chat" ) ) {
-		if ( cgs.gametype >= GT_TEAM && cg_teamChatsOnly.integer ) {
+		if ( trap_Argc() > start+2 ) {
+			chatPlayerNum = atoi(CG_Argv(start+2));
+		} else {
+			// message is from a pre-Spearmint 0.5 server or demo
+			chatPlayerNum = CHATPLAYER_UNKNOWN;
+		}
+
+		// allow disabling non-team chat but always show server chat
+		if ( cgs.gametype >= GT_TEAM && cg_teamChatsOnly.integer && chatPlayerNum != CHATPLAYER_SERVER ) {
 			return;
 		}
 
@@ -1212,8 +1295,19 @@ static void CG_ServerCommand( void ) {
 
 		Q_strncpyz( text, CG_Argv(start+1), MAX_SAY_TEXT );
 
+		if ( trap_Argc() > start+2 ) {
+			chatPlayerNum = atoi(CG_Argv(start+2));
+		} else {
+			// message is from a pre-Spearmint 0.5 server or demo
+			chatPlayerNum = CHATPLAYER_UNKNOWN;
+		}
+
 		CG_RemoveChatEscapeChar( text );
-		CG_NotifyBitsPrintf( localPlayerBits, "%s\n", text );
+		if ( chatPlayerNum >= 0 && chatPlayerNum < MAX_CLIENTS ) {
+			CG_AddToTeamChat( localPlayerBits, cgs.playerinfo[chatPlayerNum].team, text );
+		} else {
+			CG_NotifyBitsPrintf( localPlayerBits, "%s\n", text );
+		}
 		return;
 	}
 
@@ -1222,9 +1316,15 @@ static void CG_ServerCommand( void ) {
 
 		Q_strncpyz( text, CG_Argv(start+1), MAX_SAY_TEXT );
 
+		if ( trap_Argc() > start+2 ) {
+			chatPlayerNum = atoi(CG_Argv(start+2));
+		} else {
+			// message is from a pre-Spearmint 0.5 server or demo
+			chatPlayerNum = CHATPLAYER_UNKNOWN;
+		}
+
 		CG_RemoveChatEscapeChar( text );
-		CG_AddToTeamChat( text );
-		CG_NotifyBitsPrintf( localPlayerBits, "%s\n", text );
+		CG_AddToTeamChat( localPlayerBits, team, text );
 		return;
 	}
 

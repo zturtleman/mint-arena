@@ -40,14 +40,25 @@ Suite 120, Rockville, Maryland 20850 USA.
   #endif
 #endif
 
-// because games can change separately from the main system version, we need a
-// second version that must match between game and cgame
+#define PRODUCT_NAME				MODDIR
 
-#define	GAME_VERSION		MODDIR "-4"
+// Keep this in-sync with VERSION in Makefile.
+#ifndef PRODUCT_VERSION
+	#define PRODUCT_VERSION			"1.0.1"
+#endif
+
+// because games can change separately from the main system protocol, we need a
+// second protocol that must match between game and cgame
+
+#define	GAME_PROTOCOL		MODDIR "-4"
 
 // used for switching fs_game
-#define BASEQ3				"baseq3"
-#define BASETA				"missionpack"
+#ifndef BASEQ3
+	#define BASEQ3			"baseq3"
+#endif
+#ifndef BASETA
+	#define BASETA			"missionpack"
+#endif
 
 #define	DEFAULT_GRAVITY		800
 #define	GIB_HEALTH			-40
@@ -60,6 +71,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	SAY_ALL			0
 #define	SAY_TEAM		1
 #define	SAY_TELL		2
+
+#define CHATPLAYER_SERVER	-1
+#define CHATPLAYER_UNKNOWN	-2
 
 #define	MODELINDEX_BITS		10
 
@@ -123,7 +137,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	CS_TEAMVOTE_YES			16
 #define	CS_TEAMVOTE_NO			18
 
-#define	CS_GAME_VERSION			20
+#define	CS_GAME_PROTOCOL		20
 #define	CS_LEVEL_START_TIME		21		// so the timer only shows the current level
 #define	CS_INTERMISSION			22		// when 1, fraglimit/timelimit has been hit and intermission will start in a second or two
 #define CS_FLAGSTATUS			23		// string indicating flag status in CTF
@@ -523,7 +537,7 @@ typedef enum {
 	STAT_WEAPONS,					// 16 bit fields
 	STAT_ARMOR,				
 	STAT_DEAD_YAW,					// look this direction when dead (FIXME: get rid of?)
-	STAT_MAX_HEALTH,				// health / armor limit, changable by handicap
+	STAT_MAX_HEALTH,				// health / armor limit, changeable by handicap
 //#ifdef MISSIONPACK
 	STAT_PERSISTANT_POWERUP
 //#endif
@@ -874,27 +888,34 @@ typedef struct animation_s {
 #define DEFAULT_MODEL4			"visor"
 #define DEFAULT_HEAD4			"visor"
 
-// For fallback sounds
+// For fallback player and gender-specific fallback sounds
+#define DEFAULT_MODEL_GENDER	"male"
 #define DEFAULT_MODEL_MALE		"sarge"
+#define DEFAULT_HEAD_MALE		"sarge"
 #define DEFAULT_MODEL_FEMALE	"major"
+#define DEFAULT_HEAD_FEMALE		"major"
 
 #ifdef MISSIONPACK
 // Default team player model names
 #define DEFAULT_TEAM_MODEL		"james"
 #define DEFAULT_TEAM_HEAD		"*james"
 
-#define DEFAULT_TEAM_MODEL2		"james"
-#define DEFAULT_TEAM_HEAD2		"*james"
+#define DEFAULT_TEAM_MODEL2		"janet"
+#define DEFAULT_TEAM_HEAD2		"*janet"
 
-#define DEFAULT_TEAM_MODEL3		"janet"
-#define DEFAULT_TEAM_HEAD3		"*janet"
+#define DEFAULT_TEAM_MODEL3		"james"
+#define DEFAULT_TEAM_HEAD3		"*james"
 
 #define DEFAULT_TEAM_MODEL4		"janet"
 #define DEFAULT_TEAM_HEAD4		"*janet"
 
-// For team fallback sounds
+// For fallback player and gender-specific fallback sounds
+// Also used for Team Arena UI's character base model and CGame player pre-caching
+#define DEFAULT_TEAM_MODEL_GENDER	"male"
 #define DEFAULT_TEAM_MODEL_MALE		"james"
+#define DEFAULT_TEAM_HEAD_MALE		"*james"
 #define DEFAULT_TEAM_MODEL_FEMALE	"janet"
+#define DEFAULT_TEAM_HEAD_FEMALE	"*janet"
 #else
 // Default team player model names
 #define DEFAULT_TEAM_MODEL		DEFAULT_MODEL
@@ -909,9 +930,12 @@ typedef struct animation_s {
 #define DEFAULT_TEAM_MODEL4		DEFAULT_MODEL4
 #define DEFAULT_TEAM_HEAD4		DEFAULT_HEAD4
 
-// For team fallback sounds
+// For fallback player and gender-specific fallback sounds
+#define DEFAULT_TEAM_MODEL_GENDER	DEFAULT_MODEL_GENDER
 #define DEFAULT_TEAM_MODEL_MALE		DEFAULT_MODEL_MALE
+#define DEFAULT_TEAM_HEAD_MALE		DEFAULT_HEAD_MALE
 #define DEFAULT_TEAM_MODEL_FEMALE	DEFAULT_MODEL_FEMALE
+#define DEFAULT_TEAM_HEAD_FEMALE	DEFAULT_HEAD_FEMALE
 #endif
 
 
@@ -1099,6 +1123,8 @@ qboolean	BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTim
 int		BG_ComposeUserCmdValue( int weapon );
 void	BG_DecomposeUserCmdValue( int value, int *weapon );
 
+void	BG_AddStringToList( char *list, size_t listSize, int *listLength, char *name );
+
 void	SnapVectorTowards( vec3_t v, vec3_t to );
 
 #define ARENAS_PER_TIER		4
@@ -1164,6 +1190,7 @@ void	SnapVectorTowards( vec3_t v, vec3_t to );
 #define UI_GIANTFONT	0x00000300
 #define UI_TINYFONT		0x00000400
 #define UI_NUMBERFONT	0x00000500
+#define UI_CONSOLEFONT	0x00000600
 #define UI_FONTMASK		0x00000F00
 
 // other flags
@@ -1174,6 +1201,7 @@ void	SnapVectorTowards( vec3_t v, vec3_t to );
 #define UI_FORCECOLOR	0x00010000
 #define UI_GRADIENT		0x00020000
 #define UI_NOSCALE		0x00040000 // fixed size with other UI elements, don't change it's scale
+#define UI_INMOTION		0x00080000 // use for scrolling / moving text to fix uneven scrolling caused by aligning to pixel boundary
 
 
 typedef struct
@@ -1300,6 +1328,7 @@ int		trap_Cvar_VariableIntegerValue( const char *var_name );
 float	trap_Cvar_VariableValue( const char *var_name );
 void	trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
 void	trap_Cvar_LatchedVariableStringBuffer( const char *var_name, char *buffer, int bufsize );
+void	trap_Cvar_DefaultVariableStringBuffer( const char *var_name, char *buffer, int bufsize );
 void	trap_Cvar_InfoStringBuffer( int bit, char *buffer, int bufsize );
 void	trap_Cvar_CheckRange( const char *var_name, float min, float max, qboolean integral );
 
@@ -1315,12 +1344,21 @@ int		trap_FS_GetFileList( const char *path, const char *extension, char *listbuf
 int		trap_FS_Delete( const char *path );
 int		trap_FS_Rename( const char *from, const char *to );
 
-int		trap_PC_AddGlobalDefine( char *define );
+int		trap_PC_AddGlobalDefine( const char *define );
+int		trap_PC_RemoveGlobalDefine( const char *define );
 void	trap_PC_RemoveAllGlobalDefines( void );
 int		trap_PC_LoadSource( const char *filename, const char *basepath );
 int		trap_PC_FreeSource( int handle );
+int		trap_PC_AddDefine( int handle, const char *define );
 int		trap_PC_ReadToken( int handle, pc_token_t *pc_token );
 void	trap_PC_UnreadToken( int handle );
 int		trap_PC_SourceFileAndLine( int handle, char *filename, int *line );
 
-void	*trap_Alloc( int size, const char *tag );
+void	*trap_HeapMalloc( int size );
+int		trap_HeapAvailable( void );
+void	trap_HeapFree( void *data );
+
+// functions for console command argument completion
+void	trap_Field_CompleteFilename( const char *dir, const char *ext, qboolean stripExt, qboolean allowNonPureFilesOnDisk );
+void	trap_Field_CompleteCommand( const char *cmd, qboolean doCommands, qboolean doCvars );
+void	trap_Field_CompleteList( const char *list );

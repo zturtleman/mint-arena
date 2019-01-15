@@ -41,6 +41,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #endif
 #endif
 
+#define assert( x ) /* do nothing */
+
 #ifndef NULL
 #define NULL ((void *)0)
 #endif
@@ -137,6 +139,7 @@ double log( double x );
 double log10( double x );
 int abs( int n );
 double fabs( double x );
+float fabsf( float x );
 double rint( double v );
 
 #endif // BG_LIB_H

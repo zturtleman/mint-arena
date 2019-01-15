@@ -30,7 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 // This file must be identical in the quake and utils directories
 
-// contents flags are seperate bits
+// contents flags are separate bits
 // a given brush can contribute multiple content bits
 
 // these definitions also need to be in q_shared.h!
@@ -66,6 +66,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	CONTENTS_TRANSLUCENT	0x20000000	// don't consume surface fragments inside
 #define	CONTENTS_TRIGGER		0x40000000
 #define	CONTENTS_NODROP			0x80000000	// don't leave bodies or items (death fog, lava)
+
+#define	CONTENTS_LADDER			CONTENTS_ORIGIN		// used by BSPC internally
 
 #define	SURF_NODAMAGE			0x1		// never give falling damage
 #define	SURF_SLICK				0x2		// effects game physics

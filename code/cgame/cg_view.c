@@ -50,7 +50,7 @@ Testmodel will create a fake entity 100 units in front of the current view
 position, directly facing the viewer.  It will remain immobile, so you can
 move around it to view it from different angles.
 
-Testgun will cause the model to follow the player around and supress the real
+Testgun will cause the model to follow the player around and suppress the real
 view weapon model.  The default frame 0 of most guns is completely off screen,
 so you will probably have to cycle a couple frames to see it.
 
@@ -79,6 +79,7 @@ can then be moved around
 void CG_TestModel_f (void) {
 	vec3_t		angles;
 
+	cg.testGun = qfalse;
 	memset( &cg.testModelEntity, 0, sizeof(cg.testModelEntity) );
 	if ( trap_Argc() < 2 ) {
 		return;
@@ -104,7 +105,17 @@ void CG_TestModel_f (void) {
 	angles[ROLL] = 0;
 
 	AnglesToAxis( angles, cg.testModelEntity.axis );
-	cg.testGun = qfalse;
+}
+
+/*
+=================
+CG_TestModelComplete
+=================
+*/
+void CG_TestModelComplete( char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		trap_Field_CompleteFilename( "", "$models", qfalse, qfalse );
+	}
 }
 
 /*
@@ -116,6 +127,11 @@ Replaces the current view weapon with the given model
 */
 void CG_TestGun_f (void) {
 	CG_TestModel_f();
+
+	if ( !cg.testModelEntity.hModel ) {
+		return;
+	}
+
 	cg.testGun = qtrue;
 	cg.testModelEntity.renderfx = RF_DEPTHHACK | RF_NO_MIRROR;
 }
@@ -256,16 +272,16 @@ void CG_CalcVrect (void) {
 	cgs.screenXScaleStretch = cg.viewportWidth * (1.0/640.0);
 	cgs.screenYScaleStretch = cg.viewportHeight * (1.0/480.0);
 	if ( cg.viewportWidth * 480 > cg.viewportHeight * 640 ) {
-		cgs.screenXScale = cg.viewportWidth * (1.0/640.0);
-		cgs.screenYScale = cg.viewportHeight * (1.0/480.0);
+		cgs.screenXScale = cgs.screenXScaleStretch;
+		cgs.screenYScale = cgs.screenYScaleStretch;
 		// wide screen
 		cgs.screenXBias = 0.5 * ( cg.viewportWidth - ( cg.viewportHeight * (640.0/480.0) ) );
 		cgs.screenXScale = cgs.screenYScale;
 		// no narrow screen
 		cgs.screenYBias = 0;
 	} else {
-		cgs.screenXScale = cg.viewportWidth * (1.0/640.0);
-		cgs.screenYScale = cg.viewportHeight * (1.0/480.0);
+		cgs.screenXScale = cgs.screenXScaleStretch;
+		cgs.screenYScale = cgs.screenYScaleStretch;
 		// narrow screen
 		cgs.screenYBias = 0.5 * ( cg.viewportHeight - ( cg.viewportWidth * (480.0/640.0) ) );
 		cgs.screenYScale = cgs.screenXScale;
@@ -319,20 +335,33 @@ static void CG_OffsetThirdPersonView( void ) {
 	vec3_t		view;
 	vec3_t		focusAngles;
 	trace_t		trace;
-	static vec3_t	mins = { -4, -4, -4 };
-	static vec3_t	maxs = { 4, 4, 4 };
+	static vec3_t	mins = { -5, -5, -5 };
+	static vec3_t	maxs = { 5, 5, 5 };
 	vec3_t		focusPoint;
 	float		focusDist;
 	float		forwardScale, sideScale;
+	float		thirdPersonAngle, thirdPersonRange;
 
 	cg.refdef.vieworg[2] += cg.cur_lc->predictedPlayerState.viewheight;
 
 	VectorCopy( cg.refdefViewAngles, focusAngles );
 
-	// if dead, look at killer
-	if ( cg.cur_lc->predictedPlayerState.stats[STAT_HEALTH] <= 0 ) {
-		focusAngles[YAW] = cg.cur_lc->predictedPlayerState.stats[STAT_DEAD_YAW];
-		cg.refdefViewAngles[YAW] = cg.cur_lc->predictedPlayerState.stats[STAT_DEAD_YAW];
+	if ( cg.cur_lc->cameraOrbit ) {
+		thirdPersonAngle = cg.cur_lc->cameraOrbitAngle;
+		thirdPersonRange = cg.cur_lc->cameraOrbitRange;
+
+		// make camera orbit horizontal
+		focusAngles[PITCH] = 0;
+		cg.refdefViewAngles[PITCH] = 0;
+	} else {
+		thirdPersonAngle = cg_thirdPersonAngle[cg.cur_localPlayerNum].value;
+		thirdPersonRange = cg_thirdPersonRange[cg.cur_localPlayerNum].value;
+
+		// if dead, look at killer
+		if ( cg.cur_lc->predictedPlayerState.stats[STAT_HEALTH] <= 0 ) {
+			focusAngles[YAW] = cg.cur_lc->predictedPlayerState.stats[STAT_DEAD_YAW];
+			cg.refdefViewAngles[YAW] = cg.cur_lc->predictedPlayerState.stats[STAT_DEAD_YAW];
+		}
 	}
 
 	if ( focusAngles[PITCH] > 45 ) {
@@ -354,13 +383,13 @@ static void CG_OffsetThirdPersonView( void ) {
 
 	AngleVectors( cg.refdefViewAngles, forward, right, up );
 
-	forwardScale = cos( cg_thirdPersonAngle[cg.cur_localPlayerNum].value / 180 * M_PI );
-	sideScale = sin( cg_thirdPersonAngle[cg.cur_localPlayerNum].value / 180 * M_PI );
-	VectorMA( view, -cg_thirdPersonRange[cg.cur_localPlayerNum].value * forwardScale, forward, view );
-	VectorMA( view, -cg_thirdPersonRange[cg.cur_localPlayerNum].value * sideScale, right, view );
+	forwardScale = cos( thirdPersonAngle / 180 * M_PI );
+	sideScale = sin( thirdPersonAngle / 180 * M_PI );
+	VectorMA( view, -thirdPersonRange * forwardScale, forward, view );
+	VectorMA( view, -thirdPersonRange * sideScale, right, view );
 
 	// trace a ray from the origin to the viewpoint to make sure the view isn't
-	// in a solid block.  Use an 8 by 8 block to prevent the view from near clipping anything
+	// in a solid block.  Use a 10 by 10 block to prevent the view from near clipping anything
 
 	if (!cg_cameraMode.integer) {
 		CG_Trace( &trace, cg.refdef.vieworg, mins, maxs, view, cg.cur_lc->predictedPlayerState.playerNum, MASK_SOLID );
@@ -386,7 +415,7 @@ static void CG_OffsetThirdPersonView( void ) {
 		focusDist = 1;	// should never happen
 	}
 	cg.refdefViewAngles[PITCH] = -180 / M_PI * atan2( focusPoint[2], focusDist );
-	cg.refdefViewAngles[YAW] -= cg_thirdPersonAngle[cg.cur_localPlayerNum].value;
+	cg.refdefViewAngles[YAW] -= thirdPersonAngle;
 }
 
 /*
@@ -560,28 +589,27 @@ Fixed fov at intermissions, otherwise account for fov variable and zooms.
 #define	WAVE_AMPLITUDE	1
 #define	WAVE_FREQUENCY	0.4
 
-static int CG_CalcFov( void ) {
+static void CG_CalcFov2( const refdef_t *refdef, float *input_fov, float *out_fov_x, float *out_fov_y ) {
 	float	x;
 	float	phase;
 	float	v;
-	int		contents;
 	float	fov_x, fov_y;
 	float	zoomFov;
 	float	f;
 
 	if ( cg.cur_lc->predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		// if in intermission, use a fixed value
-		cg.fov = fov_x = 90;
+		fov_x = 90;
+		*input_fov = 90;
 	} else {
 		// user selectable
 		if ( cgs.dmflags & DF_FIXED_FOV ) {
 			// dmflag to prevent wide fov for all players
 			fov_x = 90;
+			*input_fov = 90;
 		} else {
-			fov_x = cg_fov.value;
+			fov_x = *input_fov;
 		}
-
-		cg.fov = fov_x;
 
 		// account for zooms
 		zoomFov = cg_zoomFov.value;
@@ -605,33 +633,48 @@ static int CG_CalcFov( void ) {
 		// Based on LordHavoc's code for Darkplaces
 		// http://www.quakeworld.nu/forum/topic/53/what-does-your-qw-look-like/page/30
 		const float baseAspect = 0.75f; // 3/4
-		const float aspect = (float)cg.refdef.width/(float)cg.refdef.height;
+		const float aspect = (float)refdef->width/(float)refdef->height;
 		const float desiredFov = fov_x;
 
 		fov_x = atan( tan( desiredFov*M_PI / 360.0f ) * baseAspect*aspect )*360.0f / M_PI;
 	}
 
-	x = cg.refdef.width / tan( fov_x / 360 * M_PI );
-	fov_y = atan2( cg.refdef.height, x );
+	x = refdef->width / tan( fov_x / 360 * M_PI );
+	fov_y = atan2( refdef->height, x );
 	fov_y = fov_y * 360 / M_PI;
 
 	// warp if underwater
-	contents = CG_PointContents( cg.refdef.vieworg, -1 );
-	if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ){
+	if ( refdef->rdflags & RDF_UNDERWATER ) {
 		phase = cg.time / 1000.0 * WAVE_FREQUENCY * M_PI * 2;
 		v = WAVE_AMPLITUDE * sin( phase );
 		fov_x += v;
 		fov_y -= v;
+	}
+
+	*out_fov_x = fov_x;
+	*out_fov_y = fov_y;
+}
+
+static int CG_CalcFov( void ) {
+	float fov;
+	int contents;
+
+	// check if underwater
+	contents = CG_PointContents( cg.refdef.vieworg, -1 );
+	if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ){
 		cg.refdef.rdflags |= RDF_UNDERWATER;
 	}
 	else {
 		cg.refdef.rdflags &= ~RDF_UNDERWATER;
 	}
 
+	// set world fov
+	fov = cg_fov.value;
+	CG_CalcFov2( &cg.refdef, &fov, &cg.refdef.fov_x, &cg.refdef.fov_y );
 
-	// set it
-	cg.refdef.fov_x = fov_x;
-	cg.refdef.fov_y = fov_y;
+	// set view weapon fov
+	cg.viewWeaponFov = cg_weaponFov.value ? cg_weaponFov.value : cg_fov.value;
+	CG_CalcFov2( &cg.refdef, &cg.viewWeaponFov, &cg.refdef.weapon_fov_x, &cg.refdef.weapon_fov_y );
 
 	if ( !cg.cur_lc->zoomed ) {
 		cg.cur_lc->zoomSensitivity = 1;
@@ -663,6 +706,7 @@ void CG_DrawSkyBoxPortal( void ) {
 		cg.refdef.fogType = FT_LINEAR;
 		cg.refdef.fogDensity = 1.0f;
 		cg.refdef.fogDepthForOpaque = cg.skyPortalFogDepthForOpaque;
+		cg.refdef.farClip = 0;
 	}
 	VectorCopy( cg.skyPortalFogColor, cg.refdef.fogColor );
 
@@ -785,11 +829,10 @@ static int CG_CalcViewValues( void ) {
 	VectorCopy( ps->origin, cg.refdef.vieworg );
 	VectorCopy( ps->viewangles, cg.refdefViewAngles );
 
-	if (cg_cameraOrbit.integer) {
-		if (cg.time > cg.nextOrbitTime) {
-			cg_thirdPersonAngle[cg.cur_localPlayerNum].value += cg_cameraOrbit.value;
-		}
+	if ( cg.cur_lc->cameraOrbit ) {
+		cg.cur_lc->cameraOrbitAngle += cg.cur_lc->cameraOrbit * cg.frametime * 0.001f;
 	}
+
 	// add error decay
 	if ( cg_errorDecay.value > 0 ) {
 		int		t;
@@ -1092,7 +1135,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 		// decide on third person view
 		cg.cur_lc->renderingThirdPerson = cg.cur_ps->persistant[PERS_TEAM] != TEAM_SPECTATOR
-							&& (cg_thirdPerson[cg.cur_localPlayerNum].integer || (cg.cur_ps->stats[STAT_HEALTH] <= 0));
+							&& (cg_thirdPerson[cg.cur_localPlayerNum].integer || (cg.cur_ps->stats[STAT_HEALTH] <= 0) || cg.cur_lc->cameraOrbit);
 
 		// build cg.refdef
 		inwater = CG_CalcViewValues();
@@ -1160,12 +1203,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	cg.cur_localPlayerNum = -1;
 	cg.cur_lc = NULL;
 	cg.cur_ps = NULL;
-
-	if (cg_cameraOrbit.integer) {
-		if (cg.time > cg.nextOrbitTime) {
-			cg.nextOrbitTime = cg.time + cg_cameraOrbitDelay.integer;
-		}
-	}
 
 	// load any models that have been deferred if a scoreboard is shown
 	if ( !CG_AnyScoreboardShowing() ) {

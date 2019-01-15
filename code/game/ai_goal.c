@@ -198,6 +198,9 @@ void BotInterbreedGoalFuzzyLogic(int parent1, int parent2, int child)
 	p2 = BotGoalStateFromHandle(parent2);
 	c = BotGoalStateFromHandle(child);
 
+	if (!p1 || !p2 || !c)
+		return;
+
 	InterbreedWeightConfigs(p1->itemweightconfig, p2->itemweightconfig,
 									c->itemweightconfig);
 } //end of the function BotInterbreedingGoalFuzzyLogic
@@ -212,7 +215,7 @@ void BotSaveGoalFuzzyLogic(int goalstate, char *filename)
 	//bot_goalstate_t *gs;
 
 	//gs = BotGoalStateFromHandle(goalstate);
-
+	//if (!gs) return;
 	//WriteWeightConfig(filename, gs->itemweightconfig);
 } //end of the function BotSaveGoalFuzzyLogic
 //===========================================================================
@@ -226,7 +229,7 @@ void BotMutateGoalFuzzyLogic(int goalstate, float range)
 	bot_goalstate_t *gs;
 
 	gs = BotGoalStateFromHandle(goalstate);
-
+	if (!gs) return;
 	EvolveWeightConfig(gs->itemweightconfig);
 } //end of the function BotMutateGoalFuzzyLogic
 //===========================================================================
@@ -434,7 +437,7 @@ void BotInitInfoEntities(void)
 				continue;
 			} //end if
 
-			cs = (campspot_t *) trap_Alloc(sizeof(campspot_t), NULL);
+			cs = (campspot_t *) trap_HeapMalloc(sizeof(campspot_t));
 			VectorCopy(origin, cs->origin);
 			trap_AAS_ValueForBSPEpairKey(ent, "message", cs->name, sizeof(cs->name));
 			trap_AAS_FloatForBSPEpairKey(ent, "range", &cs->range);
@@ -587,6 +590,12 @@ void BotInitLevelItems(void)
 		{
 			li->flags |= IFL_ROAM;
 			trap_AAS_FloatForBSPEpairKey(ent, "weight", &li->weight);
+		} //end if
+		else if (g_instagib.integer && Q_stricmpn(classname, "team_", 5) != 0)
+		{
+			// instagib only spawns IT_TEAM items. treat non-team items as item_botroam so bots can still navigate the map.
+			li->flags |= IFL_ROAM;
+			li->weight = 1;
 		} //end if
 		//if not a stationary item
 		if (!(spawnflags & 1))
@@ -853,6 +862,7 @@ int BotGetLevelItemGoal(int index, char *name, bot_goal_t *goal)
 			goal->number = li->number;
 			goal->flags = GFL_ITEM;
 			if (li->timeout) goal->flags |= GFL_DROPPED;
+			goal->iteminfo = li->iteminfo;
 			//BotAI_Print(PRT_MESSAGE, "found li %s\n", itemconfig->iteminfo[li->iteminfo].name);
 			return li->number;
 		} //end if
@@ -882,6 +892,9 @@ int BotGetMapLocationGoal(char *name, bot_goal_t *goal)
 			goal->entitynum = 0;
 			VectorCopy(mins, goal->mins);
 			VectorCopy(maxs, goal->maxs);
+			goal->number = 0;
+			goal->flags = 0;
+			goal->iteminfo = 0;
 			return qtrue;
 		} //end if
 	} //end for
@@ -910,6 +923,9 @@ int BotGetNextCampSpotGoal(int num, bot_goal_t *goal)
 			goal->entitynum = 0;
 			VectorCopy(mins, goal->mins);
 			VectorCopy(maxs, goal->maxs);
+			goal->number = 0;
+			goal->flags = 0;
+			goal->iteminfo = 0;
 			return num+1;
 		} //end if
 	} //end for

@@ -386,41 +386,74 @@ void	Svcmd_EntityList_f (void) {
 	}
 }
 
-gplayer_t	*PlayerForString( const char *s ) {
-	gplayer_t	*player;
-	int			i;
+int PlayerForString( const char *s ) {
+	gplayer_t	*cl;
 	int			idnum;
+	char		cleanName[MAX_NETNAME];
 
-	// numeric values are just slot numbers
-	if ( s[0] >= '0' && s[0] <= '9' ) {
+	// numeric values could be slot numbers
+	if ( StringIsInteger( s ) ) {
 		idnum = atoi( s );
-		if ( idnum < 0 || idnum >= level.maxplayers ) {
-			Com_Printf( "Bad player slot: %i\n", idnum );
-			return NULL;
+		if ( idnum >= 0 && idnum < level.maxplayers ) {
+			cl = &level.players[idnum];
+			if ( cl->pers.connected == CON_CONNECTED ) {
+				return idnum;
+			}
 		}
-
-		player = &level.players[idnum];
-		if ( player->pers.connected == CON_DISCONNECTED ) {
-			G_Printf( "Player %i is not connected\n", idnum );
-			return NULL;
-		}
-		return player;
 	}
 
 	// check for a name match
-	for ( i=0 ; i < level.maxplayers ; i++ ) {
-		player = &level.players[i];
-		if ( player->pers.connected == CON_DISCONNECTED ) {
+	for ( idnum=0,cl=level.players ; idnum < level.maxplayers ; idnum++,cl++ ) {
+		if ( cl->pers.connected != CON_CONNECTED ) {
 			continue;
 		}
-		if ( !Q_stricmp( player->pers.netname, s ) ) {
-			return player;
+		Q_strncpyz(cleanName, cl->pers.netname, sizeof(cleanName));
+		Q_CleanStr(cleanName);
+		if ( !Q_stricmp( cleanName, s ) ) {
+			return idnum;
 		}
 	}
 
 	G_Printf( "User %s is not on the server\n", s );
 
-	return NULL;
+	return -1;
+}
+
+/*
+===================
+G_Field_CompletePlayerName
+===================
+*/
+void G_Field_CompletePlayerName( void ) {
+	gplayer_t	*cl;
+	int			idnum;
+	char		cleanName[MAX_NETNAME];
+	char		list[MAX_CLIENTS * MAX_NETNAME];
+	int			listTotalLength;
+
+	// ZTM: FIXME: have to clear whole list because BG_AddStringToList doesn't properly terminate list
+	memset( list, 0, sizeof( list ) );
+	listTotalLength = 0;
+
+	for ( idnum=0,cl=level.players ; idnum < level.maxplayers ; idnum++,cl++ ) {
+		if ( cl->pers.connected != CON_CONNECTED ) {
+			continue;
+		}
+		Q_strncpyz(cleanName, cl->pers.netname, sizeof(cleanName));
+		Q_CleanStr(cleanName);
+
+		// Use quotes if there is a space in the name
+		if ( strchr( cleanName, ' ' ) != NULL ) {
+			BG_AddStringToList( list, sizeof( list ), &listTotalLength, va( "\"%s\"", cleanName ) );
+		} else {
+			BG_AddStringToList( list, sizeof( list ), &listTotalLength, cleanName );
+		}
+	}
+
+	if ( listTotalLength > 0 ) {
+		list[listTotalLength++] = 0;
+		trap_Field_CompleteList( list );
+	}
 }
 
 /*
@@ -431,7 +464,7 @@ forceTeam <player> <team>
 ===================
 */
 void	Svcmd_ForceTeam_f( void ) {
-	gplayer_t	*player;
+	int			playerNum;
 	char		str[MAX_TOKEN_CHARS];
 
 	if ( trap_Argc() < 3 ) {
@@ -441,14 +474,89 @@ void	Svcmd_ForceTeam_f( void ) {
 
 	// find the player
 	trap_Argv( 1, str, sizeof( str ) );
-	player = PlayerForString( str );
-	if ( !player ) {
+	playerNum = PlayerForString( str );
+	if ( playerNum == -1 ) {
 		return;
 	}
 
 	// set the team
 	trap_Argv( 2, str, sizeof( str ) );
-	SetTeam( &g_entities[player - level.players], str );
+	SetTeam( &g_entities[playerNum], str );
+}
+
+/*
+===================
+Svcmd_ForceTeamComplete
+===================
+*/
+void	Svcmd_ForceTeamComplete( char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		G_Field_CompletePlayerName();
+	} else if ( argNum == 3 ) {
+		trap_Field_CompleteList( "blue\0follow1\0follow2\0free\0red\0scoreboard\0spectator\0" );
+	}
+}
+
+/*
+===================
+Svcmd_Teleport_f
+
+teleport <player> <x> <y> <z> [yaw]
+===================
+*/
+void	Svcmd_Teleport_f( void ) {
+	int			playerNum;
+	gentity_t	*ent;
+	char		str[MAX_TOKEN_CHARS];
+	vec3_t		position, angles;
+
+	if ( !g_cheats.integer ) {
+		G_Printf("Cheats are not enabled on this server.\n");
+		return;
+	}
+
+	if ( trap_Argc() < 3 ) {
+		G_Printf("Usage: teleport <player> <x> <y> <z> [yaw]\n");
+		return;
+	}
+
+	// find the player
+	trap_Argv( 1, str, sizeof( str ) );
+	playerNum = PlayerForString( str );
+	if ( playerNum == -1 ) {
+		return;
+	}
+
+	// set the position
+	trap_Argv( 2, str, sizeof( str ) );
+	position[0] = atoi( str );
+
+	trap_Argv( 3, str, sizeof( str ) );
+	position[1] = atoi( str );
+
+	trap_Argv( 4, str, sizeof( str ) );
+	position[2] = atoi( str );
+
+	ent = &g_entities[playerNum];
+	VectorCopy( ent->s.angles, angles );
+
+	if ( trap_Argc() > 5 ) {
+		trap_Argv( 5, str, sizeof( str ) );
+		angles[YAW] = atoi( str );
+	}
+
+	TeleportPlayer( ent, position, angles );
+}
+
+/*
+===================
+Svcmd_TeleportComplete
+===================
+*/
+void	Svcmd_TeleportComplete( char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		G_Field_CompletePlayerName();
+	}
 }
 
 /*
@@ -460,44 +568,96 @@ void	Svcmd_ListIPs_f( void ) {
 	trap_Cmd_ExecuteText( EXEC_NOW, "g_banIPs\n" );
 }
 
-#if 0
 /*
 ===================
 Svcmd_Say_f
 ===================
 */
 void	Svcmd_Say_f( void ) {
-	trap_SendServerCommand( -1, va("print \"server: %s\n\"", ConcatArgs(1) ) );
+	char		*p;
+
+	if ( trap_Argc() < 2 ) {
+		return;
+	}
+
+	p = ConcatArgs( 1 );
+
+	G_Say( NULL, NULL, SAY_ALL, p );
 }
-#endif
+
+/*
+===================
+Svcmd_Tell_f
+===================
+*/
+void	Svcmd_Tell_f( void ) {
+	char		arg[MAX_TOKEN_CHARS];
+	int			playerNum;
+	gentity_t	*target;
+	char		*p;
+
+	if ( trap_Argc() < 3 ) {
+		G_Printf( "Usage: tell <player id> <message>\n" );
+		return;
+	}
+
+	trap_Argv( 1, arg, sizeof( arg ) );
+	playerNum = PlayerForString( arg );
+	if ( playerNum == -1 ) {
+		return;
+	}
+
+	target = &level.gentities[playerNum];
+	if ( !target->inuse || !target->player ) {
+		return;
+	}
+
+	p = ConcatArgs( 2 );
+
+	G_Say( NULL, target, SAY_TELL, p );
+}
+
+/*
+===================
+Svcmd_TellComplete
+===================
+*/
+void	Svcmd_TellComplete( char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		G_Field_CompletePlayerName();
+	}
+}
 
 struct svcmd
 {
   char     *cmd;
   qboolean dedicated;
   void     ( *function )( void );
+  void     ( *complete )( char *, int );
 } svcmds[ ] = {
   { "abort_podium", qfalse, Svcmd_AbortPodium_f },
-  { "addbot", qfalse, Svcmd_AddBot_f },
+  { "addbot", qfalse, Svcmd_AddBot_f, Svcmd_AddBotComplete },
   { "addip", qfalse, Svcmd_AddIP_f },
   { "botlist", qfalse, Svcmd_BotList_f },
   { "botreport", qfalse, Svcmd_BotTeamplayReport_f },
   { "entityList", qfalse, Svcmd_EntityList_f },
-  { "forceTeam", qfalse, Svcmd_ForceTeam_f },
+  { "forceTeam", qfalse, Svcmd_ForceTeam_f, Svcmd_ForceTeamComplete },
   { "listip", qfalse, Svcmd_ListIPs_f },
   { "removeip", qfalse, Svcmd_RemoveIP_f },
-  //{ "say", qtrue, Svcmd_Say_f },
+  { "say", qtrue, Svcmd_Say_f },
+  { "teleport", qfalse, Svcmd_Teleport_f, Svcmd_TeleportComplete },
+  { "tell", qtrue, Svcmd_Tell_f, Svcmd_TellComplete },
 };
 
 const size_t numSvCmds = ARRAY_LEN(svcmds);
 
 /*
 =================
-ConsoleCommand
+G_ConsoleCommand
 
 =================
 */
-qboolean	ConsoleCommand( void ) {
+qboolean	G_ConsoleCommand( void ) {
 	char	cmd[MAX_TOKEN_CHARS];
 	struct	svcmd *command;
 
@@ -517,6 +677,33 @@ qboolean	ConsoleCommand( void ) {
 		return qfalse;
 
 	command->function( );
+	return qtrue;
+}
+
+/*
+=================
+G_ConsoleCompleteArgument
+
+=================
+*/
+qboolean	G_ConsoleCompleteArgument( int completeArgument ) {
+	char	args[BIG_INFO_STRING];
+	char	cmd[MAX_TOKEN_CHARS];
+	struct	svcmd *command;
+
+	trap_Argv( 0, cmd, sizeof( cmd ) );
+
+	command = bsearch( cmd, svcmds, numSvCmds, sizeof( struct svcmd ), cmdcmp );
+
+	if( !command || !command->complete )
+		return qfalse;
+
+	if( command->dedicated && !g_dedicated.integer )
+		return qfalse;
+
+	trap_LiteralArgs( args, sizeof ( args ) );
+
+	command->complete( args, completeArgument );
 	return qtrue;
 }
 

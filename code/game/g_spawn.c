@@ -315,6 +315,10 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 			continue;
 		}
 		if ( !strcmp(item->classname, ent->classname) ) {
+			if ( g_instagib.integer && item->giType != IT_TEAM ) {
+				// only spawn team play items in instagib mode
+				return qfalse;
+			}
 			G_SpawnItem( ent, item );
 			return qtrue;
 		}
@@ -346,7 +350,7 @@ char *G_NewString( const char *string ) {
 	
 	l = strlen(string) + 1;
 
-	newb = trap_Alloc( l, NULL );
+	newb = trap_HeapMalloc( l );
 
 	new_p = newb;
 
@@ -429,7 +433,7 @@ void G_ParseField( const char *key, const char *value, gentity_t *ent ) {
 G_SpawnGEntityFromSpawnVars
 
 Spawn an entity and fill in all of the level fields from
-level.spawnVars[], then call the class specfic spawn function
+level.spawnVars[], then call the class specific spawn function
 ===================
 */
 void G_SpawnGEntityFromSpawnVars( void ) {
@@ -507,7 +511,7 @@ qboolean G_ParseSpawnVars( void ) {
 	level.numSpawnVarChars = 0;
 
 	// parse the opening brace
-	if ( !trap_GetEntityToken( com_token, sizeof( com_token ) ) ) {
+	if ( !trap_GetEntityToken( &level.spawnEntityOffset, com_token, sizeof( com_token ) ) ) {
 		// end of spawn string
 		return qfalse;
 	}
@@ -518,7 +522,7 @@ qboolean G_ParseSpawnVars( void ) {
 	// go through all the key / value pairs
 	while ( 1 ) {	
 		// parse key
-		if ( !trap_GetEntityToken( keyname, sizeof( keyname ) ) ) {
+		if ( !trap_GetEntityToken( &level.spawnEntityOffset, keyname, sizeof( keyname ) ) ) {
 			G_Error( "G_ParseSpawnVars: EOF without closing brace" );
 		}
 
@@ -527,7 +531,7 @@ qboolean G_ParseSpawnVars( void ) {
 		}
 		
 		// parse value	
-		if ( !trap_GetEntityToken( com_token, sizeof( com_token ) ) ) {
+		if ( !trap_GetEntityToken( &level.spawnEntityOffset, com_token, sizeof( com_token ) ) ) {
 			G_Error( "G_ParseSpawnVars: EOF without closing brace" );
 		}
 
@@ -563,7 +567,7 @@ void SP_worldspawn( void ) {
 	}
 
 	// make some data visible to connecting client
-	trap_SetConfigstring( CS_GAME_VERSION, GAME_VERSION );
+	trap_SetConfigstring( CS_GAME_PROTOCOL, GAME_PROTOCOL );
 
 	trap_SetConfigstring( CS_LEVEL_START_TIME, va("%i", level.startTime ) );
 
@@ -619,6 +623,7 @@ void G_SpawnEntitiesFromString( void ) {
 	// allow calls to G_Spawn*()
 	level.spawning = qtrue;
 	level.numSpawnVars = 0;
+	level.spawnEntityOffset = 0;
 
 	// the worldspawn is not an actual entity, but it still
 	// has a "spawn" function to perform any global setup

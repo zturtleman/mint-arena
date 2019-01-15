@@ -154,7 +154,7 @@ static void PlayerSettings_DrawName( void *self ) {
 	if ( focus ) {
 		style |= UI_FORCECOLOR;
 	}
-	MField_Draw( &f->field, x, y, style, colorWhite, focus );
+	UI_MField_Draw( &f->field, x, y, style, colorWhite, focus );
 
 	// draw at bottom also using proportional font
 	Q_strncpyz( name, MField_Buffer( &f->field ), sizeof(name) );
@@ -446,16 +446,16 @@ static void PlayerSettings_MenuInit( int localPlayerNum )
 	s_playersettings.menu.wrapAround = qtrue;
 	s_playersettings.menu.fullscreen = qtrue;
 
-	if (UI_MaxSplitView() == 1) {
+	// Q3 bitmap banner font is missing numbers, fall back to PTEXT
+	if (uis.bannerNumbers || UI_MaxSplitView() == 1) {
 		s_playersettings.banner.generic.type  = MTYPE_BTEXT;
 	} else {
-		// ZTM: Q3's BTEXT doesn't have numbers sadly.
 		s_playersettings.banner.generic.type  = MTYPE_PTEXT;
 	}
 	s_playersettings.banner.generic.flags = QMF_INACTIVE;
 	s_playersettings.banner.generic.x     = 320;
 	s_playersettings.banner.generic.y     = 16;
-	s_playersettings.banner.string = s_playersettings.bannerString;
+	s_playersettings.banner.string        = s_playersettings.bannerString;
 	s_playersettings.banner.color         = text_banner_color;
 	s_playersettings.banner.style         = UI_CENTER;
 

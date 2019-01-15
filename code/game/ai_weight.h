@@ -56,14 +56,13 @@ typedef struct fuzzyseperator_s
 //fuzzy weight
 typedef struct weight_s
 {
-	char name[128];
+	char *name;
 	struct fuzzyseperator_s *firstseperator;
 } weight_t;
 
 //weight configuration
 typedef struct weightconfig_s
 {
-	qboolean valid;
 	int numweights;
 	weight_t weights[MAX_WEIGHTS];
 	char		filename[MAX_QPATH];
@@ -73,7 +72,7 @@ typedef struct weightconfig_s
 weightconfig_t *ReadWeightConfig(char *filename);
 //free a weight configuration
 void FreeWeightConfig(weightconfig_t *config);
-//writes a weight configuration, returns true if successfull
+//writes a weight configuration, returns true if successful
 qboolean WriteWeightConfig(char *filename, weightconfig_t *config);
 //find the fuzzy weight with the given name
 int FindFuzzyWeight(weightconfig_t *wc, const char *name);

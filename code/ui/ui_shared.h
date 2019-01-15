@@ -381,6 +381,9 @@ typedef struct {
 	void (*stopCinematic)(int handle);
 	void (*drawCinematic)(int handle, float x, float y, float w, float h);
 	void (*runCinematicFrame)(int handle);
+	void (*adjustFrom640)( float *x, float *y, float *w, float *h );
+	void (*setScreenPlacement)( screenPlacement_e hpos, screenPlacement_e vpos );
+	void (*popScreenPlacement)( void );
 
   int				realTime;
   int				frameTime;
@@ -432,6 +435,7 @@ void Menu_Reset( void );
 qboolean Menus_AnyFullScreenVisible( void );
 void  Menus_Activate(menuDef_t *menu);
 
+int UI_SelectForKey(int key);
 displayContextDef_t *Display_GetContext( void );
 void *Display_CaptureItem(int x, int y);
 qboolean Display_MouseMove(void *p, int x, int y);
@@ -450,6 +454,8 @@ void Menu_SetFeederSelection(menuDef_t *menu, int feeder, int index, const char 
 void Menu_SetScreenPlacement(menuDef_t *menu, screenPlacement_e hpos, screenPlacement_e vpos );
 void Display_CacheAll( void );
 qboolean Display_DebugMode( void );
+
+itemDef_t *Menu_FindItemByName(menuDef_t *menu, const char *p);
 
 void *UI_Alloc( int size );
 void UI_InitMemory( void );

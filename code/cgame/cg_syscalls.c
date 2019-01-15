@@ -105,6 +105,10 @@ void trap_Cvar_LatchedVariableStringBuffer( const char *var_name, char *buffer, 
 	syscall( CG_CVAR_LATCHED_VARIABLE_STRING_BUFFER, var_name, buffer, bufsize );
 }
 
+void trap_Cvar_DefaultVariableStringBuffer( const char *var_name, char *buffer, int bufsize ) {
+	syscall( CG_CVAR_DEFAULT_VARIABLE_STRING_BUFFER, var_name, buffer, bufsize );
+}
+
 void	trap_Cvar_InfoStringBuffer( int bit, char *buffer, int bufsize ) {
 	syscall( CG_CVAR_INFO_STRING_BUFFER, bit, buffer, bufsize );
 }
@@ -330,12 +334,16 @@ void trap_S_SetStreamVolume( int stream, float volume ) {
 	syscall( CG_S_SETSTREAMVOLUME, stream, PASSFLOAT( volume ) );
 }
 
+void trap_S_StopAllSounds( void ) {
+	syscall( CG_S_STOPALLSOUNDS );
+}
+
 void	trap_R_LoadWorldMap( const char *mapname ) {
 	syscall( CG_R_LOADWORLDMAP, mapname );
 }
 
-qboolean trap_GetEntityToken( char *buffer, int bufferSize ) {
-	return syscall( CG_GET_ENTITY_TOKEN, buffer, bufferSize );
+qboolean trap_GetEntityToken( int *parseOffset, char *buffer, int bufferSize ) {
+	return syscall( CG_GET_ENTITY_TOKEN, parseOffset, buffer, bufferSize );
 }
 
 qhandle_t trap_R_RegisterModel( const char *name ) {
@@ -491,12 +499,12 @@ qboolean trap_R_inPVS( const vec3_t p1, const vec3_t p2 ) {
 	return syscall( CG_R_INPVS, p1, p2 );
 }
 
-void trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
-	syscall( CG_R_GET_GLOBAL_FOG, type, color, depthForOpaque, density );
+void trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density, float *farClip ) {
+	syscall( CG_R_GET_GLOBAL_FOG, type, color, depthForOpaque, density, farClip );
 }
 
-void trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater ) {
-	syscall( CG_R_GET_VIEW_FOG, origin, type, color, depthForOpaque, density, inwater );
+void trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, float *farClip, qboolean inwater ) {
+	syscall( CG_R_GET_VIEW_FOG, origin, type, color, depthForOpaque, density, farClip, inwater );
 }
 
 void		trap_R_SetSurfaceShader( int surfaceNum, const char *name ) {
@@ -773,8 +781,12 @@ qboolean trap_LAN_ServerIsInFavoriteList( int source, int n  ) {
 	return syscall( CG_LAN_SERVERISINFAVORITELIST, source, n );
 }
 
-int trap_PC_AddGlobalDefine( char *define ) {
+int trap_PC_AddGlobalDefine( const char *define ) {
 	return syscall( CG_PC_ADD_GLOBAL_DEFINE, define );
+}
+
+int trap_PC_RemoveGlobalDefine( const char *define ) {
+	return syscall( CG_PC_REMOVE_GLOBAL_DEFINE, define );
 }
 
 void trap_PC_RemoveAllGlobalDefines( void ) {
@@ -789,6 +801,10 @@ int trap_PC_FreeSource( int handle ) {
 	return syscall( CG_PC_FREE_SOURCE, handle );
 }
 
+int trap_PC_AddDefine( int handle, const char *define ) {
+	return syscall( CG_PC_ADD_DEFINE, handle, define );
+}
+
 int trap_PC_ReadToken( int handle, pc_token_t *pc_token ) {
 	return syscall( CG_PC_READ_TOKEN, handle, pc_token );
 }
@@ -801,8 +817,28 @@ int trap_PC_SourceFileAndLine( int handle, char *filename, int *line ) {
 	return syscall( CG_PC_SOURCE_FILE_AND_LINE, handle, filename, line );
 }
 
-void *trap_Alloc( int size, const char *tag ) {
-	return (void *)syscall( CG_ALLOC, size, tag );
+void *trap_HeapMalloc( int size ) {
+	return (void *)syscall( CG_HEAP_MALLOC, size );
+}
+
+int trap_HeapAvailable( void ) {
+	return syscall( CG_HEAP_AVAILABLE );
+}
+
+void trap_HeapFree( void *data ) {
+	syscall( CG_HEAP_FREE, data );
+}
+
+void	trap_Field_CompleteFilename( const char *dir, const char *ext, qboolean stripExt, qboolean allowNonPureFilesOnDisk ) {
+	syscall( CG_FIELD_COMPLETEFILENAME, dir, ext, stripExt, allowNonPureFilesOnDisk );
+}
+
+void	trap_Field_CompleteCommand( const char *cmd, qboolean doCommands, qboolean doCvars ) {
+	syscall( CG_FIELD_COMPLETECOMMAND, cmd, doCommands, doCvars );
+}
+
+void	trap_Field_CompleteList( const char *list ) {
+	syscall( CG_FIELD_COMPLETELIST, list );
 }
 
 int trap_RealTime(qtime_t *qtime) {

@@ -54,7 +54,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define idppc 1
 #if defined(__VEC__)
 #define idppc_altivec 1
-#ifdef MACOS_X  // Apple's GCC does this differently than the FSF.
+#ifdef __APPLE__  // Apple's GCC does this differently than the FSF.
 #define VECCONST_UINT8(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p) \
 	(vector unsigned char) (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p)
 #else
@@ -147,12 +147,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 //============================================================== MAC OS X ===
 
-#if defined(MACOS_X) || defined(__APPLE_CC__)
-
-// make sure this is defined, just for sanity's sake...
-#ifndef MACOS_X
-#define MACOS_X
-#endif
+#if defined(__APPLE__) || defined(__APPLE_CC__)
 
 #define OS_STRING "macosx"
 #define ID_INLINE inline
@@ -307,6 +302,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define ARCH_STRING "bytecode"
 
+#define Q3_PORTABLE_ENDIAN
+
 #define DLL_EXT ".qvm"
 
 #endif
@@ -354,6 +351,7 @@ float FloatSwap (const float *f);
 #define BigShort
 #define BigLong
 #define BigFloat
+#define Swap_Init()
 
 #elif defined( Q3_LITTLE_ENDIAN )
 
@@ -365,15 +363,11 @@ float FloatSwap (const float *f);
 #define BigShort(x) ShortSwap(x)
 #define BigLong(x) LongSwap(x)
 #define BigFloat(x) FloatSwap(&x)
+#define Swap_Init()
 
-#elif defined( Q3_VM )
+#elif defined( Q3_PORTABLE_ENDIAN )
 
-#define LittleShort
-#define LittleLong
-#define LittleFloat
-#define BigShort
-#define BigLong
-#define BigFloat
+// functions in q_shared will be used to check if little or big endian at run time
 
 #else
 #error "Endianness not defined"

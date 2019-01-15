@@ -34,6 +34,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 // q_shared.h -- included first by ALL program modules.
 // A user mod should never modify this file
 
+#ifndef PRODUCT_DATE
+#  define PRODUCT_DATE __DATE__
+#endif
+
 #ifdef _MSC_VER
 
 #pragma warning(disable : 4018)     // signed/unsigned mismatch
@@ -128,15 +132,17 @@ typedef int intptr_t;
   typedef unsigned __int32 uint32_t;
   typedef unsigned __int16 uint16_t;
   typedef unsigned __int8 uint8_t;
+#else
+  #include <stdint.h>
+#endif
 
+#ifdef _WIN32
   // vsnprintf is ISO/IEC 9899:1999
   // abstracting this to make it portable
   int Q_vsnprintf(char *str, size_t size, const char *format, va_list ap);
 
   #define rint(x) (floor(x)+0.5f)
 #else
-  #include <stdint.h>
-
   #define Q_vsnprintf vsnprintf
 #endif
 
@@ -216,7 +222,7 @@ typedef int		clipHandle_t;
 
 #define	MAX_NAME_LENGTH		32		// max length of a player name
 
-// paramters for command buffer stuffing
+// parameters for command buffer stuffing
 typedef enum {
 	EXEC_NOW,			// don't return until completed, a VM should NEVER use this,
 						// because some commands might cause the VM to be unloaded...
@@ -252,6 +258,10 @@ typedef enum {
 	ERR_DISCONNECT,				// client disconnected from the server
 } errorParm_t;
 
+
+#if !defined(NDEBUG) && !defined(BSPC)
+	#define ZONE_DEBUG
+#endif
 
 #if !defined(NDEBUG) && !defined(BSPC)
 	#define HUNK_DEBUG
@@ -912,18 +922,22 @@ typedef struct
 } qint64;
 
 //=============================================
-/*
+#ifdef Q3_PORTABLE_ENDIAN
 short	BigShort(short l);
 short	LittleShort(short l);
 int		BigLong (int l);
 int		LittleLong (int l);
 qint64  BigLong64 (qint64 l);
 qint64  LittleLong64 (qint64 l);
-float	BigFloat (const float *l);
-float	LittleFloat (const float *l);
+float	BigFloatPtr (const float *l);
+float	LittleFloatPtr (const float *l);
+
+#define BigFloat(x) BigFloatPtr(&x)
+#define LittleFloat(x) LittleFloatPtr(&x)
 
 void	Swap_Init (void);
-*/
+#endif
+
 char	* QDECL va(char *format, ...) __attribute__ ((format (printf, 1, 2)));
 
 #define TRUNCATE_LENGTH	64

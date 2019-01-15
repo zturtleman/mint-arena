@@ -35,8 +35,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // major 0 means each minor is an API break.
 // major > 0 means each major is an API break and each minor extends API.
-#define	GAME_API_MAJOR_VERSION	0
-#define	GAME_API_MINOR_VERSION	11
+// ZTM: FIXME: There is no way for the VM to know what the engine support API is
+//             so there is no way to add more system calls.
+#define	GAME_API_MAJOR_VERSION	1
+#define	GAME_API_MINOR_VERSION	0
 
 
 // entity->svFlags
@@ -154,6 +156,7 @@ typedef enum {
 	G_CVAR_VARIABLE_INTEGER_VALUE,			// ( const char *var_name );
 	G_CVAR_VARIABLE_STRING_BUFFER,			// ( const char *var_name, char *buffer, int bufsize );
 	G_CVAR_LATCHED_VARIABLE_STRING_BUFFER,	// ( const char *var_name, char *buffer, int bufsize );
+	G_CVAR_DEFAULT_VARIABLE_STRING_BUFFER,	// ( const char *var_name, char *buffer, int bufsize );
 	G_CVAR_INFO_STRING_BUFFER,				// ( int bit, char *buffer, int bufsize );
 	G_CVAR_CHECK_RANGE,						// (  const char *var_name, float min, float max, qboolean integral );
 
@@ -167,15 +170,23 @@ typedef enum {
 	G_FS_DELETE,		// ( const void *path );
 	G_FS_RENAME,		// ( const void *from, const void *to );
 
-	G_PC_ADD_GLOBAL_DEFINE,
-	G_PC_REMOVE_ALL_GLOBAL_DEFINES,
-	G_PC_LOAD_SOURCE,
-	G_PC_FREE_SOURCE,
-	G_PC_READ_TOKEN,
-	G_PC_UNREAD_TOKEN,
-	G_PC_SOURCE_FILE_AND_LINE,
+	G_PC_ADD_GLOBAL_DEFINE,				// ( const char *define );
+	G_PC_REMOVE_GLOBAL_DEFINE,			// ( const char *define );
+	G_PC_REMOVE_ALL_GLOBAL_DEFINES,		// ( void );
+	G_PC_LOAD_SOURCE,					// ( const char *filename, const char *basepath );
+	G_PC_FREE_SOURCE,					// ( int handle );
+	G_PC_ADD_DEFINE,					// ( int handle, const char *define );
+	G_PC_READ_TOKEN,					// ( int handle, pc_token_t *pc_token );
+	G_PC_UNREAD_TOKEN,					// ( int handle );
+	G_PC_SOURCE_FILE_AND_LINE,			// ( int handle, char *filename, int *line );
 
-	G_ALLOC,			// ( int size, const char *tag );
+	G_HEAP_MALLOC,		// ( int size );
+	G_HEAP_AVAILABLE,	// ( void );
+	G_HEAP_FREE,		// ( void *data );
+
+	G_FIELD_COMPLETEFILENAME, // ( const char *dir, const char *ext, qboolean stripExt, qboolean allowNonPureFilesOnDisk );
+	G_FIELD_COMPLETECOMMAND, // ( const char *cmd, qboolean doCommands, qboolean doCvars );
+	G_FIELD_COMPLETELIST, // ( const char *list );
 
 	//=========== server specific functionality =============
 
@@ -244,20 +255,23 @@ typedef enum {
 	G_ENTITY_CONTACT,	// ( const vec3_t mins, const vec3_t maxs, const gentity_t *ent );
 	// perform an exact check against inline brush models of non-square shape
 
-	// access for bots to get and free a server client (FIXME?)
-	G_BOT_ALLOCATE_CLIENT,	// ( void );
-
-	G_BOT_FREE_CLIENT,	// ( int playerNum );
+	// access for bots to get and free a server client
+	G_BOT_ALLOCATE_CLIENT,			// ( void );
+	G_BOT_FREE_CLIENT,				// ( int playerNum );
+	G_BOT_GET_SNAPSHOT_ENTITY,		// ( int playerNum, int ent );
+	G_BOT_GET_SERVER_COMMAND,		// ( int playerNum, char *command, int size );
+	G_BOT_USER_COMMAND,				// ( int playerNum, usercmd_t *ucmd );
+	G_CLIENT_COMMAND,				// ( int playerNum, const char *command );
 
 	G_GET_USERCMD,	// ( int playerNum, usercmd_t *cmd )
 
-	G_GET_ENTITY_TOKEN,	// qboolean ( char *buffer, int bufferSize )
+	G_GET_ENTITY_TOKEN,	// qboolean ( int *parseOffset, char *buffer, int bufferSize )
 	// Retrieves the next string token from the entity spawn text, returning
 	// false when all tokens have been parsed.
-	// This should only be done at GAME_INIT time.
 
-	G_DEBUG_POLYGON_CREATE,
-	G_DEBUG_POLYGON_DELETE,
+	G_DEBUG_POLYGON_CREATE, // ( int color, int numPoints, vec3_t *points );
+	G_DEBUG_POLYGON_SHOW, // ( int id, int color, int numPoints, vec3_t *points );
+	G_DEBUG_POLYGON_DELETE, // ( int id );
 
 	G_TRACECAPSULE,	// ( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
 	G_ENTITY_CONTACTCAPSULE,	// ( const vec3_t mins, const vec3_t maxs, const gentity_t *ent );
@@ -271,82 +285,8 @@ typedef enum {
 	                   //   const vec3_t *torsoAxis, qhandle_t torsoFrameModel, int torsoFrame, qhandle_t oldTorsoFrameModel, int oldTorsoFrame, float torsoFrac );
 	G_R_MODELBOUNDS, // ( qhandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac );
 
-	G_CLIENT_COMMAND,	// ( int playerNum, const char *command );
-
 	G_CLIPTOENTITIES, // ( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
 	G_CLIPTOENTITIESCAPSULE, // ( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
-
-	BOTLIB_SETUP = 200,				// ( void );
-	BOTLIB_SHUTDOWN,				// ( void );
-	BOTLIB_LIBVAR_SET,
-	BOTLIB_LIBVAR_GET,
-	BOTLIB_START_FRAME,
-	BOTLIB_LOAD_MAP,
-	BOTLIB_UPDATENTITY,
-	BOTLIB_TEST,
-
-	BOTLIB_GET_SNAPSHOT_ENTITY,		// ( int playerNum, int ent );
-	BOTLIB_GET_CONSOLE_MESSAGE,		// ( int playerNum, char *message, int size );
-	BOTLIB_USER_COMMAND,			// ( int playerNum, usercmd_t *ucmd );
-
-	BOTLIB_AAS_BBOX_AREAS = 301,
-	BOTLIB_AAS_AREA_INFO,
-	BOTLIB_AAS_LOADED,
-	BOTLIB_AAS_INITIALIZED,
-	BOTLIB_AAS_PRESENCE_TYPE_BOUNDING_BOX,
-	BOTLIB_AAS_TIME,
-
-	BOTLIB_AAS_POINT_AREA_NUM,
-	BOTLIB_AAS_TRACE_PLAYER_BBOX,
-	BOTLIB_AAS_TRACE_AREAS,
-
-	BOTLIB_AAS_POINT_CONTENTS,
-	BOTLIB_AAS_NEXT_BSP_ENTITY,
-	BOTLIB_AAS_VALUE_FOR_BSP_EPAIR_KEY,
-	BOTLIB_AAS_VECTOR_FOR_BSP_EPAIR_KEY,
-	BOTLIB_AAS_FLOAT_FOR_BSP_EPAIR_KEY,
-	BOTLIB_AAS_INT_FOR_BSP_EPAIR_KEY,
-
-	// aas_move
-	BOTLIB_AAS_PREDICT_PLAYER_MOVEMENT = 325,
-	BOTLIB_AAS_ON_GROUND,
-	BOTLIB_AAS_SWIMMING,
-	BOTLIB_AAS_JUMP_REACH_RUN_START,
-	BOTLIB_AAS_AGAINST_LADDER,
-	BOTLIB_AAS_HORIZONTAL_VELOCITY_FOR_JUMP,
-	BOTLIB_AAS_DROP_TO_FLOOR,
-
-	// aas_reach
-	BOTLIB_AAS_AREA_REACHABILITY = 350,
-	BOTLIB_AAS_BEST_REACHABLE_AREA,
-	BOTLIB_AAS_BEST_REACHABLE_FROM_JUMP_PAD_AREA,
-	BOTLIB_AAS_NEXT_MODEL_REACHABILITY,
-	BOTLIB_AAS_AREA_GROUND_FACE_AREA,
-	BOTLIB_AAS_AREA_CROUCH,
-	BOTLIB_AAS_AREA_SWIM,
-	BOTLIB_AAS_AREA_LIQUID,
-	BOTLIB_AAS_AREA_LAVA,
-	BOTLIB_AAS_AREA_SLIME,
-	BOTLIB_AAS_AREA_GROUNDED,
-	BOTLIB_AAS_AREA_LADDER,
-	BOTLIB_AAS_AREA_JUMP_PAD,
-	BOTLIB_AAS_AREA_DO_NOT_ENTER,
-
-	// aas_route
-	BOTLIB_AAS_TRAVEL_FLAG_FOR_TYPE = 400,
-	BOTLIB_AAS_AREA_CONTENTS_TRAVEL_FLAGS,
-	BOTLIB_AAS_NEXT_AREA_REACHABILITY,
-	BOTLIB_AAS_REACHABILITY_FROM_NUM,
-	BOTLIB_AAS_RANDOM_GOAL_AREA,
-	BOTLIB_AAS_ENABLE_ROUTING_AREA,
-	BOTLIB_AAS_AREA_TRAVEL_TIME,
-	BOTLIB_AAS_AREA_TRAVEL_TIME_TO_GOAL_AREA,
-	BOTLIB_AAS_PREDICT_ROUTE,
-
-	// aas_altroute
-	BOTLIB_AAS_ALTERNATIVE_ROUTE_GOAL = 420,
-
-	BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX = 500,
 
 } gameImport_t;
 
@@ -373,7 +313,7 @@ typedef enum {
 
 	GAME_PLAYER_USERINFO_CHANGED,	// ( int playerNum );
 
-	GAME_PLAYER_DISCONNECT,			// ( int playerNum );
+	GAME_PLAYER_DISCONNECT,			// ( int playerNum, qboolean force );
 
 	GAME_CLIENT_COMMAND,			// ( int clientNum );
 
@@ -382,7 +322,7 @@ typedef enum {
 	GAME_RUN_FRAME,					// ( int levelTime );
 
 	GAME_CONSOLE_COMMAND,			// ( void );
-	// ConsoleCommand will be called when a command has been issued
+	// G_ConsoleCommand will be called when a command has been issued
 	// that is not recognized as a builtin function.
 	// The game can issue trap_argc() / trap_argv() commands to get the command
 	// and parameters.  Return qfalse if the game doesn't recognize it as a command.
@@ -396,11 +336,13 @@ typedef enum {
 	// caused by vid_restart on localhost server.
 	// model handles are no longer valid, must re-register all models.
 
-	GAME_MAP_RESTART				// ( int levelTime, int restartTime );
+	GAME_MAP_RESTART,				// ( int levelTime, int restartTime );
 	// G_MapRestart will be called when a map_restart command has been issued;
 	//    caused by user, VM code, or server after restart time is hit.
 	// return restart time (levelTime + delay), -1 to do a full map reload,
 	//    or INT_MAX to prevent map restart.
+
+	GAME_CONSOLE_COMPLETEARGUMENT,		// ( int completeArgument );
 
 } gameExport_t;
 

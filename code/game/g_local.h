@@ -37,9 +37,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 //==================================================================
 
-// the "gameversion" client command will print this plus compile date
-#define	GAMEVERSION	MODDIR
-
 #define BODY_QUEUE_SIZE		64
 
 #define	FRAMETIME			100					// msec
@@ -436,6 +433,7 @@ typedef struct {
 	char		*spawnVars[MAX_SPAWN_VARS][2];	// key / value pairs
 	int			numSpawnVarChars;
 	char		spawnVarChars[MAX_SPAWN_VARS_CHARS];
+	int			spawnEntityOffset;
 
 	// intermission state
 	int			intermissionQueued;		// intermission was qualified, but
@@ -479,6 +477,7 @@ void StopFollowing( gentity_t *ent );
 void BroadcastTeamChange( gplayer_t *player, int oldTeam );
 void SetTeam( gentity_t *ent, const char *s );
 void Cmd_FollowCycle_f( gentity_t *ent, int dir );
+void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
 
 //
 // g_items.c
@@ -639,7 +638,8 @@ void G_PredictPlayerMove( gentity_t *ent, float frametime );
 //
 // g_svcmds.c
 //
-qboolean	ConsoleCommand( void );
+qboolean	G_ConsoleCommand( void );
+qboolean	G_ConsoleCompleteArgument( int completeArgument );
 void G_RegisterCommands( void );
 void G_ProcessIPBans(void);
 qboolean G_FilterPacket (char *from);
@@ -657,6 +657,7 @@ void G_StartKamikaze( gentity_t *ent );
 //
 void DeathmatchScoreboardMessage( gentity_t *ent );
 char *ConcatArgs( int start );
+qboolean StringIsInteger( const char * s );
 
 //
 // g_main.c
@@ -678,7 +679,7 @@ void QDECL G_Error( const char *fmt, ... ) __attribute__ ((noreturn, format (pri
 //
 char *PlayerConnect( int playerNum, qboolean firstTime, qboolean isBot, int connectionNum, int localPlayerNum );
 void PlayerUserinfoChanged( int playerNum );
-void PlayerDisconnect( int playerNum );
+qboolean PlayerDisconnect( int playerNum, qboolean force );
 void PlayerBegin( int playerNum );
 void ClientCommand( int connectionNum );
 float PlayerHandicap( gplayer_t *player );
@@ -723,10 +724,18 @@ void G_CheckBotSpawn( void );
 void G_RemoveQueuedBotBegin( int playerNum );
 qboolean G_BotConnect( int playerNum, qboolean restart );
 void Svcmd_AddBot_f( void );
+void Svcmd_AddBotComplete( char *args, int argNum );
 void Svcmd_BotList_f( void );
 void BotInterbreedEndMatch( void );
 
+//
+// g_botlib.c
+//
+void G_BotInitBotLib(void);
+
+//
 // ai_main.c
+//
 #define MAX_FILEPATH			144
 
 //bot settings
@@ -802,4 +811,5 @@ extern	vmCvar_t	g_rankings;
 extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_proxMineTimeout;
 extern	vmCvar_t	g_playerCapsule;
+extern	vmCvar_t	g_instagib;
 

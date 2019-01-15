@@ -220,6 +220,7 @@ qboolean EntityIsDead(aas_entityinfo_t *entinfo) {
 		if (!BotAI_GetPlayerState( entinfo->number, &ps )) {
 			return qfalse;
 		}
+
 		if (ps.pm_type != PM_NORMAL) return qtrue;
 	}
 	return qfalse;
@@ -2489,6 +2490,19 @@ int BotCanAndWantsToRocketJump(bot_state_t *bs) {
 
 /*
 ==================
+BotCanGrapple
+==================
+*/
+int BotCanGrapple(bot_state_t *bs) {
+	//if grappling is disabled
+	if (!bot_grapple.integer) return qfalse;
+	//if no grappling hook
+	if (!bot_offhandgrapple.integer && bs->inventory[INVENTORY_GRAPPLINGHOOK] <= 0) return qfalse;
+	return qtrue;
+}
+
+/*
+==================
 BotHasPersistantPowerupAndWeapon
 ==================
 */
@@ -2851,7 +2865,7 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 		bs->flags ^= BFL_STRAFERIGHT;
 		bs->attackstrafe_time = 0;
 	}
-	//bot couldn't do any usefull movement
+	//bot couldn't do any useful movement
 //	bs->attackchase_time = AAS_Time() + 6;
 	return moveresult;
 }
@@ -3152,6 +3166,10 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 			BotEntityInfo(bs->playernum, &curbotinfo);
 			// if the bot is invisible and want to get the flag, ignore enemies
 			if (EntityIsInvisible(&curbotinfo) && bs->ltgtype == LTG_GETFLAG) {
+				continue;
+			}
+			// if trying to activate an entity, ignore enemies
+			if ( bs->ainode == AINode_Seek_ActivateEntity ) {
 				continue;
 			}
 			//check if we can avoid this enemy
@@ -3855,21 +3873,26 @@ void BotMapScripts(bot_state_t *bs) {
 	strncpy(mapname, Info_ValueForKey( info, "mapname" ), sizeof(mapname)-1);
 	mapname[sizeof(mapname)-1] = '\0';
 
-	if (!Q_stricmp(mapname, "q3tourney6")) {
-		vec3_t mins = {700, 204, 672}, maxs = {964, 468, 680};
+	if (!Q_stricmp(mapname, "q3tourney6") || !Q_stricmp(mapname, "q3tourney6_ctf") || !Q_stricmp(mapname, "mpq3tourney6")) {
+		vec3_t mins = {694, 200, 480}, maxs = {968, 472, 680};
 		vec3_t buttonorg = {304, 352, 920};
 		//NOTE: NEVER use the func_bobbing in q3tourney6
 		bs->tfl &= ~TFL_FUNCBOB;
-		//if the bot is below the bounding box
+		//crush area is higher in mpq3tourney6
+		if (!Q_stricmp(mapname, "mpq3tourney6")) {
+			mins[2] += 64;
+			maxs[2] += 64;
+		}
+		//if the bot is in the bounding box of the crush area
 		if (bs->origin[0] > mins[0] && bs->origin[0] < maxs[0]) {
 			if (bs->origin[1] > mins[1] && bs->origin[1] < maxs[1]) {
-				if (bs->origin[2] < mins[2]) {
+				if (bs->origin[2] > mins[2] && bs->origin[2] < maxs[2]) {
 					return;
 				}
 			}
 		}
 		shootbutton = qfalse;
-		//if an enemy is below this bounding box then shoot the button
+		//if an enemy is in the bounding box then shoot the button
 		for (i = 0; i < level.maxplayers; i++) {
 
 			if (i == bs->playernum) continue;
@@ -3882,13 +3905,13 @@ void BotMapScripts(bot_state_t *bs) {
 			//
 			if (entinfo.origin[0] > mins[0] && entinfo.origin[0] < maxs[0]) {
 				if (entinfo.origin[1] > mins[1] && entinfo.origin[1] < maxs[1]) {
-					if (entinfo.origin[2] < mins[2]) {
+					if (entinfo.origin[2] > mins[2] && entinfo.origin[2] < maxs[2]) {
 						//if there's a team mate below the crusher
 						if (BotSameTeam(bs, i)) {
 							shootbutton = qfalse;
 							break;
 						}
-						else {
+						else if (bs->enemy == i) {
 							shootbutton = qtrue;
 						}
 					}
@@ -3909,10 +3932,6 @@ void BotMapScripts(bot_state_t *bs) {
 				EA_Attack(bs->playernum);
 			}
 		}
-	}
-	else if (!Q_stricmp(mapname, "mpq3tourney6")) {
-		//NOTE: NEVER use the func_bobbing in mpq3tourney6
-		bs->tfl &= ~TFL_FUNCBOB;
 	}
 }
 
@@ -4508,13 +4527,16 @@ int BotGetActivateGoal(bot_state_t *bs, int entitynum, bot_activategoal_t *activ
 BotGoForActivateGoal
 ==================
 */
-int BotGoForActivateGoal(bot_state_t *bs, bot_activategoal_t *activategoal) {
+int BotGoForActivateGoal(bot_state_t *bs, bot_activategoal_t *activategoal, bot_aienter_t aienter) {
 	aas_entityinfo_t activateinfo;
+
+	assert( aienter );
 
 	activategoal->inuse = qtrue;
 	if (!activategoal->time)
 		activategoal->time = FloatTime() + 10;
 	activategoal->start_time = FloatTime();
+	activategoal->aienter = aienter;
 	BotEntityInfo(activategoal->goal.entitynum, &activateinfo);
 	VectorCopy(activateinfo.origin, activategoal->origin);
 	//
@@ -4715,7 +4737,7 @@ Before the bot ends in this part of the AI it should predict which doors to
 open, which buttons to activate etc.
 ==================
 */
-void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
+void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, bot_aienter_t activatedonefunc) {
 #ifdef OBSTACLEDEBUG
 	char netname[MAX_NETNAME];
 #endif
@@ -4784,7 +4806,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 			return;
 		}
 		// if the bot wants to activate the bsp entity
-		if (activate) {
+		if (activatedonefunc != NULL) {
 			// find the bsp entity which should be activated in order to get the blocking entity out of the way
 			bspent = BotGetActivateGoal(bs, entinfo.number, &activategoal);
 
@@ -4794,7 +4816,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 				}
 				// if not already trying to activate this entity
 				if (!BotIsGoingToActivateEntity(bs, activategoal.goal.entitynum)) {
-					BotGoForActivateGoal(bs, &activategoal);
+					BotGoForActivateGoal(bs, &activategoal, activatedonefunc);
 				}
 				// if ontop of an obstacle or if the bot is not in a reachability area it'll still need some dynamic obstacle avoidance
 				if (!(moveresult->flags & MOVERESULT_ONTOPOFOBSTACLE) && trap_AAS_AreaReachability(bs->areanum)) {
@@ -4841,7 +4863,7 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 		}
 	}
 	//
-	if (!activate) {
+	if (activatedonefunc == NULL) {
 		if (bs->notblocked_time < FloatTime() - 0.4) {
 			// just reset goals and hope the bot will go into another direction
 			if (bs->ainode == AINode_Seek_NBG) {
@@ -4863,7 +4885,7 @@ on its path the bot should figure out if they can be removed
 by activating certain entities.
 ==================
 */
-int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal) {
+int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal, bot_aienter_t activatedonefunc) {
 	int modelnum, entitynum, bspent;
 	bot_activategoal_t activategoal;
 	aas_predictroute_t route;
@@ -4873,13 +4895,13 @@ int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal) {
 
 	// always predict when the goal change or at regular intervals
 	if (bs->predictobstacles_goalareanum == goal->areanum &&
-		bs->predictobstacles_time > FloatTime() - 6) {
+		bs->predictobstacles_time > FloatTime() - 0.5) {
 		return qfalse;
 	}
 	bs->predictobstacles_goalareanum = goal->areanum;
 	bs->predictobstacles_time = FloatTime();
 
-	// predict at most 100 areas or 10 seconds ahead
+	// predict at most 100 areas or 1 second ahead
 	trap_AAS_PredictRoute(&route, bs->areanum, bs->origin,
 							goal->areanum, bs->tfl, 100, 1000,
 							RSE_USETRAVELTYPE|RSE_ENTERCONTENTS,
@@ -4905,7 +4927,7 @@ int BotAIPredictObstacles(bot_state_t *bs, bot_goal_t *goal) {
 							//
 							//BotAI_Print(PRT_MESSAGE, "blocked by mover model %d, entity %d ?\n", modelnum, entitynum);
 							//
-							BotGoForActivateGoal(bs, &activategoal);
+							BotGoForActivateGoal(bs, &activategoal, activatedonefunc);
 							return qtrue;
 						}
 						else {
@@ -5215,7 +5237,7 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 			else*/
 #ifdef MISSIONPACK
 			if (!strcmp(buf, "sound/items/kamikazerespawn.wav" )) {
-				//the kamikaze respawned so dont avoid it
+				//the kamikaze respawned so don't avoid it
 				BotDontAvoid(bs, "Kamikaze");
 			}
 			else
@@ -5517,7 +5539,7 @@ void BotSetupAlternativeRouteGoals(void) {
 #ifdef MISSIONPACK
 	if (gametype == GT_CTF) {
 		if (BotGetLevelItemGoal(-1, "Neutral Flag", &ctf_neutralflag) < 0)
-			BotAI_Print(PRT_WARNING, "No alt routes without Neutral Flag\n");
+			BotAI_Print(PRT_DEVELOPER, "No alt routes without Neutral Flag\n");
 		if (ctf_neutralflag.areanum) {
 			//
 			red_numaltroutegoals = trap_AAS_AlternativeRouteGoals(
@@ -5717,7 +5739,33 @@ void BotSetEntityNumForGoal(bot_goal_t *goal, char *classname) {
 		if ( !ent->inuse ) {
 			continue;
 		}
-		if ( !Q_stricmp(ent->classname, classname) ) {
+		if ( Q_stricmp(ent->classname, classname) != 0 ) {
+			continue;
+		}
+		VectorSubtract(goal->origin, ent->s.origin, dir);
+		if (VectorLengthSquared(dir) < Square(10)) {
+			goal->entitynum = i;
+			return;
+		}
+	}
+}
+
+/*
+==================
+BotSetEntityNumForGoalWithActivator
+==================
+*/
+void BotSetEntityNumForGoalWithActivator(bot_goal_t *goal, char *classname) {
+	gentity_t *ent;
+	int i;
+	vec3_t dir;
+
+	ent = &g_entities[0];
+	for (i = 0; i < level.num_entities; i++, ent++) {
+		if ( !ent->inuse || !ent->activator ) {
+			continue;
+		}
+		if ( Q_stricmp(ent->activator->classname, classname) != 0 ) {
 			continue;
 		}
 		VectorSubtract(goal->origin, ent->s.origin, dir);
@@ -5772,7 +5820,7 @@ void BotSetupDeathmatchAI(void) {
 	gametype = trap_Cvar_VariableIntegerValue("g_gametype");
 
 	trap_Cvar_Register(&bot_rocketjump, "bot_rocketjump", "1", 0);
-	trap_Cvar_Register(&bot_grapple, "bot_grapple", "0", 0);
+	trap_Cvar_Register(&bot_grapple, "bot_grapple", "1", 0);
 	trap_Cvar_Register(&bot_fastchat, "bot_fastchat", "0", 0);
 	trap_Cvar_Register(&bot_nochat, "bot_nochat", "0", 0);
 	trap_Cvar_Register(&bot_testichat, "bot_testichat", "0", 0);
@@ -5801,21 +5849,21 @@ void BotSetupDeathmatchAI(void) {
 	else if (gametype == GT_OBELISK) {
 		if (BotGetLevelItemGoal(-1, "Red Obelisk", &redobelisk) < 0)
 			BotAI_Print(PRT_WARNING, "Overload without Red Obelisk\n");
-		BotSetEntityNumForGoal(&redobelisk, "team_redobelisk");
+		BotSetEntityNumForGoalWithActivator(&redobelisk, "team_redobelisk");
 		if (BotGetLevelItemGoal(-1, "Blue Obelisk", &blueobelisk) < 0)
 			BotAI_Print(PRT_WARNING, "Overload without Blue Obelisk\n");
-		BotSetEntityNumForGoal(&blueobelisk, "team_blueobelisk");
+		BotSetEntityNumForGoalWithActivator(&blueobelisk, "team_blueobelisk");
 	}
 	else if (gametype == GT_HARVESTER) {
 		if (BotGetLevelItemGoal(-1, "Red Obelisk", &redobelisk) < 0)
 			BotAI_Print(PRT_WARNING, "Harvester without Red Obelisk\n");
-		BotSetEntityNumForGoal(&redobelisk, "team_redobelisk");
+		BotSetEntityNumForGoalWithActivator(&redobelisk, "team_redobelisk");
 		if (BotGetLevelItemGoal(-1, "Blue Obelisk", &blueobelisk) < 0)
 			BotAI_Print(PRT_WARNING, "Harvester without Blue Obelisk\n");
-		BotSetEntityNumForGoal(&blueobelisk, "team_blueobelisk");
+		BotSetEntityNumForGoalWithActivator(&blueobelisk, "team_blueobelisk");
 		if (BotGetLevelItemGoal(-1, "Neutral Obelisk", &neutralobelisk) < 0)
 			BotAI_Print(PRT_WARNING, "Harvester without Neutral Obelisk\n");
-		BotSetEntityNumForGoal(&neutralobelisk, "team_neutralobelisk");
+		BotSetEntityNumForGoalWithActivator(&neutralobelisk, "team_neutralobelisk");
 	}
 #endif
 

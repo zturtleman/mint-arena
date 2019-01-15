@@ -1202,6 +1202,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	centity_t	*nonPredictedCent;
 	orientation_t	lerped;
 	playerInfo_t *pi;
+	int		anim;
 
 	weaponNum = cent->currentState.weapon;
 
@@ -1233,8 +1234,30 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 	if ( !weapon->weaponModel || !weapon->flashModel ) {
 		// use default flash origin when no flash model
-		VectorCopy( cent->lerpOrigin, nonPredictedCent->pe.flashOrigin );
-		nonPredictedCent->pe.flashOrigin[2] += DEFAULT_VIEWHEIGHT - 6;
+		if ( ps ) {
+			VectorCopy( cg.firstPersonViewOrg, cg.cur_lc->flashOrigin );
+			VectorMA( cg.cur_lc->flashOrigin, -8, cg.firstPersonViewAxis[2], cg.cur_lc->flashOrigin );
+
+			VectorCopy( cg.cur_lc->flashOrigin, flash.origin );
+		} else {
+			VectorCopy( cent->lerpOrigin, nonPredictedCent->pe.flashOrigin );
+
+			anim = nonPredictedCent->currentState.legsAnim & ~ANIM_TOGGLEBIT;
+			if ( anim == LEGS_WALKCR || anim == LEGS_IDLECR ) {
+				nonPredictedCent->pe.flashOrigin[2] += CROUCH_VIEWHEIGHT - 6;
+			} else {
+				nonPredictedCent->pe.flashOrigin[2] += DEFAULT_VIEWHEIGHT - 6;
+			}
+
+			VectorCopy( nonPredictedCent->pe.flashOrigin, flash.origin );
+		}
+
+		if ( ( cg.cur_lc->predictedPlayerState.eFlags & EF_FIRING )
+			&& ( ps || cg.cur_lc->renderingThirdPerson
+					|| cent->currentState.number != cg.cur_lc->predictedPlayerState.playerNum ) ) {
+			// special hack for lightning gun...
+			CG_LightningBolt( nonPredictedCent, flash.origin );
+		}
 	}
 
 	gun.hModel = weapon->weaponModel;
@@ -1292,7 +1315,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	}
 
 	// if the index of the nonPredictedCent is not the same as the playerNum
-	// then this is a fake player (like on teh single player podiums), so
+	// then this is a fake player (like on the single player podiums), so
 	// go ahead and use the cent
 	if( ( nonPredictedCent - cg_entities ) != cent->currentState.playerNum ) {
 		nonPredictedCent = cent;
@@ -1317,7 +1340,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 	CG_PositionRotatedEntityOnTag( &flash, &gun, weapon->weaponModel, "tag_flash");
 
-	// udate muzzle origin
+	// update muzzle origin
 	if ( ps ) {
 		VectorCopy( flash.origin, cg.cur_lc->flashOrigin );
 	} else {
@@ -1383,8 +1406,8 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	// allow the gun to be completely removed
 	if ( !cg_drawGun[cg.cur_localPlayerNum].integer ) {
 		// use default flash origin
-		VectorCopy( cg_entities[cg.cur_ps->playerNum].lerpOrigin, cg.cur_lc->flashOrigin );
-		cg.cur_lc->flashOrigin[2] += DEFAULT_VIEWHEIGHT - 6;
+		VectorCopy( cg.firstPersonViewOrg, cg.cur_lc->flashOrigin );
+		VectorMA( cg.cur_lc->flashOrigin, -8, cg.firstPersonViewAxis[2], cg.cur_lc->flashOrigin );
 
 		if ( cg.cur_lc->predictedPlayerState.eFlags & EF_FIRING ) {
 			// special hack for lightning gun...
@@ -1400,12 +1423,12 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 
 	VectorClear(fovOffset);
 
-	if ( cg.fov > 90 ) {
+	if ( cg.viewWeaponFov > 90 ) {
 		// drop gun lower at higher fov
-		fovOffset[2] = -0.2 * ( cg.fov - 90 ) * cg.refdef.fov_x / cg.fov;
-	} else if ( cg.fov < 90 ) {
+		fovOffset[2] = -0.2 * ( cg.viewWeaponFov - 90 ) * cg.refdef.weapon_fov_x / cg.viewWeaponFov;
+	} else if ( cg.viewWeaponFov < 90 ) {
 		// move gun forward at lowerer fov
-		fovOffset[0] = -0.2 * ( cg.fov - 90 ) * cg.refdef.fov_x / cg.fov;
+		fovOffset[0] = -0.2 * ( cg.viewWeaponFov - 90 ) * cg.refdef.weapon_fov_x / cg.viewWeaponFov;
 	}
 
 	cent = &cg.cur_lc->predictedPlayerEntity;	// &cg_entities[cg.snap->ps.playerNum];
@@ -1573,7 +1596,7 @@ void CG_NextWeapon_f( int localPlayerNum ) {
 		if ( player->weaponSelect == MAX_WEAPONS ) {
 			player->weaponSelect = 0;
 		}
-		if ( player->weaponSelect == WP_GAUNTLET ) {
+		if ( player->weaponSelect == WP_GAUNTLET && cg_cyclePastGauntlet[localPlayerNum].integer ) {
 			continue;		// never cycle to gauntlet
 		}
 		if ( CG_WeaponSelectable( ps, player->weaponSelect ) ) {
@@ -1615,7 +1638,7 @@ void CG_PrevWeapon_f( int localPlayerNum ) {
 		if ( player->weaponSelect == -1 ) {
 			player->weaponSelect = MAX_WEAPONS - 1;
 		}
-		if ( player->weaponSelect == WP_GAUNTLET ) {
+		if ( player->weaponSelect == WP_GAUNTLET && cg_cyclePastGauntlet[localPlayerNum].integer ) {
 			continue;		// never cycle to gauntlet
 		}
 		if ( CG_WeaponSelectable( ps, player->weaponSelect ) ) {
@@ -1661,6 +1684,55 @@ void CG_Weapon_f( int localPlayerNum ) {
 	}
 
 	player->weaponSelect = num;
+}
+
+/*
+===============
+CG_WeaponToggle_f
+
+select weapon and store old weapon or if already selecting the weapon
+switch back to old weapon
+===============
+*/
+void CG_WeaponToggle_f( int localPlayerNum ) {
+	int		num;
+	int		weapon, oldweapon;
+	playerState_t	*ps;
+	localPlayer_t	*player;
+
+	if ( cg.localPlayers[localPlayerNum].playerNum == -1 ) {
+		return;
+	}
+
+	ps = &cg.snap->pss[localPlayerNum];
+	player = &cg.localPlayers[localPlayerNum];
+
+	if ( ps->pm_flags & PMF_FOLLOW ) {
+		return;
+	}
+
+	num = atoi( CG_Argv( 1 ) );
+
+	if ( num < 1 || num > MAX_WEAPONS-1 ) {
+		return;
+	}
+
+	player->weaponSelectTime = cg.time;
+
+	if ( player->weaponSelect != num ) {
+		weapon = num;
+		oldweapon = player->weaponSelect;
+	} else {
+		weapon = player->weaponToggledFrom;
+		oldweapon = WP_NONE;
+	}
+
+	if ( ! ( ps->stats[STAT_WEAPONS] & ( 1 << weapon ) ) ) {
+		return;		// don't have the weapon
+	}
+
+	player->weaponSelect = weapon;
+	player->weaponToggledFrom = oldweapon;
 }
 
 /*

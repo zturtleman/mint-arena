@@ -59,7 +59,7 @@ void CG_Text_PaintWithCursor(float x, float y, float scale, const vec4_t color, 
 		shadowOffset = 0;
 	}
 
-	Text_PaintWithCursor( x, y, CG_FontForScale( scale ), scale, color, text, cursorPos, cursor, 0, limit, shadowOffset, 0, qfalse );
+	Text_PaintWithCursor( x, y, CG_FontForScale( scale ), scale, color, text, cursorPos, cursor, 0, limit, shadowOffset, 0, qfalse, qfalse );
 }
 
 int CG_Text_Width(const char *text, float scale, int limit) {
@@ -81,7 +81,7 @@ void CG_Text_Paint(float x, float y, float scale, const vec4_t color, const char
 		shadowOffset = 0;
 	}
 
-	Text_Paint( x, y, CG_FontForScale( scale ), scale, color, text, adjust, limit, shadowOffset, 0, qfalse );
+	Text_Paint( x, y, CG_FontForScale( scale ), scale, color, text, adjust, limit, shadowOffset, 0, qfalse, qfalse );
 }
 
 void CG_Text_PaintGradient(float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle) {
@@ -95,11 +95,26 @@ void CG_Text_PaintGradient(float x, float y, float scale, const vec4_t color, co
 		shadowOffset = 0;
 	}
 
-	Text_Paint( x, y, CG_FontForScale( scale ), scale, color, text, adjust, limit, shadowOffset, 0.4f, qfalse );
+	Text_Paint( x, y, CG_FontForScale( scale ), scale, color, text, adjust, limit, shadowOffset, 0.4f, qfalse, qfalse );
+}
+
+// this function does not align text position to pixel boundary so that text scrolls evenly
+void CG_Text_PaintInMotion(float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle) {
+	float shadowOffset;
+
+	if ( textStyle == ITEM_TEXTSTYLE_SHADOWED ) {
+		shadowOffset = 1;
+	} else if ( textStyle == ITEM_TEXTSTYLE_SHADOWEDMORE ) {
+		shadowOffset = 2;
+	} else {
+		shadowOffset = 0;
+	}
+
+	Text_Paint( x, y, CG_FontForScale( scale ), scale, color, text, adjust, limit, shadowOffset, 0, qfalse, qtrue );
 }
 
 void CG_Text_Paint_Limit(float *maxX, float x, float y, float scale, const vec4_t color, const char* text, float adjust, int limit) {
-	Text_Paint_Limit( maxX, x, y, CG_FontForScale( scale ), scale, color, text, adjust, limit );
+	Text_Paint_Limit( maxX, x, y, CG_FontForScale( scale ), scale, color, text, adjust, limit, qfalse );
 }
 #endif
 
@@ -264,7 +279,7 @@ void CG_SelectPrevPlayer( int localPlayerNum ) {
 	team = cg.snap->pss[ localPlayerNum ].persistant[PERS_TEAM];
 
 	CG_CheckOrderPending( localPlayerNum );
-	if (cg_currentSelectedPlayer[ localPlayerNum ].integer > 0 && cg_currentSelectedPlayer[ localPlayerNum ].integer < numSortedTeamPlayers[team]) {
+	if (cg_currentSelectedPlayer[ localPlayerNum ].integer > 0 && cg_currentSelectedPlayer[ localPlayerNum ].integer <= numSortedTeamPlayers[team]) {
 		cg_currentSelectedPlayer[ localPlayerNum ].integer--;
 	} else {
 		cg_currentSelectedPlayer[ localPlayerNum ].integer = numSortedTeamPlayers[team];
@@ -974,10 +989,15 @@ static void CG_DrawAreaPowerUp(rectDef_t *rect, int align, float special, float 
 		if ( !ps->powerups[ i ] ) {
 			continue;
 		}
-		t = ps->powerups[ i ] - cg.time;
-		// ZOID--don't draw if the power up has unlimited time (999 seconds)
+
+		// ZOID--don't draw if the power up has unlimited time
 		// This is true of the CTF flags
-		if ( t <= 0 || t >= 999000) {
+		if ( ps->powerups[ i ] == INT_MAX ) {
+			continue;
+		}
+
+		t = ps->powerups[ i ] - cg.time;
+		if ( t <= 0 ) {
 			continue;
 		}
 
@@ -1455,8 +1475,8 @@ static void CG_DrawTeamSpectators( rectDef_t *rect, float scale, vec4_t color, q
 
 	CG_SetClipRegion( rect->x, rect->y, rect->w, rect->h );
 
-	CG_Text_Paint( rect->x - cg.spectatorOffset, rect->y + rect->h - 3, scale, color, text, 0, 0, 0 );
-	CG_Text_Paint( rect->x + textWidth - cg.spectatorOffset, rect->y + rect->h - 3, scale, color, text, 0, 0, 0 );
+	CG_Text_PaintInMotion( rect->x - cg.spectatorOffset, rect->y + rect->h - 3, scale, color, text, 0, 0, 0 );
+	CG_Text_PaintInMotion( rect->x + textWidth - cg.spectatorOffset, rect->y + rect->h - 3, scale, color, text, 0, 0, 0 );
 
 	CG_ClearClipRegion( );
 

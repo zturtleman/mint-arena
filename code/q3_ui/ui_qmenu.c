@@ -63,7 +63,9 @@ vec4_t text_color_disabled  = {0.50f, 0.50f, 0.50f, 1.00f};	// light gray
 vec4_t text_color_normal    = {1.00f, 0.43f, 0.00f, 1.00f};	// light orange
 vec4_t text_color_highlight = {1.00f, 1.00f, 0.00f, 1.00f};	// bright yellow
 vec4_t listbar_color        = {1.00f, 0.43f, 0.00f, 0.30f};	// transluscent orange
-vec4_t text_banner_color	= {1.00f, 1.00f, 1.00f, 1.00f};	// bright white
+vec4_t text_banner_color;
+vec4_t bitmap_banner_color	= {1.00f, 1.00f, 1.00f, 1.00f};	// bright white
+vec4_t ttf_banner_color		= {0.70f, 0.00f, 0.00f, 1.00f};	// dark red
 vec4_t text_big_color		= {1.00f, 0.00f, 0.00f, 1.00f};	// bright red
 vec4_t text_small_title_color={1.00f, 0.00f, 0.00f, 1.00f};	// bright red
 
@@ -380,7 +382,7 @@ static void Action_Init( menuaction_s *a )
 	int	len;
 
 	// calculate bounds
-	len = CG_DrawStrlen( a->generic.name, UI_BIGFONT );
+	len = UI_DrawStrlen( a->generic.name, UI_BIGFONT );
 
 	// left justify text
 	a->generic.left   = a->generic.x; 
@@ -429,7 +431,7 @@ static void Action_Draw( menuaction_s *a )
 	if ( a->generic.parent->cursor == a->generic.menuPosition )
 	{
 		// draw cursor
-		UI_DrawChar( x - BIGCHAR_WIDTH, y, 13, UI_LEFT|UI_BLINK, color);
+		UI_DrawChar( x - BIGCHAR_WIDTH, y, GLYPH_ARROW, UI_LEFT|UI_BLINK, color);
 	}
 }
 
@@ -443,7 +445,7 @@ static void RadioButton_Init( menuradiobutton_s *rb )
 	int	len;
 
 	// calculate bounds
-	len = CG_DrawStrlen( rb->generic.name, UI_SMALLFONT );
+	len = UI_DrawStrlen( rb->generic.name, UI_SMALLFONT );
 
 	rb->generic.left   = rb->generic.x - len - SMALLCHAR_WIDTH;
 	rb->generic.right  = rb->generic.x + 6*SMALLCHAR_WIDTH;
@@ -540,7 +542,7 @@ static void RadioButton_Draw( menuradiobutton_s *rb )
 	{
 		// draw cursor
 		CG_FillRect( rb->generic.left, rb->generic.top, rb->generic.right-rb->generic.left+1, rb->generic.bottom-rb->generic.top+1, listbar_color ); 
-		UI_DrawChar( x, y, 13, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
+		UI_DrawChar( x, y, GLYPH_ARROW, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
 	}
 
 	if ( rb->generic.name )
@@ -572,7 +574,7 @@ static void Slider_Init( menuslider_s *s )
 	int len;
 
 	// calculate bounds
-	len = CG_DrawStrlen( s->generic.name, UI_SMALLFONT );
+	len = UI_DrawStrlen( s->generic.name, UI_SMALLFONT );
 
 	s->generic.left   = s->generic.x - len - SMALLCHAR_WIDTH;
 	s->generic.right  = s->generic.x + (SLIDER_RANGE+2+1)*SMALLCHAR_WIDTH;
@@ -743,7 +745,7 @@ static void Slider_Draw( menuslider_s *s )
 	{
 		// draw cursor
 		CG_FillRect( s->generic.left, s->generic.top, s->generic.right-s->generic.left+1, s->generic.bottom-s->generic.top+1, listbar_color ); 
-		UI_DrawChar( x, y, 13, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
+		UI_DrawChar( x, y, GLYPH_ARROW, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
 	}
 
 	// draw label
@@ -786,14 +788,14 @@ static void SpinControl_Init( menulist_s *s ) {
 	int	l;
 	const char* str;
 
-	len = CG_DrawStrlen( s->generic.name, UI_SMALLFONT );
+	len = UI_DrawStrlen( s->generic.name, UI_SMALLFONT );
 
 	s->generic.left	= s->generic.x - SMALLCHAR_WIDTH - len;
 
 	len = s->numitems = 0;
 	while ( (str = s->itemnames[s->numitems]) != 0 )
 	{
-		l = CG_DrawStrlen( str, UI_SMALLFONT );
+		l = UI_DrawStrlen( str, UI_SMALLFONT );
 		if (l > len)
 			len = l;
 
@@ -894,7 +896,7 @@ static void SpinControl_Draw( menulist_s *s )
 	{
 		// draw cursor
 		CG_FillRect( s->generic.left, s->generic.top, s->generic.right-s->generic.left+1, s->generic.bottom-s->generic.top+1, listbar_color ); 
-		UI_DrawChar( x, y, 13, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
+		UI_DrawChar( x, y, GLYPH_ARROW, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
 	}
 
 	UI_DrawString( x - SMALLCHAR_WIDTH, y, s->generic.name, style|UI_RIGHT, color );
@@ -916,13 +918,13 @@ static void ScrollList_Init( menulist_s *l )
 
 	if( !l->columns ) {
 		l->columns = 1;
-		l->seperation = 0;
+		l->separation = 0;
 	}
-	else if( !l->seperation ) {
-		l->seperation = 3;
+	else if( !l->separation ) {
+		l->separation = 3;
 	}
 
-	w = ( (l->width + l->seperation) * l->columns - l->seperation) * SMALLCHAR_WIDTH;
+	w = ( (l->width + l->separation) * l->columns - l->separation) * SMALLCHAR_WIDTH;
 
 	l->generic.left   =	l->generic.x;
 	l->generic.top    = l->generic.y;	
@@ -961,14 +963,14 @@ sfxHandle_t ScrollList_Key( menulist_s *l, int key )
 				// check scroll region
 				x = l->generic.x;
 				y = l->generic.y;
-				w = ( (l->width + l->seperation) * l->columns - l->seperation) * SMALLCHAR_WIDTH;
+				w = ( (l->width + l->separation) * l->columns - l->separation) * SMALLCHAR_WIDTH;
 				if( l->generic.flags & QMF_CENTER_JUSTIFY ) {
 					x -= w / 2;
 				}
 				if (UI_CursorInRect( x, y, w, l->height*SMALLCHAR_HEIGHT ))
 				{
 					cursorx = (uis.cursorx - x)/SMALLCHAR_WIDTH;
-					column = cursorx / (l->width + l->seperation);
+					column = cursorx / (l->width + l->separation);
 					cursory = (uis.cursory - y)/SMALLCHAR_HEIGHT;
 					index = column * l->height + cursory;
 					if (l->top + index < l->numitems)
@@ -1066,6 +1068,50 @@ sfxHandle_t ScrollList_Key( menulist_s *l, int key )
 					l->generic.callback( l, QM_GOTFOCUS );
 
 				return (menu_move_sound);
+			}
+			return (menu_buzz_sound);
+
+		case K_MWHEELUP:
+			if( l->columns > 1 ) {
+				return menu_null_sound;
+			}
+
+			if (l->top > 0)
+			{
+				// if scrolling 3 lines would replace over half of the
+				// displayed items, only scroll 1 item at a time.
+				int scroll = l->height < 6 ? 1 : 3;
+				l->top -= scroll;
+				if (l->top < 0)
+					l->top = 0;
+
+				if (l->generic.callback)
+					l->generic.callback( l, QM_GOTFOCUS );
+
+				// make scrolling silent
+				return (menu_null_sound);
+			}
+			return (menu_buzz_sound);
+
+		case K_MWHEELDOWN:
+			if( l->columns > 1 ) {
+				return menu_null_sound;
+			}
+
+			if (l->top < l->numitems-l->height)
+			{
+				// if scrolling 3 items would replace over half of the
+				// displayed items, only scroll 1 item at a time.
+				int scroll = l->height < 6 ? 1 : 3;
+				l->top += scroll;
+				if (l->top > l->numitems-l->height)
+					l->top = l->numitems-l->height;
+
+				if (l->generic.callback)
+					l->generic.callback( l, QM_GOTFOCUS );
+
+				// make scrolling silent
+				return (menu_null_sound);
 			}
 			return (menu_buzz_sound);
 
@@ -1277,7 +1323,7 @@ void ScrollList_Draw( menulist_s *l )
 
 			y += SMALLCHAR_HEIGHT;
 		}
-		x += (l->width + l->seperation) * SMALLCHAR_WIDTH;
+		x += (l->width + l->separation) * SMALLCHAR_WIDTH;
 	}
 }
 
@@ -1758,13 +1804,26 @@ Menu_Cache
 */
 void Menu_Cache( void )
 {
-	if ( !CG_InitTrueTypeFont( "fonts/font1_prop", PROP_HEIGHT, 0, &uis.fontProp ) ) {
+	if ( !CG_InitTrueTypeFont( ui_menuFont.string, SMALLCHAR_HEIGHT, 0, &uis.smallFont ) ) {
+		CG_InitBitmapFont( &uis.smallFont, SMALLCHAR_HEIGHT, SMALLCHAR_WIDTH );
+	}
+	if ( !CG_InitTrueTypeFont( ui_menuFont.string, BIGCHAR_HEIGHT, 0, &uis.textFont ) ) {
+		CG_InitBitmapFont( &uis.textFont, BIGCHAR_HEIGHT, BIGCHAR_WIDTH );
+	}
+
+	if ( !CG_InitTrueTypeFont( ui_menuFontProp.string, PROP_HEIGHT, 0, &uis.fontProp ) ) {
 		UI_InitPropFont( &uis.fontProp, qfalse );
 	}
-	if ( !CG_InitTrueTypeFont( "fonts/font1_prop_glo", PROP_HEIGHT, 0, &uis.fontPropGlow ) ) {
+	if ( !CG_InitTrueTypeFont( ui_menuFontProp.string, PROP_HEIGHT, 0, &uis.fontPropGlow ) ) {
 		UI_InitPropFont( &uis.fontPropGlow, qtrue );
 	}
-	if ( !CG_InitTrueTypeFont( "fonts/font2_prop", PROPB_HEIGHT, 0, &uis.fontPropB ) ) {
+
+	if ( CG_InitTrueTypeFont( ui_menuFontBanner.string, PROPB_HEIGHT, 0, &uis.fontPropB ) ) {
+		uis.bannerNumbers = qtrue;
+		Vector4Copy( ttf_banner_color, text_banner_color );
+	} else {
+		uis.bannerNumbers = qfalse;
+		Vector4Copy( bitmap_banner_color, text_banner_color );
 		UI_InitBannerFont( &uis.fontPropB );
 	}
 

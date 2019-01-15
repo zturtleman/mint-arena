@@ -64,30 +64,37 @@ typedef struct {
 
 vmCvar_t	ui_ffa_fraglimit;
 vmCvar_t	ui_ffa_timelimit;
+vmCvar_t	ui_ffa_instagib;
 
 vmCvar_t	ui_tourney_fraglimit;
 vmCvar_t	ui_tourney_timelimit;
+vmCvar_t	ui_tourney_instagib;
 
 vmCvar_t	ui_team_fraglimit;
 vmCvar_t	ui_team_timelimit;
 vmCvar_t	ui_team_friendly;
+vmCvar_t	ui_team_instagib;
 
 vmCvar_t	ui_ctf_capturelimit;
 vmCvar_t	ui_ctf_timelimit;
 vmCvar_t	ui_ctf_friendly;
+vmCvar_t	ui_ctf_instagib;
 
 #ifdef MISSIONPACK
 vmCvar_t	ui_1flag_capturelimit;
 vmCvar_t	ui_1flag_timelimit;
 vmCvar_t	ui_1flag_friendly;
+vmCvar_t	ui_1flag_instagib;
 
 vmCvar_t	ui_obelisk_capturelimit;
 vmCvar_t	ui_obelisk_timelimit;
 vmCvar_t	ui_obelisk_friendly;
+vmCvar_t	ui_obelisk_instagib;
 
 vmCvar_t	ui_harvester_capturelimit;
 vmCvar_t	ui_harvester_timelimit;
 vmCvar_t	ui_harvester_friendly;
+vmCvar_t	ui_harvester_instagib;
 #endif
 
 vmCvar_t	ui_publicServer;
@@ -106,11 +113,13 @@ vmCvar_t	ui_spSkill;
 vmCvar_t	ui_spSelection;
 
 vmCvar_t	ui_browserMaster;
+vmCvar_t	ui_browserGame;
 vmCvar_t	ui_browserGameType;
 vmCvar_t	ui_browserSortKey;
 vmCvar_t	ui_browserShowFull;
 vmCvar_t	ui_browserShowEmpty;
 vmCvar_t	ui_browserShowBots;
+vmCvar_t	ui_browserSeparateMasters;
 
 vmCvar_t	ui_brassTime;
 vmCvar_t	ui_drawCrosshair;
@@ -136,33 +145,44 @@ vmCvar_t	ui_server16;
 
 vmCvar_t	ui_ioq3;
 
+vmCvar_t	ui_menuFont;
+vmCvar_t	ui_menuFontProp;
+vmCvar_t	ui_menuFontBanner;
+
 static cvarTable_t		cvarTable[] = {
 	{ &ui_ffa_fraglimit, "ui_ffa_fraglimit", "20", CVAR_ARCHIVE },
 	{ &ui_ffa_timelimit, "ui_ffa_timelimit", "0", CVAR_ARCHIVE },
+	{ &ui_ffa_instagib, "ui_ffa_instagib", "0", CVAR_ARCHIVE },
 
 	{ &ui_tourney_fraglimit, "ui_tourney_fraglimit", "0", CVAR_ARCHIVE },
 	{ &ui_tourney_timelimit, "ui_tourney_timelimit", "15", CVAR_ARCHIVE },
+	{ &ui_tourney_instagib, "ui_tourney_instagib", "0", CVAR_ARCHIVE },
 
 	{ &ui_team_fraglimit, "ui_team_fraglimit", "0", CVAR_ARCHIVE },
 	{ &ui_team_timelimit, "ui_team_timelimit", "20", CVAR_ARCHIVE },
 	{ &ui_team_friendly, "ui_team_friendly",  "1", CVAR_ARCHIVE },
+	{ &ui_team_instagib, "ui_team_instagib", "0", CVAR_ARCHIVE },
 
 	{ &ui_ctf_capturelimit, "ui_ctf_capturelimit", "8", CVAR_ARCHIVE },
 	{ &ui_ctf_timelimit, "ui_ctf_timelimit", "30", CVAR_ARCHIVE },
 	{ &ui_ctf_friendly, "ui_ctf_friendly",  "0", CVAR_ARCHIVE },
+	{ &ui_ctf_instagib, "ui_ctf_instagib", "0", CVAR_ARCHIVE },
 
 #ifdef MISSIONPACK
 	{ &ui_1flag_capturelimit, "ui_1flag_capturelimit", "5", CVAR_ARCHIVE },
 	{ &ui_1flag_timelimit, "ui_1flag_timelimit", "30", CVAR_ARCHIVE },
 	{ &ui_1flag_friendly, "ui_1flag_friendly",  "0", CVAR_ARCHIVE },
+	{ &ui_1flag_instagib, "ui_1flag_instagib", "0", CVAR_ARCHIVE },
 
 	{ &ui_obelisk_capturelimit, "ui_obelisk_capturelimit", "5", CVAR_ARCHIVE },
 	{ &ui_obelisk_timelimit, "ui_obelisk_timelimit", "20", CVAR_ARCHIVE },
 	{ &ui_obelisk_friendly, "ui_obelisk_friendly",  "0", CVAR_ARCHIVE },
+	{ &ui_obelisk_instagib, "ui_obelisk_instagib", "0", CVAR_ARCHIVE },
 
 	{ &ui_harvester_capturelimit, "ui_harvester_capturelimit", "5", CVAR_ARCHIVE },
 	{ &ui_harvester_timelimit, "ui_harvester_timelimit", "30", CVAR_ARCHIVE },
 	{ &ui_harvester_friendly, "ui_harvester_friendly",  "0", CVAR_ARCHIVE },
+	{ &ui_harvester_instagib, "ui_harvester_instagib", "0", CVAR_ARCHIVE },
 #endif
 
 	{ &ui_publicServer, "ui_publicServer", "1", CVAR_ARCHIVE },
@@ -180,12 +200,14 @@ static cvarTable_t		cvarTable[] = {
 
 	{ &ui_spSelection, "ui_spSelection", "", CVAR_ROM },
 
-	{ &ui_browserMaster, "ui_browserMaster", "0", CVAR_ARCHIVE },
+	{ &ui_browserMaster, "ui_browserMaster", "1", CVAR_ARCHIVE },
+	{ &ui_browserGame, "ui_browserGame", "", CVAR_ARCHIVE },
 	{ &ui_browserGameType, "ui_browserGameType", "0", CVAR_ARCHIVE },
 	{ &ui_browserSortKey, "ui_browserSortKey", "4", CVAR_ARCHIVE },
 	{ &ui_browserShowFull, "ui_browserShowFull", "1", CVAR_ARCHIVE },
 	{ &ui_browserShowEmpty, "ui_browserShowEmpty", "1", CVAR_ARCHIVE },
 	{ &ui_browserShowBots, "ui_browserShowBots", "1", CVAR_ARCHIVE },
+	{ &ui_browserSeparateMasters, "ui_browserSeparateMasters", "0", CVAR_ARCHIVE },
 
 	{ &ui_brassTime, "cg_brassTime", "2500", CVAR_ARCHIVE },
 	{ &ui_drawCrosshair, "cg_drawCrosshair", "4", CVAR_ARCHIVE },
@@ -209,7 +231,11 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_server15, "server15", "", CVAR_ARCHIVE },
 	{ &ui_server16, "server16", "", CVAR_ARCHIVE },
 
-	{ &ui_ioq3, "ui_ioq3", "1", CVAR_ROM }
+	{ &ui_ioq3, "ui_ioq3", "1", CVAR_ROM },
+
+	{ &ui_menuFont, "ui_menuFont", "fonts/LiberationSans-Bold.ttf", CVAR_ARCHIVE | CVAR_LATCH },
+	{ &ui_menuFontProp, "ui_menuFontProp", "", CVAR_ARCHIVE | CVAR_LATCH },
+	{ &ui_menuFontBanner, "ui_menuFontBanner", "", CVAR_ARCHIVE | CVAR_LATCH },
 };
 
 static int cvarTableSize = ARRAY_LEN( cvarTable );

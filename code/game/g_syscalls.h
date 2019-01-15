@@ -66,10 +66,11 @@ qboolean trap_EntityContact( const vec3_t mins, const vec3_t maxs, const gentity
 int		trap_BotAllocateClient( void );
 void	trap_BotFreeClient( int clientNum );
 void	trap_GetUsercmd( int playerNum, usercmd_t *cmd );
-qboolean	trap_GetEntityToken( char *buffer, int bufferSize );
+qboolean	trap_GetEntityToken( int *parseOffset, char *buffer, int bufferSize );
 void	trap_ClientCommand(int playerNum, const char *command);
 
 int		trap_DebugPolygonCreate(int color, int numPoints, vec3_t *points);
+void	trap_DebugPolygonShow(int id, int color, int numPoints, vec3_t *points);
 void	trap_DebugPolygonDelete(int id);
 
 qhandle_t trap_R_RegisterModel( const char *name );
@@ -97,7 +98,6 @@ int		trap_BotLibVarGet(const char *var_name, char *value, int size);
 int		trap_BotLibStartFrame(float time);
 int		trap_BotLibLoadMap(const char *mapname);
 int		trap_BotLibUpdateEntity(int ent, void /* struct bot_updateentity_s */ *bue);
-int		trap_BotLibTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3);
 
 int		trap_BotGetSnapshotEntity( int playerNum, int sequence );
 int		trap_BotGetServerCommand(int playerNum, char *message, int size);
@@ -110,6 +110,23 @@ int		trap_AAS_Loaded(void);
 int		trap_AAS_Initialized(void);
 void	trap_AAS_PresenceTypeBoundingBox(int presencetype, vec3_t mins, vec3_t maxs);
 float	trap_AAS_Time(void);
+
+void	trap_AAS_ClearShownDebugLines(void);
+void	trap_AAS_ClearShownPolygons(void);
+void	trap_AAS_DebugLine(vec3_t start, vec3_t end, int color);
+void	trap_AAS_PermanentLine(vec3_t start, vec3_t end, int color);
+void	trap_AAS_DrawPermanentCross(vec3_t origin, float size, int color);
+void	trap_AAS_DrawPlaneCross(vec3_t point, vec3_t normal, float dist, int type, int color);
+void	trap_AAS_ShowBoundingBox(vec3_t origin, vec3_t mins, vec3_t maxs);
+void	trap_AAS_ShowFace(int facenum);
+void	trap_AAS_ShowArea(int areanum, int groundfacesonly);
+void	trap_AAS_ShowAreaPolygons(int areanum, int color, int groundfacesonly);
+void	trap_AAS_DrawCross(vec3_t origin, float size, int color);
+void	trap_AAS_PrintTravelType(int traveltype);
+void	trap_AAS_DrawArrow(vec3_t start, vec3_t end, int linecolor, int arrowcolor);
+void	trap_AAS_ShowReachability(void /*struct aas_reachability_s*/ *reach, int contentmask);
+void	trap_AAS_ShowReachableAreas(int areanum, int contentmask);
+void	trap_AAS_FloodAreas(vec3_t origin);
 
 int		trap_AAS_PointAreaNum(vec3_t point);
 int		trap_AAS_PointReachabilityAreaIndex(vec3_t point);

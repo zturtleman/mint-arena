@@ -33,56 +33,40 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 static vec4_t lastTextColor = { 0, 0, 0, 1 };
 
-// Q3A UI also uses additional fonts (font1_prop, font2_prop, ..)
-// Team Arena HUD/UI also use separate fonts (specified in .menu files).
-// The truetype font names here are the same as in Team Arena
-//   (except tiny and number fonts that do not exist)
-void CG_TextInit( void ) {
-	int tinySize;
-	int smallSize;
-	int bigSize;
-	int giantSize;
-	int numberSize;
-	int smallBitmapSize;
-	int giantBitmapSize;
+/*
+Load fonts for CGame and UI usage.
 
-	// TrueType font sizes
-	tinySize = 8;
-	smallSize = 12;
-	bigSize = 16;
-	giantSize = 20;
-	numberSize = 48;
+Try to load TrueType/OpenType fonts specified by cvars. Falls back to
+original Quake 3 fonts.
 
-	// Bitmap font sizes
-	smallBitmapSize = 16;
-	giantBitmapSize = 48;
+cgame loads an additional font for the console.
+q3_ui loads additional fonts (font1_prop, font1_prop_glo, font2_prop).
+Team Arena menu/hud also load separate fonts (specified in .menu files).
 
-	// Make bitmap fonts use TrueType sizes
-	//smallBitmapSize = smallSize;
-	//giantBitmapSize = giantSize;
-
-	if ( !CG_InitTrueTypeFont( "fonts/tinyfont", tinySize, 0, &cgs.media.tinyFont ) ) {
-		CG_InitBitmapFont( &cgs.media.tinyFont, tinySize, tinySize );
+Q3 gfx/2d/bigchars.tga bitmap font looks like Helvetica or Arial.
+Q3 number font, font1_prop, and font2_prop look similar to Impact Wide.
+Team Arena's pre-rendered menu/hud TrueType fonts (fonts/smallfont:12,
+fonts/font:16, and fonts/bigfont:20) are Impact.
+*/
+void CG_HudTextInit( void ) {
+	if ( !CG_InitTrueTypeFont( cg_hudFont.string, TINYCHAR_HEIGHT, cg_hudFontBorder.value*0.5f, &cgs.media.tinyFont ) ) {
+		CG_InitBitmapFont( &cgs.media.tinyFont, TINYCHAR_HEIGHT, TINYCHAR_WIDTH );
 	}
 
-	if ( !CG_InitTrueTypeFont( "fonts/smallfont", smallSize, 0, &cgs.media.smallFont ) ) {
-		CG_InitBitmapFont( &cgs.media.smallFont, smallBitmapSize, smallBitmapSize * 0.5f );
+	if ( !CG_InitTrueTypeFont( cg_hudFont.string, SMALLCHAR_HEIGHT, cg_hudFontBorder.value, &cgs.media.smallFont ) ) {
+		CG_InitBitmapFont( &cgs.media.smallFont, SMALLCHAR_HEIGHT, SMALLCHAR_WIDTH );
 	}
 
-	if ( !CG_InitTrueTypeFont( "fonts/font", bigSize, 0, &cgs.media.textFont ) ) {
-		CG_InitBitmapFont( &cgs.media.textFont, bigSize, bigSize );
+	if ( !CG_InitTrueTypeFont( cg_hudFont.string, BIGCHAR_HEIGHT, cg_hudFontBorder.value, &cgs.media.textFont ) ) {
+		CG_InitBitmapFont( &cgs.media.textFont, BIGCHAR_HEIGHT, BIGCHAR_WIDTH );
 	}
 
-	if ( !CG_InitTrueTypeFont( "fonts/bigfont", giantSize, 0, &cgs.media.bigFont ) ) {
-		// quake 3 bitmap style
-		CG_InitBitmapFont( &cgs.media.bigFont, giantBitmapSize, ceil( giantBitmapSize * 0.666666f ) );
-		// team arena truetype style
-		//CG_InitBitmapFont( &cgs.media.bigFont, giantSize, giantSize * 0.5f );
+	if ( !CG_InitTrueTypeFont( cg_hudFont.string, GIANTCHAR_HEIGHT, cg_hudFontBorder.value*2.0f, &cgs.media.bigFont ) ) {
+		CG_InitBitmapFont( &cgs.media.bigFont, GIANTCHAR_HEIGHT, GIANTCHAR_WIDTH );
 	}
 
-	// note: the original Q3 number bitmaps look like font1_prop
-	if ( !CG_InitTrueTypeFont( "fonts/numberfont", numberSize, 0, &cgs.media.numberFont ) ) {
-		CG_InitBitmapNumberFont( &cgs.media.numberFont, numberSize, ceil( numberSize * 0.666666f ) );
+	if ( !CG_InitTrueTypeFont( cg_numberFont.string, CHAR_HEIGHT, cg_numberFontBorder.value, &cgs.media.numberFont ) ) {
+		CG_InitBitmapNumberFont( &cgs.media.numberFont, CHAR_HEIGHT, CHAR_WIDTH );
 	}
 }
 
@@ -179,7 +163,9 @@ void CG_InitBitmapNumberFont( fontInfo_t *font, int charHeight, int charWidth ) 
 
 // borderWidth is in screen-pixels, not scaled with resolution
 qboolean CG_InitTrueTypeFont( const char *name, int pointSize, float borderWidth, fontInfo_t *font ) {
-	if ( cg_forceBitmapFonts.integer ) {
+	int imageHeight;
+
+	if ( cg_forceBitmapFonts.integer || !name || !name[0] ) {
 		return qfalse;
 	}
 
@@ -191,19 +177,41 @@ qboolean CG_InitTrueTypeFont( const char *name, int pointSize, float borderWidth
 
 	// fallback if missing Q3 bigchars-like cursors only present in Spearmint rendered fonts
 	if ( !( font->flags & FONTFLAG_CURSORS ) ) {
-		// Team Arena per-rendered fonts don't have cursor characters (they're just transparent space)
-		Com_Memcpy( &font->glyphs[10], &font->glyphs[(int)'_'], sizeof ( glyphInfo_t ) );
-		Com_Memcpy( &font->glyphs[11], &font->glyphs[(int)'|'], sizeof ( glyphInfo_t ) );
-
-		// Make the '|' into a full width block
-		font->glyphs[11].glyph = cgs.media.whiteShader;
-		font->glyphs[11].imageWidth = font->glyphs[(int)'M'].left + font->glyphs[(int)'M'].xSkip;
-		font->glyphs[11].s = 0;
-		font->glyphs[11].s2 = 1;
+		// Team Arena pre-rendered fonts don't have cursor characters (they're just transparent space)
 
 		// character 13 is used as a selection marker in q3_ui
-		Com_Memcpy( &font->glyphs[13], &font->glyphs[(int)'>'], sizeof ( glyphInfo_t ) );
+		Com_Memcpy( &font->glyphs[GLYPH_ARROW], &font->glyphs[(int)'>'], sizeof ( glyphInfo_t ) );
 	}
+
+	// Most TrueType fonts don't contain the glyphs used for text input
+	// cursors, so just hard code them. There is no easy way to hard code
+	// the q3_ui arrow. Though, I don't think programs typically use glyphs
+	// from fonts for text input cursors anyway.
+
+	// ZTM: TODO?: Replace (unreliable/pointless) glyphInfo_t::pitch with
+	// flags so it's possible to check if glyph is missing, so these can
+	// be fallbacks instead of hard coded.
+
+	// missing overstrike block
+	Com_Memcpy( &font->glyphs[GLYPH_OVERSTRIKE], &font->glyphs[(int)'|'], sizeof ( glyphInfo_t ) );
+	font->glyphs[GLYPH_OVERSTRIKE].glyph = cgs.media.whiteShader;
+	font->glyphs[GLYPH_OVERSTRIKE].imageWidth = font->glyphs[GLYPH_OVERSTRIKE].imageHeight * 0.5f;
+	font->glyphs[GLYPH_OVERSTRIKE].s = 0;
+	font->glyphs[GLYPH_OVERSTRIKE].t = 0;
+	font->glyphs[GLYPH_OVERSTRIKE].s2 = 1;
+	font->glyphs[GLYPH_OVERSTRIKE].t2 = 1;
+
+	// missing insert underline
+	Com_Memcpy( &font->glyphs[GLYPH_INSERT], &font->glyphs[(int)'|'], sizeof ( glyphInfo_t ) );
+	font->glyphs[GLYPH_INSERT].glyph = cgs.media.whiteShader;
+	font->glyphs[GLYPH_INSERT].imageWidth = font->glyphs[GLYPH_INSERT].imageHeight * 0.5f;
+	font->glyphs[GLYPH_INSERT].s = 0;
+	font->glyphs[GLYPH_INSERT].t = 0;
+	font->glyphs[GLYPH_INSERT].s2 = 1;
+	font->glyphs[GLYPH_INSERT].t2 = 1;
+	imageHeight = Com_Clamp( 1, font->glyphs[GLYPH_INSERT].imageHeight, 1 / ( font->pointSize / 48.0f * font->glyphScale ) );
+	font->glyphs[GLYPH_INSERT].top -= font->glyphs[GLYPH_INSERT].imageHeight - imageHeight;
+	font->glyphs[GLYPH_INSERT].imageHeight = imageHeight;
 
 	return qtrue;
 }
@@ -288,25 +296,22 @@ float Text_Height( const char *text, const fontInfo_t *font, float scale, int li
 	return max * useScale;
 }
 
-// Note: scale must be multiplied by font->glyphScale
-void Text_PaintChar( float x, float y, float width, float height, float useScale, float s, float t, float s2, float t2, qhandle_t hShader ) {
-	float w, h;
+void Text_PaintGlyph( float x, float y, float w, float h, const glyphInfo_t *glyph, float *gradientColor ) {
+#if 0
+	vec4_t colors[2] = {
+		{ 1.0, 1.0, 1.0f, 1.0f }, // white (pixel aligned)
+		{ 0.0, 1.0, 0.0f, 1.0f }, // green (sub-pixel position / size)
+	};
 
-	w = width * useScale;
-	h = height * useScale;
-
-	CG_AdjustFrom640( &x, &y, &w, &h );
-	trap_R_DrawStretchPic( x, y, w, h, s, t, s2, t2, hShader );
-}
-
-// Note: scale must be multiplied by font->glyphScale
-void Text_PaintGlyph( float x, float y, float useScale, const glyphInfo_t *glyph, float *gradientColor ) {
-	float w, h;
-
-	w = glyph->imageWidth * useScale;
-	h = glyph->imageHeight * useScale;
-
-	CG_AdjustFrom640( &x, &y, &w, &h );
+	// check which glyphs have sub-pixel blending
+	gradientColor = NULL;
+	if ( x != floor( x ) || y != floor( y ) ||
+		 w != floor( w ) || h != floor( h ) ) {
+		trap_R_SetColor( colors[1] );
+	} else {
+		trap_R_SetColor( colors[0] );
+	}
+#endif
 
 	if ( gradientColor ) {
 		trap_R_DrawStretchPicGradient( x, y, w, h, glyph->s, glyph->t, glyph->s2, glyph->t2, glyph->glyph, gradientColor );
@@ -315,20 +320,40 @@ void Text_PaintGlyph( float x, float y, float useScale, const glyphInfo_t *glyph
 	}
 }
 
-void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor ) {
+void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, qboolean textInMotion ) {
 	int len, count;
 	vec4_t newColor;
 	vec4_t gradientColor;
 	const glyphInfo_t *glyph;
 	const char *s;
 	float yadj, xadj;
-	float useScale;
+	float useScaleX, useScaleY;
+	float xscale, yscale;
+	float shadowOffsetX, shadowOffsetY;
 
 	if ( !text ) {
 		return;
 	}
 
-	useScale = scale * font->glyphScale;
+	xscale = 1.0f;
+	yscale = 1.0f;
+	CG_AdjustFrom640( &x, &y, &xscale, &yscale );
+
+	shadowOffsetX = shadowOffset * xscale;
+	shadowOffsetY = shadowOffset * yscale;
+
+	adjust *= xscale;
+
+	useScaleX = scale * font->glyphScale * xscale;
+	useScaleY = scale * font->glyphScale * yscale;
+
+	if ( !textInMotion ) {
+		// prevent native resolution text from being blurred due to sub-pixel blending
+		x = floor( x );
+		y = floor( y );
+		shadowOffsetX = floor( shadowOffsetX );
+		shadowOffsetY = floor( shadowOffsetY );
+	}
 
 	trap_R_SetColor( color );
 	Vector4Copy( color, newColor );
@@ -365,38 +390,58 @@ void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const ve
 
 		glyph = Text_GetGlyph( font, Q_UTF8_CodePoint( &s ) );
 
-		yadj = useScale * glyph->top;
-		xadj = useScale * glyph->left;
-		if ( shadowOffset ) {
+		yadj = useScaleY * glyph->top;
+		xadj = useScaleX * glyph->left;
+		if ( shadowOffsetX || shadowOffsetY ) {
 			colorBlack[3] = newColor[3];
 			trap_R_SetColor( colorBlack );
-			Text_PaintGlyph( x + xadj + shadowOffset, y - yadj + shadowOffset, useScale, glyph, NULL );
+			Text_PaintGlyph( x + xadj + shadowOffsetX, y - yadj + shadowOffsetY, glyph->imageWidth * useScaleX, glyph->imageHeight * useScaleY, glyph, NULL );
 			trap_R_SetColor( newColor );
 			colorBlack[3] = 1.0f;
 		}
-		Text_PaintGlyph( x + xadj, y - yadj, useScale, glyph, ( gradient != 0 ) ? gradientColor : NULL );
+		Text_PaintGlyph( x + xadj, y - yadj, glyph->imageWidth * useScaleX, glyph->imageHeight * useScaleY, glyph, ( gradient != 0 ) ? gradientColor : NULL );
 
-		x += ( glyph->xSkip * useScale ) + adjust;
+		x += ( glyph->xSkip * useScaleX ) + adjust;
 		count++;
 	}
 
 	trap_R_SetColor( NULL );
 }
 
-void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor ) {
+void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, qboolean textInMotion ) {
 	int len, count;
 	vec4_t newColor;
 	vec4_t gradientColor;
 	const glyphInfo_t *glyph, *glyph2;
 	float yadj, xadj;
-	float useScale;
+	float useScaleX, useScaleY;
+	float xscale, yscale;
+	float shadowOffsetX, shadowOffsetY;
 	const char *s;
 
 	if ( !text ) {
 		return;
 	}
 
-	useScale = scale * font->glyphScale;
+	xscale = 1.0f;
+	yscale = 1.0f;
+	CG_AdjustFrom640( &x, &y, &xscale, &yscale );
+
+	shadowOffsetX = shadowOffset * xscale;
+	shadowOffsetY = shadowOffset * yscale;
+
+	adjust *= xscale;
+
+	useScaleX = scale * font->glyphScale * xscale;
+	useScaleY = scale * font->glyphScale * yscale;
+
+	if ( !textInMotion ) {
+		// prevent native resolution text from being blurred due to sub-pixel blending
+		x = floor( x );
+		y = floor( y );
+		shadowOffsetX = floor( shadowOffsetX );
+		shadowOffsetY = floor( shadowOffsetY );
+	}
 
 	trap_R_SetColor( color );
 	Vector4Copy( color, newColor );
@@ -436,32 +481,29 @@ void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale
 		glyph = Text_GetGlyph( font, Q_UTF8_CodePoint( &s ) );
 
 		if ( count == cursorPos && ( ( cg.realTime / BLINK_DIVISOR ) & 1 ) == 0 ) {
-			yadj = useScale * glyph2->top;
+			yadj = useScaleY * glyph2->top;
 
-			Text_PaintChar( x, y - yadj,
-							glyph->left + glyph->xSkip, // use horizontal width of text character
-							glyph2->imageHeight,
-							useScale,
-							glyph2->s,
-							glyph2->t,
-							glyph2->s2,
-							glyph2->t2,
-							glyph2->glyph );
+			// use horizontal width of text character (glyph)
+			Text_PaintGlyph( x, y - yadj,
+							(glyph->left + glyph->xSkip) * useScaleX,
+							glyph2->imageHeight * useScaleY,
+							glyph2,
+							NULL );
 		}
 
-		yadj = useScale * glyph->top;
-		xadj = useScale * glyph->left;
+		yadj = useScaleY * glyph->top;
+		xadj = useScaleX * glyph->left;
 
-		if ( shadowOffset ) {
+		if ( shadowOffsetX || shadowOffsetY ) {
 			colorBlack[3] = newColor[3];
 			trap_R_SetColor( colorBlack );
-			Text_PaintGlyph( x + xadj + shadowOffset, y - yadj + shadowOffset, useScale, glyph, NULL );
+			Text_PaintGlyph( x + xadj + shadowOffsetX, y - yadj + shadowOffsetY, glyph->imageWidth * useScaleX, glyph->imageHeight * useScaleY, glyph, NULL );
 			trap_R_SetColor( newColor );
 			colorBlack[3] = 1.0f;
 		}
 
 		// make overstrike cursor invert color
-		if ( count == cursorPos && !( ( cg.realTime / BLINK_DIVISOR ) & 1 ) && cursor == 11 ) {
+		if ( count == cursorPos && !( ( cg.realTime / BLINK_DIVISOR ) & 1 ) && cursor == GLYPH_OVERSTRIKE ) {
 			// invert color
 			vec4_t invertedColor;
 
@@ -472,45 +514,60 @@ void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale
 
 			trap_R_SetColor( invertedColor );
 
-			Text_PaintGlyph( x + xadj, y - yadj, useScale, glyph, NULL );
+			Text_PaintGlyph( x + xadj, y - yadj, glyph->imageWidth * useScaleX, glyph->imageHeight * useScaleY, glyph, NULL );
 		} else {
-			Text_PaintGlyph( x + xadj, y - yadj, useScale, glyph, ( gradient != 0 ) ? gradientColor : NULL );
+			Text_PaintGlyph( x + xadj, y - yadj, glyph->imageWidth * useScaleX, glyph->imageHeight * useScaleY, glyph, ( gradient != 0 ) ? gradientColor : NULL );
 		}
 
-		if ( count == cursorPos && !( ( cg.realTime / BLINK_DIVISOR ) & 1 ) && cursor == 11 ) {
+		if ( count == cursorPos && !( ( cg.realTime / BLINK_DIVISOR ) & 1 ) && cursor == GLYPH_OVERSTRIKE ) {
 			// restore color
 			trap_R_SetColor( newColor );
 		}
 
-		x += ( glyph->xSkip * useScale ) + adjust;
+		x += ( glyph->xSkip * useScaleX ) + adjust;
 		count++;
 	}
 
 	// need to paint cursor at end of text
 	if ( cursorPos == len && !( ( cg.realTime / BLINK_DIVISOR ) & 1 ) ) {
-		yadj = useScale * glyph2->top;
-		Text_PaintGlyph( x, y - yadj, useScale, glyph2, NULL );
+		yadj = useScaleY * glyph2->top;
+		Text_PaintGlyph( x, y - yadj, glyph2->imageWidth * useScaleX, glyph2->imageHeight * useScaleY, glyph2, NULL );
 	}
 
 	trap_R_SetColor( NULL );
 }
 
-void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit ) {
+void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit, qboolean textInMotion ) {
 	int len, count;
 	vec4_t newColor;
 	const glyphInfo_t *glyph;
 	const char *s;
-	float max;
+	float start, max;
 	float yadj, xadj;
-	float useScale;
+	float useScaleX, useScaleY;
+	float xscale, yscale;
 
 	if ( !text || !maxX ) {
 		return;
 	}
 
+	xscale = 1.0f;
+	yscale = 1.0f;
+	start = 0.0f;
 	max = *maxX;
+	CG_AdjustFrom640( &x, &y, &xscale, &yscale );
+	CG_AdjustFrom640( &start, NULL, &adjust, NULL );
+	CG_AdjustFrom640( &max, NULL, NULL, NULL );
 
-	useScale = scale * font->glyphScale;
+	useScaleX = scale * font->glyphScale * xscale;
+	useScaleY = scale * font->glyphScale * yscale;
+
+	if ( !textInMotion ) {
+		// prevent native resolution text from being blurred due to sub-pixel blending
+		x = floor( x );
+		y = floor( y );
+	}
+
 	trap_R_SetColor( color );
 	Vector4Copy( color, lastTextColor );
 
@@ -533,26 +590,28 @@ void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, fl
 
 		glyph = Text_GetGlyph( font, Q_UTF8_CodePoint( &s ) );
 
-		if ( x + ( glyph->xSkip * useScale ) > max ) {
-			*maxX = 0;
+		if ( x + ( glyph->xSkip * useScaleX ) > max ) {
+			x = start;
 			break;
 		}
 
-		yadj = useScale * glyph->top;
-		xadj = useScale * glyph->left;
+		yadj = useScaleY * glyph->top;
+		xadj = useScaleX * glyph->left;
 
-		Text_PaintGlyph( x + xadj, y - yadj, useScale, glyph, NULL );
-		x += ( glyph->xSkip * useScale ) + adjust;
-		*maxX = x;
+		Text_PaintGlyph( x + xadj, y - yadj, glyph->imageWidth * useScaleX, glyph->imageHeight * useScaleY, glyph, NULL );
+		x += ( glyph->xSkip * useScaleX ) + adjust;
 		count++;
 	}
 	trap_R_SetColor( NULL );
+
+	// convert X to 640 coords
+	*maxX = ( x - start ) / xscale;
 }
 
 #define MAX_WRAP_BYTES 1024
 #define MAX_WRAP_LINES 1024
 
-void Text_Paint_AutoWrapped( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *str, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, float xmax, float ystep, int style ) {
+void Text_Paint_AutoWrapped( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *str, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, qboolean textInMotion, float xmax, float ystep, int style ) {
 	int width;
 	char *s1, *s2, *s3;
 	char c_bcp;
@@ -708,7 +767,7 @@ void Text_Paint_AutoWrapped( float x, float y, const fontInfo_t *font, float sca
 				break;
 		}
 
-		Text_Paint( drawX, y, font, scale, newColor, buf, adjust, 0, shadowOffset, gradient, forceColor );
+		Text_Paint( drawX, y, font, scale, newColor, buf, adjust, 0, shadowOffset, gradient, forceColor, textInMotion );
 		y += ystep;
 
 		if ( numLines >= MAX_WRAP_LINES || autoNewline[numLines] ) {

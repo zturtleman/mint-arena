@@ -40,7 +40,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
   Respawnable items don't actually go away when picked up, they are
   just made invisible and untouchable.  This allows them to ride
-  movers and respawn apropriately.
+  movers and respawn appropriately.
 */
 
 
@@ -781,7 +781,11 @@ void ClearRegisteredItems( void ) {
 	memset( itemRegistered, 0, sizeof( itemRegistered ) );
 
 	// players always start with the base weapon
-	RegisterItem( BG_FindItemForWeapon( WP_MACHINEGUN ) );
+	if ( g_instagib.integer ) {
+		RegisterItem( BG_FindItemForWeapon( WP_RAILGUN ) );
+	} else {
+		RegisterItem( BG_FindItemForWeapon( WP_MACHINEGUN ) );
+	}
 	RegisterItem( BG_FindItemForWeapon( WP_GAUNTLET ) );
 #ifdef MISSIONPACK
 	if( g_gametype.integer == GT_HARVESTER ) {
@@ -880,15 +884,17 @@ void G_SpawnItem (gentity_t *ent, gitem_t *item) {
 
 #ifdef MISSIONPACK
 	if ( item->giType == IT_PERSISTANT_POWERUP ) {
-		// allow both teams to pick it up
-		if ( ( ent->spawnflags & 2 ) && ( ent->spawnflags & 4 ) ) {
-			ent->s.team = 255;
-		}
+		qboolean redTeam = !!( ent->spawnflags & 2 );
+		qboolean blueTeam = !!( ent->spawnflags & 4 );
+
 		// only one team can pick it up
-		else if ( ent->spawnflags & 2 )
+		if ( redTeam && !blueTeam )
 			ent->s.team = TEAM_RED;
-		else if ( ent->spawnflags & 4 )
+		else if ( blueTeam && !redTeam )
 			ent->s.team = TEAM_BLUE;
+		// allow all players to pick it up
+		else
+			ent->s.team = 255;
 	}
 #endif
 }

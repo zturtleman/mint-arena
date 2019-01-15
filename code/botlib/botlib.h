@@ -97,6 +97,8 @@ typedef struct bot_entitystate_s
 //bot AI library exported functions
 typedef struct botlib_import_s
 {
+	//get time for measuring time lapse
+	int			(*MilliSeconds)(void);
 	//print messages from the bot library
 	void		(QDECL *Print)(int type, char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
 	//trace a bbox through the world
@@ -108,11 +110,11 @@ typedef struct botlib_import_s
 	//check if the point is in potential visible sight
 	int			(*inPVS)(vec3_t p1, vec3_t p2);
 	//retrieve the BSP entity data lump
-	char		*(*BSPEntityData)(void);
+	qboolean	(*GetEntityToken)(int *offset, char *token, int tokenSize);
 	//
 	void		(*BSPModelMinsMaxsOrigin)(int modelnum, vec3_t angles, vec3_t mins, vec3_t maxs, vec3_t origin);
 	//send a bot client command
-	void		(*BotClientCommand)(int client, const char *command);
+	void		(*BotClientCommand)(int playerNum, const char *command);
 	//memory allocation
 	void		*(*GetMemory)(int size);		// allocate from Zone
 	void		(*FreeMemory)(void *ptr);		// free memory from Zone
@@ -142,12 +144,31 @@ typedef struct aas_export_s
 	int			(*AAS_Initialized)(void);
 	void		(*AAS_PresenceTypeBoundingBox)(int presencetype, vec3_t mins, vec3_t maxs);
 	float		(*AAS_Time)(void);
+	//-----------------------------------
+	// be_aas_debug.c
+	//-----------------------------------
+	void		(*AAS_ClearShownDebugLines)(void);
+	void		(*AAS_ClearShownPolygons)(void);
+	void		(*AAS_DebugLine)(vec3_t start, vec3_t end, int color);
+	void		(*AAS_PermanentLine)(vec3_t start, vec3_t end, int color);
+	void		(*AAS_DrawPermanentCross)(vec3_t origin, float size, int color);
+	void		(*AAS_DrawPlaneCross)(vec3_t point, vec3_t normal, float dist, int type, int color);
+	void		(*AAS_ShowBoundingBox)(vec3_t origin, vec3_t mins, vec3_t maxs);
+	void		(*AAS_ShowFace)(int facenum);
+	void		(*AAS_ShowArea)(int areanum, int groundfacesonly);
+	void		(*AAS_ShowAreaPolygons)(int areanum, int color, int groundfacesonly);
+	void		(*AAS_DrawCross)(vec3_t origin, float size, int color);
+	void		(*AAS_PrintTravelType)(int traveltype);
+	void		(*AAS_DrawArrow)(vec3_t start, vec3_t end, int linecolor, int arrowcolor);
+	void		(*AAS_ShowReachability)(struct aas_reachability_s *reach, int contentmask);
+	void		(*AAS_ShowReachableAreas)(int areanum, int contentmask);
+	void		(*AAS_FloodAreas)(vec3_t origin);
 	//--------------------------------------------
 	// be_aas_sample.c
 	//--------------------------------------------
 	int			(*AAS_PointAreaNum)(vec3_t point);
 	int			(*AAS_PointReachabilityAreaIndex)( vec3_t point );
-	void		(*AAS_TraceClientBBox)(struct aas_trace_s *trace, vec3_t start, vec3_t end, int presencetype, int passent);
+	void		(*AAS_TracePlayerBBox)(struct aas_trace_s *trace, vec3_t start, vec3_t end, int presencetype, int passent, int contentmask);
 	int			(*AAS_TraceAreas)(vec3_t start, vec3_t end, int *areas, vec3_t *points, int maxareas);
 	int			(*AAS_BBoxAreas)(vec3_t absmins, vec3_t absmaxs, int *areas, int maxareas);
 	int			(*AAS_AreaInfo)( int areanum, struct aas_areainfo_s *info );
@@ -184,7 +205,7 @@ typedef struct aas_export_s
 	int			(*AAS_AreaContentsTravelFlags)(int areanum);
 	int			(*AAS_NextAreaReachability)(int areanum, int reachnum);
 	void		(*AAS_ReachabilityFromNum)(int num, struct aas_reachability_s *reach);
-	int			(*AAS_RandomGoalArea)(int areanum, int travelflags, int *goalareanum, vec3_t goalorigin);
+	int			(*AAS_RandomGoalArea)(int areanum, int travelflags, int contentmask, int *goalareanum, vec3_t goalorigin);
 	int			(*AAS_EnableRoutingArea)(int areanum, int enable);
 	unsigned short int (*AAS_AreaTravelTime)(int areanum, vec3_t start, vec3_t end);
 	int			(*AAS_AreaTravelTimeToGoalArea)(int areanum, vec3_t origin, int goalareanum, int travelflags);
@@ -206,13 +227,13 @@ typedef struct aas_export_s
 											vec3_t velocity, vec3_t cmdmove,
 											int cmdframes,
 											int maxframes, float frametime,
-											int stopevent, int stopareanum, int visualize);
-	int			(*AAS_OnGround)(vec3_t origin, int presencetype, int passent);
+											int stopevent, int stopareanum, int visualize, int contentmask);
+	int			(*AAS_OnGround)(vec3_t origin, int presencetype, int passent, int contentmask);
 	int			(*AAS_Swimming)(vec3_t origin);
-	void		(*AAS_JumpReachRunStart)(struct aas_reachability_s *reach, vec3_t runstart);
+	void		(*AAS_JumpReachRunStart)(struct aas_reachability_s *reach, vec3_t runstart, int contentmask);
 	int			(*AAS_AgainstLadder)(vec3_t origin);
 	int			(*AAS_HorizontalVelocityForJump)(float zvel, vec3_t start, vec3_t end, float *velocity);
-	int			(*AAS_DropToFloor)(vec3_t origin, vec3_t mins, vec3_t maxs);
+	int			(*AAS_DropToFloor)(vec3_t origin, vec3_t mins, vec3_t maxs, int passent, int contentmask);
 } aas_export_t;
 
 //bot AI library imported functions
@@ -225,18 +246,9 @@ typedef struct botlib_export_s
 	//shutdown the bot library, returns BLERR_
 	int (*BotLibShutdown)(void);
 	//sets a library variable returns BLERR_
-	int (*BotLibVarSet)(char *var_name, char *value);
+	int (*BotLibVarSet)(const char *var_name, const char *value);
 	//gets a library variable returns BLERR_
-	int (*BotLibVarGet)(char *var_name, char *value, int size);
-
-	//sets a C-like define returns BLERR_
-	int (*PC_AddGlobalDefine)(char *string);
-	void (*PC_RemoveAllGlobalDefines)(void);
-	int (*PC_LoadSourceHandle)(const char *filename, const char *basepath);
-	int (*PC_FreeSourceHandle)(int handle);
-	int (*PC_ReadTokenHandle)(int handle, pc_token_t *pc_token);
-	void (*PC_UnreadLastTokenHandle)(int handle);
-	int (*PC_SourceFileAndLine)(int handle, char *filename, int *line);
+	int (*BotLibVarGet)(const char *var_name, char *value, int size);
 
 	//start a frame in the bot library
 	int (*BotLibStartFrame)(float time);
@@ -244,8 +256,6 @@ typedef struct botlib_export_s
 	int (*BotLibLoadMap)(const char *mapname);
 	//entity updates
 	int (*BotLibUpdateEntity)(int ent, bot_entitystate_t *state);
-	//just for testing
-	int (*Test)(int parm0, char *parm1, vec3_t parm2, vec3_t parm3);
 } botlib_export_t;
 
 //linking of bot library

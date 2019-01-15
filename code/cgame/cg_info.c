@@ -108,6 +108,7 @@ void CG_LoadingPlayer( int playerNum ) {
 	char			personality[MAX_QPATH];
 	char			model[MAX_QPATH];
 	char			iconName[MAX_QPATH];
+	const char		*defaultModel;
 
 	info = CG_ConfigString( CS_PLAYERS + playerNum );
 
@@ -124,7 +125,13 @@ void CG_LoadingPlayer( int playerNum ) {
 		loadingPlayerIcons[loadingPlayerIconCount] = trap_R_RegisterShaderNoMip( iconName );
 
 		if ( !loadingPlayerIcons[loadingPlayerIconCount] ) {
-			Com_sprintf( iconName, MAX_QPATH, "models/players/%s/icon_%s.tga", DEFAULT_MODEL, "default" );
+			if ( cgs.gametype >= GT_TEAM ) {
+				defaultModel = cg_defaultTeamModelGender.string[0] == 'f' ? cg_defaultFemaleTeamModel.string : cg_defaultMaleTeamModel.string;
+			} else {
+				defaultModel = cg_defaultModelGender.string[0] == 'f' ? cg_defaultFemaleModel.string : cg_defaultMaleModel.string;
+			}
+
+			Com_sprintf( iconName, MAX_QPATH, "models/players/%s/icon_%s.tga", defaultModel, "default" );
 			loadingPlayerIcons[loadingPlayerIconCount] = trap_R_RegisterShaderNoMip( iconName );
 		}
 		if ( loadingPlayerIcons[loadingPlayerIconCount] ) {

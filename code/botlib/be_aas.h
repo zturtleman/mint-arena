@@ -118,19 +118,19 @@ typedef struct aas_areainfo_s
 
 // client movement prediction stop events, stop as soon as:
 #define SE_NONE					0
-#define SE_HITGROUND			1		// the ground is hit
-#define SE_LEAVEGROUND			2		// there's no ground
-#define SE_ENTERWATER			4		// water is entered
-#define SE_ENTERSLIME			8		// slime is entered
-#define SE_ENTERLAVA			16		// lava is entered
-#define SE_HITGROUNDDAMAGE		32		// the ground is hit with damage
+#define SE_HITGROUND				1		// the ground is hit
+#define SE_LEAVEGROUND				2		// there's no ground
+#define SE_ENTERWATER				4		// water is entered
+#define SE_ENTERSLIME				8		// slime is entered
+#define SE_ENTERLAVA				16		// lava is entered
+#define SE_HITGROUNDDAMAGE			32		// the ground is hit with damage
 #define SE_GAP					64		// there's a gap
-#define SE_TOUCHJUMPPAD			128		// touching a jump pad area
-#define SE_TOUCHTELEPORTER		256		// touching teleporter
-#define SE_ENTERAREA			512		// the given stoparea is entered
-#define SE_HITGROUNDAREA		1024	// a ground face in the area is hit
-#define SE_HITBOUNDINGBOX		2048	// hit the specified bounding box
-#define SE_TOUCHCLUSTERPORTAL	4096	// touching a cluster portal
+#define SE_TOUCHJUMPPAD				128		// touching a jump pad area
+#define SE_TOUCHTELEPORTER			256		// touching teleporter
+#define SE_ENTERAREA				512		// the given stoparea is entered
+#define SE_HITGROUNDAREA			1024		// a ground face in the area is hit
+#define SE_HITBOUNDINGBOX			2048		// hit the specified bounding box
+#define SE_TOUCHCLUSTERPORTAL			4096		// touching a cluster portal
 
 typedef struct aas_clientmove_s
 {
@@ -141,12 +141,12 @@ typedef struct aas_clientmove_s
 	int presencetype;		//presence type at end of movement prediction
 	int stopevent;			//event that made the prediction stop
 	int endcontents;		//contents at the end of movement prediction
-	float time;				//time predicted ahead
-	int frames;				//number of frames predicted ahead
+	float time;			//time predicted ahead
+	int frames;			//number of frames predicted ahead
 } aas_clientmove_t;
 
 // alternate route goals
-#define ALTROUTEGOAL_ALL				1
+#define ALTROUTEGOAL_ALL			1
 #define ALTROUTEGOAL_CLUSTERPORTALS		2
 #define ALTROUTEGOAL_VIEWPORTALS		4
 
@@ -162,9 +162,9 @@ typedef struct aas_altroutegoal_s
 // route prediction stop events
 #define RSE_NONE				0
 #define RSE_NOROUTE				1	//no route to goal
-#define RSE_USETRAVELTYPE		2	//stop as soon as on of the given travel types is used
-#define RSE_ENTERCONTENTS		4	//stop when entering the given contents
-#define RSE_ENTERAREA			8	//stop when entering the given area
+#define RSE_USETRAVELTYPE			2	//stop as soon as on of the given travel types is used
+#define RSE_ENTERCONTENTS			4	//stop when entering the given contents
+#define RSE_ENTERAREA				8	//stop when entering the given area
 
 typedef struct aas_predictroute_s
 {
@@ -174,5 +174,5 @@ typedef struct aas_predictroute_s
 	int endcontents;		//contents at the end of movement prediction
 	int endtravelflags;		//end travel flags
 	int numareas;			//number of areas predicted ahead
-	int time;				//time predicted ahead (in hundredths of a sec)
+	int time;			//time predicted ahead (in hundredths of a second)
 } aas_predictroute_t;

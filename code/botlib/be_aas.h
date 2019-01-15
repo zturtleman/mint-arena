@@ -52,7 +52,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define TFL_BARRIERJUMP				0x00000008	//jumping onto a barrier
 #define TFL_JUMP				0x00000010	//jumping
 #define TFL_LADDER				0x00000020	//climbing a ladder
-#define TFL_WALKOFFLEDGE			0x00000080	//walking of a ledge
+#define TFL_WALKOFFLEDGE			0x00000080	//walking off a ledge
 #define TFL_SWIM				0x00000100	//swimming
 #define TFL_WATERJUMP				0x00000200	//jumping out of the water
 #define TFL_TELEPORT				0x00000400	//teleporting

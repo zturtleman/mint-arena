@@ -909,6 +909,7 @@ vmNetField_t	bg_entityStateFields[] =
 { NETF(origin[0]), 0 },
 { NETF(origin[1]), 0 },
 { NETF(origin[2]), 0 },
+{ NETF(skinFraction), 0 },
 { NETF(contents), 32 },
 { NETF(collisionType), 16 },
 { NETF(mins[0]), 0 },
@@ -1739,6 +1740,14 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 		SnapVector( s->mins );
 		SnapVector( s->maxs );
 	}
+
+	if ( ps->stats[STAT_HEALTH] <= 0 ) {
+		s->skinFraction = 1.0f;
+	} else if ( ps->stats[STAT_HEALTH] >= ps->stats[STAT_MAX_HEALTH] ) {
+		s->skinFraction = 0.0f;
+	} else {
+		s->skinFraction = 1.0f - ( (float)ps->stats[STAT_HEALTH] / (float)ps->stats[STAT_MAX_HEALTH] );
+	}
 }
 
 /*
@@ -1827,6 +1836,14 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	if ( snap ) {
 		SnapVector( s->mins );
 		SnapVector( s->maxs );
+	}
+
+	if ( ps->stats[STAT_HEALTH] <= 0 ) {
+		s->skinFraction = 1.0f;
+	} else if ( ps->stats[STAT_HEALTH] >= ps->stats[STAT_MAX_HEALTH] ) {
+		s->skinFraction = 0.0f;
+	} else {
+		s->skinFraction = 1.0f - ( (float)ps->stats[STAT_HEALTH] / (float)ps->stats[STAT_MAX_HEALTH] );
 	}
 }
 

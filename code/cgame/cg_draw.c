@@ -102,7 +102,7 @@ CG_Draw3DModelEx
 
 ================
 */
-void CG_Draw3DModelEx( float x, float y, float w, float h, qhandle_t model, cgSkin_t *skin, vec3_t origin, vec3_t angles, const byte *rgba ) {
+void CG_Draw3DModelEx( float x, float y, float w, float h, qhandle_t model, cgSkin_t *skin, vec3_t origin, vec3_t angles, const byte *rgba, entityState_t *state ) {
 	refdef_t		refdef;
 	refEntity_t		ent;
 
@@ -118,7 +118,7 @@ void CG_Draw3DModelEx( float x, float y, float w, float h, qhandle_t model, cgSk
 	AnglesToAxis( angles, ent.axis );
 	VectorCopy( origin, ent.origin );
 	ent.hModel = model;
-	ent.customSkin = CG_AddSkinToFrame( skin );
+	ent.customSkin = CG_AddSkinToFrame( skin, state );
 	ent.renderfx = RF_NOSHADOW;		// no stencil shadows
 
 	if ( rgba ) {
@@ -151,7 +151,7 @@ CG_Draw3DModel
 ================
 */
 void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, cgSkin_t *skin, vec3_t origin, vec3_t angles ) {
-	CG_Draw3DModelEx( x, y, w, h, model, skin, origin, angles, NULL );
+	CG_Draw3DModelEx( x, y, w, h, model, skin, origin, angles, NULL, NULL );
 }
 
 /*
@@ -167,6 +167,8 @@ void CG_DrawHead( float x, float y, float w, float h, int playerNum, vec3_t head
 	float			len;
 	vec3_t			origin;
 	vec3_t			mins, maxs;
+	entityState_t	*entityState;
+	byte			color[4];
 
 	pi = &cgs.playerinfo[ playerNum ];
 
@@ -190,7 +192,15 @@ void CG_DrawHead( float x, float y, float w, float h, int playerNum, vec3_t head
 		// allow per-model tweaking
 		VectorAdd( origin, pi->headOffset, origin );
 
-		CG_Draw3DModelEx( x, y, w, h, pi->headModel, &pi->modelSkin, origin, headAngles, pi->c1RGBA );
+		// TODO: Use prediction entity state for local players?
+		entityState = &cg_entities[playerNum].currentState;
+
+		color[0] = pi->c1RGBA[0];
+		color[1] = pi->c1RGBA[1];
+		color[2] = pi->c1RGBA[2];
+		color[3] = entityState->skinFraction * 255;
+
+		CG_Draw3DModelEx( x, y, w, h, pi->headModel, &pi->modelSkin, origin, headAngles, color, entityState );
 	} else if ( cg_drawIcons.integer ) {
 		CG_DrawPic( x, y, w, h, pi->modelIcon );
 	}
@@ -2999,7 +3009,7 @@ void CG_DrawMiscGamemodels( void ) {
 		}
 		ent.hModel = cgs.miscGameModels[i].model;
 
-		ent.customSkin = CG_AddSkinToFrame( &cgs.miscGameModels[i].skin );
+		ent.customSkin = CG_AddSkinToFrame( &cgs.miscGameModels[i].skin, NULL );
 		trap_R_AddRefEntityToScene( &ent );
 
 		drawn++;

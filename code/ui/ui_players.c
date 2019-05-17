@@ -826,7 +826,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int 
 	// add the legs
 	//
 	legs.hModel = pi->legsModel;
-	legs.customSkin = CG_AddSkinToFrame( &pi->modelSkin );
+	legs.customSkin = CG_AddSkinToFrame( &pi->modelSkin, NULL );
 
 	VectorCopy( origin, legs.origin );
 

@@ -1120,11 +1120,11 @@ static void CG_TeamBase( centity_t *cent ) {
 
 		if ( cent->currentState.modelindex == TEAM_RED ) {
 			model.hModel = cgs.media.harvesterModel;
-			model.customSkin = CG_AddSkinToFrame( &cgs.media.harvesterRedSkin );
+			model.customSkin = CG_AddSkinToFrame( &cgs.media.harvesterRedSkin, &cent->currentState );
 		}
 		else if ( cent->currentState.modelindex == TEAM_BLUE ) {
 			model.hModel = cgs.media.harvesterModel;
-			model.customSkin = CG_AddSkinToFrame( &cgs.media.harvesterBlueSkin );
+			model.customSkin = CG_AddSkinToFrame( &cgs.media.harvesterBlueSkin, &cent->currentState );
 		}
 		else {
 			model.hModel = cgs.media.harvesterNeutralModel;

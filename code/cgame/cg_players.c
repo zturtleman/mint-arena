@@ -526,12 +526,30 @@ static qboolean	CG_FindPlayerHeadFile( char *filename, int length, playerInfo_t 
 CG_AddSkinToFrame
 ==========================
 */
-qhandle_t CG_AddSkinToFrame( const cgSkin_t *skin ) {
-	if ( !skin || !skin->numSurfaces ) {
+qhandle_t CG_AddSkinToFrame( const cgSkin_t *skin, entityState_t *state ) {
+	qhandle_t surfaces[MAX_CG_SKIN_SURFACES];
+	int i, index;
+	float skinFraction;
+
+	if ( !skin || !skin->numMeshes ) {
 		return 0;
 	}
 
-	return trap_R_AddSkinToFrame( skin->numSurfaces, skin->surfaces );
+	skinFraction = state ? state->skinFraction : 0.0f;
+
+	for ( i = 0; i < skin->numMeshes; i++ ) {
+		if ( skinFraction >= 1.0f ) {
+			index = skin->meshes[i].numShaders-1;
+		} else if ( skinFraction <= 0.0f ) {
+			index = 0;
+		} else { // > 0 && < 1
+			index = skinFraction * skin->meshes[i].numShaders;
+		}
+
+		surfaces[i] = skin->meshes[i].surfaces[index];
+	}
+
+	return trap_R_AddSkinToFrame( skin->numMeshes, surfaces );
 }
 
 /*
@@ -567,11 +585,11 @@ qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append ) {
 	}
 
 	if ( !append ) {
-		skin->numSurfaces = 0;
+		skin->numMeshes = 0;
 	}
 
-	initialSurfaces = skin->numSurfaces;
-	totalSurfaces = skin->numSurfaces;
+	initialSurfaces = skin->numMeshes;
+	totalSurfaces = skin->numMeshes;
 
 	// load the file
 	len = trap_FS_FOpenFile( name, &f, FS_READ );
@@ -614,20 +632,35 @@ qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append ) {
 			continue;
 		}
 
-		// parse the shader name
-		token = COM_ParseExt2( &text_p, qfalse, ',' );
-		Q_strncpyz( shaderName, token, sizeof( shaderName ) );
+		if ( skin->numMeshes < MAX_CG_SKIN_SURFACES ) {
+			int numShaders;
 
-		if ( skin->numSurfaces < MAX_CG_SKIN_SURFACES ) {
-			hShader = trap_R_RegisterShaderEx( shaderName, LIGHTMAP_NONE, qtrue );
+			for ( numShaders = 0; numShaders < MAX_CG_SKIN_SURFACE_SHADERS; numShaders++ ) {
+				if ( *text_p == ',' ) {
+					text_p++;
+				}
 
-			// for compatibility with quake3 skins, don't render missing shaders listed in skins
-			if ( !hShader ) {
-				hShader = cgs.media.nodrawShader;
+				// parse the shader name
+				token = COM_ParseExt2( &text_p, qfalse, ',' );
+				Q_strncpyz( shaderName, token, sizeof( shaderName ) );
+
+				if ( !token[0] ) {
+					// End of line
+					break;
+				}
+
+				hShader = trap_R_RegisterShaderEx( shaderName, LIGHTMAP_NONE, qtrue );
+
+				// for compatibility with quake3 skins, don't render missing shaders listed in skins
+				if ( !hShader ) {
+					hShader = cgs.media.nodrawShader;
+				}
+
+				skin->meshes[skin->numMeshes].surfaces[numShaders] = trap_R_AllocSkinSurface( surfName, hShader );
 			}
 
-			skin->surfaces[skin->numSurfaces] = trap_R_AllocSkinSurface( surfName, hShader );
-			skin->numSurfaces++;
+			skin->meshes[skin->numMeshes].numShaders = numShaders;
+			skin->numMeshes++;
 		}
 
 		totalSurfaces++;
@@ -639,7 +672,7 @@ qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append ) {
 	}
 
 	// failed to load surfaces
-	if ( !skin->numSurfaces ) {
+	if ( !skin->numMeshes ) {
 		return qfalse;
 	}
 
@@ -1955,7 +1988,7 @@ static void CG_PlayerFlag( centity_t *cent, const cgSkin_t *skin, refEntity_t *t
 	// show the flag model
 	memset( &flag, 0, sizeof(flag) );
 	flag.hModel = cgs.media.flagFlapModel;
-	flag.customSkin = CG_AddSkinToFrame( skin );
+	flag.customSkin = CG_AddSkinToFrame( skin, &cent->currentState );
 	VectorCopy( torso->lightingOrigin, flag.lightingOrigin );
 	flag.shadowPlane = torso->shadowPlane;
 	flag.renderfx = torso->renderfx;
@@ -2701,7 +2734,7 @@ void CG_Player( centity_t *cent ) {
 	// add the legs
 	//
 	legs.hModel = pi->legsModel;
-	legs.customSkin = CG_AddSkinToFrame( &pi->modelSkin );
+	legs.customSkin = CG_AddSkinToFrame( &pi->modelSkin, &cent->currentState );
 
 	VectorCopy( cent->lerpOrigin, legs.origin );
 
@@ -2711,6 +2744,8 @@ void CG_Player( centity_t *cent ) {
 	VectorCopy (legs.origin, legs.oldorigin);	// don't positionally lerp at all
 
 	Byte4Copy( pi->c1RGBA, legs.shaderRGBA );
+
+	legs.shaderRGBA[3] = cent->currentState.skinFraction * 255;
 
 	CG_AddRefEntityWithPowerups( &legs, &cent->currentState );
 
@@ -2738,7 +2773,11 @@ void CG_Player( centity_t *cent ) {
 
 	Byte4Copy( pi->c1RGBA, torso.shaderRGBA );
 
+	torso.shaderRGBA[3] = cent->currentState.skinFraction * 255;
+
 	CG_AddRefEntityWithPowerups( &torso, &cent->currentState );
+
+	torso.shaderRGBA[3] = 255; // leave powerup entity alpha alone
 
 	// add the talk baloon or disconnect icon
 	CG_PlayerSprites( cent, &torso );
@@ -2968,6 +3007,8 @@ void CG_Player( centity_t *cent ) {
 	head.renderfx = renderfx;
 
 	Byte4Copy( pi->c1RGBA, head.shaderRGBA );
+
+	head.shaderRGBA[3] = cent->currentState.skinFraction * 255;
 
 	CG_AddRefEntityWithPowerups( &head, &cent->currentState );
 

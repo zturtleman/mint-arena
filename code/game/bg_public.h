@@ -50,7 +50,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // because games can change separately from the main system protocol, we need a
 // second protocol that must match between game and cgame
 
-#define	GAME_PROTOCOL		MODDIR "-4"
+#define	GAME_PROTOCOL		MODDIR "damageskins-4"
 
 // used for switching fs_game
 #ifndef BASEQ3
@@ -276,6 +276,7 @@ typedef struct entityState_s {
 	int		legsAnim;		// mask off ANIM_TOGGLEBIT
 	int		torsoAnim;		// mask off ANIM_TOGGLEBIT
 	int		tokens;			// harvester skulls
+	float	skinFraction;	// 0 = full health, 1 = dead
 } entityState_t;
 
 

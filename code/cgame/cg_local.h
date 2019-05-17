@@ -203,9 +203,15 @@ typedef struct {
 
 // skin surfaces array shouldn't be dynamically allocated because players reuse the same skin structure when changing models
 #define MAX_CG_SKIN_SURFACES 100
+#define MAX_CG_SKIN_SURFACE_SHADERS 10
 typedef struct {
-	int numSurfaces;
-	qhandle_t surfaces[MAX_CG_SKIN_SURFACES];
+	qhandle_t surfaces[MAX_CG_SKIN_SURFACE_SHADERS]; // allocated skin surfaces (mesh name + shader)
+	int numShaders;
+} cgSkinMesh_t;
+
+typedef struct {
+	int numMeshes;
+	cgSkinMesh_t meshes[MAX_CG_SKIN_SURFACES];
 } cgSkin_t;
 
 //=================================================
@@ -1713,7 +1719,7 @@ int CG_Text_Height( const char *text, float scale, int limit );
 void CG_Player( centity_t *cent );
 void CG_ResetPlayerEntity( centity_t *cent );
 void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state );
-qhandle_t CG_AddSkinToFrame( const cgSkin_t *skin );
+qhandle_t CG_AddSkinToFrame( const cgSkin_t *skin, entityState_t *state );
 qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append );
 void CG_NewPlayerInfo( int playerNum );
 sfxHandle_t	CG_CustomSound( int playerNum, const char *soundName );

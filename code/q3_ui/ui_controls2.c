@@ -129,8 +129,8 @@ enum {
 	ID_AUTOSWITCH,
 	ID_MOUSESPEED,
 	ID_SELECTJOY,
-	ID_JOYANALOG,
 	ID_JOYTHRESHOLD,
+	ID_JOYANALOG,
 	ID_SMOOTHMOUSE
 };
 
@@ -234,8 +234,8 @@ typedef struct
 	menuaction_s		togglemenu;
 
 	menutext_s			selectjoy;
-	menuradiobutton_s	joyanalog;
 	menuslider_s		joythreshold;
+	menuradiobutton_s	joyanalog;
 	int					section;
 	char				playerModel[MAX_QPATH];
 	char				playerHead[MAX_QPATH];
@@ -1044,8 +1044,8 @@ static void Controls_GetConfig( void )
 	s_controls.alwaysrun.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cl_run" ) ) );
 	s_controls.cyclepastgauntlet.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_cyclePastGauntlet" ) ) );
 	s_controls.autoswitch.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_autoswitch" ) ) );
-	s_controls.joyanalog.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickUseAnalog" ) ) );
 	s_controls.joythreshold.curvalue = Com_Clamp( 0.05f, 0.75f, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickThreshold" ) ) );
+	s_controls.joyanalog.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickUseAnalog" ) ) );
 }
 
 /*
@@ -1093,8 +1093,8 @@ static void Controls_SetConfig( void )
 	trap_Cvar_SetValue( Com_LocalPlayerCvarName( s_controls.localPlayerNum, "cl_run" ), s_controls.alwaysrun.curvalue );
 	trap_Cvar_SetValue( Com_LocalPlayerCvarName( s_controls.localPlayerNum, "cg_cyclePastGauntlet" ), s_controls.cyclepastgauntlet.curvalue );
 	trap_Cvar_SetValue( Com_LocalPlayerCvarName( s_controls.localPlayerNum, "cg_autoswitch" ), s_controls.autoswitch.curvalue );
-	trap_Cvar_SetValue( Com_LocalPlayerCvarName( s_controls.localPlayerNum, "in_joystickUseAnalog" ), s_controls.joyanalog.curvalue );
 	trap_Cvar_SetValue( Com_LocalPlayerCvarName( s_controls.localPlayerNum, "in_joystickThreshold" ), s_controls.joythreshold.curvalue );
+	trap_Cvar_SetValue( Com_LocalPlayerCvarName( s_controls.localPlayerNum, "in_joystickUseAnalog" ), s_controls.joyanalog.curvalue );
 }
 
 /*
@@ -1132,8 +1132,8 @@ static void Controls_SetDefaults( void )
 	s_controls.autoswitch.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_autoswitch" ) );
 	trap_Cvar_SetValue(Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystick"), 0);
 	trap_Cvar_SetValue(Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickNo"), 0);
-	s_controls.joyanalog.curvalue    = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickUseAnalog" ) );
 	s_controls.joythreshold.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickThreshold" ) );
+	s_controls.joyanalog.curvalue    = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickUseAnalog" ) );
 }
 
 /*
@@ -1410,8 +1410,8 @@ static void Controls_MenuEvent( void* ptr, int event )
 		case ID_ALWAYSRUN:
 		case ID_CYCLEPASTGAUNTLET:
 		case ID_AUTOSWITCH:
-		case ID_JOYANALOG:
 		case ID_JOYTHRESHOLD:
+		case ID_JOYANALOG:
 			if (event == QM_ACTIVATED)
 			{
 				s_controls.changesmade = qtrue;
@@ -1919,14 +1919,6 @@ static void Controls_MenuInit( int localPlayerNum )
 	s_controls.selectjoy.color				= text_color_normal;
 	s_controls.selectjoy.style				= UI_RIGHT|UI_SMALLFONT;
 
-	s_controls.joyanalog.generic.type      = MTYPE_RADIOBUTTON;
-	s_controls.joyanalog.generic.flags	   = QMF_SMALLFONT;
-	s_controls.joyanalog.generic.x	       = SCREEN_WIDTH/2;
-	s_controls.joyanalog.generic.name	   = "analog input";
-	s_controls.joyanalog.generic.id        = ID_JOYANALOG;
-	s_controls.joyanalog.generic.callback  = Controls_MenuEvent;
-	s_controls.joyanalog.generic.statusbar = Controls_StatusBar;
-
 	s_controls.joythreshold.generic.type	  = MTYPE_SLIDER;
 	s_controls.joythreshold.generic.x		  = SCREEN_WIDTH/2;
 	s_controls.joythreshold.generic.flags	  = QMF_SMALLFONT;
@@ -1936,6 +1928,14 @@ static void Controls_MenuInit( int localPlayerNum )
 	s_controls.joythreshold.minvalue		  = 0.05f;
 	s_controls.joythreshold.maxvalue		  = 0.75f;
 	s_controls.joythreshold.generic.statusbar = Controls_StatusBar;
+
+	s_controls.joyanalog.generic.type      = MTYPE_RADIOBUTTON;
+	s_controls.joyanalog.generic.flags	   = QMF_SMALLFONT;
+	s_controls.joyanalog.generic.x	       = SCREEN_WIDTH/2;
+	s_controls.joyanalog.generic.name	   = "analog input";
+	s_controls.joyanalog.generic.id        = ID_JOYANALOG;
+	s_controls.joyanalog.generic.callback  = Controls_MenuEvent;
+	s_controls.joyanalog.generic.statusbar = Controls_StatusBar;
 
 	s_controls.name.generic.type	= MTYPE_PTEXT;
 	s_controls.name.generic.flags	= QMF_CENTER_JUSTIFY|QMF_INACTIVE;
@@ -1967,8 +1967,8 @@ static void Controls_MenuInit( int localPlayerNum )
 	Menu_AddItem( &s_controls.menu, &s_controls.centerview );
 	Menu_AddItem( &s_controls.menu, &s_controls.zoomview );
 	Menu_AddItem( &s_controls.menu, &s_controls.selectjoy );
-	Menu_AddItem( &s_controls.menu, &s_controls.joyanalog );
 	Menu_AddItem( &s_controls.menu, &s_controls.joythreshold );
+	Menu_AddItem( &s_controls.menu, &s_controls.joyanalog );
 
 	Menu_AddItem( &s_controls.menu, &s_controls.alwaysrun );
 	Menu_AddItem( &s_controls.menu, &s_controls.run );

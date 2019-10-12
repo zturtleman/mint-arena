@@ -1252,7 +1252,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 			VectorCopy( nonPredictedCent->pe.flashOrigin, flash.origin );
 		}
 
-		if ( ( cg.cur_lc->predictedPlayerState.eFlags & EF_FIRING )
+		if ( ( nonPredictedCent->currentState.eFlags & EF_FIRING )
 			&& ( ps || cg.cur_lc->renderingThirdPerson
 					|| cent->currentState.number != cg.cur_lc->predictedPlayerState.playerNum ) ) {
 			// special hack for lightning gun...

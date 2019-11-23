@@ -515,7 +515,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_forceBitmapFonts, "cg_forceBitmapFonts", "0", CVAR_ARCHIVE | CVAR_LATCH, RANGE_BOOL },
 	{ &cg_drawGrappleHook, "cg_drawGrappleHook", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_drawBBox, "cg_drawBBox", "0", CVAR_CHEAT, RANGE_BOOL },
-	{ &cg_consoleFont, "cg_consoleFont", "fonts/LiberationMono-Bold.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+	{ &cg_consoleFont, "cg_consoleFont", "fonts/LiberationMono-Regular.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
 	{ &cg_consoleFontSize, "cg_consoleFontSize", "8", CVAR_ARCHIVE | CVAR_LATCH, RANGE_INT( 4, 24 ) },
 	{ &cg_hudFont, "cg_hudFont", "fonts/LiberationSans-Bold.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
 	{ &cg_hudFontBorder, "cg_hudFontBorder", "2", CVAR_ARCHIVE | CVAR_LATCH, RANGE_FLOAT( 0, 10 ) },

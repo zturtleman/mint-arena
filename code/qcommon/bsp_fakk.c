@@ -30,7 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // bsp_fakk.c -- FAKK/Alice BSP Level Loading
 
 #include "q_shared.h"
-//#include "qcommon.h"
+#include "qcommon.h"
 #include "bsp.h"
 
 // Implementation notes

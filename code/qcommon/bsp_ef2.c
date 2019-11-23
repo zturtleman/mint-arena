@@ -30,7 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // bsp_ef2.c -- Elite Force 2 BSP Level Loading (extended from FAKK)
 
 #include "q_shared.h"
-//#include "qcommon.h"
+#include "qcommon.h"
 #include "bsp.h"
 
 // Implementation notes

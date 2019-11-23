@@ -30,7 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // bsp_mohaa.c -- MoHAA BSP Level Loading, based on bsp_fakk.c and OpenMoHAA
 
 #include "q_shared.h"
-//#include "qcommon.h"
+#include "qcommon.h"
 #include "bsp.h"
 
 // Implementation notes

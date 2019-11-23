@@ -30,7 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // bsp_q3.c -- Q3/RTCW/ET/EF BSP Level Loading
 
 #include "q_shared.h"
-//#include "qcommon.h"
+#include "qcommon.h"
 #include "bsp.h"
 
 #define BSP_IDENT	(('P'<<24)+('S'<<16)+('B'<<8)+'I')

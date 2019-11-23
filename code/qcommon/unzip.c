@@ -42,7 +42,7 @@ woven in by Terry Thorsen 1/2003.
 
 
 #include "../qcommon/q_shared.h"
-//#include "../qcommon/qcommon.h"
+#include "../qcommon/qcommon.h"
 #include "unzip.h"
 
 #ifndef local

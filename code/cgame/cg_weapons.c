@@ -1230,7 +1230,11 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	}
 
 	// make sure we aren't looking at cg.cur_lc->predictedPlayerEntity for LG
-	nonPredictedCent = &cg_entities[cent->currentState.playerNum];
+	if ( cent == &cg.cur_lc->predictedPlayerEntity ) {
+		nonPredictedCent = &cg_entities[cent->currentState.playerNum];
+	} else {
+		nonPredictedCent = cent;
+	}
 
 	if ( !weapon->weaponModel || !weapon->flashModel ) {
 		// use default flash origin when no flash model
@@ -1252,7 +1256,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 			VectorCopy( nonPredictedCent->pe.flashOrigin, flash.origin );
 		}
 
-		if ( ( cg.cur_lc->predictedPlayerState.eFlags & EF_FIRING )
+		if ( ( nonPredictedCent->currentState.eFlags & EF_FIRING )
 			&& ( ps || cg.cur_lc->renderingThirdPerson
 					|| cent->currentState.number != cg.cur_lc->predictedPlayerState.playerNum ) ) {
 			// special hack for lightning gun...
@@ -1312,13 +1316,6 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		CG_PositionRotatedEntityOnTag( &barrel, &gun, weapon->weaponModel, "tag_barrel" );
 
 		CG_AddWeaponWithPowerups( &barrel, cent->currentState.powerups );
-	}
-
-	// if the index of the nonPredictedCent is not the same as the playerNum
-	// then this is a fake player (like on the single player podiums), so
-	// go ahead and use the cent
-	if( ( nonPredictedCent - cg_entities ) != cent->currentState.playerNum ) {
-		nonPredictedCent = cent;
 	}
 
 	memset( &flash, 0, sizeof( flash ) );

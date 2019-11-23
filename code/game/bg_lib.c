@@ -1732,6 +1732,7 @@ static int dopr (char *buffer, size_t maxlen, const char *format, va_list args)
       case 'E':
 	flags |= DP_F_UP;
       case 'e':
+	/* ZTM: TODO: %e is missing exponent notation */
 	if (cflags == DP_C_LDOUBLE)
 	  fvalue = va_arg (args, LDOUBLE);
 	else
@@ -1742,7 +1743,11 @@ static int dopr (char *buffer, size_t maxlen, const char *format, va_list args)
       case 'G':
 	flags |= DP_F_UP;
       case 'g':
-	flags |= DP_F_STRIP_TRAILING_ZEROS;
+	/* ZTM: TODO: Unlike %f, %g percision ("max" variable) isn't suppose
+	               to count leading zeros in value and suppose to switch
+	               to exponent notation if value has four leading zeros */
+	if (!(flags & DP_F_NUM))
+	  flags |= DP_F_STRIP_TRAILING_ZEROS;
 	if (cflags == DP_C_LDOUBLE)
 	  fvalue = va_arg (args, LDOUBLE);
 	else
@@ -2059,17 +2064,63 @@ static int fmtfp (char *buffer, size_t *currlen, size_t maxlen,
   {
     int i;
 
+#ifdef DEBUG_SNPRINTF_G_FORMAT
+    trap_Print( "    Before strip trailing zeros: " );
+
+    for (i = fplace-1; i >= 0; i--) {
+      char str[2];
+      str[0] = fconvert[i];
+      str[1] = '\0';
+      trap_Print( str );
+    }
+    trap_Print( "\n" );
+
+    trap_Print( "    Found non-zero at: " );
+#endif
+
     /* fconvert is reverse order... */
-    for ( i = 1; i < fplace && i < max; i++ ) {
-      if ( fconvert[fplace-i] == '0' || fconvert[fplace-i] == '\0' ) {
+    for (i = 0; i < fplace; i++)
+    {
+      if (fconvert[i] != '0')
+      {
+#ifdef DEBUG_SNPRINTF_G_FORMAT
+        char str[2];
+        str[0] = "0123456789abcdef"[i];
+        str[1] = '\0';
+        trap_Print( str );
+#endif
+
         break;
       }
     }
-    i--;
-    if ( i > 0 ) {
-      memmove( &fconvert[0], &fconvert[fplace-i], sizeof(char) * fplace-i );
+
+#ifdef DEBUG_SNPRINTF_G_FORMAT
+    trap_Print( "\n" );
+#endif
+
+    if (i == fplace)
+    {
+      /* fractional part is zero, don't display it */
+      max = fplace = 0;
     }
-    max = fplace = i;
+    else
+    {
+      max -= i;
+      fplace -= i;
+      memmove(&fconvert[0], &fconvert[i], sizeof(char) * (fplace+1));
+    }
+
+#ifdef DEBUG_SNPRINTF_G_FORMAT
+    trap_Print( "    After strip trailing zeros: " );
+
+    for (i = fplace-1; i >= 0; i--) {
+      char str[2];
+      str[0] = fconvert[i];
+      str[1] = '\0';
+      trap_Print( str );
+    }
+    trap_Print( "\n" );
+#endif
   }
 
   /* -1 for decimal point, another -1 if we are printing a sign */

@@ -279,7 +279,7 @@ void CG_SelectPrevPlayer( int localPlayerNum ) {
 	team = cg.snap->pss[ localPlayerNum ].persistant[PERS_TEAM];
 
 	CG_CheckOrderPending( localPlayerNum );
-	if (cg_currentSelectedPlayer[ localPlayerNum ].integer > 0 && cg_currentSelectedPlayer[ localPlayerNum ].integer < numSortedTeamPlayers[team]) {
+	if (cg_currentSelectedPlayer[ localPlayerNum ].integer > 0 && cg_currentSelectedPlayer[ localPlayerNum ].integer <= numSortedTeamPlayers[team]) {
 		cg_currentSelectedPlayer[ localPlayerNum ].integer--;
 	} else {
 		cg_currentSelectedPlayer[ localPlayerNum ].integer = numSortedTeamPlayers[team];

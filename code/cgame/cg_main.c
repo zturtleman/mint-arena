@@ -2393,7 +2393,7 @@ static void CG_FeederSelection(float feederID, int index) {
 static float CG_Cvar_Get(const char *cvar) {
 	char buff[128];
 	memset(buff, 0, sizeof(buff));
-	trap_Cvar_VariableStringBuffer(cvar, buff, sizeof(buff));
+	trap_Cvar_LatchedVariableStringBuffer(cvar, buff, sizeof(buff));
 	return atof(buff);
 }
 
@@ -2471,7 +2471,7 @@ void CG_LoadHudMenu( void ) {
 	cgDC.runScript = &CG_RunMenuScript;
 	cgDC.getTeamColor = &CG_GetTeamColor;
 	cgDC.setCVar = trap_Cvar_Set;
-	cgDC.getCVarString = trap_Cvar_VariableStringBuffer;
+	cgDC.getCVarString = trap_Cvar_LatchedVariableStringBuffer;
 	cgDC.getCVarValue = CG_Cvar_Get;
 	cgDC.drawTextWithCursor = &CG_Text_PaintWithCursor;
 	cgDC.setOverstrikeMode = &trap_Key_SetOverstrikeMode;

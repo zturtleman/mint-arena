@@ -47,6 +47,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define TRACEMAP_SIZE               256
 
 typedef struct tracemap_s {
+	char rawmapname[MAX_QPATH];
 	qboolean loaded;
 	float sky[TRACEMAP_SIZE][TRACEMAP_SIZE];
 	float skyground[TRACEMAP_SIZE][TRACEMAP_SIZE];
@@ -453,11 +454,32 @@ qboolean BG_LoadTraceMap( char *mapname, vec2_t world_mins, vec2_t world_maxs ) 
 	char rawmapname[MAX_QPATH];
 	//int startTime = trap_Milliseconds();
 
+	//
+	// Set tracemap world bounds
+	//
+	tracemap.world_mins[0] = world_mins[0];
+	tracemap.world_mins[1] = world_mins[1];
+	tracemap.world_maxs[0] = world_maxs[0];
+	tracemap.world_maxs[1] = world_maxs[1];
+
+	one_over_mapgrid_factor[0] = 1.f / ( ( tracemap.world_maxs[0] - tracemap.world_mins[0] ) / (float)TRACEMAP_SIZE );
+	one_over_mapgrid_factor[1] = 1.f / ( ( tracemap.world_maxs[1] - tracemap.world_mins[1] ) / (float)TRACEMAP_SIZE );
+
+	//
+	// Check if tracemap was already loaded
+	//
+	COM_StripExtension( mapname, rawmapname, sizeof (rawmapname) );
+	if ( !strcmp( tracemap.rawmapname, rawmapname ) ) {
+		return tracemap.loaded;
+	}
+	Q_strncpyz( tracemap.rawmapname, rawmapname, sizeof( tracemap.rawmapname ) );
+
+	//
+	// Read the tracemap
+	//
 	ground_min = ground_max = MIN_WORLD_HEIGHT;
 	skyground_min = skyground_max = MAX_WORLD_HEIGHT;
 	sky_min = sky_max = MAX_WORLD_HEIGHT;
-
-	COM_StripExtension( mapname, rawmapname, sizeof (rawmapname) );
 
 	if ( trap_FS_FOpenFile( va( "%s_tracemap.tga", Q_strlwr( rawmapname ) ), &f, FS_READ ) >= 0 ) {
 		// skip over header
@@ -607,14 +629,6 @@ qboolean BG_LoadTraceMap( char *mapname, vec2_t world_mins, vec2_t world_maxs ) 
 		Com_Printf("DEBUG: Failed to open tracemap %s\n", va( "%s_tracemap.tga", Q_strlwr( rawmapname ) ));
 		return( tracemap.loaded = qfalse );
 	}
-
-	tracemap.world_mins[0] = world_mins[0];
-	tracemap.world_mins[1] = world_mins[1];
-	tracemap.world_maxs[0] = world_maxs[0];
-	tracemap.world_maxs[1] = world_maxs[1];
-
-	one_over_mapgrid_factor[0] = 1.f / ( ( tracemap.world_maxs[0] - tracemap.world_mins[0] ) / (float)TRACEMAP_SIZE );
-	one_over_mapgrid_factor[1] = 1.f / ( ( tracemap.world_maxs[1] - tracemap.world_mins[1] ) / (float)TRACEMAP_SIZE );
 
 	tracemap.groundfloor = ground_min;
 	tracemap.groundceil = ground_max;

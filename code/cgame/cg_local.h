@@ -1939,8 +1939,9 @@ void CG_CheckGameSounds( void );
 //
 // cg_atmospheric.c
 //
-void CG_EffectParse(const char *effectstr);
-void CG_AddAtmosphericEffects(void);
+void CG_EffectParse( const char *effectstr );
+void CG_EffectParseForPlayer( int localPlayerNum, const char *effectstr );
+void CG_AddAtmosphericEffects( void );
 
 //
 // cg_polybus.c

@@ -98,7 +98,7 @@ endif
 export CROSS_COMPILING
 
 ifndef VERSION
-VERSION=1.0.2
+VERSION=1.0.3
 endif
 
 ifndef VM_PREFIX
@@ -856,6 +856,7 @@ makedirs:
 	@$(MKDIR) $(B)/$(MISSIONPACK)/game
 	@$(MKDIR) $(B)/$(MISSIONPACK)/ui
 	@$(MKDIR) $(B)/$(MISSIONPACK)/qcommon
+	@$(MKDIR) $(B)/$(MISSIONPACK)/q3ui
 	@$(MKDIR) $(B)/$(MISSIONPACK)/vm
 	@$(MKDIR) $(B)/tools/asm
 	@$(MKDIR) $(B)/tools/etc

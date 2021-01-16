@@ -1333,7 +1333,7 @@ UI_PlayerInfo_UpdateColor
 ===============
 */
 void UI_PlayerInfo_UpdateColor( uiPlayerInfo_t *pi ) {
-	CG_PlayerColorFromIndex( trap_Cvar_VariableIntegerValue( "color1" ), pi->color1 );
+	CG_PlayerColorFromIndex( trap_Cvar_VariableIntegerValue( Com_LocalPlayerCvarName( pi->localPlayerNum, "color1" ) ), pi->color1 );
 
 	pi->c1RGBA[0] = 255 * pi->color1[0];
 	pi->c1RGBA[1] = 255 * pi->color1[1];
@@ -1347,11 +1347,12 @@ void UI_PlayerInfo_UpdateColor( uiPlayerInfo_t *pi ) {
 UI_PlayerInfo_SetInfo
 ===============
 */
-void UI_PlayerInfo_SetInfo( uiPlayerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNumber, qboolean chat ) {
+void UI_PlayerInfo_SetInfo( uiPlayerInfo_t *pi, int localPlayerNum, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNumber, qboolean chat ) {
 	int			currentAnim;
 	weapon_t	weaponNum;
 
 	pi->chat = chat;
+	pi->localPlayerNum = localPlayerNum;
 
 	UI_PlayerInfo_UpdateColor( pi );
 

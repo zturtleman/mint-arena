@@ -1041,7 +1041,7 @@ static void UI_DrawPlayerModel(rectDef_t *rect) {
   	viewangles[ROLL]  = 0;
   	VectorClear( moveangles );
     UI_PlayerInfo_SetModel( &info, model, head, team);
-    UI_PlayerInfo_SetInfo( &info, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
+    UI_PlayerInfo_SetInfo( &info, 0, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
 //		UI_RegisterPlayerModelname( &info, model, head, team);
     updateModel = qfalse;
     updateModelColor = qfalse; // playerinfo setinfo calls updatecolor
@@ -1188,7 +1188,7 @@ static void UI_DrawOpponent(rectDef_t *rect) {
   	viewangles[ROLL]  = 0;
   	VectorClear( moveangles );
     UI_PlayerInfo_SetModel( &info2, model, headmodel, "");
-    UI_PlayerInfo_SetInfo( &info2, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
+    UI_PlayerInfo_SetInfo( &info2, 0, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
 		UI_RegisterPlayerModelname( &info2, model, headmodel, team);
     updateOpponentModel = qfalse;
   }

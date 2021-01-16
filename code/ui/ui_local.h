@@ -197,11 +197,13 @@ typedef struct {
 	int				barrelTime;
 
 	int				realWeapon;
+
+	int				localPlayerNum;
 } uiPlayerInfo_t;
 
 void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int time );
 void UI_PlayerInfo_SetModel( uiPlayerInfo_t *pi, const char *model, const char *headmodel, char *teamName );
-void UI_PlayerInfo_SetInfo( uiPlayerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNum, qboolean chat );
+void UI_PlayerInfo_SetInfo( uiPlayerInfo_t *pi, int localPlayerNum, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNum, qboolean chat );
 void UI_PlayerInfo_UpdateColor( uiPlayerInfo_t *pi );
 qboolean UI_RegisterPlayerModelname( uiPlayerInfo_t *pi, const char *modelSkinName , const char *headName, const char *teamName);
 

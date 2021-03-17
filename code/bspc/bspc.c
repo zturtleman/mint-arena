@@ -92,6 +92,7 @@ qboolean	capsule_collision = 0;
 void AASOuputFile(quakefile_t *qf, char *outputpath, char *filename)
 {
 	char ext[MAX_PATH];
+	char *period;
 
 	//
 	if (strlen(outputpath))
@@ -126,12 +127,11 @@ void AASOuputFile(quakefile_t *qf, char *outputpath, char *filename)
 	else
 	{
 		strcpy(filename, qf->filename);
-		while(strlen(filename) &&
-				filename[strlen(filename)-1] != '.')
-		{
-			filename[strlen(filename)-1] = '\0';
-		} //end while
-		strcat(filename, "aas");
+		//remove extension
+		period = strrchr(filename, '.');
+		if (period) *period = '\0';
+		//append .aas
+		strcat(filename, ".aas");
 	} //end else
 } //end of the function AASOutputFile
 //===========================================================================

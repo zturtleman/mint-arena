@@ -1231,7 +1231,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 	// make sure we aren't looking at cg.cur_lc->predictedPlayerEntity for LG
 	if ( cent == &cg.cur_lc->predictedPlayerEntity ) {
-		nonPredictedCent = &cg_entities[cent->currentState.playerNum];
+		nonPredictedCent = &cg_entities[cent->currentState.number];
 	} else {
 		nonPredictedCent = cent;
 	}

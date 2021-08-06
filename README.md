@@ -1,4 +1,4 @@
-![Build](https://github.com/zturtleman/spearmint/workflows/Build/badge.svg)
+![Build](https://github.com/KuehnhammerTobias/mint-arena/workflows/Build/badge.svg)
 
 **Spearmint Quake 3** and **Team Arena** game code.
 

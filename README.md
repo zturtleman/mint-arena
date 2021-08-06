@@ -1,3 +1,5 @@
+![Build](https://github.com/zturtleman/spearmint/workflows/Build/badge.svg)
+
 **Spearmint Quake 3** and **Team Arena** game code.
 
 To use this you'll need the [Spearmint engine](https://github.com/zturtleman/spearmint).

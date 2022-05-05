@@ -39,6 +39,10 @@ USER INTERFACE MAIN
 
 #include "ui_local.h"
 
+// Called by CG_LoadHud_f() but only matters for missionpack UI.
+void UI_Load( void ) {
+
+}
 
 qboolean UI_WantsBindKeys( void ) {
 	return Controls_WantsBindKeys();

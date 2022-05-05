@@ -3272,14 +3272,17 @@ static bind_t g_bindings[] =
 	{"weapon 7",		 '7',					-1,		-1, -1},
 	{"weapon 8",		 '8',					-1,		-1, -1},
 	{"weapon 9",		 '9',					-1,		-1, -1},
+#ifdef MISSIONPACK
 	{"weapon 10",		 '0',					-1,		-1, -1},
 	{"weapon 11",		 -1,					-1,		-1, -1},
 	{"weapon 12",		 -1,					-1,		-1, -1},
 	{"weapon 13",		 -1,					-1,		-1, -1},
+#endif
 	{"+attack", 		 K_LEFTCTRL,	K_RIGHTCTRL,		-1, -1},
 	{"weapprev",		 '[',					-1,		-1, -1},
 	{"weapnext", 		 ']',					-1,		-1, -1},
 	{"+button3", 		 K_MOUSE3,			-1,		-1, -1},
+#ifdef MISSIONPACK
 	{"+button4", 		 K_MOUSE4,			-1,		-1, -1},
 	{"prevTeamMember", 'w',					-1,		-1, -1},
 	{"nextTeamMember", 'r',					-1,		-1, -1},
@@ -3300,6 +3303,7 @@ static bind_t g_bindings[] =
 	{"tauntTaunt", K_F3,			-1,		-1, -1},
 	{"tauntDeathInsult", K_F4,			-1,		-1, -1},
 	{"tauntGauntlet", K_F5,			-1,		-1, -1},
+#endif
 	{"scoresUp", K_KP_PGUP,			-1,		-1, -1},
 	{"scoresDown", K_KP_PGDN,			-1,		-1, -1},
 	{"messagemode",  -1,					-1,		-1, -1},

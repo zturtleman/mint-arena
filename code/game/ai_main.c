@@ -1408,8 +1408,10 @@ void BotInputToUserCommand(bot_input_t *bi, usercmd_t *ucmd, int delta_angles[3]
 	if (bi->actionflags & ACTION_MOVERIGHT) ucmd->rightmove = 127;
 	//jump/moveup
 	if (bi->actionflags & ACTION_JUMP) ucmd->upmove = 127;
+	if (bi->actionflags & ACTION_MOVEUP) ucmd->upmove = 127;
 	//crouch/movedown
 	if (bi->actionflags & ACTION_CROUCH) ucmd->upmove = -127;
+	if (bi->actionflags & ACTION_MOVEDOWN) ucmd->upmove = -127;
 }
 
 /*

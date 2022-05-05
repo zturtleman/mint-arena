@@ -33,7 +33,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "cg_local.h"
 #include "../ui/ui_public.h"
-#ifdef MISSIONPACK
+#if defined MISSIONPACK || defined MISSIONPACK_HUD
 #include "../ui/ui_shared.h"
 #endif
 #ifdef MISSIONPACK_HUD
@@ -754,7 +754,9 @@ static void CG_VoiceTellAttacker_f( int localPlayerNum ) {
 	Com_sprintf( command, sizeof( command ), "%s %i %s", Com_LocalPlayerCvarName( localPlayerNum, "vtell" ), playerNum, message );
 	trap_SendClientCommand( command );
 }
+#endif
 
+#ifdef MISSIONPACK_HUD
 static void CG_NextTeamMember_f( int localPlayerNum ) {
   CG_SelectNextPlayer( localPlayerNum );
 }
@@ -762,14 +764,19 @@ static void CG_NextTeamMember_f( int localPlayerNum ) {
 static void CG_PrevTeamMember_f( int localPlayerNum ) {
   CG_SelectPrevPlayer( localPlayerNum );
 }
+#endif
+
+#ifdef MISSIONPACK
 
 // ASS U ME's enumeration order as far as task specific orders, OFFENSE is zero, CAMP is last
 //
 static void CG_NextOrder_f( int localPlayerNum ) {
 	localPlayer_t	*player;
+#ifdef MISSIONPACK_HUD
 	playerInfo_t	*pi;
 	int				playerNum;
 	int				team;
+#endif
 
 	player = &cg.localPlayers[ localPlayerNum ];
 
@@ -777,6 +784,7 @@ static void CG_NextOrder_f( int localPlayerNum ) {
 		return;
 	}
 
+#ifdef MISSIONPACK_HUD
 	playerNum = cg.snap->pss[ localPlayerNum ].playerNum;
 	team = cg.snap->pss[ localPlayerNum ].persistant[PERS_TEAM];
 
@@ -787,6 +795,7 @@ static void CG_NextOrder_f( int localPlayerNum ) {
 			return;
 		}
 	}
+#endif
 	if (player->currentOrder < TEAMTASK_CAMP) {
 		player->currentOrder++;
 
@@ -1574,9 +1583,9 @@ static consoleCommand_t	cg_commands[] = {
 #ifdef MISSIONPACK
 	{ "spWin", CG_spWin_f, CMD_INGAME },
 	{ "spLose", CG_spLose_f, CMD_INGAME },
+#endif
 #ifdef MISSIONPACK_HUD
 	{ "loadhud", CG_LoadHud_f, CMD_INGAME },
-#endif
 #endif
 	{ "startOrbit", CG_StartOrbit_f, CMD_INGAME },
 	//{ "camera", CG_Camera_f, CMD_INGAME },
@@ -1684,8 +1693,12 @@ static playerConsoleCommand_t	playerCommands[] = {
 #ifdef MISSIONPACK
 	{ "vtell_target", CG_VoiceTellTarget_f, CMD_INGAME, CG_VoiceSayComplete },
 	{ "vtell_attacker", CG_VoiceTellAttacker_f, CMD_INGAME, CG_VoiceSayComplete },
+#endif
+#ifdef MISSIONPACK_HUD
 	{ "nextTeamMember", CG_NextTeamMember_f, CMD_INGAME },
 	{ "prevTeamMember", CG_PrevTeamMember_f, CMD_INGAME },
+#endif
+#ifdef MISSIONPACK
 	{ "nextOrder", CG_NextOrder_f, CMD_INGAME },
 	{ "confirmOrder", CG_ConfirmOrder_f, CMD_INGAME },
 	{ "denyOrder", CG_DenyOrder_f, CMD_INGAME },

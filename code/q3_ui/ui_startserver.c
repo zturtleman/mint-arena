@@ -894,7 +894,10 @@ static void ServerOptions_Start( void ) {
 	// the wait commands will allow the dedicated to take effect
 	info = UI_GetArenaInfoByNumber( s_startserver.maplist[ s_startserver.currentmap ]);
 	trap_Cmd_ExecuteText( EXEC_APPEND, va( "wait ; wait ; map %s\n", Info_ValueForKey( info, "map" )));
-
+	// remove bots
+	if ( trap_Cvar_VariableValue("sv_running") ) {
+		trap_Cmd_ExecuteText( EXEC_APPEND, "kickbots\n" );
+	}
 	// add bots
 	trap_Cmd_ExecuteText( EXEC_APPEND, "wait 3\n" );
 	for( n = 1; n < PLAYER_SLOTS; n++ ) {

@@ -31,7 +31,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "cg_local.h"
 #include "../ui/ui_shared.h"
 
-#ifdef MISSIONPACK
+#if defined MISSIONPACK || defined MISSIONPACK_HUD
 
 #ifdef MISSIONPACK_HUD
 extern displayContextDef_t cgDC;
@@ -146,6 +146,7 @@ void CG_SetPrintString(q3print_t type, const char *p) {
   }
 }
 
+#ifdef MISSIONPACK
 void CG_CheckOrderPending( int localPlayerNum ) {
 	localPlayer_t *localPlayer;
 
@@ -172,7 +173,11 @@ void CG_CheckOrderPending( int localPlayerNum ) {
 
 		playerNum = cg.snap->pss[localPlayerNum].playerNum;
 		team = cg.snap->pss[localPlayerNum].persistant[PERS_TEAM];
+#ifdef MISSIONPACK_HUD
 		selectedPlayer = cg_currentSelectedPlayer[localPlayerNum].integer;
+#else
+		selectedPlayer = playerNum;
+#endif
 
 		//pi = cgs.playerinfo + sortedTeamPlayers[team][selectedPlayer];
 
@@ -231,7 +236,9 @@ void CG_CheckOrderPending( int localPlayerNum ) {
 		localPlayer->orderPending = qfalse;
 	}
 }
+#endif
 
+#ifdef MISSIONPACK_HUD
 static void CG_SetSelectedPlayerName( int localPlayerNum ) {
 	int team;
 
@@ -264,7 +271,9 @@ void CG_SelectNextPlayer( int localPlayerNum ) {
 
 	team = cg.snap->pss[ localPlayerNum ].persistant[PERS_TEAM];
 
+#ifdef MISSIONPACK
 	CG_CheckOrderPending( localPlayerNum );
+#endif
 	if (cg_currentSelectedPlayer[ localPlayerNum ].integer >= 0 && cg_currentSelectedPlayer[ localPlayerNum ].integer < numSortedTeamPlayers[team]) {
 		cg_currentSelectedPlayer[ localPlayerNum ].integer++;
 	} else {
@@ -278,7 +287,9 @@ void CG_SelectPrevPlayer( int localPlayerNum ) {
 
 	team = cg.snap->pss[ localPlayerNum ].persistant[PERS_TEAM];
 
+#ifdef MISSIONPACK
 	CG_CheckOrderPending( localPlayerNum );
+#endif
 	if (cg_currentSelectedPlayer[ localPlayerNum ].integer > 0 && cg_currentSelectedPlayer[ localPlayerNum ].integer <= numSortedTeamPlayers[team]) {
 		cg_currentSelectedPlayer[ localPlayerNum ].integer--;
 	} else {
@@ -288,7 +299,6 @@ void CG_SelectPrevPlayer( int localPlayerNum ) {
 }
 
 
-#ifdef MISSIONPACK_HUD
 static void CG_DrawPlayerArmorIcon( rectDef_t *rect, qboolean draw2D ) {
 	vec3_t		angles;
 	vec3_t		origin;
@@ -477,6 +487,7 @@ static void CG_DrawSelectedPlayerArmor( rectDef_t *rect, float scale, vec4_t col
  	}
 }
 
+#ifdef MISSIONPACK
 qhandle_t CG_StatusHandle(int task) {
 	qhandle_t h;
 	switch (task) {
@@ -538,6 +549,7 @@ static void CG_DrawPlayerStatus( rectDef_t *rect ) {
 		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, h);
 	}
 }
+#endif
 
 
 static void CG_DrawSelectedPlayerName( rectDef_t *rect, float scale, vec4_t color, qboolean voice, int textStyle) {
@@ -545,7 +557,16 @@ static void CG_DrawSelectedPlayerName( rectDef_t *rect, float scale, vec4_t colo
 	int team;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	pi = cgs.playerinfo + ((voice) ? cg.cur_lc->currentVoicePlayerNum : sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localPlayerNum )]);
+
+#ifdef MISSIONPACK
+	if ( voice ) {
+		pi = cgs.playerinfo + cg.cur_lc->currentVoicePlayerNum;
+	} else
+#endif
+	{
+		pi = cgs.playerinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localPlayerNum )];
+	}
+
 	if (pi) {
 		CG_Text_Paint(rect->x, rect->y + rect->h, scale, color, pi->name, 0, 0, textStyle);
 	}
@@ -674,7 +695,14 @@ static void CG_DrawSelectedPlayerHead( rectDef_t *rect, qboolean draw2D, qboolea
 	vec3_t			mins, maxs, angles;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
-	pi = cgs.playerinfo + ((voice) ? cg.cur_lc->currentVoicePlayerNum : sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localPlayerNum )]);
+#ifdef MISSIONPACK
+	if ( voice ) {
+		pi = cgs.playerinfo + cg.cur_lc->currentVoicePlayerNum;
+	} else
+#endif
+	{
+		pi = cgs.playerinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localPlayerNum )];
+	}
 
 	if (pi) {
 		if ( cg_draw3dIcons.integer ) {
@@ -764,11 +792,19 @@ static void CG_DrawBlueScore(rectDef_t *rect, float scale, vec4_t color, qhandle
 
 // FIXME: team name support
 static void CG_DrawRedName(rectDef_t *rect, float scale, vec4_t color, int textStyle ) {
+#ifdef MISSIONPACK
   CG_Text_Paint(rect->x, rect->y + rect->h, scale, color, cg_redTeamName.string , 0, 0, textStyle);
+#else
+  CG_Text_Paint(rect->x, rect->y + rect->h, scale, color, "Red Team", 0, 0, textStyle);
+#endif
 }
 
 static void CG_DrawBlueName(rectDef_t *rect, float scale, vec4_t color, int textStyle ) {
+#ifdef MISSIONPACK
   CG_Text_Paint(rect->x, rect->y + rect->h, scale, color, cg_blueTeamName.string, 0, 0, textStyle);
+#else
+  CG_Text_Paint(rect->x, rect->y + rect->h, scale, color, "Blue Team", 0, 0, textStyle);
+#endif
 }
 
 static void CG_DrawBlueFlagName(rectDef_t *rect, float scale, vec4_t color, int textStyle ) {
@@ -782,6 +818,7 @@ static void CG_DrawBlueFlagName(rectDef_t *rect, float scale, vec4_t color, int 
 }
 
 static void CG_DrawBlueFlagStatus(rectDef_t *rect, qhandle_t shader) {
+#ifdef MISSIONPACK
 	if (cgs.gametype != GT_CTF && cgs.gametype != GT_1FCTF) {
 		if (cgs.gametype == GT_HARVESTER) {
 		  vec4_t color = {0, 0, 1, 1};
@@ -791,6 +828,11 @@ static void CG_DrawBlueFlagStatus(rectDef_t *rect, qhandle_t shader) {
 		}
 		return;
 	}
+#else
+	if (cgs.gametype != GT_CTF) {
+		return;
+	}
+#endif
   if (shader) {
 		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, shader );
   } else {
@@ -832,6 +874,7 @@ static void CG_DrawRedFlagName(rectDef_t *rect, float scale, vec4_t color, int t
 }
 
 static void CG_DrawRedFlagStatus(rectDef_t *rect, qhandle_t shader) {
+#ifdef MISSIONPACK
 	if (cgs.gametype != GT_CTF && cgs.gametype != GT_1FCTF) {
 		if (cgs.gametype == GT_HARVESTER) {
 		  vec4_t color = {1, 0, 0, 1};
@@ -841,6 +884,11 @@ static void CG_DrawRedFlagStatus(rectDef_t *rect, qhandle_t shader) {
 		}
 		return;
 	}
+#else
+	if (cgs.gametype != GT_CTF) {
+		return;
+	}
+#endif
   if (shader) {
 		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, shader );
   } else {
@@ -871,6 +919,7 @@ static void CG_DrawRedFlagHead(rectDef_t *rect) {
   }
 }
 
+#ifdef MISSIONPACK
 static void CG_HarvesterSkulls(rectDef_t *rect, float scale, vec4_t color, qboolean force2D, int textStyle ) {
 	char num[16];
 	vec3_t origin, angles;
@@ -951,6 +1000,7 @@ static void CG_DrawCTFPowerUp(rectDef_t *rect) {
 		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, cg_items[ value ].icon );
 	}
 }
+#endif
 
 
 
@@ -1090,50 +1140,54 @@ float CG_GetValue(int ownerDraw) {
 #endif // MISSIONPACK_HUD
 
 qboolean CG_OtherTeamHasFlag(void) {
-	if (cgs.gametype == GT_CTF || cgs.gametype == GT_1FCTF) {
+	if (cgs.gametype == GT_CTF) {
 		int team = cg.cur_ps->persistant[PERS_TEAM];
-		if (cgs.gametype == GT_1FCTF) {
-			if (team == TEAM_RED && cgs.flagStatus == FLAG_TAKEN_BLUE) {
-				return qtrue;
-			} else if (team == TEAM_BLUE && cgs.flagStatus == FLAG_TAKEN_RED) {
-				return qtrue;
-			} else {
-				return qfalse;
-			}
+		if (team == TEAM_RED && cgs.redflag == FLAG_TAKEN) {
+			return qtrue;
+		} else if (team == TEAM_BLUE && cgs.blueflag == FLAG_TAKEN) {
+			return qtrue;
 		} else {
-			if (team == TEAM_RED && cgs.redflag == FLAG_TAKEN) {
-				return qtrue;
-			} else if (team == TEAM_BLUE && cgs.blueflag == FLAG_TAKEN) {
-				return qtrue;
-			} else {
-				return qfalse;
-			}
+			return qfalse;
 		}
 	}
+#ifdef MISSIONPACK
+	if (cgs.gametype == GT_1FCTF) {
+		int team = cg.cur_ps->persistant[PERS_TEAM];
+		if (team == TEAM_RED && cgs.flagStatus == FLAG_TAKEN_BLUE) {
+			return qtrue;
+		} else if (team == TEAM_BLUE && cgs.flagStatus == FLAG_TAKEN_RED) {
+			return qtrue;
+		} else {
+			return qfalse;
+		}
+	}
+#endif
 	return qfalse;
 }
 
 qboolean CG_YourTeamHasFlag(void) {
-	if (cgs.gametype == GT_CTF || cgs.gametype == GT_1FCTF) {
+	if (cgs.gametype == GT_CTF) {
 		int team = cg.cur_ps->persistant[PERS_TEAM];
-		if (cgs.gametype == GT_1FCTF) {
-			if (team == TEAM_RED && cgs.flagStatus == FLAG_TAKEN_RED) {
-				return qtrue;
-			} else if (team == TEAM_BLUE && cgs.flagStatus == FLAG_TAKEN_BLUE) {
-				return qtrue;
-			} else {
-				return qfalse;
-			}
+		if (team == TEAM_RED && cgs.blueflag == FLAG_TAKEN) {
+			return qtrue;
+		} else if (team == TEAM_BLUE && cgs.redflag == FLAG_TAKEN) {
+			return qtrue;
 		} else {
-			if (team == TEAM_RED && cgs.blueflag == FLAG_TAKEN) {
-				return qtrue;
-			} else if (team == TEAM_BLUE && cgs.redflag == FLAG_TAKEN) {
-				return qtrue;
-			} else {
-				return qfalse;
-			}
+			return qfalse;
 		}
 	}
+#ifdef MISSIONPACK
+	if (cgs.gametype == GT_1FCTF) {
+		int team = cg.cur_ps->persistant[PERS_TEAM];
+		if (team == TEAM_RED && cgs.flagStatus == FLAG_TAKEN_RED) {
+			return qtrue;
+		} else if (team == TEAM_BLUE && cgs.flagStatus == FLAG_TAKEN_BLUE) {
+			return qtrue;
+		} else {
+			return qfalse;
+		}
+	}
+#endif
 	return qfalse;
 }
 
@@ -1180,19 +1234,25 @@ qboolean CG_OwnerDrawVisible(int flags) {
 	}
 
 	if (flags & CG_SHOW_HARVESTER) {
+#ifdef MISSIONPACK
 		if( cgs.gametype == GT_HARVESTER ) {
 			return qtrue;
-    } else {
-      return qfalse;
-    }
+		} else
+#endif
+		{
+			return qfalse;
+		}
 	}
 
 	if (flags & CG_SHOW_ONEFLAG) {
+#ifdef MISSIONPACK
 		if( cgs.gametype == GT_1FCTF ) {
 			return qtrue;
-    } else {
-      return qfalse;
-    }
+		} else
+#endif
+		{
+			return qfalse;
+		}
 	}
 
 	if (flags & CG_SHOW_CTF) {
@@ -1202,11 +1262,14 @@ qboolean CG_OwnerDrawVisible(int flags) {
 	}
 
 	if (flags & CG_SHOW_OBELISK) {
+#ifdef MISSIONPACK
 		if( cgs.gametype == GT_OBELISK ) {
 			return qtrue;
-    } else {
-      return qfalse;
-    }
+		} else
+#endif
+		{
+			return qfalse;
+		}
 	}
 
 	if (flags & CG_SHOW_HEALTHCRITICAL) {
@@ -1237,9 +1300,14 @@ qboolean CG_OwnerDrawVisible(int flags) {
 	}
 
 	if (flags & CG_SHOW_IF_PLAYER_HAS_FLAG) {
-		if (cg.cur_ps->powerups[PW_REDFLAG] || cg.cur_ps->powerups[PW_BLUEFLAG] || cg.cur_ps->powerups[PW_NEUTRALFLAG]) {
+		if (cg.cur_ps->powerups[PW_REDFLAG] || cg.cur_ps->powerups[PW_BLUEFLAG]) {
 			return qtrue;
 		}
+#ifdef MISSIONPACK
+		if (cg.cur_ps->powerups[PW_NEUTRALFLAG]) {
+			return qtrue;
+		}
+#endif
 	}
 	return qfalse;
 }
@@ -1347,7 +1415,9 @@ void CG_DrawNewTeamInfo(rectDef_t *rect, float text_x, float text_y, float scale
 	float pwidth, lwidth, maxx, leftOver;
 	playerInfo_t *pi;
 	gitem_t	*item;
+#ifdef MISSIONPACK
 	qhandle_t h;
+#endif
 	int team;
 
 	team = cg.cur_ps->persistant[PERS_TEAM];
@@ -1422,6 +1492,7 @@ void CG_DrawNewTeamInfo(rectDef_t *rect, float text_x, float text_y, float scale
 #endif
 
 			trap_R_SetColor(NULL);
+#ifdef MISSIONPACK
 			if (cg.cur_lc->orderPending) {
 				// blink the icon
 				if ( cg.time > cg.cur_lc->orderTime - 2500 && (cg.time >> 9 ) & 1 ) {
@@ -1436,6 +1507,7 @@ void CG_DrawNewTeamInfo(rectDef_t *rect, float text_x, float text_y, float scale
 			if (h) {
 				CG_DrawPic( xx, y, PIC_WIDTH, PIC_WIDTH, h);
 			}
+#endif
 
 			xx += PIC_WIDTH + 1;
 
@@ -1599,6 +1671,7 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
   case CG_SELECTEDPLAYER_HEAD:
     CG_DrawSelectedPlayerHead(&rect, ownerDrawFlags & CG_SHOW_2DONLY, qfalse);
     break;
+#ifdef MISSIONPACK
   case CG_VOICE_HEAD:
     CG_DrawSelectedPlayerHead(&rect, ownerDrawFlags & CG_SHOW_2DONLY, qtrue);
     break;
@@ -1608,6 +1681,7 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
   case CG_SELECTEDPLAYER_STATUS:
     CG_DrawSelectedPlayerStatus(&rect);
     break;
+#endif
   case CG_SELECTEDPLAYER_ARMOR:
     CG_DrawSelectedPlayerArmor(&rect, scale, color, shader, textStyle);
     break;
@@ -1668,6 +1742,7 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
   case CG_RED_FLAGNAME:
     CG_DrawRedFlagName(&rect, scale, color, textStyle);
     break;
+#ifdef MISSIONPACK
   case CG_HARVESTER_SKULLS:
     CG_HarvesterSkulls(&rect, scale, color, qfalse, textStyle);
     break;
@@ -1677,21 +1752,26 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
   case CG_ONEFLAG_STATUS:
     CG_OneFlagStatus(&rect);
     break;
+#endif
   case CG_PLAYER_LOCATION:
     CG_DrawPlayerLocation(&rect, scale, color, textStyle);
     break;
   case CG_TEAM_COLOR:
     CG_DrawTeamColor(&rect, color);
     break;
+#ifdef MISSIONPACK
   case CG_CTF_POWERUP:
     CG_DrawCTFPowerUp(&rect);
     break;
+#endif
   case CG_AREA_POWERUP:
 		CG_DrawAreaPowerUp(&rect, align, special, scale, color);
     break;
+#ifdef MISSIONPACK
   case CG_PLAYER_STATUS:
     CG_DrawPlayerStatus(&rect);
     break;
+#endif
   case CG_PLAYER_HASFLAG:
     CG_DrawPlayerHasFlag(&rect, qfalse);
     break;

@@ -813,7 +813,7 @@ typedef struct {
 	int			teamScores[2];
 	score_t		scores[MAX_CLIENTS];
 	clientList_t	readyPlayers;
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	char			spectatorList[MAX_STRING_CHARS];		// list of names
 	int				spectatorTime;							// last time offset
 	float			spectatorOffset;						// current offset from start
@@ -1026,7 +1026,6 @@ typedef struct {
 	qhandle_t	invulnerabilityJuicedModel;
 	qhandle_t	medkitUsageModel;
 	qhandle_t	dustPuffShader;
-	qhandle_t	heartShader;
 	qhandle_t	invulnerabilityPowerupModel;
 #endif
 
@@ -1186,17 +1185,22 @@ typedef struct {
 	qhandle_t teamLeaderShader;
 	qhandle_t retrieveShader;
 	qhandle_t escortShader;
-	qhandle_t flagShaders[3];
 	sfxHandle_t	countPrepareTeamSound;
 
 	sfxHandle_t ammoregenSound;
 	sfxHandle_t doublerSound;
 	sfxHandle_t guardSound;
 	sfxHandle_t scoutSound;
+#endif
 
+#ifdef MISSIONPACK_HUD
 	qhandle_t cursor;
 	qhandle_t selectCursor;
 	qhandle_t sizeCursor;
+	qhandle_t heartShader;
+#endif
+#if defined MISSIONPACK || defined MISSIONPACK_HUD
+	qhandle_t flagShaders[3];
 #endif
 
 	sfxHandle_t	regenSound;
@@ -1324,6 +1328,7 @@ extern	vmCvar_t		cg_dedicated;
 
 extern	vmCvar_t		cg_centertime;
 extern	vmCvar_t		cg_viewbob;
+extern	vmCvar_t		cg_viewkick;
 extern	vmCvar_t		cg_runpitch;
 extern	vmCvar_t		cg_runroll;
 extern	vmCvar_t		cg_bobup;
@@ -1488,7 +1493,7 @@ extern	vmCvar_t		cg_thirdPersonAngle[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_thirdPersonHeight[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_thirdPersonSmooth[MAX_SPLITVIEW];
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 extern	vmCvar_t		cg_currentSelectedPlayer[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_currentSelectedPlayerName[MAX_SPLITVIEW];
 #endif
@@ -1530,7 +1535,9 @@ void CG_JoystickHatEvent( int localPlayerNum, int hat, int value, unsigned time,
 void CG_EventHandling(int type);
 void CG_RankRunFrame( void );
 score_t *CG_GetSelectedScore( void );
+#ifdef MISSIONPACK_HUD
 void CG_BuildSpectatorString( void );
+#endif
 
 void CG_RemoveNotifyLine( localPlayer_t *player );
 void CG_AddNotifyText( int realTime, qboolean restoredText );
@@ -1673,11 +1680,15 @@ void CG_GetTeamColor(vec4_t *color);
 const char *CG_GetGameStatusText( void );
 const char *CG_GetKillerText( void );
 void CG_Draw3DModel(float x, float y, float w, float h, qhandle_t model, cgSkin_t *skin, vec3_t origin, vec3_t angles);
+#ifdef MISSIONPACK
 void CG_CheckOrderPending( int localPlayerNum );
+#endif
 const char *CG_GameTypeString( void );
 qboolean CG_YourTeamHasFlag( void );
 qboolean CG_OtherTeamHasFlag( void );
+#ifdef MISSIONPACK
 qhandle_t CG_StatusHandle(int task);
+#endif
 qboolean CG_AnyScoreboardShowing( void );
 
 

@@ -256,6 +256,7 @@ GRAPHICS OPTIONS MENU
 #define ID_SOUND		108
 #define ID_NETWORK		109
 #define ID_RATIO		110
+#define ID_FPS			111
 
 typedef struct {
 	menuframework_s	menu;
@@ -272,6 +273,7 @@ typedef struct {
 	menulist_s		list;
 	menulist_s		ratio;
 	menulist_s		mode;
+	menulist_s		fps;
 	menulist_s		driver;
 	menulist_s		tq;
 	menulist_s  	fs;
@@ -300,6 +302,7 @@ typedef struct
 	int filter;
 	int multisample;
 	qboolean flares;
+	int fps;
 } InitialVideoOptions_s;
 
 static InitialVideoOptions_s	s_ivo;
@@ -309,27 +312,27 @@ static InitialVideoOptions_s s_ivo_templates[] =
 {
 	// very high
 	{
-		6, qtrue, 3, 0, 2, 2, 4, 5, 2, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
+		6, qtrue, 3, 0, 2, 2, 4, 5, 2, qtrue, 4	// Note: If r_availableModes is found, mode is changed to -2.
 	},
 	// high
 	{
-		6, qtrue, 3, 0, 2, 2, 3, 2, 1, qtrue
+		6, qtrue, 3, 0, 2, 2, 3, 2, 1, qtrue, 4
 	},
 	// normal
 	{
-		6, qtrue, 3, 0, 0, 2, 2, 1, 0, qtrue
+		6, qtrue, 3, 0, 0, 2, 2, 1, 0, qtrue, 3
 	},
 	// fast
 	{
-		4, qtrue, 2, 0, 1, 0, 1, 0, 0, qfalse
+		4, qtrue, 2, 0, 1, 0, 1, 0, 0, qfalse, 3
 	},
 	// fastest
 	{
-		3, qtrue, 1, 1, 1, 0, 0, 0, 0, qfalse
+		3, qtrue, 1, 1, 1, 0, 0, 0, 0, qfalse, 3
 	},
 	// custom
 	{
-		3, qtrue, 1, 0, 0, 0, 1, 0, 0, qfalse
+		3, qtrue, 1, 0, 0, 0, 1, 0, 0, qfalse, 3
 	}
 };
 
@@ -373,6 +376,7 @@ static int resToRatio[ MAX_RESOLUTIONS ];
 
 static char resbuf[ MAX_STRING_CHARS ];
 static const char* detectedResolutions[ MAX_RESOLUTIONS ];
+static char currentResolution[ 20 ];
 
 static const char** resolutions = builtinResolutions;
 static qboolean resolutionsDetected = qfalse;
@@ -514,6 +518,7 @@ static void GraphicsOptions_GetInitialVideo( void )
 	s_ivo.colordepth  = s_graphicsoptions.colordepth.curvalue;
 	s_ivo.mode        = s_graphicsoptions.mode.curvalue;
 	s_ivo.fullscreen  = s_graphicsoptions.fs.curvalue;
+	s_ivo.fps         = s_graphicsoptions.fps.curvalue;
 	s_ivo.tq          = s_graphicsoptions.tq.curvalue;
 	s_ivo.lighting    = s_graphicsoptions.lighting.curvalue;
 	s_ivo.flares      = s_graphicsoptions.flares.curvalue;
@@ -523,7 +528,7 @@ static void GraphicsOptions_GetInitialVideo( void )
 	s_ivo.texturebits = s_graphicsoptions.texturebits.curvalue;
 
 #if 0
-	Com_Printf( "DEBUG: s_ivo = { %d, %d, %d, %d, %d, %d, %d, %d, %d, %s }\n",
+	Com_Printf( "DEBUG: s_ivo = { %d, %d, %d, %d, %d, %d, %d, %d, %d, %s, %d }\n",
 			s_ivo.mode,
 			s_ivo.fullscreen,
 			s_ivo.tq,
@@ -533,7 +538,8 @@ static void GraphicsOptions_GetInitialVideo( void )
 			s_ivo.geometry,
 			s_ivo.filter,
 			s_ivo.multisample,
-			s_ivo.flares ? "qtrue" : "qfalse"
+			s_ivo.flares ? "qtrue" : "qfalse",
+			s_ivo.fps
 			);
 #endif
 }
@@ -545,7 +551,7 @@ GraphicsOptions_GetResolutions
 */
 static void GraphicsOptions_GetResolutions( void )
 {
-	Q_strncpyz(resbuf, CG_Cvar_VariableString("r_availableModes"), sizeof(resbuf));
+	trap_Cvar_VariableStringBuffer("r_availableModes", resbuf, sizeof(resbuf));
 	if(*resbuf)
 	{
 		char* s = resbuf;
@@ -568,11 +574,26 @@ static void GraphicsOptions_GetResolutions( void )
 		}
 		detectedResolutions[ i ] = NULL;
 
-		if( i > 0 )
+		// add custom resolution if not in mode list
+		if ( i < ARRAY_LEN(detectedResolutions)-1 )
 		{
-			resolutions = detectedResolutions;
-			resolutionsDetected = qtrue;
+			Com_sprintf( currentResolution, sizeof ( currentResolution ), "%dx%d", cgs.glconfig.vidWidth, cgs.glconfig.vidHeight );
+
+			for( i = 0; detectedResolutions[ i ]; i++ )
+			{
+				if ( strcmp( detectedResolutions[ i ], currentResolution ) == 0 )
+					break;
+			}
+
+			if ( detectedResolutions[ i ] == NULL )
+			{
+				detectedResolutions[ i++ ] = currentResolution;
+				detectedResolutions[ i ] = NULL;
+			}
 		}
+
+		resolutions = detectedResolutions;
+		resolutionsDetected = qtrue;
 	}
 }
 
@@ -590,6 +611,8 @@ static void GraphicsOptions_CheckConfig( void )
 		if ( s_ivo_templates[i].colordepth != s_graphicsoptions.colordepth.curvalue )
 			continue;
 		if ( GraphicsOptions_FindDetectedResolution(s_ivo_templates[i].mode) != s_graphicsoptions.mode.curvalue )
+			continue;
+		if ( s_ivo_templates[i].fps != s_graphicsoptions.fps.curvalue )
 			continue;
 //		if ( s_ivo_templates[i].fullscreen != s_graphicsoptions.fs.curvalue )
 //			continue;
@@ -635,6 +658,10 @@ static void GraphicsOptions_UpdateMenuItems( void )
 	s_graphicsoptions.apply.generic.flags |= QMF_HIDDEN|QMF_INACTIVE;
 
 	if ( s_ivo.mode != s_graphicsoptions.mode.curvalue )
+	{
+		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
+	}
+	if ( s_ivo.fps != s_graphicsoptions.fps.curvalue )
 	{
 		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
 	}
@@ -726,6 +753,30 @@ static void GraphicsOptions_ApplyChanges( void *unused, int notification )
 	}
 	else
 		trap_Cvar_SetValue( "r_mode", s_graphicsoptions.mode.curvalue );
+
+	switch ( s_graphicsoptions.fps.curvalue )
+	{
+	case 0:
+		trap_Cvar_SetValue( "r_swapInterval", 1 );
+		trap_Cvar_SetValue( "com_maxfps", 125 );
+		break;
+	case 1:
+		trap_Cvar_SetValue( "r_swapInterval", 0 );
+		trap_Cvar_SetValue( "com_maxfps", 30 );
+		break;
+	case 2:
+		trap_Cvar_SetValue( "r_swapInterval", 0 );
+		trap_Cvar_SetValue( "com_maxfps", 60 );
+		break;
+	case 3:
+		trap_Cvar_SetValue( "r_swapInterval", 0 );
+		trap_Cvar_SetValue( "com_maxfps", 85 );
+		break;
+	case 4:
+		trap_Cvar_SetValue( "r_swapInterval", 0 );
+		trap_Cvar_SetValue( "com_maxfps", 125 );
+		break;
+	}
 
 	trap_Cvar_SetValue( "r_fullscreen", s_graphicsoptions.fs.curvalue );
 	switch ( s_graphicsoptions.colordepth.curvalue )
@@ -850,6 +901,7 @@ static void GraphicsOptions_Event( void* ptr, int event ) {
 		s_graphicsoptions.mode.curvalue        = GraphicsOptions_FindDetectedResolution(ivo->mode);
 		s_graphicsoptions.ratio.curvalue =
 			resToRatio[ s_graphicsoptions.mode.curvalue ];
+		s_graphicsoptions.fps.curvalue         = ivo->fps;
 		s_graphicsoptions.tq.curvalue          = ivo->tq;
 		s_graphicsoptions.lighting.curvalue    = ivo->lighting;
 		s_graphicsoptions.colordepth.curvalue  = ivo->colordepth;
@@ -944,6 +996,29 @@ static void GraphicsOptions_SetMenuItems( void )
 	}
 	s_graphicsoptions.ratio.curvalue =
 		resToRatio[ s_graphicsoptions.mode.curvalue ];
+
+	s_graphicsoptions.fps.curvalue = trap_Cvar_VariableValue( "com_maxfps");
+	if ( trap_Cvar_VariableValue( "r_swapInterval" ) != 0 )
+	{
+		s_graphicsoptions.fps.curvalue = 0;
+	}
+	else if ( s_graphicsoptions.fps.curvalue <= 30 )
+	{
+		s_graphicsoptions.fps.curvalue = 1;
+	}
+	else if ( s_graphicsoptions.fps.curvalue <= 60 )
+	{
+		s_graphicsoptions.fps.curvalue = 2;
+	}
+	else if ( s_graphicsoptions.fps.curvalue <= 85 )
+	{
+		s_graphicsoptions.fps.curvalue = 3;
+	}
+	else //if ( s_graphicsoptions.fps.curvalue <= 125 )
+	{
+		s_graphicsoptions.fps.curvalue = 4;
+	}
+
 	s_graphicsoptions.fs.curvalue = trap_Cvar_VariableValue("r_fullscreen");
 	s_graphicsoptions.tq.curvalue = 3-trap_Cvar_VariableValue( "r_picmip");
 	if ( s_graphicsoptions.tq.curvalue < 0 )
@@ -1064,6 +1139,22 @@ static void GraphicsOptions_SetMenuItems( void )
 }
 
 /*
+=================
+GraphicsOptions_StatusBar
+=================
+*/
+static void GraphicsOptions_StatusBar( void *ptr ) {
+	switch( ((menucommon_s*)ptr)->id ) {
+	case ID_FPS:
+		UI_DrawString( 320, 410, "The frame rate also affects your player's movement.", UI_CENTER|UI_SMALLFONT, colorWhite );
+		UI_DrawString( 320, 430, "125Hz can jump slightly higher than the others.", UI_CENTER|UI_SMALLFONT, colorWhite );
+		break;
+	default:
+		break;
+	}
+}
+
+/*
 ================
 GraphicsOptions_MenuInit
 ================
@@ -1086,6 +1177,16 @@ void GraphicsOptions_MenuInit( void )
 		"Fast",
 		"Fastest",
 		"Custom",
+		NULL
+	};
+
+	static const char *fps_names[] =
+	{
+		"V-Sync",
+		"30 Hz",
+		"60 Hz",
+		"85 Hz",
+		"125 Hz",
 		NULL
 	};
 
@@ -1254,6 +1355,18 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.mode.generic.id       = ID_MODE;
 	y += BIGCHAR_HEIGHT+2;
 
+	// references/modifies "com_maxfps" and "r_swapInterval"
+	s_graphicsoptions.fps.generic.type     = MTYPE_SPINCONTROL;
+	s_graphicsoptions.fps.generic.name     = "Frame Rate:";
+	s_graphicsoptions.fps.generic.flags    = QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	s_graphicsoptions.fps.generic.x        = 400;
+	s_graphicsoptions.fps.generic.y        = y;
+	s_graphicsoptions.fps.itemnames        = fps_names;
+	s_graphicsoptions.fps.generic.callback = GraphicsOptions_Event;
+	s_graphicsoptions.fps.generic.id       = ID_FPS;
+	s_graphicsoptions.fps.generic.statusbar = GraphicsOptions_StatusBar;
+	y += BIGCHAR_HEIGHT+2;
+
 	// references "r_colorbits"
 	s_graphicsoptions.colordepth.generic.type     = MTYPE_SPINCONTROL;
 	s_graphicsoptions.colordepth.generic.name     = "Color Depth:";
@@ -1378,6 +1491,7 @@ void GraphicsOptions_MenuInit( void )
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.list );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.ratio );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.mode );
+	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.fps );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.colordepth );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.fs );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.multisample );

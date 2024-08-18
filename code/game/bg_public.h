@@ -1239,7 +1239,7 @@ typedef struct
 	int			(*pointcontents)( const vec3_t point, int passEntityNum );
 } bgGenTracemap_t;
 
-void BG_GenerateTracemap(const char *mapname, vec3_t mapcoordsMins, vec3_t mapcoordsMaxs, bgGenTracemap_t *gen);
+void BG_GenerateTracemap(const char *mapname, vec2_t mapcoordsMins, vec2_t mapcoordsMaxs, bgGenTracemap_t *gen);
 
 qboolean BG_LoadTraceMap( char *rawmapname, vec2_t world_mins, vec2_t world_maxs );
 float BG_GetSkyHeightAtPoint( vec3_t pos );

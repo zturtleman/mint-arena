@@ -2044,6 +2044,26 @@ qboolean Item_Multi_HandleKey(itemDef_t *item, int key) {
 				} else if ( current >= max ) {
 					current = 0;
 				}
+
+				if (multiPtr->videoMode) {
+					if (multiPtr->cvarValue[current] != -1) {
+						DC->setCVar("r_mode", va("%i", (int) multiPtr->cvarValue[current] ));
+					} else {
+						int w, h;
+						char *x;
+						char str[8];
+
+						x = strchr( multiPtr->cvarStr[current], 'x' ) + 1;
+						Q_strncpyz( str, multiPtr->cvarStr[current], MIN( x-multiPtr->cvarStr[current], sizeof( str ) ) );
+						w = atoi( str );
+						h = atoi( x );
+
+						DC->setCVar("r_mode", "-1");
+						DC->setCVar("r_customwidth", va("%i", w));
+						DC->setCVar("r_customheight", va("%i", h));
+					}
+				}
+
 				if (multiPtr->strDef) {
 					DC->setCVar(item->cvar, multiPtr->cvarStr[current]);
 				} else {
@@ -3252,14 +3272,17 @@ static bind_t g_bindings[] =
 	{"weapon 7",		 '7',					-1,		-1, -1},
 	{"weapon 8",		 '8',					-1,		-1, -1},
 	{"weapon 9",		 '9',					-1,		-1, -1},
+#ifdef MISSIONPACK
 	{"weapon 10",		 '0',					-1,		-1, -1},
 	{"weapon 11",		 -1,					-1,		-1, -1},
 	{"weapon 12",		 -1,					-1,		-1, -1},
 	{"weapon 13",		 -1,					-1,		-1, -1},
+#endif
 	{"+attack", 		 K_LEFTCTRL,	K_RIGHTCTRL,		-1, -1},
 	{"weapprev",		 '[',					-1,		-1, -1},
 	{"weapnext", 		 ']',					-1,		-1, -1},
 	{"+button3", 		 K_MOUSE3,			-1,		-1, -1},
+#ifdef MISSIONPACK
 	{"+button4", 		 K_MOUSE4,			-1,		-1, -1},
 	{"prevTeamMember", 'w',					-1,		-1, -1},
 	{"nextTeamMember", 'r',					-1,		-1, -1},
@@ -3280,6 +3303,7 @@ static bind_t g_bindings[] =
 	{"tauntTaunt", K_F3,			-1,		-1, -1},
 	{"tauntDeathInsult", K_F4,			-1,		-1, -1},
 	{"tauntGauntlet", K_F5,			-1,		-1, -1},
+#endif
 	{"scoresUp", K_KP_PGUP,			-1,		-1, -1},
 	{"scoresDown", K_KP_PGDN,			-1,		-1, -1},
 	{"messagemode",  -1,					-1,		-1, -1},
@@ -5019,6 +5043,7 @@ qboolean ItemParse_cvarStrList( itemDef_t *item, int handle ) {
 	multiPtr = (multiDef_t*)item->typeData;
 	multiPtr->count = 0;
 	multiPtr->strDef = qtrue;
+	multiPtr->videoMode = qfalse;
 
 	if (!trap_PC_ReadToken(handle, &token))
 		return qfalse;
@@ -5067,6 +5092,7 @@ qboolean ItemParse_cvarFloatList( itemDef_t *item, int handle ) {
 	multiPtr = (multiDef_t*)item->typeData;
 	multiPtr->count = 0;
 	multiPtr->strDef = qfalse;
+	multiPtr->videoMode = qfalse;
 
 	if (!trap_PC_ReadToken(handle, &token))
 		return qfalse;
@@ -5243,6 +5269,61 @@ void Item_SetupKeywordHash(void) {
 	}
 }
 
+static const char *builtinResolutions[ ] =
+{
+	"320x240",
+	"400x300",
+	"512x384",
+	"640x480",
+	"800x600",
+	"960x720",
+	"1024x768",
+	"1152x864",
+	"1280x1024",
+	"1600x1200",
+	"2048x1536",
+	"856x480",
+	NULL
+};
+
+static const char *knownRatios[ ][2] =
+{
+	{ "1.25:1", "5:4"   },
+	{ "1.33:1", "4:3"   },
+	{ "1.50:1", "3:2"   },
+	{ "1.56:1", "14:9"  },
+	{ "1.60:1", "16:10" },
+	{ "1.67:1", "5:3"   },
+	{ "1.78:1", "16:9"  },
+	{ NULL    , NULL    }
+};
+
+/*
+===============
+UI_ResolutionToAspect
+===============
+*/
+static void UI_ResolutionToAspect( const char *resolution, char *aspect, size_t aspectLength ) {
+	int i, w, h;
+	char *x;
+	char str[8];
+
+	// calculate resolution's aspect ratio
+	x = strchr( resolution, 'x' ) + 1;
+	Q_strncpyz( str, resolution, MIN( x-resolution, sizeof( str ) ) );
+	w = atoi( str );
+	h = atoi( x );
+	Com_sprintf( aspect, aspectLength, "%.2f:1", (float)w / (float)h );
+
+	// rename common ratios ("1.33:1" -> "4:3")
+	for( i = 0; knownRatios[i][0]; i++ ) {
+		if( !Q_stricmp( aspect, knownRatios[i][0] ) ) {
+			Q_strncpyz( aspect, knownRatios[i][1], aspectLength );
+			break;
+		}
+	}
+}
+
 /*
 ===============
 Item_ApplyHacks
@@ -5275,6 +5356,89 @@ static void Item_ApplyHacks( itemDef_t *item ) {
 			Com_DPrintf( "Extended player name field using cvar %s to %d characters\n", item->cvar, MAX_NAME_LENGTH );
 			editField->maxChars = MAX_NAME_LENGTH;
 		}
+	}
+
+	// Replace mode list and use a temporary ui_videomode cvar for handling custom modes
+	if ( item->type == ITEM_TYPE_MULTI && item->cvar && !Q_stricmp( item->cvar, "r_mode" ) ) {
+		multiDef_t *multiPtr = (multiDef_t*)item->typeData;
+		int i, oldCount;
+		char resbuf[MAX_STRING_CHARS];
+		char modeName[32], aspect[8];
+
+		item->cvar = "ui_videomode";
+		multiPtr->strDef = qtrue;
+		multiPtr->videoMode = qtrue;
+
+		oldCount = multiPtr->count;
+		multiPtr->count = 0;
+
+		DC->getCVarString( "r_availableModes", resbuf, sizeof( resbuf ) );
+
+		if ( *resbuf ) {
+			char *s = resbuf, *mode;
+
+			while ( s && multiPtr->count < MAX_MULTI_CVARS ) {
+				mode = s;
+
+				s = strchr(s, ' ');
+				if( s )
+					*s++ = '\0';
+
+				UI_ResolutionToAspect( mode, aspect, sizeof( aspect ) );
+				Com_sprintf( modeName, sizeof( modeName ), "%s (%s)", mode, aspect );
+
+				multiPtr->cvarList[multiPtr->count] = String_Alloc( modeName );
+
+				for ( i = 0; builtinResolutions[i]; i++ ) {
+					if( !Q_stricmp( builtinResolutions[i], mode ) ) {
+						multiPtr->cvarStr[multiPtr->count] = builtinResolutions[i];
+						multiPtr->cvarValue[multiPtr->count] = i;
+						break;
+					}
+				}
+
+				if ( builtinResolutions[i] == NULL ) {
+					multiPtr->cvarStr[multiPtr->count] = String_Alloc( mode );
+					multiPtr->cvarValue[multiPtr->count] = -1;
+				}
+
+				multiPtr->count++;
+			}
+		} else {
+			for ( i = 0; builtinResolutions[i] && multiPtr->count < MAX_MULTI_CVARS; i++ ) {
+				UI_ResolutionToAspect( builtinResolutions[i], aspect, sizeof( aspect ) );
+				Com_sprintf( modeName, sizeof( modeName ), "%s (%s)", builtinResolutions[i], aspect );
+
+				multiPtr->cvarList[multiPtr->count] = String_Alloc( modeName );
+				multiPtr->cvarStr[multiPtr->count] = builtinResolutions[i];
+				multiPtr->cvarValue[multiPtr->count] = i;
+				multiPtr->count++;
+			}
+		}
+
+		// Add custom resolution if not in mode list
+		if ( multiPtr->count < MAX_MULTI_CVARS ) {
+			char currentResolution[20];
+
+			Com_sprintf( currentResolution, sizeof ( currentResolution ), "%dx%d", cgs.glconfig.vidWidth, cgs.glconfig.vidHeight );
+			for ( i = 0; i < multiPtr->count; i++ ) {
+				if ( !Q_stricmp( multiPtr->cvarStr[i], currentResolution ) ) {
+					break;
+				}
+			}
+
+			if ( i == multiPtr->count ) {
+				UI_ResolutionToAspect( currentResolution, aspect, sizeof( aspect ) );
+				Com_sprintf( modeName, sizeof( modeName ), "%s (%s)", currentResolution, aspect );
+
+				multiPtr->cvarList[multiPtr->count] = String_Alloc( modeName );
+				multiPtr->cvarStr[multiPtr->count] = String_Alloc( currentResolution );
+				multiPtr->cvarValue[multiPtr->count] = -1;
+				multiPtr->count++;
+			}
+		}
+
+		Com_Printf( "Found video mode list with %d modes, replaced list with %d modes\n", oldCount, multiPtr->count );
 	}
 
 	// Show selected score on the scoreboard

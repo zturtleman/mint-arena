@@ -37,6 +37,24 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "../../ui/menudef.h"
 
+
+// Avoid duplicate symbols when using MISSIONPACK_HUD with Q3_UI.
+// "static" doesn't make symbols local to the file in QVMs.
+#define UI_SHARED_STATIC( sym ) sym##_ui_shared
+#define UI_Alloc                  UI_SHARED_STATIC( UI_Alloc )
+#define UI_InitMemory             UI_SHARED_STATIC( UI_InitMemory )
+#define outOfMemory               UI_SHARED_STATIC( outOfMemory )
+#define allocPoint                UI_SHARED_STATIC( allocPoint )
+#define memoryPool                UI_SHARED_STATIC( memoryPool )
+#define builtinResolutions        UI_SHARED_STATIC( builtinResolutions )
+#define knownRatios               UI_SHARED_STATIC( knownRatios )
+#define Controls_GetKeyAssignment UI_SHARED_STATIC( Controls_GetKeyAssignment )
+#define Controls_GetConfig        UI_SHARED_STATIC( Controls_GetConfig )
+#define Controls_SetConfig        UI_SHARED_STATIC( Controls_SetConfig )
+#define Controls_SetDefaults      UI_SHARED_STATIC( Controls_SetDefaults )
+#define g_bindings                UI_SHARED_STATIC( g_bindings )
+
+
 #define MAX_MENUNAME 32
 #define MAX_ITEMTEXT 64
 #define MAX_ITEMACTION 64
@@ -215,6 +233,7 @@ typedef struct multiDef_s {
 	float cvarValue[MAX_MULTI_CVARS];
 	int count;
 	qboolean strDef;
+	qboolean videoMode;
 } multiDef_t;
 
 typedef struct modelDef_s {

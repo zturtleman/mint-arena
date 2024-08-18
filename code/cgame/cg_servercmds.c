@@ -383,7 +383,7 @@ static void CG_ConfigStringModified( void ) {
 		}
 	} else if ( num >= CS_PLAYERS && num < CS_PLAYERS+MAX_CLIENTS ) {
 		CG_NewPlayerInfo( num - CS_PLAYERS );
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 		CG_BuildSpectatorString();
 #endif
 	} else if ( num >= CS_DLIGHTS && num < CS_DLIGHTS + MAX_DLIGHT_CONFIGSTRINGS ) {

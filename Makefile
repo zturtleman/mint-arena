@@ -20,11 +20,17 @@ endif
 ifndef BUILD_BASEGAME
   BUILD_BASEGAME =
 endif
+ifndef USE_BASEGAME_MP_HUD
+  USE_BASEGAME_MP_HUD =
+endif
 ifndef BUILD_MISSIONPACK
   BUILD_MISSIONPACK=
 endif
 ifndef USE_MISSIONPACK_Q3_UI
   USE_MISSIONPACK_Q3_UI =
+endif
+ifndef USE_MISSIONPACK_MP_HUD
+  USE_MISSIONPACK_MP_HUD = 1
 endif
 ifndef BUILD_FINAL
   BUILD_FINAL      =0
@@ -115,6 +121,10 @@ endif
 
 ifndef BASEGAME_CFLAGS
 BASEGAME_CFLAGS=
+
+ifeq ($(USE_BASEGAME_MP_HUD), 1)
+BASEGAME_CFLAGS+=-DMISSIONPACK_HUD
+endif
 endif
 
 BASEGAME_CFLAGS+=-DMODDIR=\"$(BASEGAME)\" -DBASETA=\"$(MISSIONPACK)\"
@@ -124,10 +134,10 @@ MISSIONPACK=missionpack
 endif
 
 ifndef MISSIONPACK_CFLAGS
-ifeq ($(USE_MISSIONPACK_Q3_UI), 1)
 MISSIONPACK_CFLAGS=-DMISSIONPACK
-else
-MISSIONPACK_CFLAGS=-DMISSIONPACK -DMISSIONPACK_HUD
+
+ifeq ($(USE_MISSIONPACK_MP_HUD), 1)
+MISSIONPACK_CFLAGS+=-DMISSIONPACK_HUD
 endif
 endif
 
@@ -423,7 +433,19 @@ ifdef MINGW
 
   ifeq ($(COMPILE_PLATFORM),cygwin)
     TOOLS_BINEXT=.exe
-    TOOLS_CC=$(CC)
+
+    # Under cygwin the default of using gcc for TOOLS_CC won't work, so
+    # we need to figure out the appropriate compiler to use, based on the
+    # host architecture that we're running under (as tools run on the host)
+    ifeq ($(COMPILE_ARCH),x86_64)
+      TOOLS_MINGW_PREFIXES=x86_64-w64-mingw32 amd64-mingw32msvc
+    endif
+    ifeq ($(COMPILE_ARCH),x86)
+      TOOLS_MINGW_PREFIXES=i686-w64-mingw32 i586-mingw32msvc i686-pc-mingw32
+    endif
+
+    TOOLS_CC=$(firstword $(strip $(foreach TOOLS_MINGW_PREFIX, $(TOOLS_MINGW_PREFIXES), \
+      $(call bin_path, $(TOOLS_MINGW_PREFIX)-gcc))))
   endif
 
   LIBS= -lws2_32 -lwinmm -lpsapi
@@ -442,6 +464,8 @@ else # ifdef MINGW
 #############################################################################
 
 ifeq ($(PLATFORM),freebsd)
+  # Use the default C compiler
+  TOOLS_CC=cc
 
   # flags
   BASE_CFLAGS = \
@@ -648,7 +672,6 @@ endif
 
 ifneq ($(HAVE_VM_COMPILED),true)
   BASE_CFLAGS += -DNO_VM_COMPILED
-  BUILD_GAME_QVM=0
 endif
 
 TARGETS =
@@ -823,6 +846,9 @@ endif
 	@echo "  CFLAGS:"
 	$(call print_wrapped, $(CFLAGS) $(OPTIMIZE))
 	@echo ""
+	@echo "  TOOLS_CFLAGS:"
+	$(call print_wrapped, $(TOOLS_CFLAGS))
+	@echo ""
 	@echo "  LDFLAGS:"
 	$(call print_wrapped, $(LDFLAGS))
 	@echo ""
@@ -849,6 +875,7 @@ makedirs:
 	@$(MKDIR) $(B)/$(BASEGAME)/botlib
 	@$(MKDIR) $(B)/$(BASEGAME)/game
 	@$(MKDIR) $(B)/$(BASEGAME)/ui
+	@$(MKDIR) $(B)/$(BASEGAME)/mpui
 	@$(MKDIR) $(B)/$(BASEGAME)/qcommon
 	@$(MKDIR) $(B)/$(BASEGAME)/vm
 	@$(MKDIR) $(B)/$(MISSIONPACK)/cgame
@@ -1134,6 +1161,11 @@ Q3CGOBJ = \
   $(B)/$(BASEGAME)/qcommon/q_shared.o \
   $(B)/$(BASEGAME)/qcommon/q_unicode.o
 
+ifeq ($(USE_BASEGAME_MP_HUD), 1)
+Q3CGOBJ += \
+  $(B)/$(BASEGAME)/mpui/ui_shared.o
+endif
+
 Q3CGVMOBJ = $(Q3CGOBJ:%.o=%.asm)
 
 $(B)/$(BASEGAME)/$(VM_PREFIX)cgame_$(SHLIBNAME): $(Q3CGOBJ)
@@ -1232,6 +1264,11 @@ MPCGOBJ += \
   $(B)/$(MISSIONPACK)/q3ui/ui_team.o \
   $(B)/$(MISSIONPACK)/q3ui/ui_teamorders.o \
   $(B)/$(MISSIONPACK)/q3ui/ui_video.o
+
+ifeq ($(USE_MISSIONPACK_MP_HUD), 1)
+MPCGOBJ += \
+  $(B)/$(MISSIONPACK)/ui/ui_shared.o
+endif
 else
 MPCGOBJ += \
   $(B)/$(MISSIONPACK)/ui/ui_main.o \
@@ -1442,6 +1479,9 @@ $(B)/$(BASEGAME)/cgame/%.o: $(CGDIR)/%.c
 $(B)/$(BASEGAME)/ui/%.o: $(Q3UIDIR)/%.c
 	$(DO_CGAME_CC)
 
+$(B)/$(BASEGAME)/mpui/%.o: $(UIDIR)/%.c
+	$(DO_CGAME_CC)
+
 $(B)/$(BASEGAME)/cgame/bg_%.asm: $(GDIR)/bg_%.c $(Q3LCC)
 	$(DO_CGAME_Q3LCC)
 
@@ -1449,6 +1489,9 @@ $(B)/$(BASEGAME)/cgame/%.asm: $(CGDIR)/%.c $(Q3LCC)
 	$(DO_CGAME_Q3LCC)
 
 $(B)/$(BASEGAME)/ui/%.asm: $(Q3UIDIR)/%.c $(Q3LCC)
+	$(DO_CGAME_Q3LCC)
+
+$(B)/$(BASEGAME)/mpui/%.asm: $(UIDIR)/%.c $(Q3LCC)
 	$(DO_CGAME_Q3LCC)
 
 $(B)/$(MISSIONPACK)/cgame/bg_%.o: $(GDIR)/bg_%.c

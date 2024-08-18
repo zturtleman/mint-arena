@@ -14,3 +14,8 @@ If you put both projects in the same directory you can launch the game using;
 
 On Linux and OS X you'll need to put `./` before the command and substitute the correct platform and architecture (look in the build directory).
 
+## License
+
+mint-arena is licensed under a [modified version of the GNU GPLv3](COPYING.txt#L625) (or at your option, any later version). This is due to including code from Return to Castle Wolfenstein and Wolfenstein: Enemy Territory.
+
+Submitted contributions must be given with permission to use as GPLv**2** (two) and any later version; unless the file is under a license besides the GPL, in which case that license applies. This allows me to potentially change the license to GPLv2 or later in the future.

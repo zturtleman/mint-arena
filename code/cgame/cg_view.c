@@ -455,7 +455,7 @@ static void CG_OffsetFirstPersonView( void ) {
 	}
 
 	// add angles based on damage kick
-	if ( cg.cur_lc->damageTime ) {
+	if ( cg.cur_lc->damageTime && !cg.cur_lc->renderingThirdPerson && cg_viewkick.integer ) {
 		ratio = cg.time - cg.cur_lc->damageTime;
 		if ( ratio < DAMAGE_DEFLECT_TIME ) {
 			ratio /= DAMAGE_DEFLECT_TIME;

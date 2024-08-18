@@ -62,7 +62,7 @@ static vec2_t one_over_mapgrid_factor;
 void etpro_FinalizeTracemapClamp( int *x, int *y );
 
 // Currently only used by CGAME
-void BG_GenerateTracemap(const char *mapname, vec3_t mapcoordsMins, vec3_t mapcoordsMaxs, bgGenTracemap_t *gen) {
+void BG_GenerateTracemap(const char *mapname, vec2_t mapcoordsMins, vec2_t mapcoordsMaxs, bgGenTracemap_t *gen) {
 	trace_t tr;
 	vec3_t start, end;
 	int i, j;

@@ -344,7 +344,6 @@ static void StartServer_MenuEvent( void* ptr, int event ) {
 		break;
 
 	case ID_STARTSERVERNEXT:
-		trap_Cvar_SetValue( "g_gameType", gametype_remap[s_startserver.gametype.curvalue] );
 		UI_ServerOptionsMenu( s_startserver.multiplayer );
 		break;
 
@@ -893,7 +892,8 @@ static void ServerOptions_Start( void ) {
 
 	// the wait commands will allow the dedicated to take effect
 	info = UI_GetArenaInfoByNumber( s_startserver.maplist[ s_startserver.currentmap ]);
-	trap_Cmd_ExecuteText( EXEC_APPEND, va( "wait ; wait ; map %s\n", Info_ValueForKey( info, "map" )));
+	trap_Cmd_ExecuteText( EXEC_APPEND, va( "wait ; wait ; g_gametype %d ; map %s\n",
+	                      s_serveroptions.gametype, Info_ValueForKey( info, "map" ) ) );
 
 	// remove bots
 	if ( trap_Cvar_VariableValue("sv_running") ) {
@@ -1405,8 +1405,7 @@ static void ServerOptions_MenuInit( qboolean multiplayer ) {
 
 	memset( &s_serveroptions, 0 ,sizeof(serveroptions_t) );
 	s_serveroptions.multiplayer = multiplayer;
-	s_serveroptions.gametype = (int) Com_Clamp(0, ARRAY_LEN(gametype_remap2) - 1,
-						trap_Cvar_VariableValue("g_gametype"));
+	s_serveroptions.gametype = gametype_remap[s_startserver.gametype.curvalue];
 
 	ServerOptions_Cache();
 

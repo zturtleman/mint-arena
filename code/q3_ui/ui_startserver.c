@@ -80,6 +80,7 @@ typedef struct {
 	menubitmap_s	arrows;
 	menubitmap_s	prevpage;
 	menubitmap_s	nextpage;
+	menutext_s		pagecount;
 	menubitmap_s	back;
 	menubitmap_s	next;
 
@@ -259,6 +260,8 @@ static void StartServer_Update( void ) {
 	}
 	
 	Q_strupr( s_startserver.mapname.string );
+
+	Com_sprintf( s_startserver.pagecount.string, 64, "Page %d of %d", s_startserver.page + 1, s_startserver.maxpages );
 }
 
 
@@ -442,6 +445,7 @@ static void StartServer_MenuInit( qboolean multiplayer ) {
 	int	x;
 	int	y;
 	static char mapnamebuffer[64];
+	static char pagecountbuffer[64];
 
 	// zero set all our globals
 	memset( &s_startserver, 0 ,sizeof(startserver_t) );
@@ -544,6 +548,14 @@ static void StartServer_MenuInit( qboolean multiplayer ) {
 	s_startserver.nextpage.height  		    = 32;
 	s_startserver.nextpage.focuspic         = GAMESERVER_ARROWSR;
 
+	s_startserver.pagecount.generic.type  = MTYPE_TEXT;
+	s_startserver.pagecount.generic.flags = QMF_RIGHT_JUSTIFY|QMF_INACTIVE;
+	s_startserver.pagecount.generic.x	    = (3 % MAX_MAPCOLS) * (128+8) + (SCREEN_WIDTH - (MAX_MAPCOLS * (128+8)) - 8) / 2 + 128;
+	s_startserver.pagecount.generic.y	    = 368;
+	s_startserver.pagecount.string        = pagecountbuffer;
+	s_startserver.pagecount.style         = UI_RIGHT|UI_SMALLFONT;
+	s_startserver.pagecount.color         = text_color_normal;
+
 	s_startserver.mapname.generic.type  = MTYPE_PTEXT;
 	s_startserver.mapname.generic.flags = QMF_CENTER_JUSTIFY|QMF_INACTIVE;
 	s_startserver.mapname.generic.x	    = 320;
@@ -595,6 +607,7 @@ static void StartServer_MenuInit( qboolean multiplayer ) {
 	Menu_AddItem( &s_startserver.menu, &s_startserver.arrows );
 	Menu_AddItem( &s_startserver.menu, &s_startserver.prevpage );
 	Menu_AddItem( &s_startserver.menu, &s_startserver.nextpage );
+	Menu_AddItem( &s_startserver.menu, &s_startserver.pagecount );
 	Menu_AddItem( &s_startserver.menu, &s_startserver.back );
 	Menu_AddItem( &s_startserver.menu, &s_startserver.next );
 	Menu_AddItem( &s_startserver.menu, &s_startserver.mapname );
